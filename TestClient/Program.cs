@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using TPPCommon.PubSub;
+using TPPCommon.PubSub.Messages;
 
 namespace TestClient
 {
@@ -9,12 +10,15 @@ namespace TestClient
         {
             // Setup dependency injection, to hide the pub-sub implementation.
             var serviceCollection = new ServiceCollection()
+                .AddTransient<IPubSubMessageSerializer, JSONPubSubMessageSerializer>()
+                .AddTransient<ZMQSubscriber>()
                 .AddTransient<ISubscriber, ZMQSubscriber>()
-                .AddTransient<TestClient>();
+                .AddTransient<TPPSubscriber>();
             var serviceProvider = serviceCollection.BuildServiceProvider();
 
             // Run client.
-            TestClient client = serviceProvider.GetService<TestClient>();
+            TPPSubscriber tppSubscriber = serviceProvider.GetService<TPPSubscriber>();
+            TestClient client = new TestClient(tppSubscriber);
             client.Run();
         }
     }

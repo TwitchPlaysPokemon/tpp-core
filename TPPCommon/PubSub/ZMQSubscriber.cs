@@ -3,6 +3,7 @@ using NetMQ.Sockets;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using TPPCommon.PubSub.Messages;
 
 namespace TPPCommon.PubSub
 {
@@ -32,13 +33,20 @@ namespace TPPCommon.PubSub
         /// <summary>
         /// Mapping for pub-sub topics and functions that will process them as they are received.
         /// </summary>
-        private Dictionary<Topic, PubSubMessageHandler> MessageHandlers = new Dictionary<Topic, PubSubMessageHandler>();
+        private Dictionary<Topic, MessageHandler> MessageHandlers = new Dictionary<Topic, MessageHandler>();
+
+        /// <summary>
+        /// Serializer object used for transforming messages.
+        /// </summary>
+        private IPubSubMessageSerializer Serializer;
 
         /// <summary>
         /// Create new instance of ZMQSubscriber, and connect to the given port.
         /// </summary>
-        public ZMQSubscriber()
+        public ZMQSubscriber(IPubSubMessageSerializer serializer)
         {
+            this.Serializer = serializer;
+
             this.Socket = InitSocket();
             this.Port = Addresses.PubSubPort;
 
@@ -81,15 +89,20 @@ namespace TPPCommon.PubSub
         /// </summary>
         private void OnReceiveReady(object sender, NetMQSocketEventArgs args)
         {
-            string topic = args.Socket.ReceiveFrameString();
+            string rawTopic = args.Socket.ReceiveFrameString();
             string rawMessage = args.Socket.ReceiveFrameString();
-            PubSubMessage message = new PubSubMessage(topic, rawMessage);
+
+            Topic topic;
+            if (!Enum.TryParse(rawTopic, out topic))
+            {
+                throw new InvalidTopicException($"Invalid pub-sub topic was received: '{rawTopic}'", nameof(rawTopic));
+            }
 
             // Invoke the designated handler function on the received message.
-            if (MessageHandlers.ContainsKey(message.Topic))
+            if (MessageHandlers.ContainsKey(topic))
             {
-                PubSubMessageHandler handler = MessageHandlers[message.Topic];
-                handler(message);
+                var handler = MessageHandlers[topic];
+                handler.ProcessMessage(rawMessage);
             }
         }
 
@@ -97,12 +110,47 @@ namespace TPPCommon.PubSub
         /// Subscribe to the given topic with a handler function.
         /// </summary>
         /// <param name="topic">pub-sub topic</param>
-        public void Subscribe(Topic topic, PubSubMessageHandler handler)
+        public void Subscribe<T>(Topic topic, PubSubMessageHandler<T> handler) where T : PubSubMessage
         {
-            MessageHandlers.Add(topic, handler);
+            MessageHandlers.Add(topic, new MessageHandler<T>(handler, this.Serializer));
 
             string topicString = topic.ToString();
             this.Socket.Subscribe(topicString);
+        }
+
+        /// <summary>
+        /// Helper classes to allow generic assignment of message topic handlers.
+        /// These allow compile-time enforcement of message handler function types when subscribing to a topic.
+        /// </summary>
+        private abstract class MessageHandler
+        {
+            /// <summary>
+            /// Deserialize and call the handler function for the incoming message.
+            /// </summary>
+            /// <param name="rawMessage">raw pub-sub message</param>
+            public abstract void ProcessMessage(string rawMessage);
+        }
+
+        private class MessageHandler<T> : MessageHandler where T : PubSubMessage
+        {
+            private PubSubMessageHandler<T> Handler;
+            private IPubSubMessageSerializer Serializer;
+
+            public MessageHandler(PubSubMessageHandler<T> handler, IPubSubMessageSerializer serializer)
+            {
+                this.Handler = handler;
+                this.Serializer = serializer;
+            }
+
+            /// <summary>
+            /// Deserialize and call the handler function for the incoming message.
+            /// </summary>
+            /// <param name="rawMessage">raw pub-sub message</param>
+            public override void ProcessMessage(string rawMessage)
+            {
+                T message = this.Serializer.Deserialize<T>(rawMessage);
+                this.Handler(message);
+            }
         }
     }
 }

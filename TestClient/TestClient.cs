@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using TPPCommon.PubSub;
+using TPPCommon.PubSub.Messages;
 
 namespace TestClient
 {
@@ -10,10 +11,10 @@ namespace TestClient
     /// </summary>
     class TestClient
     {
-        private ISubscriber Subscriber;
+        private TPPSubscriber Subscriber;
         private int TotalMessagesReceived;
 
-        public TestClient(ISubscriber subscriber)
+        public TestClient(TPPSubscriber subscriber)
         {
             this.Subscriber = subscriber;
             this.TotalMessagesReceived = 0;
@@ -24,8 +25,8 @@ namespace TestClient
             Console.WriteLine("Running Subscriber client...");
 
             // Subscribe to the pub-sub topics, and assign message handler functions for each topic.
-            this.Subscriber.Subscribe(Topic.Topic1, PrintTopic1Message);
-            this.Subscriber.Subscribe(Topic.Topic2, PrintTopic2Message);
+            this.Subscriber.SubscribeToCurrentSongInfo(OnSongInfoChanged);
+            this.Subscriber.SubscribeToPauseSongEvent(OnSongPaused);
 
             // Run forever.
             while (true)
@@ -34,19 +35,17 @@ namespace TestClient
             }
         }
 
-        // Topic1 handler
-        void PrintTopic1Message(PubSubMessage message)
+        void OnSongInfoChanged(SongInfoMessage message)
         {
             this.TotalMessagesReceived += 1;
-            Console.WriteLine($"Topic1 Received: {message.Message}");
+            Console.WriteLine($"Song Info:  Id = {message.Id}, Title = '{message.Title}', Artist = '{message.Artist}'");
             Console.WriteLine($"Total Messages Received: {this.TotalMessagesReceived}");
         }
 
-        // Topic2 handler
-        void PrintTopic2Message(PubSubMessage message)
+        void OnSongPaused(SongPausedEvent message)
         {
             this.TotalMessagesReceived += 1;
-            Console.WriteLine($"Topic2 Received: {message.Message}");
+            Console.WriteLine($"Song was paused!");
             Console.WriteLine($"Total Messages Received: {this.TotalMessagesReceived}");
         }
     }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using TPPCommon.PubSub;
+using TPPCommon.PubSub.Messages;
 
 namespace TestServer
 {
@@ -10,7 +11,9 @@ namespace TestServer
             // Setup dependency injection, to hide the pub-sub implementation.
             var serviceCollection = new ServiceCollection()
                 .AddTransient<IPublisher, ZMQPublisher>()
-                .AddTransient<TestServer>();
+                .AddTransient<TestServer>()
+                .AddTransient<IPubSubMessageSerializer, JSONPubSubMessageSerializer>()
+                .AddTransient<ZMQPublisher>();
             var serviceProvider = serviceCollection.BuildServiceProvider();
 
             // Run server.
