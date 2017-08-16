@@ -1,5 +1,6 @@
 ﻿using System;
 using TPPCommon.PubSub;
+using TPPCommon.PubSub.Messages;
 
 namespace TestServer
 {
@@ -17,29 +18,30 @@ namespace TestServer
 
         public void Run()
         {
-            Console.WriteLine("Running Server, Enter keys to publish messages...");
+            Console.WriteLine("Running Music Server, Enter keys to publish messages...");
 
             while (true)
             {
                 // Read single keystroke.
                 ConsoleKeyInfo key = Console.ReadKey();
-                string message = key.Key.ToString();
-                if (message.Equals("q", StringComparison.OrdinalIgnoreCase))
+                string input = key.Key.ToString();
+                if (input.Equals("q", StringComparison.OrdinalIgnoreCase))
                 {
                     // Quit running the server.
                     break;
                 }
 
-                Console.WriteLine($"Publishing {message}...");
-
-                // Decide which topic to publish the message to.
-                if (message == "A")
+                // Decide which message to publish.
+                if (input == "A")
                 {
-                    this.Publisher.PublishMessageString(Topic.Topic1, message);
+                    Console.WriteLine($"Sending Song Paused Event...");
+                    this.Publisher.Publish(new SongPausedEvent());
                 }
                 else
                 {
-                    this.Publisher.PublishMessageString(Topic.Topic2, message);
+                    Console.WriteLine($"Sending Song Info Message...");
+                    SongInfoMessage message = new SongInfoMessage(10, "Battle Theme", "Game Freak");
+                    this.Publisher.Publish(message);
                 }
             }
         }

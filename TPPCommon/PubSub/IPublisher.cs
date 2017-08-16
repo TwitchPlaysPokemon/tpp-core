@@ -1,4 +1,6 @@
-﻿namespace TPPCommon.PubSub
+﻿using TPPCommon.PubSub.Messages;
+
+namespace TPPCommon.PubSub
 {
     /// <summary>
     /// Interface for a publisher in the pub-sub pattern.
@@ -6,10 +8,9 @@
     public interface IPublisher
     {
         /// <summary>
-        /// Publish a string message to the given topic.
+        /// Publish a pub-sub message.
         /// </summary>
-        /// <param name="topic">pub-sub topic</param>
         /// <param name="message">message</param>
-        void PublishMessageString(Topic topic, string message);
+        void Publish(PubSubMessage message);
     }
 }

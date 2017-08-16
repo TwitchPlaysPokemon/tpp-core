@@ -3,6 +3,7 @@ using NetMQ.Sockets;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using TPPCommon.PubSub.Messages;
 
 namespace TPPCommon.PubSub
 {
@@ -28,10 +29,17 @@ namespace TPPCommon.PubSub
         private const int SendHighWatermark = 1000;
 
         /// <summary>
+        /// Serializer object used for transforming messages.
+        /// </summary>
+        private IPubSubMessageSerializer Serializer;
+
+        /// <summary>
         /// Create new instance of ZMQPublisher, and bind to the given port.
         /// </summary>
-        public ZMQPublisher()
+        public ZMQPublisher(IPubSubMessageSerializer serializer)
         {
+            this.Serializer = serializer;
+
             this.Socket = InitSocket();
             this.Port = Addresses.PubSubPort;
 
@@ -60,13 +68,13 @@ namespace TPPCommon.PubSub
         /// Publish a message to the given topic.
         /// </summary>
         /// <param name="message">message to publish</param>
-        public void PublishMessageString(Topic topic, string message)
+        public void Publish(PubSubMessage message)
         {
-            message = message ?? string.Empty;
-            string rawTopic = topic.ToString();
+            string rawTopic = message.GetTopic().ToString();
+            string rawMessage = this.Serializer.Serialize(message);
 
             this.Socket.SendMoreFrame(rawTopic);
-            this.Socket.SendFrame(message);
+            this.Socket.SendFrame(rawMessage);
         }
     }
 }
