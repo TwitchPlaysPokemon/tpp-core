@@ -1,12 +1,12 @@
-﻿using TPPCommon.PubSub.Messages;
+﻿using TPPCommon.PubSub.Events;
 
 namespace TPPCommon.PubSub
 {
     /// <summary>
-    /// Delegate function definition for received message processing.
+    /// Delegate function definition for received event processing.
     /// </summary>
-    /// <param name="message">pub-sub message object</param>
-    public delegate void PubSubMessageHandler<T>(T message) where T : PubSubMessage;
+    /// <param name="event">pub-sub event object</param>
+    public delegate void PubSubEventHandler<T>(T @event) where T : PubSubEvent;
 
     /// <summary>
     /// Interface for a subscriber in the pub-sub pattern.
@@ -16,7 +16,7 @@ namespace TPPCommon.PubSub
         /// <summary>
         /// Subscribe to the given topic with a handler function.
         /// </summary>
-        /// <param name="handler">pub-sub message handler delegate function</param>
-        void Subscribe<T>(PubSubMessageHandler<T> handler) where T : PubSubMessage;
+        /// <param name="handler">pub-sub event handler delegate function</param>
+        void Subscribe<T>(PubSubEventHandler<T> handler) where T : PubSubEvent;
     }
 }

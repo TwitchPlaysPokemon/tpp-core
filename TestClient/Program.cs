@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using TPPCommon.PubSub;
-using TPPCommon.PubSub.Messages;
+using TPPCommon.PubSub.Events;
 
 namespace TestClient
 {
@@ -10,7 +10,7 @@ namespace TestClient
         {
             // Setup dependency injection, to hide the pub-sub implementation.
             var serviceCollection = new ServiceCollection()
-                .AddTransient<IPubSubMessageSerializer, JSONPubSubMessageSerializer>()
+                .AddTransient<IPubSubEventSerializer, JSONPubSubEventSerializer>()
                 .AddTransient<ZMQSubscriber>()
                 .AddTransient<ISubscriber, ZMQSubscriber>();
             var serviceProvider = serviceCollection.BuildServiceProvider();

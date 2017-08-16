@@ -2,8 +2,7 @@
 using NetMQ.Sockets;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using TPPCommon.PubSub.Messages;
+using TPPCommon.PubSub.Events;
 
 namespace TPPCommon.PubSub
 {
@@ -38,12 +37,12 @@ namespace TPPCommon.PubSub
         /// <summary>
         /// Serializer object used for transforming messages.
         /// </summary>
-        private IPubSubMessageSerializer Serializer;
+        private IPubSubEventSerializer Serializer;
 
         /// <summary>
         /// Create new instance of ZMQSubscriber, and connect to the given port.
         /// </summary>
-        public ZMQSubscriber(IPubSubMessageSerializer serializer)
+        public ZMQSubscriber(IPubSubEventSerializer serializer)
         {
             this.Serializer = serializer;
 
@@ -110,9 +109,9 @@ namespace TPPCommon.PubSub
         /// Subscribe to the given topic with a handler function.
         /// </summary>
         /// <param name="topic">pub-sub topic</param>
-        public void Subscribe<T>(PubSubMessageHandler<T> handler) where T : PubSubMessage
+        public void Subscribe<T>(PubSubEventHandler<T> handler) where T : PubSubEvent
         {
-            Topic topic = PubSubMessage.GetTopicForMessageType(typeof(T));
+            Topic topic = PubSubEvent.GetTopicForEventType(typeof(T));
             MessageHandlers.Add(topic, new MessageHandler<T>(handler, this.Serializer));
 
             string topicString = topic.ToString();
@@ -132,12 +131,12 @@ namespace TPPCommon.PubSub
             public abstract void ProcessMessage(string rawMessage);
         }
 
-        private class MessageHandler<T> : MessageHandler where T : PubSubMessage
+        private class MessageHandler<T> : MessageHandler where T : PubSubEvent
         {
-            private PubSubMessageHandler<T> Handler;
-            private IPubSubMessageSerializer Serializer;
+            private PubSubEventHandler<T> Handler;
+            private IPubSubEventSerializer Serializer;
 
-            public MessageHandler(PubSubMessageHandler<T> handler, IPubSubMessageSerializer serializer)
+            public MessageHandler(PubSubEventHandler<T> handler, IPubSubEventSerializer serializer)
             {
                 this.Handler = handler;
                 this.Serializer = serializer;
@@ -149,8 +148,8 @@ namespace TPPCommon.PubSub
             /// <param name="rawMessage">raw pub-sub message</param>
             public override void ProcessMessage(string rawMessage)
             {
-                T message = this.Serializer.Deserialize<T>(rawMessage);
-                this.Handler(message);
+                T @event = this.Serializer.Deserialize<T>(rawMessage);
+                this.Handler(@event);
             }
         }
     }

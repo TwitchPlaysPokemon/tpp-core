@@ -10,7 +10,7 @@ namespace TPPCommon
     public class Addresses
     {
         /// <summary>
-        /// The port used for pub-sub communication. TODO: This assumes only a single port is used for all pub-sub messages.
+        /// The port used for pub-sub communication. TODO: This assumes only a single port is used for all pub-sub events.
         /// </summary>
         public const int PubSubPort = 1337;
 

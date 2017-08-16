@@ -1,11 +1,11 @@
 ﻿using System;
 using TPPCommon.PubSub;
-using TPPCommon.PubSub.Messages;
+using TPPCommon.PubSub.Events;
 
 namespace TestServer
 {
     /// <summary>
-    /// Test service that publishes messages to some pub-sub topics.
+    /// Test service that publishes events to some pub-sub topics.
     /// </summary>
     class TestServer
     {
@@ -18,7 +18,7 @@ namespace TestServer
 
         public void Run()
         {
-            Console.WriteLine("Running Music Server, Enter keys to publish messages...");
+            Console.WriteLine("Running Music Server, Enter keys to publish events...");
 
             while (true)
             {
@@ -31,7 +31,7 @@ namespace TestServer
                     break;
                 }
 
-                // Decide which message to publish.
+                // Decide which event to publish.
                 if (input == "A")
                 {
                     Console.WriteLine($"Sending Song Paused Event...");
@@ -39,9 +39,9 @@ namespace TestServer
                 }
                 else
                 {
-                    Console.WriteLine($"Sending Song Info Message...");
-                    SongInfoMessage message = new SongInfoMessage(10, "Battle Theme", "Game Freak");
-                    this.Publisher.Publish(message);
+                    Console.WriteLine($"Sending Song Info Event...");
+                    SongInfoEvent @event = new SongInfoEvent(10, "Battle Theme", "Game Freak");
+                    this.Publisher.Publish(@event);
                 }
             }
         }
