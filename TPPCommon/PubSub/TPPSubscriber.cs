@@ -15,21 +15,12 @@ namespace TPPCommon.PubSub
         }
 
         /// <summary>
-        /// Subscribe to the music service's current song info topic.
+        /// Subscribe to a type of pubsub messages.
         /// </summary>
         /// <param name="handler">message handler</param>
-        public void SubscribeToCurrentSongInfo(PubSubMessageHandler<SongInfoMessage> handler)
+        public void Subscribe<T>(PubSubMessageHandler<T> handler) where T : PubSubMessage
         {
-            this.Subscriber.Subscribe(Topic.CurrentSongInfo, handler);
-        }
-
-        /// <summary>
-        /// Subscribe to the music service's pause song event.
-        /// </summary>
-        /// <param name="handler">message handler</param>
-        public void SubscribeToPauseSongEvent(PubSubMessageHandler<SongPausedEvent> handler)
-        {
-            this.Subscriber.Subscribe(Topic.EventSongPause, handler);
+            this.Subscriber.Subscribe(handler);
         }
     }
 }

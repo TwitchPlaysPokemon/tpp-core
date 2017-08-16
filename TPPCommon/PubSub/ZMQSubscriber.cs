@@ -110,8 +110,9 @@ namespace TPPCommon.PubSub
         /// Subscribe to the given topic with a handler function.
         /// </summary>
         /// <param name="topic">pub-sub topic</param>
-        public void Subscribe<T>(Topic topic, PubSubMessageHandler<T> handler) where T : PubSubMessage
+        public void Subscribe<T>(PubSubMessageHandler<T> handler) where T : PubSubMessage
         {
+            Topic topic = PubSubMessage.GetTopicForMessageType(typeof(T));
             MessageHandlers.Add(topic, new MessageHandler<T>(handler, this.Serializer));
 
             string topicString = topic.ToString();

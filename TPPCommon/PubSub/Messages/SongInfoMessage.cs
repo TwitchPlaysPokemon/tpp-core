@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
 namespace TPPCommon.PubSub.Messages
 {
@@ -7,6 +6,7 @@ namespace TPPCommon.PubSub.Messages
     /// Pub-sub message object for the song info message.
     /// </summary>
     [DataContract]
+    [Topic(Topic.CurrentSongInfo)]
     public class SongInfoMessage : PubSubMessage
     {
         [DataMember]
@@ -23,11 +23,6 @@ namespace TPPCommon.PubSub.Messages
             this.Id = songId;
             this.Title = title;
             this.Artist = artist;
-        }
-
-        public override Topic GetTopic()
-        {
-            return Topic.CurrentSongInfo;
         }
     }
 }

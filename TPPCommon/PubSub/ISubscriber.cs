@@ -16,8 +16,7 @@ namespace TPPCommon.PubSub
         /// <summary>
         /// Subscribe to the given topic with a handler function.
         /// </summary>
-        /// <param name="topic">pub-sub topic</param>
         /// <param name="handler">pub-sub message handler delegate function</param>
-        void Subscribe<T>(Topic topic, PubSubMessageHandler<T> handler) where T : PubSubMessage;
+        void Subscribe<T>(PubSubMessageHandler<T> handler) where T : PubSubMessage;
     }
 }

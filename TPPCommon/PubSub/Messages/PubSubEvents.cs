@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
 namespace TPPCommon.PubSub.Messages
 {
@@ -14,11 +13,7 @@ namespace TPPCommon.PubSub.Messages
     /// Event for when the music service pauses the current song.
     /// </summary>
     [DataContract]
+    [Topic(Topic.EventSongPause)]
     public class SongPausedEvent : PubSubEvent
-    {
-        public override Topic GetTopic()
-        {
-            return Topic.EventSongPause;
-        }
-    }
+    { }
 }

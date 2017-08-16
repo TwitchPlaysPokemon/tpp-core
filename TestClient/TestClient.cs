@@ -25,8 +25,8 @@ namespace TestClient
             Console.WriteLine("Running Subscriber client...");
 
             // Subscribe to the pub-sub topics, and assign message handler functions for each topic.
-            this.Subscriber.SubscribeToCurrentSongInfo(OnSongInfoChanged);
-            this.Subscriber.SubscribeToPauseSongEvent(OnSongPaused);
+            this.Subscriber.Subscribe<SongInfoMessage>(OnSongInfoChanged);
+            this.Subscriber.Subscribe<SongPausedEvent>(OnSongPaused);
 
             // Run forever.
             while (true)
