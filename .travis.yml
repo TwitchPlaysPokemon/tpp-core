@@ -6,5 +6,5 @@ install:
   - dotnet restore
 script:
   - dotnet build
-  - dotnet test TPPCommonTest/TPPCommonTest.csproj
+  - find . -maxdepth 2 -name "*Test.csproj" -type f | xargs dotnet test
 ...
