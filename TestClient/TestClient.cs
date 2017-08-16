@@ -11,10 +11,10 @@ namespace TestClient
     /// </summary>
     class TestClient
     {
-        private TPPSubscriber Subscriber;
+        private ISubscriber Subscriber;
         private int TotalMessagesReceived;
 
-        public TestClient(TPPSubscriber subscriber)
+        public TestClient(ISubscriber subscriber)
         {
             this.Subscriber = subscriber;
             this.TotalMessagesReceived = 0;
