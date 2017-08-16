@@ -1,8 +1,9 @@
+![travis-ci build](https://api.travis-ci.org/TwitchPlaysPokemon/tpp-core.svg?branch=master)
 
 This repository contains the open-source rewrite of the TwitchPlaysPokemon core codebase.
 Its main goals are the following:
 
-  - Switch to a statically typed language for more guarantees about code structure and correctness.
+  - Switch to a statically typed language (C#) for more guarantees about code structure and correctness.
   - Use our experiences with the current tpp core to get things _right_, or at least implement them nicer.
   - Be open source to allow contributions from anyone.
   - Drop the frustration dealing with old code, and instead siphon the motivation of doing something fresh
