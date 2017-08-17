@@ -14,26 +14,28 @@ namespace TPPCommon.PubSub.Events
         /// Returns the topic for the pub-sub event class.
         /// If the class has no Topic attribute, an ArgumentException is thrown.
         /// </summary>
-        public static Topic GetTopicForEventType(Type type)
+        public static string GetTopicForEventType(Type type)
         {
             var isSubclass = typeof(PubSubEvent).GetTypeInfo().IsAssignableFrom(type);
             if (!isSubclass)
             {
                 throw new ArgumentException("event type must be subclass of " + typeof(PubSubEvent));
             }
+
             var topicAttribute = type.GetTypeInfo().GetCustomAttribute<TopicAttribute>();
             if (topicAttribute == null)
             {
                 throw new ArgumentException("the class" + type + " must define a topic with the " + typeof(TopicAttribute) + " attribute.");
             }
+
             return topicAttribute.Topic;
         }
-        
+
         /// <summary>
         /// Returns the topic for the pub-sub event.
         /// See also <see cref="GetTopicForEventType"/>
         /// </summary>
-        public Topic GetTopic()
+        public string GetTopic()
         {
             return GetTopicForEventType(this.GetType());
         }

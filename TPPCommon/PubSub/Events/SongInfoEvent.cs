@@ -6,7 +6,7 @@ namespace TPPCommon.PubSub.Events
     /// Pub-sub event class for the song info event.
     /// </summary>
     [DataContract]
-    [Topic(Topic.CurrentSongInfo)]
+    [Topic("song_info")]
     public class SongInfoEvent : PubSubEvent
     {
         [DataMember]

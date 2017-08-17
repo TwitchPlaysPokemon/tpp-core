@@ -12,12 +12,12 @@ namespace TestClient
             var serviceCollection = new ServiceCollection()
                 .AddTransient<IPubSubEventSerializer, JSONPubSubEventSerializer>()
                 .AddTransient<ZMQSubscriber>()
-                .AddTransient<ISubscriber, ZMQSubscriber>();
+                .AddTransient<ISubscriber, ZMQSubscriber>()
+                .AddTransient<TestClient>();
             var serviceProvider = serviceCollection.BuildServiceProvider();
 
             // Run client.
-            ISubscriber tppSubscriber = serviceProvider.GetService<ZMQSubscriber>();
-            TestClient client = new TestClient(tppSubscriber);
+            TestClient client = serviceProvider.GetService<TestClient>();
             client.Run();
         }
     }

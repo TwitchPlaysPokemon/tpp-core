@@ -70,7 +70,7 @@ namespace TPPCommon.PubSub
         /// <param name="event">event to publish</param>
         public void Publish(PubSubEvent @event)
         {
-            string rawTopic = @event.GetTopic().ToString();
+            string rawTopic = @event.GetTopic();
             string rawMessage = this.Serializer.Serialize(@event);
 
             this.Socket.SendMoreFrame(rawTopic);
