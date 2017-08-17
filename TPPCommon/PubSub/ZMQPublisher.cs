@@ -3,7 +3,7 @@ using NetMQ.Sockets;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using TPPCommon.PubSub.Messages;
+using TPPCommon.PubSub.Events;
 
 namespace TPPCommon.PubSub
 {
@@ -23,20 +23,20 @@ namespace TPPCommon.PubSub
         private int Port;
 
         /// <summary>
-        /// Maximum number of messages this publisher will queue in memory before potentially dropping messages.
+        /// Maximum number of events this publisher will queue in memory before potentially dropping events.
         /// ZMQ's default is 1000.
         /// </summary>
         private const int SendHighWatermark = 1000;
 
         /// <summary>
-        /// Serializer object used for transforming messages.
+        /// Serializer object used for transforming events into raw messages.
         /// </summary>
-        private IPubSubMessageSerializer Serializer;
+        private IPubSubEventSerializer Serializer;
 
         /// <summary>
         /// Create new instance of ZMQPublisher, and bind to the given port.
         /// </summary>
-        public ZMQPublisher(IPubSubMessageSerializer serializer)
+        public ZMQPublisher(IPubSubEventSerializer serializer)
         {
             this.Serializer = serializer;
 
@@ -65,13 +65,13 @@ namespace TPPCommon.PubSub
         }
 
         /// <summary>
-        /// Publish a message to the given topic.
+        /// Publish an event to the given topic.
         /// </summary>
-        /// <param name="message">message to publish</param>
-        public void Publish(PubSubMessage message)
+        /// <param name="event">event to publish</param>
+        public void Publish(PubSubEvent @event)
         {
-            string rawTopic = message.GetTopic().ToString();
-            string rawMessage = this.Serializer.Serialize(message);
+            string rawTopic = @event.GetTopic().ToString();
+            string rawMessage = this.Serializer.Serialize(@event);
 
             this.Socket.SendMoreFrame(rawTopic);
             this.Socket.SendFrame(rawMessage);

@@ -1,4 +1,4 @@
-﻿using TPPCommon.PubSub.Messages;
+﻿using TPPCommon.PubSub.Events;
 
 namespace TPPCommon.PubSub
 {
@@ -8,9 +8,9 @@ namespace TPPCommon.PubSub
     public interface IPublisher
     {
         /// <summary>
-        /// Publish a pub-sub message.
+        /// Publish a pub-sub event.
         /// </summary>
-        /// <param name="message">message</param>
-        void Publish(PubSubMessage message);
+        /// <param name="event">event</param>
+        void Publish(PubSubEvent @event);
     }
 }

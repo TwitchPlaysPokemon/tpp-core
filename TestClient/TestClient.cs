@@ -1,32 +1,32 @@
 ﻿using System;
 using System.Threading;
 using TPPCommon.PubSub;
-using TPPCommon.PubSub.Messages;
+using TPPCommon.PubSub.Events;
 
 namespace TestClient
 {
     /// <summary>
-    /// Test service that subscribes to some pub-sub topics and prints out the published messages, while keeping
-    /// track of the total number of messages it receives across all topics.
+    /// Test service that subscribes to some pub-sub topics and prints out the published events, while keeping
+    /// track of the total number of events it receives across all topics.
     /// </summary>
     class TestClient
     {
-        private TPPSubscriber Subscriber;
-        private int TotalMessagesReceived;
+        private ISubscriber Subscriber;
+        private int TotalEventsReceived;
 
-        public TestClient(TPPSubscriber subscriber)
+        public TestClient(ISubscriber subscriber)
         {
             this.Subscriber = subscriber;
-            this.TotalMessagesReceived = 0;
+            this.TotalEventsReceived = 0;
         }
 
         public void Run()
         {
             Console.WriteLine("Running Subscriber client...");
 
-            // Subscribe to the pub-sub topics, and assign message handler functions for each topic.
-            this.Subscriber.SubscribeToCurrentSongInfo(OnSongInfoChanged);
-            this.Subscriber.SubscribeToPauseSongEvent(OnSongPaused);
+            // Subscribe to the pub-sub topics, and assign event handler functions for each topic.
+            this.Subscriber.Subscribe<SongInfoEvent>(OnSongInfoChanged);
+            this.Subscriber.Subscribe<SongPausedEvent>(OnSongPaused);
 
             // Run forever.
             while (true)
@@ -35,18 +35,18 @@ namespace TestClient
             }
         }
 
-        void OnSongInfoChanged(SongInfoMessage message)
+        void OnSongInfoChanged(SongInfoEvent @event)
         {
-            this.TotalMessagesReceived += 1;
-            Console.WriteLine($"Song Info:  Id = {message.Id}, Title = '{message.Title}', Artist = '{message.Artist}'");
-            Console.WriteLine($"Total Messages Received: {this.TotalMessagesReceived}");
+            this.TotalEventsReceived += 1;
+            Console.WriteLine($"Song Info:  Id = {@event.Id}, Title = '{@event.Title}', Artist = '{@event.Artist}'");
+            Console.WriteLine($"Total Events Received: {this.TotalEventsReceived}");
         }
 
-        void OnSongPaused(SongPausedEvent message)
+        void OnSongPaused(SongPausedEvent @event)
         {
-            this.TotalMessagesReceived += 1;
+            this.TotalEventsReceived += 1;
             Console.WriteLine($"Song was paused!");
-            Console.WriteLine($"Total Messages Received: {this.TotalMessagesReceived}");
+            Console.WriteLine($"Total Events Received: {this.TotalEventsReceived}");
         }
     }
 }

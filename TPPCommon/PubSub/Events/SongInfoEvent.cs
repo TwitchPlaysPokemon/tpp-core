@@ -1,13 +1,13 @@
-﻿using System;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace TPPCommon.PubSub.Messages
+namespace TPPCommon.PubSub.Events
 {
     /// <summary>
-    /// Pub-sub message object for the song info message.
+    /// Pub-sub event class for the song info event.
     /// </summary>
     [DataContract]
-    public class SongInfoMessage : PubSubMessage
+    [Topic(Topic.CurrentSongInfo)]
+    public class SongInfoEvent : PubSubEvent
     {
         [DataMember]
         public int Id { get; set; }
@@ -18,16 +18,11 @@ namespace TPPCommon.PubSub.Messages
         [DataMember]
         public string Artist { get; set; }
 
-        public SongInfoMessage(int songId, string title, string artist)
+        public SongInfoEvent(int songId, string title, string artist)
         {
             this.Id = songId;
             this.Title = title;
             this.Artist = artist;
-        }
-
-        public override Topic GetTopic()
-        {
-            return Topic.CurrentSongInfo;
         }
     }
 }
