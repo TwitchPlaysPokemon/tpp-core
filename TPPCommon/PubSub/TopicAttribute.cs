@@ -18,7 +18,7 @@ namespace TPPCommon.PubSub
         ///        Therefore, subscribing to the "music" topic also subscribes to the "music_pause" topic.
         ///        Ensuring a unique suffix character guarantees this won't happen.
         /// </summary>
-        public const string Suffix = ":";
+        public const string Suffix = ";";
 
         public string Topic { get; }
 
