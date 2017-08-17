@@ -6,7 +6,7 @@ namespace TPPCommon.PubSub.Events
     /// Event for when the music service pauses the current song.
     /// </summary>
     [DataContract]
-    [Topic(Topic.EventSongPause)]
+    [Topic("song_pause")]
     public class SongPausedEvent : PubSubEvent
     { }
 }

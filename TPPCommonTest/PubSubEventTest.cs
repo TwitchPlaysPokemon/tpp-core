@@ -10,7 +10,7 @@ namespace TPPCommonTest
     /// </summary>
     public class PubSubEventTest
     {
-        private const Topic TestTopic = Topic.CurrentSongInfo; // can be any topic 
+        private const string TestTopic = "test_topic"; // can be any topic 
         
         [Topic(TestTopic)]
         class TestEventWithTopicAttribute : PubSubEvent
@@ -30,7 +30,8 @@ namespace TPPCommonTest
         public void TestTopicNameWithAttribute()
         {
             var @event = new TestEventWithTopicAttribute();
-            Assert.Equal(TestTopic, @event.GetTopic());
+            string expected = TestTopic + TopicAttribute.Suffix;
+            Assert.Equal(expected, @event.GetTopic());
         }
         
         [Fact]
@@ -46,6 +47,13 @@ namespace TPPCommonTest
         {
             // retrieving the topic for a class that doesn't inherit the pubsub event class should raise an error.
             Assert.Throws<ArgumentException>(() => PubSubEvent.GetTopicForEventType(typeof(TestEventNotSubclass)));
+        }
+
+        [Fact]
+        public void TestTopicInvalidContainsReservedSuffixCharacter()
+        {
+            string invalidTopic = "contains_reserved_suffix" + TopicAttribute.Suffix;
+            Assert.Throws<ArgumentException>(() => new TopicAttribute(invalidTopic));
         }
     }
 }

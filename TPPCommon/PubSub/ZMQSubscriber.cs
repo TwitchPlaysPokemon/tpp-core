@@ -32,7 +32,7 @@ namespace TPPCommon.PubSub
         /// <summary>
         /// Mapping for pub-sub topics and functions that will process them as they are received.
         /// </summary>
-        private Dictionary<Topic, MessageHandler> MessageHandlers = new Dictionary<Topic, MessageHandler>();
+        private Dictionary<string, MessageHandler> MessageHandlers = new Dictionary<string, MessageHandler>();
 
         /// <summary>
         /// Serializer object used for transforming messages.
@@ -88,14 +88,8 @@ namespace TPPCommon.PubSub
         /// </summary>
         private void OnReceiveReady(object sender, NetMQSocketEventArgs args)
         {
-            string rawTopic = args.Socket.ReceiveFrameString();
+            string topic = args.Socket.ReceiveFrameString();
             string rawMessage = args.Socket.ReceiveFrameString();
-
-            Topic topic;
-            if (!Enum.TryParse(rawTopic, out topic))
-            {
-                throw new InvalidTopicException($"Invalid pub-sub topic was received: '{rawTopic}'", nameof(rawTopic));
-            }
 
             // Invoke the designated handler function on the received message.
             if (MessageHandlers.ContainsKey(topic))
@@ -111,7 +105,7 @@ namespace TPPCommon.PubSub
         /// <param name="topic">pub-sub topic</param>
         public void Subscribe<T>(PubSubEventHandler<T> handler) where T : PubSubEvent
         {
-            Topic topic = PubSubEvent.GetTopicForEventType(typeof(T));
+            string topic = PubSubEvent.GetTopicForEventType(typeof(T));
             MessageHandlers.Add(topic, new MessageHandler<T>(handler, this.Serializer));
 
             string topicString = topic.ToString();
