@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using TPPCommon.PubSub;
 using TPPCommon.PubSub.Events;
 using Xunit;
@@ -54,6 +57,22 @@ namespace TPPCommonTest
         {
             string invalidTopic = "contains_reserved_suffix" + TopicAttribute.Suffix;
             Assert.Throws<ArgumentException>(() => new TopicAttribute(invalidTopic));
+        }
+
+        [Fact]
+        public void TestTopicUniqueness()
+        {
+            // Gather list of all PubSubEvent sub-classes.
+            IEnumerable<Type> pubSubEventTypes = typeof(PubSubEvent).GetTypeInfo().Assembly.GetTypes()
+                .Where(type => typeof(PubSubEvent).IsAssignableFrom(type) && type != typeof(PubSubEvent));
+
+            // Ensure all PubSubEvents have unique topics.
+            HashSet<string> topics = new HashSet<string>();
+            foreach (Type eventType in pubSubEventTypes)
+            {
+                string topic = PubSubEvent.GetTopicForEventType(eventType);
+                Assert.True(topics.Add(topic));
+            }
         }
     }
 }
