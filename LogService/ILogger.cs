@@ -35,8 +35,9 @@ namespace LogService
         /// Log an error message along with its exception.
         /// </summary>
         /// <param name="message">log message</param>
-        /// <param name="e">exception</param>
-        void LogError(string message, Exception e);
+        /// <param name="exceptionMessage">exception message</param>
+        /// <param name="stackTrace">exception stack trace</param>
+        void LogError(string message, string exceptionMessage, string stackTrace);
 
         /// <summary>
         /// Log a critical error message.
@@ -48,7 +49,8 @@ namespace LogService
         /// Log a critical error message along with its exception.
         /// </summary>
         /// <param name="message">log message</param>
-        /// <param name="e">exception</param>
-        void LogCritical(string message, Exception e);
+        /// <param name="exceptionMessage">exception message</param>
+        /// <param name="stackTrace">exception stack trace</param>
+        void LogCritical(string message, string exceptionMessage, string stackTrace);
     }
 }

@@ -76,7 +76,7 @@ namespace TPPCommon.Logging
         /// <param name="e">exception</param>
         public void LogError(string message, Exception e)
         {
-            this.Publisher.Publish(new LogErrorEvent(ApplyPrefix(message), e));
+            this.Publisher.Publish(new LogErrorExceptionEvent(ApplyPrefix(message), e?.Message, e?.StackTrace));
         }
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace TPPCommon.Logging
         /// <param name="e">exception</param>
         public void LogCritical(string message, Exception e)
         {
-            this.Publisher.Publish(new LogCriticalEvent(ApplyPrefix(message), e));
+            this.Publisher.Publish(new LogCriticalExceptionEvent(ApplyPrefix(message), e?.Message, e?.StackTrace));
         }
     }
 }

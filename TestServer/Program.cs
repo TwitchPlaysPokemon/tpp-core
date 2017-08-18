@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using System.Threading;
 using TPPCommon.PubSub;
 using TPPCommon.PubSub.Events;
 
@@ -8,6 +9,9 @@ namespace TestServer
     {
         static void Main(string[] args)
         {
+            // Give time for PubSubBroker to warm up.
+            Thread.Sleep(2000);
+
             // Setup dependency injection, to hide the pub-sub implementation.
             var serviceCollection = new ServiceCollection()
                 .AddTransient<IPublisher, ZMQPublisher>()

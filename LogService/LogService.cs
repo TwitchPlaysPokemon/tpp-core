@@ -34,10 +34,13 @@ namespace LogService
             this.Subscriber.Subscribe<LogDebugEvent>(log => this.Logger.LogDebug(log.Message));
             this.Subscriber.Subscribe<LogInfoEvent>(log => this.Logger.LogInfo(log.Message));
             this.Subscriber.Subscribe<LogWarningEvent>(log => this.Logger.LogWarning(log.Message));
-            this.Subscriber.Subscribe<LogErrorEvent>(log => this.Logger.LogError(log.Message, log.Exception));
-            this.Subscriber.Subscribe<LogCriticalEvent>(log => this.Logger.LogCritical(log.Message, log.Exception));
+            this.Subscriber.Subscribe<LogErrorEvent>(log => this.Logger.LogError(log.Message));
+            this.Subscriber.Subscribe<LogErrorExceptionEvent>(log => this.Logger.LogError(log.Message, log.ExceptionMessage, log.StackTrace));
+            this.Subscriber.Subscribe<LogCriticalEvent>(log => this.Logger.LogCritical(log.Message));
+            this.Subscriber.Subscribe<LogCriticalExceptionEvent>(log => this.Logger.LogCritical(log.Message, log.ExceptionMessage, log.StackTrace));
 
             // Block forever.
+            this.Logger.LogDebug("Logging service running...");
             new AutoResetEvent(false).WaitOne();
         }
     }

@@ -63,21 +63,38 @@ namespace TPPCommon.PubSub.Events
         [DataMember]
         public string Message { get; set; }
 
-        [DataMember]
-        public Exception @Exception { get; set; }
-
-        public LogErrorEvent(string message) : this(message, null)
-        { }
-
-        public LogErrorEvent(string message, Exception e)
+        public LogErrorEvent(string message)
         {
             this.Message = message;
-            this.Exception = e;
         }
     }
 
     /// <summary>
     /// Pub-sub event class for error-level log messages.
+    /// </summary>
+    [DataContract]
+    [Topic("log_error_exception")]
+    public class LogErrorExceptionEvent : PubSubEvent
+    {
+        [DataMember]
+        public string Message { get; set; }
+
+        [DataMember]
+        public string ExceptionMessage { get; set; }
+
+        [DataMember]
+        public string StackTrace { get; set; }
+
+        public LogErrorExceptionEvent(string message, string exceptionMessage, string stackTrace)
+        {
+            this.Message = message;
+            this.ExceptionMessage = exceptionMessage;
+            this.StackTrace = stackTrace;
+        }
+    }
+
+    /// <summary>
+    /// Pub-sub event class for critical-level log messages.
     /// </summary>
     [DataContract]
     [Topic("log_critical")]
@@ -86,16 +103,33 @@ namespace TPPCommon.PubSub.Events
         [DataMember]
         public string Message { get; set; }
 
-        [DataMember]
-        public Exception @Exception { get; set; }
-
-        public LogCriticalEvent(string message) : this(message, null)
-        { }
-
-        public LogCriticalEvent(string message, Exception e)
+        public LogCriticalEvent(string message)
         {
             this.Message = message;
-            this.Exception = e;
+        }
+    }
+
+    /// <summary>
+    /// Pub-sub event class for critical-level log messages.
+    /// </summary>
+    [DataContract]
+    [Topic("log_critical_exception")]
+    public class LogCriticalExceptionEvent : PubSubEvent
+    {
+        [DataMember]
+        public string Message { get; set; }
+
+        [DataMember]
+        public string ExceptionMessage { get; set; }
+
+        [DataMember]
+        public string StackTrace { get; set; }
+
+        public LogCriticalExceptionEvent(string message, string exceptionMessage, string stackTrace)
+        {
+            this.Message = message;
+            this.ExceptionMessage = exceptionMessage;
+            this.StackTrace = stackTrace;
         }
     }
 }
