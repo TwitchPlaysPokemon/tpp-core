@@ -20,7 +20,7 @@ namespace TPPCommon.PubSub
         /// </summary>
         public const string Suffix = ";";
 
-        public string Topic { get; }
+        public readonly string Topic;
 
         public TopicAttribute(string topic)
         {
