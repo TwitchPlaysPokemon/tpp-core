@@ -1,4 +1,5 @@
 ﻿using System;
+using TPPCommon.Logging;
 using TPPCommon.PubSub;
 using TPPCommon.PubSub.Events;
 
@@ -10,15 +11,18 @@ namespace TestServer
     class TestServer
     {
         private IPublisher Publisher;
+        private TPPLogger Logger;
 
         public TestServer(IPublisher publisher)
         {
             this.Publisher = publisher;
+            this.Logger = new TPPLogger(this.Publisher);
         }
 
         public void Run()
         {
-            Console.WriteLine("Running Music Server, Enter keys to publish events...");
+            this.Logger.SetLogPrefix("(TestServer) ");
+            this.Logger.LogInfo("Running Music Server, Enter keys to publish events...");
 
             while (true)
             {
@@ -31,15 +35,17 @@ namespace TestServer
                     break;
                 }
 
+                this.Logger.LogDebug($"The keystroke was {input}");
+
                 // Decide which event to publish.
                 if (input == "A")
                 {
-                    Console.WriteLine($"Sending Song Paused Event...");
+                    this.Logger.LogInfo($"Sending Song Paused Event...");
                     this.Publisher.Publish(new SongPausedEvent());
                 }
                 else
                 {
-                    Console.WriteLine($"Sending Song Info Event...");
+                    this.Logger.LogInfo($"Sending Song Info Event...");
                     SongInfoEvent @event = new SongInfoEvent(10, "Battle Theme", "Game Freak");
                     this.Publisher.Publish(@event);
                 }

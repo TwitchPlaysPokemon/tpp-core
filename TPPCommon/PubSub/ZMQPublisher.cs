@@ -18,11 +18,6 @@ namespace TPPCommon.PubSub
         private PublisherSocket Socket;
 
         /// <summary>
-        /// Port number to which the publisher is bound.
-        /// </summary>
-        private int Port;
-
-        /// <summary>
         /// Maximum number of events this publisher will queue in memory before potentially dropping events.
         /// ZMQ's default is 1000.
         /// </summary>
@@ -39,12 +34,7 @@ namespace TPPCommon.PubSub
         public ZMQPublisher(IPubSubEventSerializer serializer)
         {
             this.Serializer = serializer;
-
             this.Socket = InitSocket();
-            this.Port = Addresses.SubscriberPort;
-
-            string addressToBind = Addresses.BuildFullAddress(Addresses.TCPLocalHost, this.Port);
-            this.Socket.Bind(addressToBind);
         }
 
         ~ZMQPublisher()
@@ -58,7 +48,8 @@ namespace TPPCommon.PubSub
 
         private PublisherSocket InitSocket()
         {
-            PublisherSocket socket = new PublisherSocket();
+            string addressToBind = ">" + Addresses.BuildFullAddress(Addresses.TCPLocalHost, Addresses.SubscriberPort);
+            PublisherSocket socket = new PublisherSocket(addressToBind);
             socket.Options.SendHighWatermark = ZMQPublisher.SendHighWatermark;
 
             return socket;

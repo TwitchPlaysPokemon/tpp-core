@@ -1,27 +1,24 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using TPPCommon.Logging;
 using TPPCommon.PubSub;
 using TPPCommon.PubSub.Events;
 
-namespace TestClient
+namespace LogService
 {
     class Program
     {
         static void Main(string[] args)
         {
-            // Setup dependency injection, to hide the pub-sub implementation.
+            // Setup dependency injection, to hide implementations.
             var serviceCollection = new ServiceCollection()
+                .AddTransient<ILogger, Log4NetLogger>()
                 .AddTransient<IPubSubEventSerializer, JSONPubSubEventSerializer>()
                 .AddTransient<ZMQSubscriber>()
                 .AddTransient<ISubscriber, ZMQSubscriber>()
-                .AddTransient<IPublisher, ZMQPublisher>()
-                .AddTransient<TPPLogger>()
-                .AddTransient<TestClient>();
+                .AddTransient<LogService>();
             var serviceProvider = serviceCollection.BuildServiceProvider();
 
-            // Run client.
-            TestClient client = serviceProvider.GetService<TestClient>();
-            client.Run();
+            LogService logService = serviceProvider.GetService<LogService>();
+            logService.Run();
         }
     }
 }

@@ -14,13 +14,13 @@ namespace TPPCommon.PubSub
     {
         public void Run()
         {
-            using (var xPubSocket = new XPublisherSocket(Addresses.BuildFullAddress(Addresses.TCPLocalHost, Addresses.PublisherPort)))
-            using (var xSubSocket = new XSubscriberSocket(Addresses.BuildFullAddress(Addresses.TCPLocalHost, Addresses.SubscriberPort)))
+            using (var xPubSocket = new XPublisherSocket("@" + Addresses.BuildFullAddress(Addresses.TCPLocalHost, Addresses.PublisherPort)))
+            using (var xSubSocket = new XSubscriberSocket("@" + Addresses.BuildFullAddress(Addresses.TCPLocalHost, Addresses.SubscriberPort)))
             {
                 Console.WriteLine("Intermediary broker started, and waiting for messages");
 
                 // proxy messages between frontend / backend
-                var proxy = new Proxy(xSubSocket, xPubSocket);
+                var proxy = new Proxy(xPubSocket, xSubSocket);
 
                 // blocks indefinitely
                 proxy.Start();
