@@ -19,11 +19,6 @@ namespace TPPCommon.PubSub
         private NetMQPoller Poller;
 
         /// <summary>
-        /// Port number to which the subscriber is connected.
-        /// </summary>
-        private int Port;
-
-        /// <summary>
         /// Maximum number of messages this subscriber will queue in memory before potentially dropping messages.
         /// ZMQ's default is 1000.
         /// </summary>
@@ -47,11 +42,6 @@ namespace TPPCommon.PubSub
             this.Serializer = serializer;
 
             this.Socket = InitSocket();
-            this.Port = Addresses.PublisherPort;
-
-            // Connect socket to publisher.
-            string addressToConnect = Addresses.BuildFullAddress(Addresses.TCPLocalHost, this.Port);
-            this.Socket.Connect(addressToConnect);
 
             // Setup non-blocking polling for subscriber socket.
             this.Poller = new NetMQPoller();
@@ -77,7 +67,8 @@ namespace TPPCommon.PubSub
 
         private SubscriberSocket InitSocket()
         {
-            SubscriberSocket socket = new SubscriberSocket();
+            string addressToConnect = ">" + Addresses.BuildFullAddress(Addresses.TCPLocalHost, Addresses.PublisherPort);
+            SubscriberSocket socket = new SubscriberSocket(addressToConnect);
             socket.Options.SendHighWatermark = ZMQSubscriber.ReceiveHighWatermark;
 
             return socket;
