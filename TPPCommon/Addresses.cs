@@ -10,9 +10,14 @@ namespace TPPCommon
     public class Addresses
     {
         /// <summary>
-        /// The port used for pub-sub communication. TODO: This assumes only a single port is used for all pub-sub events.
+        /// The port used for the publishers in pub-sub communication.
         /// </summary>
-        public const int PubSubPort = 1337;
+        public const int PublisherPort = 1337;
+
+        /// <summary>
+        /// The port used for the subscribers in pub-sub communication.
+        /// </summary>
+        public const int SubscriberPort = 1338;
 
         /// <summary>
         /// Base network address for localhost.
