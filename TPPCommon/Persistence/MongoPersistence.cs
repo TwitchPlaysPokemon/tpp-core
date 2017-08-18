@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Security;
-using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using TPPCommon.Models;
 
@@ -42,29 +43,25 @@ namespace TPPCommon.Persistence
         
         private void Init()
         {
-            // Associate Models with MongoDB collection names
-            RegisterCollection<User>("users");
-            
-            // Set up MongoDB mappings
-            BsonClassMap.RegisterClassMap<User>(cm =>
+            // Get all model subclasses to read their respective table attributes.
+            IEnumerable<Type> modelTypes = typeof(Model).GetTypeInfo().Assembly.GetTypes()
+                .Where(type => typeof(Model).GetTypeInfo().IsAssignableFrom(type) && type != typeof(Model));
+            foreach (var modelType in modelTypes)
             {
-                cm.MapIdMember(m => m.Id);
-                cm.MapMember(m => m.ProvidedId).SetElementName("provided_id");
-                cm.MapMember(m => m.ProvidedName).SetElementName("provided_name");
-                cm.MapMember(m => m.Name).SetElementName("name");
-                cm.MapMember(m => m.SimpleName).SetElementName("simple_name");
-                cm.MapCreator(m => new User(m.Id, m.ProvidedId, m.Name, m.SimpleName, m.ProvidedName));
-            });
-        }
-
-        private void RegisterCollection<TModel>(string collectionName) where TModel : Model
-        {
-            if (_usedCollectionNames.Contains(collectionName))
-            {
-                throw new ArgumentException("Collection name already in use: " + collectionName);
+                var attribute = modelType.GetTypeInfo().GetCustomAttribute<TableAttribute>();
+                if (attribute == null)
+                {
+                    // TODO what exception should be thrown? ArgumentException sounds wrong
+                    throw new ArgumentException($"Subclasses of {typeof(Model)} must have the {typeof(TableAttribute)} attribute.");
+                }
+                var collectionName = attribute.Table;
+                if (_usedCollectionNames.Contains(collectionName))
+                {
+                    throw new ArgumentException("Collection name already in use: " + collectionName);
+                }
+                _collectionLookup.Add(modelType, collectionName);
+                _usedCollectionNames.Add(collectionName);
             }
-            _collectionLookup.Add(typeof(TModel), collectionName);
-            _usedCollectionNames.Add(collectionName);
         }
 
         private IMongoCollection<T> GetCollection<T>()
