@@ -41,7 +41,7 @@ namespace TPPCommon.PubSub
             this.Serializer = serializer;
 
             this.Socket = InitSocket();
-            this.Port = Addresses.PubSubPort;
+            this.Port = Addresses.SubscriberPort;
 
             string addressToBind = Addresses.BuildFullAddress(Addresses.TCPLocalHost, this.Port);
             this.Socket.Bind(addressToBind);

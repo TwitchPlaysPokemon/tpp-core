@@ -47,7 +47,7 @@ namespace TPPCommon.PubSub
             this.Serializer = serializer;
 
             this.Socket = InitSocket();
-            this.Port = Addresses.PubSubPort;
+            this.Port = Addresses.PublisherPort;
 
             // Connect socket to publisher.
             string addressToConnect = Addresses.BuildFullAddress(Addresses.TCPLocalHost, this.Port);

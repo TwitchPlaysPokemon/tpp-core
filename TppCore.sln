@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TPPCommonTest", "TPPCommonT
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestPersistence", "TestPersistence\TestPersistence.csproj", "{9F0D2A34-E767-43D5-B918-A4D26A18BFE7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PubSubBroker", "PubSubBroker\PubSubBroker.csproj", "{64EBD83B-D3EC-4F80-AABD-629265317433}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{9F0D2A34-E767-43D5-B918-A4D26A18BFE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9F0D2A34-E767-43D5-B918-A4D26A18BFE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9F0D2A34-E767-43D5-B918-A4D26A18BFE7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64EBD83B-D3EC-4F80-AABD-629265317433}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64EBD83B-D3EC-4F80-AABD-629265317433}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64EBD83B-D3EC-4F80-AABD-629265317433}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64EBD83B-D3EC-4F80-AABD-629265317433}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
