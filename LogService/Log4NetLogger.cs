@@ -80,10 +80,11 @@ namespace LogService
         /// Log an error message along with its exception.
         /// </summary>
         /// <param name="message">log message</param>
-        /// <param name="e">exception</param>
-        public void LogError(string message, Exception e)
+        /// <param name="exceptionMessage">exception message</param>
+        /// <param name="stackTrace">exception stack trace</param>
+        public void LogError(string message, string exceptionMessage, string stackTrace)
         {
-            Log4NetLogger.Log.Error(ApplyPrefix(message), e);
+            Log4NetLogger.Log.Error($"{ApplyPrefix(message)}{Environment.NewLine}{exceptionMessage}{Environment.NewLine}{stackTrace}");
         }
 
         /// <summary>
@@ -99,10 +100,11 @@ namespace LogService
         /// Log a critical error message along with its exception.
         /// </summary>
         /// <param name="message">log message</param>
-        /// <param name="e">exception</param>
-        public void LogCritical(string message, Exception e)
+        /// <param name="exceptionMessage">exception message</param>
+        /// <param name="stackTrace">exception stack trace</param>
+        public void LogCritical(string message, string exceptionMessage, string stackTrace)
         {
-            Log4NetLogger.Log.Fatal(ApplyPrefix(message), e);
+            Log4NetLogger.Log.Fatal($"{ApplyPrefix(message)}{Environment.NewLine}{exceptionMessage}{Environment.NewLine}{stackTrace}");
         }
     }
 }
