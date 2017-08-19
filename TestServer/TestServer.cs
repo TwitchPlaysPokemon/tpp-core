@@ -11,17 +11,20 @@ namespace TestServer
     class TestServer
     {
         private IPublisher Publisher;
-        private ITPPLogger Logger;
+        private ITPPLoggerFactory LoggerFactory;
+        private TPPLoggerBase Logger;
+        private TPPLoggerBase Logger2;
 
-        public TestServer(IPublisher publisher, ITPPLogger logger)
+        public TestServer(IPublisher publisher, ITPPLoggerFactory loggerFactory)
         {
             this.Publisher = publisher;
-            this.Logger = logger;
+            this.LoggerFactory = loggerFactory;
+            this.Logger = this.LoggerFactory.Create("test_server");
+            this.Logger2 = this.LoggerFactory.Create("test_server_2");
         }
 
         public void Run()
         {
-            this.Logger.SetLogPrefix("(TestServer) ");
             this.Logger.LogInfo("Running Music Server, Enter keys to publish events...");
 
             while (true)
@@ -40,7 +43,7 @@ namespace TestServer
                 // Decide which event to publish.
                 if (input == "A")
                 {
-                    this.Logger.LogInfo($"Sending Song Paused Event...");
+                    this.Logger2.LogInfo($"Sending Song Paused Event...");
                     this.Publisher.Publish(new SongPausedEvent());
                 }
                 else

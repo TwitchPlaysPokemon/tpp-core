@@ -40,7 +40,6 @@ namespace LogService
             this.Subscriber.Subscribe<LogCriticalExceptionEvent>(log => this.Logger.LogCritical(log.Message, log.ExceptionMessage, log.StackTrace));
 
             // Block forever.
-            this.Logger.LogDebug("Logging service running...");
             new AutoResetEvent(false).WaitOne();
         }
     }

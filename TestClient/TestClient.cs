@@ -14,20 +14,21 @@ namespace TestClient
     {
         private ISubscriber Subscriber;
         private IPublisher Publisher;
-        private ITPPLogger Logger;
+        private ITPPLoggerFactory LoggerFactory;
+        private TPPLoggerBase Logger;
         private int TotalEventsReceived;
 
-        public TestClient(ISubscriber subscriber, IPublisher publisher, ITPPLogger logger)
+        public TestClient(ISubscriber subscriber, IPublisher publisher, ITPPLoggerFactory loggerFactory)
         {
             this.Subscriber = subscriber;
             this.Publisher = publisher;
-            this.Logger = logger;
+            this.LoggerFactory = loggerFactory;
+            this.Logger = this.LoggerFactory.Create("test_client");
             this.TotalEventsReceived = 0;
         }
 
         public void Run()
         {
-            this.Logger.SetLogPrefix("(TestClient) ");
             this.Logger.LogInfo("Running Subscriber client...");
 
             // Subscribe to the pub-sub topics, and assign event handler functions for each topic.
@@ -45,14 +46,14 @@ namespace TestClient
         {
             this.TotalEventsReceived += 1;
             this.Logger.LogInfo($"Song Info:  Id = {@event.Id}, Title = '{@event.Title}', Artist = '{@event.Artist}'");
-            this.Logger.LogDebug($"Total Events Received: {this.TotalEventsReceived}");
+            this.Logger.LogWarning($"Total Events Received: {this.TotalEventsReceived}");
         }
 
         void OnSongPaused(SongPausedEvent @event)
         {
             this.TotalEventsReceived += 1;
             this.Logger.LogInfo($"Song was paused!");
-            this.Logger.LogDebug($"Total Events Received: {this.TotalEventsReceived}");
+            this.Logger.LogWarning($"Total Events Received: {this.TotalEventsReceived}");
         }
     }
 }

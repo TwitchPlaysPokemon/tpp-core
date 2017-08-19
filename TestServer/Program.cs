@@ -17,7 +17,7 @@ namespace TestServer
             var serviceCollection = new ServiceCollection()
                 .AddTransient<IPublisher, ZMQPublisher>()
                 .AddTransient<ISubscriber, ZMQSubscriber>()
-                .AddTransient<ITPPLogger, TPPDebugLogger>()
+                .AddTransient<ITPPLoggerFactory, TPPDebugLoggerFactory>()
                 .AddTransient<IPubSubEventSerializer, JSONPubSubEventSerializer>()
                 .AddTransient<TestServer>();
             var serviceProvider = serviceCollection.BuildServiceProvider();

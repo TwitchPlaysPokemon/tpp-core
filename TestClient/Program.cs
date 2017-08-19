@@ -18,7 +18,7 @@ namespace TestClient
                 .AddTransient<IPubSubEventSerializer, JSONPubSubEventSerializer>()
                 .AddTransient<ISubscriber, ZMQSubscriber>()
                 .AddTransient<IPublisher, ZMQPublisher>()
-                .AddTransient<ITPPLogger, TPPDebugLogger>()
+                .AddTransient<ITPPLoggerFactory, TPPDebugLoggerFactory>()
                 .AddTransient<TestClient>();
             var serviceProvider = serviceCollection.BuildServiceProvider();
 

@@ -13,28 +13,10 @@ namespace TPPCommon.Logging
     /// This is meant to be used during local development, because it writes logs directly to the console, in addition to
     /// publishing log events.
     /// </summary>
-    public class TPPDebugLogger : TPPLoggerBase, ITPPLogger
+    public class TPPDebugLogger : TPPLoggerBase
     {
-        private IPublisher Publisher;
-
-        public TPPDebugLogger(IPublisher publisher)
-        {
-            this.Publisher = publisher;
-        }
-
-        /// <summary>
-        /// Specifies a prefix to add to all log messages.
-        /// </summary>
-        /// <param name="prefixMessage">log message prefix</param>
-        public void SetLogPrefix(string prefixMessage)
-        {
-            this.Prefix = prefixMessage ?? string.Empty;
-        }
-
-        private string ApplyPrefix(string message)
-        {
-            return this.Prefix + message;
-        }
+        public TPPDebugLogger(IPublisher publisher, string identifier) : base(publisher, identifier)
+        { }
 
         /// <summary>
         /// Write to the console, in addition to generating a log event.
@@ -43,11 +25,11 @@ namespace TPPCommon.Logging
         /// </summary>
         /// <param name="logEvent">log event</param>
         /// <param name="errorLevel">error level</param>
-        private void PublishLog(LogEvent logEvent, string errorLevel)
+        private void PublishLog(LogEvent logEvent, string errorLevel, Action<string> writeFunc)
         {
             string dateTime = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-            FormattableString message = $"{dateTime} [{errorLevel}] {logEvent.Message ?? string.Empty}";
-            Console.WriteLine(message.ToString(CultureInfo.InvariantCulture));
+            FormattableString message = $"{dateTime}\t[{errorLevel}]\t{logEvent.Message ?? string.Empty}";
+            writeFunc(message.ToString(CultureInfo.InvariantCulture));
             this.Publisher.Publish(logEvent);
         }
 
@@ -56,9 +38,9 @@ namespace TPPCommon.Logging
         /// </summary>
         /// <param name="message">log message</param>
         /// <param name="args">string format args</param>
-        public void LogDebug(string message, params object[] args)
+        public override void LogDebug(string message, params object[] args)
         {
-            this.PublishLog(new LogDebugEvent(this.NormalizeMessage(message, args)), "DEBUG");
+            this.PublishLog(new LogDebugEvent(this.NormalizeMessage(message, args)), "DEBUG", Console.WriteLine);
         }
 
         /// <summary>
@@ -66,9 +48,9 @@ namespace TPPCommon.Logging
         /// </summary>
         /// <param name="message">log message</param>
         /// <param name="args">string format args</param>
-        public void LogInfo(string message, params object[] args)
+        public override void LogInfo(string message, params object[] args)
         {
-            this.PublishLog(new LogInfoEvent(this.NormalizeMessage(message, args)), "INFO ");
+            this.PublishLog(new LogInfoEvent(this.NormalizeMessage(message, args)), "INFO ", Console.WriteLine);
         }
 
         /// <summary>
@@ -76,9 +58,9 @@ namespace TPPCommon.Logging
         /// </summary>
         /// <param name="message">log message</param>
         /// <param name="args">string format args</param>
-        public void LogWarning(string message, params object[] args)
+        public override void LogWarning(string message, params object[] args)
         {
-            this.PublishLog(new LogWarningEvent(this.NormalizeMessage(message, args)), "WARN ");
+            this.PublishLog(new LogWarningEvent(this.NormalizeMessage(message, args)), "WARN ", Console.Error.WriteLine);
         }
 
         /// <summary>
@@ -86,9 +68,9 @@ namespace TPPCommon.Logging
         /// </summary>
         /// <param name="message">log message</param>
         /// <param name="args">string format args</param>
-        public void LogError(string message, params object[] args)
+        public override void LogError(string message, params object[] args)
         {
-            this.PublishLog(new LogErrorEvent(this.NormalizeMessage(message, args)), "ERROR");
+            this.PublishLog(new LogErrorEvent(this.NormalizeMessage(message, args)), "ERROR", Console.Error.WriteLine);
         }
 
         /// <summary>
@@ -97,9 +79,9 @@ namespace TPPCommon.Logging
         /// <param name="message">log message</param>
         /// <param name="e">exception</param>
         /// <param name="args">string format args</param>
-        public void LogError(string message, Exception e, params object[] args)
+        public override void LogError(string message, Exception e, params object[] args)
         {
-            this.PublishLog(new LogErrorExceptionEvent(this.NormalizeMessage(message, args), e?.Message, e?.StackTrace), "ERROR");
+            this.PublishLog(new LogErrorExceptionEvent(this.NormalizeMessage(message, args), e?.Message, e?.StackTrace), "ERROR", Console.Error.WriteLine);
         }
 
         /// <summary>
@@ -107,9 +89,9 @@ namespace TPPCommon.Logging
         /// </summary>
         /// <param name="message">log message</param>
         /// <param name="args">string format args</param>
-        public void LogCritical(string message, params object[] args)
+        public override void LogCritical(string message, params object[] args)
         {
-            this.PublishLog(new LogCriticalEvent(this.NormalizeMessage(message, args)), "FATAL");
+            this.PublishLog(new LogCriticalEvent(this.NormalizeMessage(message, args)), "FATAL", Console.Error.WriteLine);
         }
 
         /// <summary>
@@ -118,9 +100,9 @@ namespace TPPCommon.Logging
         /// <param name="message">log message</param>
         /// <param name="e">exception</param>
         /// <param name="args">string format args</param>
-        public void LogCritical(string message, Exception e, params object[] args)
+        public override void LogCritical(string message, Exception e, params object[] args)
         {
-            this.PublishLog(new LogCriticalExceptionEvent(this.NormalizeMessage(message, args), e?.Message, e?.StackTrace), "FATAL");
+            this.PublishLog(new LogCriticalExceptionEvent(this.NormalizeMessage(message, args), e?.Message, e?.StackTrace), "FATAL", Console.Error.WriteLine);
         }
     }
 }
