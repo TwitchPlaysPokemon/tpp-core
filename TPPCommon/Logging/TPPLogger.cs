@@ -9,30 +9,17 @@ namespace TPPCommon.Logging
     /// This class isn't responsible for perform the actual logging, rather it publishes logging
     /// events, to which a logging service can listen.
     /// </summary>
-    public class TPPLogger : TPPLoggerBase, ITPPLogger
+    public class TPPLogger : TPPLoggerBase
     {
-        private IPublisher Publisher;
-
-        public TPPLogger(IPublisher publisher)
-        {
-            this.Publisher = publisher;
-        }
-
-        /// <summary>
-        /// Specifies a prefix to add to all log messages.
-        /// </summary>
-        /// <param name="prefixMessage">log message prefix</param>
-        public void SetLogPrefix(string prefixMessage)
-        {
-            this.Prefix = prefixMessage ?? string.Empty;
-        }
+        public TPPLogger(IPublisher publisher, string identifier) : base(publisher, identifier)
+        { }
 
         /// <summary>
         /// Log a debug event.
         /// </summary>
         /// <param name="message">log message</param>
         /// <param name="args">string format args</param>
-        public void LogDebug(string message, params object[] args)
+        public override void LogDebug(string message, params object[] args)
         {
             this.Publisher.Publish(new LogDebugEvent(this.NormalizeMessage(message, args)));
         }
@@ -42,7 +29,7 @@ namespace TPPCommon.Logging
         /// </summary>
         /// <param name="message">log message</param>
         /// <param name="args">string format args</param>
-        public void LogInfo(string message, params object[] args)
+        public override void LogInfo(string message, params object[] args)
         {
             this.Publisher.Publish(new LogInfoEvent(this.NormalizeMessage(message, args)));
         }
@@ -52,7 +39,7 @@ namespace TPPCommon.Logging
         /// </summary>
         /// <param name="message">log message</param>
         /// <param name="args">string format args</param>
-        public void LogWarning(string message, params object[] args)
+        public override void LogWarning(string message, params object[] args)
         {
             this.Publisher.Publish(new LogWarningEvent(this.NormalizeMessage(message, args)));
         }
@@ -62,7 +49,7 @@ namespace TPPCommon.Logging
         /// </summary>
         /// <param name="message">log message</param>
         /// <param name="args">string format args</param>
-        public void LogError(string message, params object[] args)
+        public override void LogError(string message, params object[] args)
         {
             this.Publisher.Publish(new LogErrorEvent(this.NormalizeMessage(message, args)));
         }
@@ -73,7 +60,7 @@ namespace TPPCommon.Logging
         /// <param name="message">log message</param>
         /// <param name="e">exception</param>
         /// <param name="args">string format args</param>
-        public void LogError(string message, Exception e, params object[] args)
+        public override void LogError(string message, Exception e, params object[] args)
         {
             this.Publisher.Publish(new LogErrorExceptionEvent(this.NormalizeMessage(message, args), e?.Message, e?.StackTrace));
         }
@@ -83,7 +70,7 @@ namespace TPPCommon.Logging
         /// </summary>
         /// <param name="message">log message</param>
         /// <param name="args">string format args</param>
-        public void LogCritical(string message, params object[] args)
+        public override void LogCritical(string message, params object[] args)
         {
             this.Publisher.Publish(new LogCriticalEvent(this.NormalizeMessage(message, args)));
         }
@@ -94,7 +81,7 @@ namespace TPPCommon.Logging
         /// <param name="message">log message</param>
         /// <param name="e">exception</param>
         /// <param name="args">string format args</param>
-        public void LogCritical(string message, Exception e, params object[] args)
+        public override void LogCritical(string message, Exception e, params object[] args)
         {
             this.Publisher.Publish(new LogCriticalExceptionEvent(this.NormalizeMessage(message, args), e?.Message, e?.StackTrace));
         }
