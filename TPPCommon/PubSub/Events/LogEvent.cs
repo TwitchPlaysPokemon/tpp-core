@@ -1,20 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
-using System.Text;
+﻿using System.Runtime.Serialization;
 
 namespace TPPCommon.PubSub.Events
 {
+    [DataContract]
+    [Topic("log")]
+    public class LogEvent : PubSubEvent
+    {
+        [DataMember]
+        public string Message { get; set; }
+    }
+
     /// <summary>
     /// Pub-sub event class for debug-level log messages.
     /// </summary>
     [DataContract]
     [Topic("log_debug")]
-    public class LogDebugEvent : PubSubEvent
+    public class LogDebugEvent : LogEvent
     {
-        [DataMember]
-        public string Message { get; set; }
-
         public LogDebugEvent(string message)
         {
             this.Message = message;
@@ -26,11 +28,8 @@ namespace TPPCommon.PubSub.Events
     /// </summary>
     [DataContract]
     [Topic("log_info")]
-    public class LogInfoEvent : PubSubEvent
+    public class LogInfoEvent : LogEvent
     {
-        [DataMember]
-        public string Message { get; set; }
-
         public LogInfoEvent(string message)
         {
             this.Message = message;
@@ -42,11 +41,8 @@ namespace TPPCommon.PubSub.Events
     /// </summary>
     [DataContract]
     [Topic("log_warning")]
-    public class LogWarningEvent : PubSubEvent
+    public class LogWarningEvent : LogEvent
     {
-        [DataMember]
-        public string Message { get; set; }
-
         public LogWarningEvent(string message)
         {
             this.Message = message;
@@ -58,11 +54,8 @@ namespace TPPCommon.PubSub.Events
     /// </summary>
     [DataContract]
     [Topic("log_error")]
-    public class LogErrorEvent : PubSubEvent
+    public class LogErrorEvent : LogEvent
     {
-        [DataMember]
-        public string Message { get; set; }
-
         public LogErrorEvent(string message)
         {
             this.Message = message;
@@ -74,11 +67,8 @@ namespace TPPCommon.PubSub.Events
     /// </summary>
     [DataContract]
     [Topic("log_error_exception")]
-    public class LogErrorExceptionEvent : PubSubEvent
+    public class LogErrorExceptionEvent : LogEvent
     {
-        [DataMember]
-        public string Message { get; set; }
-
         [DataMember]
         public string ExceptionMessage { get; set; }
 
@@ -98,11 +88,8 @@ namespace TPPCommon.PubSub.Events
     /// </summary>
     [DataContract]
     [Topic("log_critical")]
-    public class LogCriticalEvent : PubSubEvent
+    public class LogCriticalEvent : LogEvent
     {
-        [DataMember]
-        public string Message { get; set; }
-
         public LogCriticalEvent(string message)
         {
             this.Message = message;
@@ -114,11 +101,8 @@ namespace TPPCommon.PubSub.Events
     /// </summary>
     [DataContract]
     [Topic("log_critical_exception")]
-    public class LogCriticalExceptionEvent : PubSubEvent
+    public class LogCriticalExceptionEvent : LogEvent
     {
-        [DataMember]
-        public string Message { get; set; }
-
         [DataMember]
         public string ExceptionMessage { get; set; }
 

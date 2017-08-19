@@ -14,14 +14,14 @@ namespace TestClient
     {
         private ISubscriber Subscriber;
         private IPublisher Publisher;
-        private TPPLogger Logger;
+        private ITPPLogger Logger;
         private int TotalEventsReceived;
 
-        public TestClient(ISubscriber subscriber, IPublisher publisher)
+        public TestClient(ISubscriber subscriber, IPublisher publisher, ITPPLogger logger)
         {
             this.Subscriber = subscriber;
             this.Publisher = publisher;
-            this.Logger = new TPPLogger(this.Publisher);
+            this.Logger = logger;
             this.TotalEventsReceived = 0;
         }
 

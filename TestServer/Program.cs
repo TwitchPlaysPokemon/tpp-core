@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System.Threading;
+using TPPCommon.Logging;
 using TPPCommon.PubSub;
 using TPPCommon.PubSub.Events;
 
@@ -16,9 +17,9 @@ namespace TestServer
             var serviceCollection = new ServiceCollection()
                 .AddTransient<IPublisher, ZMQPublisher>()
                 .AddTransient<ISubscriber, ZMQSubscriber>()
-                .AddTransient<TestServer>()
+                .AddTransient<ITPPLogger, TPPDebugLogger>()
                 .AddTransient<IPubSubEventSerializer, JSONPubSubEventSerializer>()
-                .AddTransient<ZMQPublisher>();
+                .AddTransient<TestServer>();
             var serviceProvider = serviceCollection.BuildServiceProvider();
 
             // Run server.
