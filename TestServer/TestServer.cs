@@ -11,12 +11,12 @@ namespace TestServer
     class TestServer
     {
         private IPublisher Publisher;
-        private TPPLogger Logger;
+        private ITPPLogger Logger;
 
-        public TestServer(IPublisher publisher)
+        public TestServer(IPublisher publisher, ITPPLogger logger)
         {
             this.Publisher = publisher;
-            this.Logger = new TPPLogger(this.Publisher);
+            this.Logger = logger;
         }
 
         public void Run()

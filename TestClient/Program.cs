@@ -16,10 +16,9 @@ namespace TestClient
             // Setup dependency injection, to hide the pub-sub implementation.
             var serviceCollection = new ServiceCollection()
                 .AddTransient<IPubSubEventSerializer, JSONPubSubEventSerializer>()
-                .AddTransient<ZMQSubscriber>()
                 .AddTransient<ISubscriber, ZMQSubscriber>()
                 .AddTransient<IPublisher, ZMQPublisher>()
-                .AddTransient<TPPLogger>()
+                .AddTransient<ITPPLogger, TPPDebugLogger>()
                 .AddTransient<TestClient>();
             var serviceProvider = serviceCollection.BuildServiceProvider();
 

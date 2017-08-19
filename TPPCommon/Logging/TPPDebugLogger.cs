@@ -1,20 +1,16 @@
 ﻿using System;
+using System.Globalization;
 using TPPCommon.PubSub;
 using TPPCommon.PubSub.Events;
 
 namespace TPPCommon.Logging
 {
-    /// <summary>
-    /// Class which TPP services directly use to perform logging.
-    /// This class isn't responsible for perform the actual logging, rather it publishes logging
-    /// events, to which a logging service can listen.
-    /// </summary>
-    public class TPPLogger : ITPPLogger
+    public class TPPDebugLogger : ITPPLogger
     {
         private string Prefix = string.Empty;
         private IPublisher Publisher;
 
-        public TPPLogger(IPublisher publisher)
+        public TPPDebugLogger(IPublisher publisher)
         {
             this.Publisher = publisher;
         }
@@ -34,12 +30,27 @@ namespace TPPCommon.Logging
         }
 
         /// <summary>
+        /// Write to the console, in addition to generating a log event.
+        /// This helps debugging services individually, rather than lumping them all into one
+        /// output.
+        /// </summary>
+        /// <param name="logEvent">log event</param>
+        /// <param name="errorLevel">error level</param>
+        private void PublishLog(LogEvent logEvent, string errorLevel)
+        {
+            string dateTime = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+            FormattableString message = $"{dateTime} [{errorLevel}] {logEvent.Message ?? string.Empty}";
+            Console.WriteLine(message.ToString(CultureInfo.InvariantCulture));
+            this.Publisher.Publish(logEvent);
+        }
+
+        /// <summary>
         /// Log a debug event.
         /// </summary>
         /// <param name="message">log message</param>
         public void LogDebug(string message)
         {
-            this.Publisher.Publish(new LogDebugEvent(ApplyPrefix(message)));
+            this.PublishLog(new LogDebugEvent(ApplyPrefix(message)), "DEBUG");
         }
 
         /// <summary>
@@ -48,7 +59,7 @@ namespace TPPCommon.Logging
         /// <param name="message">log message</param>
         public void LogInfo(string message)
         {
-            this.Publisher.Publish(new LogInfoEvent(ApplyPrefix(message)));
+            this.PublishLog(new LogInfoEvent(ApplyPrefix(message)), "INFO ");
         }
 
         /// <summary>
@@ -57,7 +68,7 @@ namespace TPPCommon.Logging
         /// <param name="message">log message</param>
         public void LogWarning(string message)
         {
-            this.Publisher.Publish(new LogWarningEvent(ApplyPrefix(message)));
+            this.PublishLog(new LogWarningEvent(ApplyPrefix(message)), "WARN ");
         }
 
         /// <summary>
@@ -66,7 +77,7 @@ namespace TPPCommon.Logging
         /// <param name="message">log message</param>
         public void LogError(string message)
         {
-            this.Publisher.Publish(new LogErrorEvent(ApplyPrefix(message)));
+            this.PublishLog(new LogErrorEvent(ApplyPrefix(message)), "ERROR");
         }
 
         /// <summary>
@@ -76,7 +87,7 @@ namespace TPPCommon.Logging
         /// <param name="e">exception</param>
         public void LogError(string message, Exception e)
         {
-            this.Publisher.Publish(new LogErrorExceptionEvent(ApplyPrefix(message), e?.Message, e?.StackTrace));
+            this.PublishLog(new LogErrorExceptionEvent(ApplyPrefix(message), e?.Message, e?.StackTrace), "ERROR");
         }
 
         /// <summary>
@@ -85,7 +96,7 @@ namespace TPPCommon.Logging
         /// <param name="message">log message</param>
         public void LogCritical(string message)
         {
-            this.Publisher.Publish(new LogCriticalEvent(ApplyPrefix(message)));
+            this.PublishLog(new LogCriticalEvent(ApplyPrefix(message)), "FATAL");
         }
 
         /// <summary>
@@ -95,7 +106,7 @@ namespace TPPCommon.Logging
         /// <param name="e">exception</param>
         public void LogCritical(string message, Exception e)
         {
-            this.Publisher.Publish(new LogCriticalExceptionEvent(ApplyPrefix(message), e?.Message, e?.StackTrace));
+            this.PublishLog(new LogCriticalExceptionEvent(ApplyPrefix(message), e?.Message, e?.StackTrace), "FATAL");
         }
     }
 }
