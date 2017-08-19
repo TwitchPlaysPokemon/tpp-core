@@ -11,7 +11,6 @@ namespace LogService
     internal class Log4NetLogger : ILogger
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(Log4NetLogger));
-        private string Prefix = string.Empty;
 
         static Log4NetLogger()
         {
@@ -27,26 +26,12 @@ namespace LogService
         }
 
         /// <summary>
-        /// Specifies a prefix to add to all log messages.
-        /// </summary>
-        /// <param name="prefixMessage">log message prefix</param>
-        public void SetLogPrefix(string prefixMessage)
-        {
-            this.Prefix = prefixMessage ?? string.Empty;
-        }
-
-        private string ApplyPrefix(string message)
-        {
-            return this.Prefix + message;
-        }
-
-        /// <summary>
         /// Log a debug message.
         /// </summary>
         /// <param name="message">log message</param>
         public void LogDebug(string message)
         {
-            Log4NetLogger.Log.Debug(ApplyPrefix(message));
+            Log4NetLogger.Log.Debug(message);
         }
 
         /// <summary>
@@ -55,7 +40,7 @@ namespace LogService
         /// <param name="message">log message</param>
         public void LogInfo(string message)
         {
-            Log4NetLogger.Log.Info(ApplyPrefix(message));
+            Log4NetLogger.Log.Info(message);
         }
 
         /// <summary>
@@ -64,7 +49,7 @@ namespace LogService
         /// <param name="message">log message</param>
         public void LogWarning(string message)
         {
-            Log4NetLogger.Log.Warn(ApplyPrefix(message));
+            Log4NetLogger.Log.Warn(message);
         }
 
         /// <summary>
@@ -73,7 +58,7 @@ namespace LogService
         /// <param name="message">log message</param>
         public void LogError(string message)
         {
-            Log4NetLogger.Log.Error(ApplyPrefix(message));
+            Log4NetLogger.Log.Error(message);
         }
 
         /// <summary>
@@ -84,7 +69,7 @@ namespace LogService
         /// <param name="stackTrace">exception stack trace</param>
         public void LogError(string message, string exceptionMessage, string stackTrace)
         {
-            Log4NetLogger.Log.Error($"{ApplyPrefix(message)}{Environment.NewLine}{exceptionMessage}{Environment.NewLine}{stackTrace}");
+            Log4NetLogger.Log.Error($"{message}{Environment.NewLine}{exceptionMessage}{Environment.NewLine}{stackTrace}");
         }
 
         /// <summary>
@@ -93,7 +78,7 @@ namespace LogService
         /// <param name="message">log message</param>
         public void LogCritical(string message)
         {
-            Log4NetLogger.Log.Fatal(ApplyPrefix(message));
+            Log4NetLogger.Log.Fatal(message);
         }
 
         /// <summary>
@@ -104,7 +89,7 @@ namespace LogService
         /// <param name="stackTrace">exception stack trace</param>
         public void LogCritical(string message, string exceptionMessage, string stackTrace)
         {
-            Log4NetLogger.Log.Fatal($"{ApplyPrefix(message)}{Environment.NewLine}{exceptionMessage}{Environment.NewLine}{stackTrace}");
+            Log4NetLogger.Log.Fatal($"{message}{Environment.NewLine}{exceptionMessage}{Environment.NewLine}{stackTrace}");
         }
     }
 }
