@@ -9,7 +9,7 @@ namespace TPPCommon.Logging
     /// This class isn't responsible for perform the actual logging, rather it publishes logging
     /// events, to which a logging service can listen.
     /// </summary>
-    public class TPPLogger : TPPLoggerBase
+    internal class TPPLogger : TPPLoggerBase
     {
         public TPPLogger(IPublisher publisher, string identifier) : base(publisher, identifier)
         { }
