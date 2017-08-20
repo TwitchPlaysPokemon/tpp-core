@@ -13,10 +13,10 @@ namespace TestServer
     /// </summary>
     class TestServer : TPPService
     {
-        private TestServerSettings Config;
+        private TestServerConfig Config;
         private TPPLoggerBase Logger;
 
-        protected override string[] ConfigFilenames => new string[] { "config_testserver.yaml" };
+        protected override string[] ConfigNames => new string[] { "config_testserver" };
         protected override int StartupDelayMilliseconds => this.Config.StartupDelayMilliseconds;
 
         public TestServer(
@@ -28,7 +28,7 @@ namespace TestServer
 
         protected override void Initialize()
         {
-            this.Config = this.Config = BaseConfig.GetConfig<TestServerSettings>(this.ConfigReader, this.ConfigFilenames);
+            this.Config = this.Config = BaseConfig.GetConfig<TestServerConfig>(this.ConfigReader, this.ConfigNames);
             this.Logger = this.LoggerFactory.Create(this.Config.ServiceName);
         }
 

@@ -10,7 +10,7 @@ namespace TPPCommon
     /// </summary>
     public abstract class TPPService
     {
-        protected abstract string[] ConfigFilenames { get; }
+        protected abstract string[] ConfigNames { get; }
         protected abstract int StartupDelayMilliseconds { get; }
 
         protected IPublisher Publisher;
