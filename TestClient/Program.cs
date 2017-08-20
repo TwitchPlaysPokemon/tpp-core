@@ -20,7 +20,6 @@ namespace TestClient
                 .AddTransient<TestClient>();
             var serviceProvider = serviceCollection.BuildServiceProvider();
 
-            // Run client.
             TestClient client = serviceProvider.GetService<TestClient>();
             client.RunService();
 

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using TPPCommon;
 using TPPCommon.Configuration;
 using TPPCommon.Logging;
@@ -30,7 +29,7 @@ namespace TestClient
 
         protected override void Initialize()
         {
-            this.Config = BaseConfig.GetConfig<TestClientConfig>(this.ConfigReader, this.ConfigNames);
+            this.Config = this.GetConfig<TestClientConfig>();
             this.Logger = this.LoggerFactory.Create(this.Config.ServiceName);
             this.TotalEventsReceived = 0;
         }

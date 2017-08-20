@@ -20,9 +20,8 @@ namespace TestServer
                 .AddTransient<TestServer>();
             var serviceProvider = serviceCollection.BuildServiceProvider();
 
-            // Run server.
             TestServer server = serviceProvider.GetService<TestServer>();
-            server.RunService();
+            server.RunService(args);
 
             System.Environment.Exit(0);
         }

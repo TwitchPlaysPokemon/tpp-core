@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using TPPCommon;
 using TPPCommon.Configuration;
 using TPPCommon.Logging;
@@ -28,7 +27,7 @@ namespace TestServer
 
         protected override void Initialize()
         {
-            this.Config = this.Config = BaseConfig.GetConfig<TestServerConfig>(this.ConfigReader, this.ConfigNames);
+            this.Config = this.GetConfig<TestServerConfig>();
             this.Logger = this.LoggerFactory.Create(this.Config.ServiceName);
         }
 
