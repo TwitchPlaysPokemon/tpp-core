@@ -1,5 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System.Threading;
+using TPPCommon;
+using TPPCommon.Configuration;
+using TPPCommon.Logging;
 using TPPCommon.PubSub;
 using TPPCommon.PubSub.Events;
 
@@ -8,18 +11,27 @@ namespace LogService
     /// <summary>
     /// Central service responsible for handling all TPP logging events, and writing them to the appropriate places.
     /// </summary>
-    internal class LogService
+    internal class LogService : TPPService
     {
-        private ISubscriber Subscriber;
         private ILogger Logger;
 
-        public LogService(ISubscriber subscriber, ILogger logger)
+        protected override string[] ConfigFilenames => new string[] { };
+        protected override int StartupDelayMilliseconds => 0;
+
+        public LogService(
+            IPublisher publisher,
+            ISubscriber subscriber,
+            ITPPLoggerFactory loggerFactory,
+            IConfigReader configReader,
+            ILogger logger) : base(publisher, subscriber, loggerFactory, configReader)
         {
-            this.Subscriber = subscriber;
             this.Logger = logger;
         }
 
-        internal void Run()
+        protected override void Initialize()
+        { }
+
+        protected override void Run()
         {
             // Setup dependency injection, to hide the pub-sub implementation.
             var serviceCollection = new ServiceCollection()

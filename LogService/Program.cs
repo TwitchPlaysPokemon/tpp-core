@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using TPPCommon.Configuration;
+using TPPCommon.Logging;
 using TPPCommon.PubSub;
 using TPPCommon.PubSub.Events;
 
@@ -10,15 +12,17 @@ namespace LogService
         {
             // Setup dependency injection, to hide implementations.
             var serviceCollection = new ServiceCollection()
-                .AddTransient<ILogger, Log4NetLogger>()
-                .AddTransient<IPubSubEventSerializer, JSONPubSubEventSerializer>()
-                .AddTransient<ZMQSubscriber>()
+                .AddTransient<IPublisher, ZMQPublisher>()
                 .AddTransient<ISubscriber, ZMQSubscriber>()
+                .AddTransient<ITPPLoggerFactory, TPPDebugLoggerFactory>()
+                .AddTransient<IPubSubEventSerializer, JSONPubSubEventSerializer>()
+                .AddTransient<IConfigReader, YamlConfigReader>()
+                .AddTransient<ILogger, Log4NetLogger>()
                 .AddTransient<LogService>();
             var serviceProvider = serviceCollection.BuildServiceProvider();
 
             LogService logService = serviceProvider.GetService<LogService>();
-            logService.Run();
+            logService.RunService();
         }
     }
 }
