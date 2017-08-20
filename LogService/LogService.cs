@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System;
+using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 using System.Threading;
 using TPPCommon.PubSub;
 using TPPCommon.PubSub.Events;
@@ -17,6 +19,8 @@ namespace LogService
         {
             this.Subscriber = subscriber;
             this.Logger = logger;
+            // Use UTF-8 globally.
+            Console.OutputEncoding = Encoding.UTF8;
         }
 
         internal void Run()
