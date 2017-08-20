@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Text;
 using TPPCommon.PubSub;
 
 namespace TPPCommon.Logging
@@ -16,6 +17,8 @@ namespace TPPCommon.Logging
         {
             this.Publisher = publisher;
             this.Identifier = identifier;
+            // Use UTF-8 globally.
+            Console.OutputEncoding = Encoding.UTF8;
         }
 
         protected string NormalizeMessage(string message, params object[] args)
