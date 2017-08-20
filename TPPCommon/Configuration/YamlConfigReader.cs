@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using YamlDotNet.Serialization;
@@ -25,9 +27,11 @@ namespace TPPCommon.Configuration
         /// to guarantee the code is working with its expected configuration values.
         /// </summary>
         /// <typeparam name="T">type of settings</typeparam>
+        /// <param name="configOverrides">individual config values to override values coming from files</param>
+        /// <param name="configFileOverride">config file which will take highest priority from config files</param>
         /// <param name="configNames">list of config names, in descending hierarchical order</param>
         /// <returns>config object</returns>
-        public T ReadConfig<T>(params string[] configNames)
+        public T ReadConfig<T>(IDictionary<string, string> configOverrides, string configFileOverride, params string[] configNames)
         {
             // Add the base config file to the front of the list of config filenames.
             List<string> allConfigNames = new List<string>() { YamlConfigReader.BaseConfigName };
@@ -57,8 +61,18 @@ namespace TPPCommon.Configuration
                 }
             }
 
-            Deserializer deserializer = new DeserializerBuilder().Build();
+            // Add override config file's contents.
+            if (!string.IsNullOrWhiteSpace(configFileOverride))
+            {
+                if (!File.Exists(configFileOverride))
+                {
+                    throw new InvalidConfigurationException($"Missing override config file: {configFileOverride}");
+                }
 
+                configContents.AppendLine(File.ReadAllText(configFileOverride));
+            }
+
+            Deserializer deserializer = new DeserializerBuilder().Build();
             T config = deserializer.Deserialize<T>(configContents.ToString());
             if (config == null)
             {
@@ -66,7 +80,25 @@ namespace TPPCommon.Configuration
                 throw new InvalidConfigurationException(message);
             }
 
-            // Throws exception is any configs were missing or unexpected.
+            // Override the specified config values.
+            foreach (var kvp in configOverrides)
+            {
+                string configName = kvp.Key;
+                string value = kvp.Value;
+
+                var configProperty = BaseConfig.GetConfigProperty(typeof(T), configName);
+                if (configProperty == null)
+                {
+                    throw new InvalidConfigurationException($"Invalid override config value specified: {configName}");
+                }
+
+                // Set the config value on the actual config object.
+                Type propertyType = configProperty.GetType();
+                object overrideValue = deserializer.Deserialize(value, configProperty.PropertyType);
+                configProperty.SetValue(config, overrideValue);
+            }
+
+            // Throws exception if any configs are missing or unexpected.
             ValidationContext context = new ValidationContext(config);
             Validator.ValidateObject(config, context, true);
 
