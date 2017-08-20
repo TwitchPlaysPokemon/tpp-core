@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Threading;
+using TPPCommon;
+using TPPCommon.Configuration;
 using TPPCommon.Logging;
 using TPPCommon.PubSub;
 using TPPCommon.PubSub.Events;
@@ -8,22 +11,28 @@ namespace TestServer
     /// <summary>
     /// Test service that publishes events to some pub-sub topics.
     /// </summary>
-    class TestServer
+    class TestServer : TPPService
     {
-        private IPublisher Publisher;
-        private ITPPLoggerFactory LoggerFactory;
+        private TestServerSettings Config;
         private TPPLoggerBase Logger;
-        private TPPLoggerBase Logger2;
 
-        public TestServer(IPublisher publisher, ITPPLoggerFactory loggerFactory)
+        protected override string[] ConfigFilenames => new string[] { "config_testserver.yaml" };
+        protected override int StartupDelayMilliseconds => this.Config.StartupDelayMilliseconds;
+
+        public TestServer(
+            IPublisher publisher,
+            ISubscriber subscriber,
+            ITPPLoggerFactory loggerFactory,
+            IConfigReader configReader) : base(publisher, subscriber, loggerFactory, configReader)
+        { }
+
+        protected override void Initialize()
         {
-            this.Publisher = publisher;
-            this.LoggerFactory = loggerFactory;
-            this.Logger = this.LoggerFactory.Create("test_server");
-            this.Logger2 = this.LoggerFactory.Create("test_server_2");
+            this.Config = this.Config = BaseConfig.GetConfig<TestServerSettings>(this.ConfigReader, this.ConfigFilenames);
+            this.Logger = this.LoggerFactory.Create(this.Config.ServiceName);
         }
 
-        public void Run()
+        protected override void Run()
         {
             this.Logger.LogInfo("Running Music Server, Enter keys to publish events...");
 
@@ -41,9 +50,9 @@ namespace TestServer
                 this.Logger.LogDebug($"The keystroke was {input}");
 
                 // Decide which event to publish.
-                if (input == "A")
+                if (input == this.Config.SongPauseKey)
                 {
-                    this.Logger2.LogInfo($"Sending Song Paused Event...");
+                    this.Logger.LogInfo($"Sending Song Paused Event...");
                     this.Publisher.Publish(new SongPausedEvent());
                 }
                 else

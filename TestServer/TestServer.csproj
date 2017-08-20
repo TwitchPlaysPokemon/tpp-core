@@ -13,4 +13,10 @@
     <ProjectReference Include="..\TPPCommon\TPPCommon.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="config_testserver.yaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
