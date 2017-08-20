@@ -18,7 +18,7 @@ namespace TestClient
         private TestClientConfig Config;
         private int TotalEventsReceived;
 
-        protected override string[] ConfigFilenames => new string[] { "config_testclient.yaml" };
+        protected override string[] ConfigNames => new string[] { "config_testclient" };
         protected override int StartupDelayMilliseconds => this.Config.StartupDelayMilliseconds;
 
         public TestClient(
@@ -30,7 +30,7 @@ namespace TestClient
 
         protected override void Initialize()
         {
-            this.Config = BaseConfig.GetConfig<TestClientConfig>(this.ConfigReader, this.ConfigFilenames);
+            this.Config = BaseConfig.GetConfig<TestClientConfig>(this.ConfigReader, this.ConfigNames);
             this.Logger = this.LoggerFactory.Create(this.Config.ServiceName);
             this.TotalEventsReceived = 0;
         }

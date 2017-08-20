@@ -1,4 +1,5 @@
-﻿using YamlDotNet.Serialization;
+﻿using System.ComponentModel.DataAnnotations;
+using YamlDotNet.Serialization;
 
 namespace TPPCommon.Configuration
 {
@@ -8,9 +9,11 @@ namespace TPPCommon.Configuration
     public abstract class BaseConfig
     {
         [YamlMember(Alias = "service_name")]
+        [Required]
         public string ServiceName { get; set; }
 
         [YamlMember(Alias = "startup_delay_ms")]
+        [Required]
         public int StartupDelayMilliseconds { get; set; }
 
         /// <summary>

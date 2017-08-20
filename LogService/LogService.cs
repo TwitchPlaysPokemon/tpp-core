@@ -15,7 +15,7 @@ namespace LogService
     {
         private ILogger Logger;
 
-        protected override string[] ConfigFilenames => new string[] { };
+        protected override string[] ConfigNames => new string[] { };
         protected override int StartupDelayMilliseconds => 0;
 
         public LogService(
