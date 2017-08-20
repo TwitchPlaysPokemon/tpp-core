@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Threading;
+using TPPCommon;
+using TPPCommon.Configuration;
 using TPPCommon.Logging;
 using TPPCommon.PubSub;
 using TPPCommon.PubSub.Events;
@@ -10,24 +12,30 @@ namespace TestClient
     /// Test service that subscribes to some pub-sub topics and prints out the published events, while keeping
     /// track of the total number of events it receives across all topics.
     /// </summary>
-    class TestClient
+    class TestClient : TPPService
     {
-        private ISubscriber Subscriber;
-        private IPublisher Publisher;
-        private ITPPLoggerFactory LoggerFactory;
         private TPPLoggerBase Logger;
+        private TestClientConfig Config;
         private int TotalEventsReceived;
 
-        public TestClient(ISubscriber subscriber, IPublisher publisher, ITPPLoggerFactory loggerFactory)
+        protected override string[] ConfigFilenames => new string[] { "config_testclient.yaml" };
+        protected override int StartupDelayMilliseconds => this.Config.StartupDelayMilliseconds;
+
+        public TestClient(
+            IPublisher publisher,
+            ISubscriber subscriber,
+            ITPPLoggerFactory loggerFactory,
+            IConfigReader configReader) : base(publisher, subscriber, loggerFactory, configReader)
+        { }
+
+        protected override void Initialize()
         {
-            this.Subscriber = subscriber;
-            this.Publisher = publisher;
-            this.LoggerFactory = loggerFactory;
-            this.Logger = this.LoggerFactory.Create("test_client");
+            this.Config = BaseConfig.GetConfig<TestClientConfig>(this.ConfigReader, this.ConfigFilenames);
+            this.Logger = this.LoggerFactory.Create(this.Config.ServiceName);
             this.TotalEventsReceived = 0;
         }
 
-        public void Run()
+        protected override void Run()
         {
             this.Logger.LogInfo("Running Subscriber client...");
 
@@ -35,11 +43,8 @@ namespace TestClient
             this.Subscriber.Subscribe<SongInfoEvent>(OnSongInfoChanged);
             this.Subscriber.Subscribe<SongPausedEvent>(OnSongPaused);
 
-            // Run forever.
-            while (true)
-            {
-                Thread.Sleep(100);
-            }
+            // Block forever.
+            new AutoResetEvent(false).WaitOne();
         }
 
         void OnSongInfoChanged(SongInfoEvent @event)
