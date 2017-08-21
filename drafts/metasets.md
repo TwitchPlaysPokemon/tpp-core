@@ -37,8 +37,8 @@ Which would have the grammar (Pseudo-BNF):
     Tag      ::= [Prefix] Ident [Postfix]
     Prefix   ::= '~'
     Postfix  ::= Quantity | Position
-    Quantity ::= '[' number ']'
-    Position ::= '{' number [',' [number]] '}' | '{,' number '}'
+    Position ::= '[' number ']'
+    Quantity ::= '{' number [',' [number]] '}' | '{,' number '}'
     Not      ::= '!' Expr
     Group    ::= [Prefix] '(' Expr ')' [Postfix]
     And      ::= Expr '&' Expr
