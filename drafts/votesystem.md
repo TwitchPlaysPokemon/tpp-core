@@ -13,7 +13,7 @@ Below I refer to "user" as the piece of software that uses the voting system.
 ### Requirements
 
 The vote system has to fulfill these requirements:
-- accept only 1 vote per user
+- accept only 1 vote per actual user from chat
 - configurable lifespan of votes
 - configurable minimum number of votes required
 
