@@ -42,7 +42,7 @@ Fixes possible problems: tight coupling, lost separation of concerns
 
 ### State instead of Change
 
-When a component's state changes, and that state change should get publishes,
+When a component's state changes, and that state change should get published,
 favor publishing the whole state instead of only the change.
  
 Bad, only changes are published:
