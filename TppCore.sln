@@ -3,19 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26730.8
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestServer", "TestServer\TestServer.csproj", "{03CFA906-A2FB-4785-89B8-4EE538C1AF59}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestClient", "TestClient\TestClient.csproj", "{F9B9AE8A-9D10-4AB8-AAFF-522C8F1E32BC}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TPPCommon", "TPPCommon\TPPCommon.csproj", "{5A22D74D-F627-4167-8C9C-DC947AF846DF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TPPCommonTest", "TPPCommonTest\TPPCommonTest.csproj", "{EE8F97DE-DC32-46C6-8680-03A91389B41F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestPersistence", "TestPersistence\TestPersistence.csproj", "{9F0D2A34-E767-43D5-B918-A4D26A18BFE7}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PubSubBroker", "PubSubBroker\PubSubBroker.csproj", "{64EBD83B-D3EC-4F80-AABD-629265317433}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LogService", "LogService\LogService.csproj", "{8C2BF055-1035-48FF-B957-BA125189ADB8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,14 +15,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{03CFA906-A2FB-4785-89B8-4EE538C1AF59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{03CFA906-A2FB-4785-89B8-4EE538C1AF59}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{03CFA906-A2FB-4785-89B8-4EE538C1AF59}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{03CFA906-A2FB-4785-89B8-4EE538C1AF59}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F9B9AE8A-9D10-4AB8-AAFF-522C8F1E32BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F9B9AE8A-9D10-4AB8-AAFF-522C8F1E32BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F9B9AE8A-9D10-4AB8-AAFF-522C8F1E32BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F9B9AE8A-9D10-4AB8-AAFF-522C8F1E32BC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5A22D74D-F627-4167-8C9C-DC947AF846DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5A22D74D-F627-4167-8C9C-DC947AF846DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5A22D74D-F627-4167-8C9C-DC947AF846DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -43,14 +27,6 @@ Global
 		{9F0D2A34-E767-43D5-B918-A4D26A18BFE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9F0D2A34-E767-43D5-B918-A4D26A18BFE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9F0D2A34-E767-43D5-B918-A4D26A18BFE7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{64EBD83B-D3EC-4F80-AABD-629265317433}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{64EBD83B-D3EC-4F80-AABD-629265317433}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{64EBD83B-D3EC-4F80-AABD-629265317433}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{64EBD83B-D3EC-4F80-AABD-629265317433}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8C2BF055-1035-48FF-B957-BA125189ADB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8C2BF055-1035-48FF-B957-BA125189ADB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8C2BF055-1035-48FF-B957-BA125189ADB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8C2BF055-1035-48FF-B957-BA125189ADB8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,11 +1,9 @@
-﻿using Microsoft.Extensions.CommandLineUtils;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using Microsoft.Extensions.CommandLineUtils;
 using TPPCommon.Configuration;
-using TPPCommon.Logging;
-using TPPCommon.PubSub;
 
 namespace TPPCommon
 {
@@ -20,16 +18,10 @@ namespace TPPCommon
         protected IDictionary<string, string> ConfigOverrides = new Dictionary<string, string>();
         protected string ConfigFileOverride = string.Empty;
 
-        protected IPublisher Publisher;
-        protected ISubscriber Subscriber;
-        protected ITPPLoggerFactory LoggerFactory;
         protected IConfigReader ConfigReader;
 
-        public TPPService(IPublisher publisher, ISubscriber subscriber, ITPPLoggerFactory loggerFactory, IConfigReader configReader)
+        public TPPService(IConfigReader configReader)
         {
-            this.Publisher = publisher;
-            this.Subscriber = subscriber;
-            this.LoggerFactory = loggerFactory;
             this.ConfigReader = configReader;
         }
 
