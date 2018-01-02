@@ -3,6 +3,7 @@ using log4net.Config;
 using System.Reflection;
 using CommandLine;
 using System;
+using System.IO;
 
 namespace TPPCore.Service.Common
 {
@@ -75,11 +76,34 @@ namespace TPPCore.Service.Common
             return options;
         }
 
+        private static void showHelp()
+        {
+            Parser.Default.ParseArguments<ServiceRunnerOptions>(
+                new string[] {"--help"});
+        }
+
         private static void setUpLogging(ServiceRunnerOptions options)
         {
-            // TODO: read the config files into log4net otherwise fallback to basic config
             var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
-            BasicConfigurator.Configure(logRepository);
+
+            if (options.LogConfig != null)
+            {
+                if (!File.Exists(options.LogConfig))
+                {
+                    Console.Error.WriteLine("Config {0} does not exist.", options.LogConfig);
+                    showHelp();
+                    Environment.Exit(1);
+                }
+
+                var fileInfo = new FileInfo(options.LogConfig);
+                XmlConfigurator.Configure(logRepository, fileInfo);
+                logger.DebugFormat("Logging was configured from file {0}",
+                    options.LogConfig);
+            }
+            else
+            {
+                BasicConfigurator.Configure(logRepository);
+            }
         }
 
         private static ServiceContext setUpContext(ServiceRunnerOptions options)
