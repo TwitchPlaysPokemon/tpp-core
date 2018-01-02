@@ -3,22 +3,18 @@ using System.Collections.ObjectModel;
 
 namespace TPPCore.Service.Example.ParrotService
 {
-    class Model
+    public class Model
     {
         public ReadOnlyCollection<string> RecentMessages
         {
             get { return recentMessages.AsReadOnly(); }
         }
+
         public string CurrentMessage
         {
             get { return currentMessage; }
-            set
-            {
-                currentMessage = value;
-                repeatCount = 0;
-                recentMessages.Add(value);
-            }
         }
+
         public int RepeatCount
         {
             get { return repeatCount; }
@@ -33,10 +29,21 @@ namespace TPPCore.Service.Example.ParrotService
             recentMessages = new List<string>();
         }
 
-        public void Increment()
+        public void Repeat()
         {
             repeatCount += 1;
             recentMessages.Add(currentMessage);
+        }
+
+        public void RepeatNewMessage(string message)
+        {
+            if (message != currentMessage)
+            {
+                currentMessage = message;
+                repeatCount = 0;
+            }
+
+            recentMessages.Add(message);
         }
     }
 }

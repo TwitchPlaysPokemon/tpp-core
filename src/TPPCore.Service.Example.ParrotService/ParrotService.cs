@@ -19,7 +19,8 @@ namespace TPPCore.Service.Example.ParrotService
             model = new Model();
         }
 
-        public void Initialize(ServiceContext context) {
+        public void Initialize(ServiceContext context)
+        {
             this.context = context;
 
             // TODO: add REST functionality:
@@ -28,39 +29,45 @@ namespace TPPCore.Service.Example.ParrotService
             // * POST /message
         }
 
-        public void Run() {
+        public void Run()
+        {
             var task = runAsync();
             task.Wait();
         }
 
-        public void Shutdown() {
+        public void Shutdown()
+        {
             running = false;
         }
 
-        private async Task runAsync() {
-            while (running) {
+        private async Task runAsync()
+        {
+            while (running)
+            {
                 await Task.Delay(1000);
 
                 broadcastMessage();
             }
         }
 
-        private void broadcastMessage() {
+        private void broadcastMessage()
+        {
             var message = model.CurrentMessage;
             logger.DebugFormat("Broadcasting message {0}", message);
 
             var jsonMessage = new JObject();
             jsonMessage.Add("message", message);
-            context.pubSubClient.Publish(ParrotTopics.Broadcast, jsonMessage.ToString());
+            context.PubSubClient.Publish(ParrotTopics.Broadcast, jsonMessage.ToString());
 
-            model.Increment();
+            model.Repeat();
 
-            if (model.RepeatCount != 0 && model.RepeatCount % 5 == 0) {
+            if (model.RepeatCount != 0 && model.RepeatCount % 5 == 0)
+            {
                 logger.DebugFormat("Broadcasting recent messages");
 
                 var recentMessage = new JObject();
                 recentMessage.Add("recent", new JArray(model.RecentMessages));
-                context.pubSubClient.Publish(ParrotTopics.Recent, recentMessage.ToString());
+                context.PubSubClient.Publish(ParrotTopics.Recent, recentMessage.ToString());
             }
         }
     }
