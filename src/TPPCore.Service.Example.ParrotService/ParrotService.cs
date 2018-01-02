@@ -48,6 +48,10 @@ namespace TPPCore.Service.Example.ParrotService
 
                 broadcastMessage();
             }
+
+            logger.Info("Parrot shutting down");
+            await Task.Delay(2000);
+            logger.Info("Goodbye!");
         }
 
         private void broadcastMessage()
