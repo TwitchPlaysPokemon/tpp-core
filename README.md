@@ -31,9 +31,11 @@ Once you have those tools installed,
 3. If are not using an IDE that does this for you, install the library dependencies: `dotnet restore`
 4. Run the unit tests in all projects: `dotnet test`
 5. Build all the projects: `dotnet build`
-6. Run a specific C# project (CSPROJ file) in the source where PROJECT_NAME is the name of the project: `dotnet run PROJECT_NAME`
+6. Run a specific C# project (CSPROJ file) in the source where PROJECT is the project file: `dotnet run --project PROJECT`. If you need to pass arguments, add `--` then your arguments.
+7. Generate portable runtimes for production use: `dotnet publish -c Release`
+8. Run the runtime with `dotnet PROJECT.dll`
 
-If your IDE does not support SLN files, use `dotnet sln` to manage the file to keep it in sync with the CSPROJ files in the repository. This file is for use with Visual Studio.
+If your IDE does not support SLN files, use `dotnet sln` to manage the file to keep it in sync with the CSPROJ files in the repository. This file is for use with Visual Studio and MSBuild.
 
 TODO: tell the user about the example programs once they are written to show the architecture.
 
