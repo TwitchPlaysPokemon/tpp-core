@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace TPPCore.Service.Common.Test
+namespace TPPCore.Service.Common.TestUtils
 {
     public class ServiceTestRunner
     {

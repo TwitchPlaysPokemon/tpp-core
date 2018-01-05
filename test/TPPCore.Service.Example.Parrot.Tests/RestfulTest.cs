@@ -4,7 +4,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using TPPCore.Service.Common;
-using TPPCore.Service.Common.Test;
+using TPPCore.Service.Common.TestUtils;
 using TPPCore.Service.Example.Parrot;
 using Xunit;
 
