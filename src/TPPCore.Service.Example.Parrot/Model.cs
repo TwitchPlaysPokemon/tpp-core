@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
-namespace TPPCore.Service.Example.ParrotService
+namespace TPPCore.Service.Example.Parrot
 {
     public class Model
     {

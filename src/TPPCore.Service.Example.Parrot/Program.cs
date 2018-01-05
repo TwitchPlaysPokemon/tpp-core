@@ -1,7 +1,7 @@
 ﻿using System;
 using TPPCore.Service.Common;
 
-namespace TPPCore.Service.Example.ParrotService
+namespace TPPCore.Service.Example.Parrot
 {
     class Program
     {

@@ -13,6 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\TPPCore.Service.Example.ParrotService\TPPCore.Service.Example.ParrotService.csproj" />
+    <ProjectReference Include="..\..\src\TPPCore.Service.Example.Parrot\TPPCore.Service.Example.Parrot.csproj" />
   </ItemGroup>
 </Project>

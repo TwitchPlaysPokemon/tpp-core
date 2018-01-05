@@ -2,31 +2,39 @@ using log4net;
 using Newtonsoft.Json.Linq;
 using System.Threading.Tasks;
 using TPPCore.Service.Common;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Http;
 
-namespace TPPCore.Service.Example.ParrotService
+namespace TPPCore.Service.Example.Parrot
 {
-    class ParrotService : IService
+    public class ParrotService : IService
     {
         private static readonly ILog logger = LogManager.GetLogger(
             System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         private ServiceContext context;
         private Model model;
+        private ParrotWebHandler webHandler;
         private bool running = true;
 
         public ParrotService()
         {
             model = new Model();
+            webHandler = new ParrotWebHandler(model);
         }
 
         public void Initialize(ServiceContext context)
         {
             this.context = context;
 
-            // TODO: add REST functionality:
-            // * GET /recent
-            // * GET /current
-            // * POST /message
+            context.RestfulServer.UseRoute((RouteBuilder routeBuilder) =>
+            {
+                routeBuilder
+                    .MapGet("message/recent", webHandler.GetRecent)
+                    .MapGet("message/current", webHandler.GetCurrent)
+                    .MapPost("message/new", webHandler.PostMessage)
+                    ;
+            });
         }
 
         public void Run()

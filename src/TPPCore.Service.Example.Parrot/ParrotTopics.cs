@@ -1,4 +1,4 @@
-namespace TPPCore.Service.Example.ParrotService
+namespace TPPCore.Service.Example.Parrot
 {
     public static class ParrotTopics
     {

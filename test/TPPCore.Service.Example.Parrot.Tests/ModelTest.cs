@@ -1,8 +1,8 @@
 using System;
-using TPPCore.Service.Example.ParrotService;
+using TPPCore.Service.Example.Parrot;
 using Xunit;
 
-namespace TPPCore.Service.Example.ParrotService.Tests
+namespace TPPCore.Service.Example.Parrot.Tests
 {
     public class ModelTest
     {
