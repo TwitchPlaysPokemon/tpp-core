@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using TPPCore.Service.Common;
+using TPPCore.Service.Common.Test;
 using TPPCore.Service.Example.Parrot;
 using Xunit;
 
@@ -11,24 +12,23 @@ namespace TPPCore.Service.Example.Parrot.Tests
 {
     public class RestfulTest
     {
-        ParrotService service;
-        ServiceRunner runner;
-
         public RestfulTest() {
-            service = new ParrotService();
-            runner = new ServiceRunner(service);
+        }
 
-            runner.Configure();
+        private ServiceTestRunner newServiceRunner()
+        {
+            return new ServiceTestRunner(new ParrotService());
         }
 
         [Fact]
         public async Task TestCurrent()
         {
-            await runner.StartRestfulServerAsync();
-            var runTask = runner.RunAsync();
+            var runner = newServiceRunner();
+            await runner.SetUpAsync();
+
             var httpClient = new HttpClient();
 
-            var uri = new Uri(runner.Context.RestfulServer.Context.GetUri(),
+            var uri = new Uri(runner.Runner.Context.RestfulServer.Context.GetUri(),
                 "/message/current");
             var response = await httpClient.GetAsync(uri);
             var body = await response.Content.ReadAsStringAsync();
@@ -39,22 +39,21 @@ namespace TPPCore.Service.Example.Parrot.Tests
 
             Assert.Equal("hello world!", jsonDoc.GetValue("message").ToString());
 
-            runner.Stop();
-            await runTask;
-            await runner.StopRestfulServerAsync();
+            await runner.TearDownAsync();
         }
 
         [Fact]
         public async Task TestNewMessage()
         {
-            await runner.StartRestfulServerAsync();
-            var runTask = runner.RunAsync();
+            var runner = newServiceRunner();
+            await runner.SetUpAsync();
+
             var httpClient = new HttpClient();
 
             var jsonDoc = new JObject();
             jsonDoc.Add("message", "wow");
 
-            var uri = new Uri(runner.Context.RestfulServer.Context.GetUri(),
+            var uri = new Uri(runner.Runner.Context.RestfulServer.Context.GetUri(),
                 "/message/new");
 
             var content = new StringContent(jsonDoc.ToString());
@@ -62,9 +61,7 @@ namespace TPPCore.Service.Example.Parrot.Tests
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-            runner.Stop();
-            await runTask;
-            await runner.StopRestfulServerAsync();
+            await runner.TearDownAsync();
         }
     }
 }
