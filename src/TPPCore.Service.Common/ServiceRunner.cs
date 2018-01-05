@@ -4,6 +4,8 @@ using System.Reflection;
 using CommandLine;
 using System;
 using System.IO;
+using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace TPPCore.Service.Common
 {
@@ -16,32 +18,95 @@ namespace TPPCore.Service.Common
         private static readonly ILog logger = LogManager.GetLogger(
             System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+        public IService Service { get { return service;} }
+        public ServiceRunnerOptions Options { get { return options; } }
+        public ServiceContext Context { get { return context; } }
+
+        private IService service;
+        private ServiceRunnerOptions options;
+        private ServiceContext context;
+        private Boolean running = false;
+
+        public ServiceRunner(IService service)
+        {
+            this.service = service;
+        }
+
         public static int Run(IService service, string[] args)
         {
-            logger.Info("Starting service");
+            var runner = new ServiceRunner(service);
 
-            var options = parseCommandLineArgs(args);
-            setUpLogging(options);
-            var context = setUpContext(options);
-            var running = true;
+            runner.Configure(args);
+            runner.StartRestfulServer();
+            runner.UseCancelKeyPress();
+            runner.Run();
+            runner.StopRestfulServer();
+
+            logger.Info("Service stopped");
+
+            return 0;
+        }
+
+        public void Configure()
+        {
+            Configure(new string[] {});
+        }
+
+        public void Configure(string[] args)
+        {
+            Debug.Assert(options == null);
+            Debug.Assert(context == null);
+
+            logger.Info("Configuring service");
+
+            options = parseCommandLineArgs(args);
+            setUpLogging();
+            context = setUpContext();
             service.Initialize(context);
+        }
 
+        public void StartRestfulServer()
+        {
+            StartRestfulServerAsync().Wait();
+        }
+
+        public async Task StartRestfulServerAsync()
+        {
+            logger.Info("Starting the RESTful web host");
+            context.RestfulServer.BuildWebHost();
+            await context.RestfulServer.AspNetWebHost.StartAsync();
+
+            context.RestfulServer.UpdateRealPort();
+
+            logger.InfoFormat("The RESTful web host is running at port {0}",
+                context.RestfulServer.Context.RealPort);
+        }
+
+        public void UseCancelKeyPress()
+        {
             Console.CancelKeyPress += (sender, eventArgs) =>
+            {
+                if (running)
                 {
-                    if (running)
-                    {
-                        logger.Info("Attempting to shut down service...");
-                        logger.Info("Use the Cancel key press again to force exit.");
-                        running = false;
-                        service.Shutdown();
-                        eventArgs.Cancel = true;
-                    }
-                    else
-                    {
-                        logger.Warn("Exiting without shutdown");
-                        eventArgs.Cancel = false;
-                    }
-                };
+                    logger.Info("Attempting to shut down service...");
+                    logger.Info("Use the Cancel key press again to force exit.");
+                    running = false;
+                    Stop();
+                    eventArgs.Cancel = true;
+                }
+                else
+                {
+                    logger.Warn("Exiting without shutdown");
+                    eventArgs.Cancel = false;
+                }
+            };
+        }
+
+        public void Run()
+        {
+            Debug.Assert(running == false);
+            Debug.Assert(context != null);
+            running = true;
 
             while (running)
             {
@@ -61,10 +126,27 @@ namespace TPPCore.Service.Common
                     }
                 }
             }
+        }
 
-            logger.Info("Service stopping");
+        public async Task RunAsync()
+        {
+            await Task.Run(new Action(service.Run));
+        }
 
-            return 0;
+        public void StopRestfulServer()
+        {
+            StopRestfulServerAsync().Wait();
+        }
+
+        public async Task StopRestfulServerAsync()
+        {
+            logger.Info("Stopping the RESTful web host");
+            await context.RestfulServer.AspNetWebHost.StopAsync();
+        }
+
+        public void Stop()
+        {
+            service.Shutdown();
         }
 
         private static ServiceRunnerOptions parseCommandLineArgs(string[] args)
@@ -82,7 +164,7 @@ namespace TPPCore.Service.Common
                 new string[] {"--help"});
         }
 
-        private static void setUpLogging(ServiceRunnerOptions options)
+        private void setUpLogging()
         {
             var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
 
@@ -106,12 +188,13 @@ namespace TPPCore.Service.Common
             }
         }
 
-        private static ServiceContext setUpContext(ServiceRunnerOptions options)
+        private static ServiceContext setUpContext()
         {
             var context = new ServiceContext();
 
             // TODO: parse the pub sub addresses, etc
             context.InitPubSubClient();
+            context.InitRestfulServer();
 
             return context;
         }
