@@ -41,6 +41,7 @@ namespace TPPCore.Service.Common
             runner.UseCancelKeyPress();
             runner.Run();
             runner.StopRestfulServer();
+            runner.CleanUp();
 
             logger.Info("Service stopped");
 
@@ -149,6 +150,11 @@ namespace TPPCore.Service.Common
             service.Shutdown();
         }
 
+        public void CleanUp()
+        {
+            tearDownLogging();
+        }
+
         private static ServiceRunnerOptions parseCommandLineArgs(string[] args)
         {
             var argResult = Parser.Default.ParseArguments<ServiceRunnerOptions>(args)
@@ -186,6 +192,12 @@ namespace TPPCore.Service.Common
             {
                 BasicConfigurator.Configure(logRepository);
             }
+        }
+
+        private void tearDownLogging()
+        {
+            var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
+            logRepository.Shutdown();
         }
 
         private static ServiceContext setUpContext()
