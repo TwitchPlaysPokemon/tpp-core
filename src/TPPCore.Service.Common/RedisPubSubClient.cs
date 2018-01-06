@@ -7,9 +7,9 @@ namespace TPPCore.Service.Common
     {
         private ConnectionMultiplexer redis;
 
-        public RedisPubSubClient(string host = "localhost", int port = 6379)
+        public RedisPubSubClient(string host = "localhost", int port = 6379, string extra = "")
         {
-            redis = ConnectionMultiplexer.Connect($"{host}:{port}");
+            redis = ConnectionMultiplexer.Connect($"{host}:{port}," + extra);
         }
 
         public void Dispose()

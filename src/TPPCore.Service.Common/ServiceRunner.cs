@@ -243,7 +243,8 @@ namespace TPPCore.Service.Common
             {
                 var host = configReader.GetCheckedValue<string>(new[] {"redis", "host"});
                 var port = configReader.GetCheckedValue<int>(new[] {"redis", "port"});
-                var redisClient = new RedisPubSubClient(host, port);
+                var extra = configReader.GetCheckedValueOrDefault<string>(new[] {"redis", "extra"}, "");
+                var redisClient = new RedisPubSubClient(host, port, extra);
 
                 logger.InfoFormat("Using pub/sub Redis address at {0}:{1}", host, port);
                 context.InitPubSubClient(redisClient);
