@@ -1,0 +1,9 @@
+## Config for the Redis in-memory database instance.
+## This file should be shared among all services.
+
+redis:
+  host: localhost  ## Hostname.
+  port: 6379  ## Port number. Default 6379.
+  db: 0  ## Database number 0 to 15.
+  # username:  ## Username (optional)
+  # password:  ## Password (optional)

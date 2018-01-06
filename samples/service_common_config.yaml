@@ -1,0 +1,6 @@
+## Options common to all microservices.
+## The file is intended to be shared among all the services
+
+service:
+  ## The pub/sub implementation to use. One of redis (default), dummy.
+  pubSub: redis

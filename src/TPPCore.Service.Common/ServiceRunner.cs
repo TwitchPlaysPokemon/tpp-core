@@ -1,11 +1,14 @@
+using CommandLine;
 using log4net;
 using log4net.Config;
-using System.Reflection;
-using CommandLine;
 using System;
-using System.IO;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Net;
+using System.Reflection;
+using System.Threading.Tasks;
+using YamlDotNet.RepresentationModel;
 
 namespace TPPCore.Service.Common
 {
@@ -25,6 +28,7 @@ namespace TPPCore.Service.Common
         private IService service;
         private ServiceRunnerOptions options;
         private ServiceContext context;
+        private ConfigReader configReader;
         private Boolean running = false;
 
         public ServiceRunner(IService service)
@@ -36,7 +40,16 @@ namespace TPPCore.Service.Common
         {
             var runner = new ServiceRunner(service);
 
-            runner.Configure(args);
+            try
+            {
+                runner.Configure(args);
+            }
+            catch (ConfigException error)
+            {
+                logger.FatalFormat("Could not configure service: {0}", error.Message);
+                Console.Error.WriteLine(error.Message);
+                Environment.Exit(1);
+            }
             runner.StartRestfulServer();
             runner.UseCancelKeyPress();
             runner.Run();
@@ -62,7 +75,8 @@ namespace TPPCore.Service.Common
 
             options = parseCommandLineArgs(args);
             setUpLogging();
-            context = setUpContext();
+            processConfigFiles();
+            setUpContext();
             service.Initialize(context);
         }
 
@@ -200,15 +214,65 @@ namespace TPPCore.Service.Common
             logRepository.Shutdown();
         }
 
-        private static ServiceContext setUpContext()
+        private void processConfigFiles()
         {
-            var context = new ServiceContext();
+            configReader = new ConfigReader();
 
-            // TODO: parse the pub sub addresses, etc
-            context.InitPubSubClient();
-            context.InitRestfulServer();
+            foreach (var path in options.ConfigFiles)
+            {
+                configReader.Load(path);
+            }
+        }
 
-            return context;
+        private void setUpContext()
+        {
+            context = new ServiceContext();
+
+            context.InitConfigReader(configReader);
+
+            setUpPubSubClient();
+            setUpRestfulServer();
+        }
+
+        private void setUpPubSubClient()
+        {
+            var pubsubImpl = configReader.GetCheckedValueOrDefault<string>(
+                new[] {"service", "pubSub"}, "dummy");
+
+            if (pubsubImpl == "redis")
+            {
+                var host = configReader.GetCheckedValue<string>(new[] {"redis", "host"});
+                var port = configReader.GetCheckedValue<int>(new[] {"redis", "port"});
+                var redisClient = new RedisPubSubClient(host, port);
+
+                logger.InfoFormat("Using pub/sub Redis address at {0}:{1}", host, port);
+                context.InitPubSubClient(redisClient);
+            }
+            else
+            {
+                logger.Info("Using a dummy pub/sub client.");
+                context.InitPubSubClient();
+            }
+        }
+
+        private void setUpRestfulServer()
+        {
+            var host = configReader.GetCheckedValueOrDefault<string>(
+                new[] {"restful", "host"}, "localhost");
+            var port = configReader.GetCheckedValueOrDefault<int>(
+                new[] {"restful", "port"}, 0);
+
+            IPAddress ipAddress;
+
+            if (host.Equals("localhost", StringComparison.InvariantCultureIgnoreCase))
+            {
+                ipAddress = IPAddress.Loopback;
+            }
+            else
+            {
+                ipAddress = IPAddress.Parse(host);
+            }
+            context.InitRestfulServer(ipAddress, port);
         }
     }
 }

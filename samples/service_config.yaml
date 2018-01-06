@@ -1,0 +1,9 @@
+## Options that may be unique to each microservice
+
+restful:
+  # Address of web host for RESTful service to be bound.
+  host: localhost
+
+  # Port number of the web host for the RESTful service to be bound.
+  # Use 0 to automatically use a free port.
+  port: 0

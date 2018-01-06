@@ -4,11 +4,16 @@ namespace TPPCore.Service.Common
 {
     public class ServiceContext
     {
+        public ConfigReader ConfigReader { get; private set; }
         public IPubSubClient PubSubClient { get; private set; }
         public RestfulServer RestfulServer { get; private set; }
-        // TODO: add way of giving parsed config to service
 
         public ServiceContext() {
+        }
+
+        public void InitConfigReader(ConfigReader configReader)
+        {
+            ConfigReader = configReader;
         }
 
         public void InitPubSubClient()
