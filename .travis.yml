@@ -6,5 +6,5 @@ install:
   - dotnet restore
 script:
   - dotnet build
-  - find test/ -maxdepth 4 -name "*Tests.csproj" -type f | xargs dotnet test
+  - find test/ -maxdepth 4 -name "*Tests.csproj" -type f -exec echo dotnet test {} \;
 ...
