@@ -1,35 +1,31 @@
 using System;
 using System.Collections.Generic;
 using YamlDotNet.RepresentationModel;
-using YamlDotNet.Serialization;
 
 namespace TPPCore.Service.Common.YamlUtils
 {
     public class YamlMappingVisitor : YamlVisitorBase
     {
-        public Action<string[],dynamic> ProcessKeyValuePair;
+        public Action<string[],YamlNode> ProcessKeyValuePair;
 
-        private Deserializer yamlDeserializer;
         private List<string> keyStack;
 
         public YamlMappingVisitor()
         {
-            yamlDeserializer = new DeserializerBuilder()
-                .Build();
             keyStack = new List<string>();
         }
 
         protected override void VisitPair(YamlNode key, YamlNode value)
         {
-            var keyString = deserializeKeyNode(key);
+            var keyString = getKeyNodeString(key);
             keyStack.Add(keyString);
+
+            ProcessKeyValuePair(keyStack.ToArray(), value);
 
             switch (value.NodeType)
             {
                 case YamlNodeType.Scalar:
                 case YamlNodeType.Sequence:
-                    var deserializedValue = deserializeValueNode(value);
-                    ProcessKeyValuePair(keyStack.ToArray(), deserializedValue);
                     break;
                 default:
                     base.VisitPair(key, value);
@@ -39,7 +35,7 @@ namespace TPPCore.Service.Common.YamlUtils
             keyStack.RemoveAt(keyStack.Count - 1);
         }
 
-        private string deserializeKeyNode(YamlNode node)
+        private string getKeyNodeString(YamlNode node)
         {
             if (node.NodeType != YamlNodeType.Scalar)
             {
@@ -48,12 +44,7 @@ namespace TPPCore.Service.Common.YamlUtils
 
             var scalar = (YamlScalarNode) node;
 
-            return yamlDeserializer.Deserialize<string>(scalar.Value);
-        }
-
-        private object deserializeValueNode(YamlNode node)
-        {
-            return yamlDeserializer.Deserialize<object>(node.ToString());
+            return scalar.Value;
         }
     }
 }

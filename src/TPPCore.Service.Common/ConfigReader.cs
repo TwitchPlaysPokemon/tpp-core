@@ -6,6 +6,8 @@ using TPPCore.Service.Common.YamlUtils;
 using TPPCore.Utils.Collections;
 using YamlDotNet.RepresentationModel;
 using YamlDotNet.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace TPPCore.Service.Common
 {
@@ -25,33 +27,40 @@ namespace TPPCore.Service.Common
             : base(message, innerException) {}
     }
 
-    public class ConfigReader : IReadOnlyDictionary<string[],object>
+    public class ConfigReader : IReadOnlyDictionary<string[],string>
     {
         private static readonly ILog logger = LogManager.GetLogger(
             System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         public readonly List<YamlDocument> YamlDocuments;
 
-        private Dictionary<string[],object> configData;
+        private Dictionary<string[],string> configData;
+        private Dictionary<string[],YamlNode> configNodes;
         private YamlMappingVisitor visitor;
+        private Deserializer yamlDeserializer;
 
         public int Count { get { return configData.Count; } }
-        public object this[string[] key] { get { return configData[key]; } }
+        public string this[string[] key] { get { return configData[key]; } }
         public IEnumerable<string[]> Keys { get { return configData.Keys; } }
-        public IEnumerable<object> Values { get  { return configData.Values; } }
+        public IEnumerable<string> Values { get  { return configData.Values; } }
 
         public ConfigReader()
         {
             YamlDocuments = new List<YamlDocument>();
             var comparer = new StringEnumerableEqualityComparer<string[]>();
-            configData = new Dictionary<string[], object>(comparer);
+            configData = new Dictionary<string[], string>(comparer);
+            configNodes = new Dictionary<string[], YamlNode>(comparer);
             visitor = new YamlMappingVisitor();
             visitor.ProcessKeyValuePair = addToConfig;
+            yamlDeserializer = new DeserializerBuilder()
+                .WithNamingConvention(new CamelCaseNamingConvention())
+                .Build();
         }
 
-        private void addToConfig(string[] key, object value)
+        private void addToConfig(string[] key, YamlNode value)
         {
-            configData.Add(key, value);
+            configData.Add(key, value.ToString());
+            configNodes.Add(key, value);
         }
 
         public void Load(string path)
@@ -92,12 +101,12 @@ namespace TPPCore.Service.Common
             return configData.ContainsKey(key);
         }
 
-        public bool TryGetValue(string[] key, out object value)
+        public bool TryGetValue(string[] key, out string value)
         {
             return configData.TryGetValue(key, out value);
         }
 
-        public IEnumerator<KeyValuePair<string[],object>> GetEnumerator()
+        public IEnumerator<KeyValuePair<string[],string>> GetEnumerator()
         {
             return configData.GetEnumerator();
         }
@@ -109,10 +118,10 @@ namespace TPPCore.Service.Common
 
         public T GetCheckedValue<T>(string[] key)
         {
-            object value;
+            YamlNode node;
             try
             {
-                value = configData[key];
+                node = configNodes[key];
             }
             catch (KeyNotFoundException error)
             {
@@ -122,13 +131,18 @@ namespace TPPCore.Service.Common
                 );
             }
 
-            if (!(value is T))
+            try
+            {
+                return yamlDeserializer.Deserialize<T>(
+                    new EventStreamParserAdapter(
+                        YamlNodeToEventStreamConverter.ConvertToEventStream(node)));
+            }
+            catch (YamlException error)
             {
                 throw new ConfigException(
-                    $"The key {string.Join(",", key)} is not the correct type.");
+                    $"The value at key {string.Join(",", key)} is not the correct type."
+                    + $" Expected {typeof(T)} for value {node.ToString()}.", error);
             }
-
-            return (T) value;
         }
 
         public T GetCheckedValueOrDefault<T>(string[] key, T defaultValue)
