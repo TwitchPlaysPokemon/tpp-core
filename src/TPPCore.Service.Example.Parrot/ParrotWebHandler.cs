@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using TPPCore.Service.Common;
 
 namespace TPPCore.Service.Example.Parrot
 {
@@ -17,27 +18,21 @@ namespace TPPCore.Service.Example.Parrot
 
         public async Task GetRecent(HttpContext context)
         {
-            var jsonDoc = new JObject();
-            jsonDoc.Add("messages", new JArray(model.RecentMessages));
+            var jsonDoc = JObject.FromObject(new { messages = model.RecentMessages });
 
-            context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync(jsonDoc.ToString());
+            await context.RespondJsonAsync(jsonDoc);
         }
 
         public async Task GetCurrent(HttpContext context)
         {
-            var jsonDoc = new JObject();
-            jsonDoc.Add("message", model.CurrentMessage);
+            var jsonDoc = JObject.FromObject(new { message = model.CurrentMessage });
 
-            context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync(jsonDoc.ToString());
+            await context.RespondJsonAsync(jsonDoc);
         }
 
         public async Task PostMessage(HttpContext context)
         {
-            var reader = new StreamReader(context.Request.Body);
-            var text = await reader.ReadToEndAsync();
-            var jsonDoc = JObject.Parse(text);
+            var jsonDoc = await context.ReadJsonAsync();
 
             var message = jsonDoc.GetValue("message").ToString();
 

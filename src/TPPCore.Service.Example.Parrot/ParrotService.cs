@@ -67,9 +67,8 @@ namespace TPPCore.Service.Example.Parrot
             var message = model.CurrentMessage;
             logger.DebugFormat("Broadcasting message {0}", message);
 
-            var jsonMessage = new JObject();
-            jsonMessage.Add("message", message);
-            context.PubSubClient.Publish(ParrotTopics.Broadcast, jsonMessage.ToString());
+            var jsonMessage = JObject.FromObject(new { message = message });
+            context.PubSubClient.Publish(ParrotTopics.Broadcast, jsonMessage);
 
             model.Repeat();
 
@@ -77,9 +76,8 @@ namespace TPPCore.Service.Example.Parrot
             {
                 logger.DebugFormat("Broadcasting recent messages");
 
-                var recentMessage = new JObject();
-                recentMessage.Add("recent", new JArray(model.RecentMessages));
-                context.PubSubClient.Publish(ParrotTopics.Recent, recentMessage.ToString());
+                var recentMessage = JObject.FromObject(new { recent = model.RecentMessages });
+                context.PubSubClient.Publish(ParrotTopics.Recent, recentMessage);
             }
         }
     }
