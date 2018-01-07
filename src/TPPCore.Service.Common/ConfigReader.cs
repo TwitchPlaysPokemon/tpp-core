@@ -27,11 +27,27 @@ namespace TPPCore.Service.Common
             : base(message, innerException) {}
     }
 
+    /// <summary>
+    /// Reads configuration from YAML files and stores them as a mapping.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The class maps key/value pairs as string arrays to strings, but
+    /// typical usage is intended with <see cref="GetCheckedValue"> that
+    /// automatically parses and converts values.
+    /// </para>
+    /// <para>
+    /// A string array is used for the key to allow nesting of mappings.
+    /// </para>
+    /// </remarks>
     public class ConfigReader : IReadOnlyDictionary<string[],string>
     {
         private static readonly ILog logger = LogManager.GetLogger(
             System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+        /// <summary>
+        /// YAML model that is read from the config.
+        /// </summary>
         public readonly List<YamlDocument> YamlDocuments;
 
         private Dictionary<string[],string> configData;
@@ -63,6 +79,9 @@ namespace TPPCore.Service.Common
             configNodes.Add(key, value);
         }
 
+        /// <summary>
+        /// Read configuration from a YAML file.
+        /// </summary>
         public void Load(string path)
         {
             logger.InfoFormat("Loading config file {0}", path);
@@ -77,6 +96,9 @@ namespace TPPCore.Service.Common
             processYamlStream(yamlStream);
         }
 
+        /// <summary>
+        /// Read configuration from a YAML string.
+        /// </summary>
         public void LoadString(string content)
         {
             var yamlStream = new YamlStream();
@@ -116,6 +138,11 @@ namespace TPPCore.Service.Common
             return GetEnumerator();
         }
 
+        /// <summary>
+        /// Deserializes the config value for the given key.
+        /// </summary>
+        /// <exception cref="ConfigKeyNotFoundException">Key does not exist.</exception>
+        /// <exception cref="ConfigException">Value could not be deserialized</exception>
         public T GetCheckedValue<T>(string[] key)
         {
             YamlNode node;
@@ -145,6 +172,10 @@ namespace TPPCore.Service.Common
             }
         }
 
+        /// <summary>
+        /// Deserializes the config value for the given key and returns
+        /// the given default value if key is not found.
+        /// </summary>
         public T GetCheckedValueOrDefault<T>(string[] key, T defaultValue)
         {
             try

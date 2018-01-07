@@ -8,6 +8,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace TPPCore.Service.Common
 {
+    /// <summary>
+    /// ASP.Net start up file.
+    /// </summary>
     public class StartupRestful
     {
         private static readonly ILog logger = LogManager.GetLogger(

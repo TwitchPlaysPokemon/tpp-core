@@ -16,6 +16,10 @@ namespace TPPCore.Service.Common
         }
     }
 
+    /// <summary>
+    /// Pub/sub client that only works in the same process and stores all
+    /// the messages.
+    /// </summary>
     public class DummyPubSubClient : IPubSubClient
     {
         private static readonly ILog logger = LogManager.GetLogger(

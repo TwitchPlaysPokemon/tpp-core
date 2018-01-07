@@ -4,6 +4,9 @@ using StackExchange.Redis;
 
 namespace TPPCore.Service.Common
 {
+    /// <summary>
+    /// Pub/sub client that uses Redis.
+    /// </summary>
     public class RedisPubSubClient : IPubSubClient, IDisposable
     {
         private ConnectionMultiplexer redis;

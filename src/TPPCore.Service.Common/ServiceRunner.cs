@@ -36,6 +36,13 @@ namespace TPPCore.Service.Common
             this.service = service;
         }
 
+        /// <summary>
+        /// Creates a new service runner and automatically configures and runs
+        /// the service.
+        /// </summary>
+        /// <remarks>
+        /// This method should be called by command line programs.
+        /// </remarks>
         public static int Run(IService service, string[] args)
         {
             var runner = new ServiceRunner(service);
@@ -66,6 +73,10 @@ namespace TPPCore.Service.Common
             Configure(new string[] {});
         }
 
+        /// <summary>
+        /// Create the necessary contexts and configuration and provide it to
+        /// the service.
+        /// </summary>
         public void Configure(string[] args)
         {
             Debug.Assert(options == null);
@@ -85,6 +96,10 @@ namespace TPPCore.Service.Common
             StartRestfulServerAsync().Wait();
         }
 
+        /// <summary>
+        /// Starts the web host containing the RESTful server and updates
+        /// the related contexts.
+        /// </summary>
         public async Task StartRestfulServerAsync()
         {
             logger.Info("Starting the RESTful web host");
@@ -97,6 +112,9 @@ namespace TPPCore.Service.Common
                 context.RestfulServer.Context.RealPort);
         }
 
+        /// <summary>
+        /// Attach a Control+C key press handler to call <see cref="Stop"/.>
+        /// </summary>
         public void UseCancelKeyPress()
         {
             Console.CancelKeyPress += (sender, eventArgs) =>
@@ -117,6 +135,9 @@ namespace TPPCore.Service.Common
             };
         }
 
+        /// <summary>
+        /// Runs the service and blocks until it exits.
+        /// </summary>
         public void Run()
         {
             Debug.Assert(running == false);
@@ -167,17 +188,31 @@ namespace TPPCore.Service.Common
             StopRestfulServerAsync().Wait();
         }
 
+        /// <summary>
+        /// Stop the web host from running.
+        /// </summary>
+        /// <returns></returns>
         public async Task StopRestfulServerAsync()
         {
             logger.Info("Stopping the RESTful web host");
             await context.RestfulServer.AspNetWebHost.StopAsync();
         }
 
+        /// <summary>
+        /// Request the service to shutdown and stop running.
+        /// </summary>
         public void Stop()
         {
             service.Shutdown();
         }
 
+        /// <summary>
+        /// Perform clean up operations on data created by configuration steps.
+        /// </summary>
+        /// <remarks>
+        /// Use this method to undo any global state changes such as global
+        /// logger configuration. This is useful for unit tests.
+        /// </remarks>
         public void CleanUp()
         {
             tearDownLogging();

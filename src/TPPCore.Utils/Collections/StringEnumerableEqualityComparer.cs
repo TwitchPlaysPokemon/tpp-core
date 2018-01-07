@@ -4,6 +4,9 @@ using System.Linq;
 
 namespace TPPCore.Utils.Collections
 {
+    /// <summary>
+    /// Comparer of arrays containing strings for use as keys in a dictionary.
+    /// </summary>
     public class StringEnumerableEqualityComparer<T>
         : EqualityComparer<T>
         where T:IEnumerable<string>

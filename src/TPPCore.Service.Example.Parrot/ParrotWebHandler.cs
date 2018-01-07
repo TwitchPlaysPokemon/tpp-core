@@ -7,6 +7,9 @@ using TPPCore.Service.Common;
 
 namespace TPPCore.Service.Example.Parrot
 {
+    /// <summary>
+    /// RESTful endpoint handlers
+    /// </summary>
     class ParrotWebHandler
     {
         private readonly Model model;

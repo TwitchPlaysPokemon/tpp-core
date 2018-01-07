@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Http;
 
 namespace TPPCore.Service.Example.Parrot
 {
+    /// <summary>
+    /// Service that repeatedly broadcasts a string.
+    /// </summary>
     public class ParrotService : IServiceAsync
     {
         private static readonly ILog logger = LogManager.GetLogger(

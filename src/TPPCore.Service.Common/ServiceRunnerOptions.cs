@@ -4,6 +4,9 @@ using System.Collections.Generic;
 
 namespace TPPCore.Service.Common
 {
+    /// <summary>
+    /// Service runner command line options.
+    /// </summary>
     public class ServiceRunnerOptions
     {
         [Option('r', "restart-on-error", Default = false,

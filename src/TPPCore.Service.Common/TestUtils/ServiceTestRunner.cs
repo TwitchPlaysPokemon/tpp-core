@@ -2,6 +2,14 @@ using System.Threading.Tasks;
 
 namespace TPPCore.Service.Common.TestUtils
 {
+    /// <summary>
+    /// Runs the service runner in the background.
+    /// </summary>
+    /// <remarks>
+    /// This class is intended for use in tests as the service is scheduled
+    /// in the background. Call <see cref="SetUp"/> at the start of the test
+    /// and <see cref="TearDown"/> at the end.
+    /// </remarks>
     public class ServiceTestRunner
     {
         public readonly IService Service;

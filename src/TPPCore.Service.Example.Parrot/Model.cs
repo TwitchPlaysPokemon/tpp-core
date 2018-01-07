@@ -3,6 +3,9 @@ using System.Collections.ObjectModel;
 
 namespace TPPCore.Service.Example.Parrot
 {
+    /// <summary>
+    /// Stores the current message and recent messages.
+    /// </summary>
     public class Model
     {
         private const int maxMessages = 100;

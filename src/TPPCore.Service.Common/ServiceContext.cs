@@ -2,6 +2,9 @@
 
 namespace TPPCore.Service.Common
 {
+    /// <summary>
+    /// Encapsulates data needed to run a minimal microservice.
+    /// </summary>
     public class ServiceContext
     {
         public ConfigReader ConfigReader { get; private set; }

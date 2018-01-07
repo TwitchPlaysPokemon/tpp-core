@@ -23,6 +23,8 @@ You will need
 * [.NET Core SDK v2.0+](https://www.microsoft.com/net/download)
 * An IDE supporting C# development such as [Visual Studio Code](https://code.visualstudio.com/Download?wt.mc_id=DotNet_Home) (free & open-source, cross-platform), [Visual Studio](https://www.visualstudio.com/) (free, Windows), or [JetBrains Rider](https://www.jetbrains.com/rider/) (paid, cross-platform).
 * [Git](https://git-scm.com/downloads) (and additional GUI tools if not using command line)
+* [Redis](https://redis.io/download) for pub/sub
+* TODO: list database once we use it
 
 Once you have those tools installed,
 
@@ -32,16 +34,33 @@ Once you have those tools installed,
 4. Run the unit tests in all projects: `dotnet test`
 5. Build all the projects: `dotnet build`
 6. Run a specific C# project (CSPROJ file) in the source where PROJECT is the project file: `dotnet run --project PROJECT`. If you need to pass arguments, add `--` then your arguments.
-7. Generate portable runtimes for production use: `dotnet publish -c Release`
-8. Run the runtime with `dotnet PROJECT.dll`
+7. Generate portable runtimes (assemblies) for production use: `dotnet publish -c Release`
+8. Run the assembly with `dotnet PROJECT.dll`
 
-If your IDE does not support SLN files, use `dotnet sln` to manage the file to keep it in sync with the CSPROJ files in the repository. This file is for use with Visual Studio and MSBuild.
+If your IDE does not support SLN files, use `dotnet sln` to manage the file to keep it in sync with the CSPROJ files in the repository. This file is for use with Visual Studio, MSBuild, code completion, etc.
+
+
+## Source Overview
 
 TODO: tell the user about the example programs once they are written to show the architecture.
 
 ## Running
 
 TODO: describe how to run things
+
+
+### Example commands
+
+Checking the command line options of the Parrot service:
+
+    dotnet TPPCore.Service.Example.Parrot.dll --help
+
+Running the parrot service with configuration files:
+
+    dotnet TPPCore.Service.Example.Parrot.dll --log-config log4net.config --config service_common_config.yaml parrot_service_config.yaml
+
+Note that `--config` switch is not repeated for each configuration filename.
+
 
 ## I want to contribute
 
