@@ -16,6 +16,8 @@ namespace TPPCore.Service.Example.Parrot
         private Model model;
         private ParrotWebHandler webHandler;
         private bool running = true;
+        private int broadcastInterval;
+        private int recentIntervalCount;
 
         public ParrotService()
         {
@@ -35,6 +37,11 @@ namespace TPPCore.Service.Example.Parrot
                     .MapPost("message/new", webHandler.PostMessage)
                     ;
             });
+
+            broadcastInterval = context.ConfigReader.GetCheckedValueOrDefault<int>(
+                new[] {"parrot", "broadcastInterval"}, 1000);
+            recentIntervalCount =  context.ConfigReader.GetCheckedValueOrDefault<int>(
+                new[] {"parrot", "recentIntervalCount"}, 5);
         }
 
         public void Run()
@@ -52,13 +59,13 @@ namespace TPPCore.Service.Example.Parrot
         {
             while (running)
             {
-                await Task.Delay(1000);
+                await Task.Delay(broadcastInterval);
 
                 broadcastMessage();
             }
 
             logger.Info("Parrot shutting down");
-            await Task.Delay(2000);
+            await Task.Delay(broadcastInterval);
             logger.Info("Goodbye!");
         }
 
@@ -72,7 +79,7 @@ namespace TPPCore.Service.Example.Parrot
 
             model.Repeat();
 
-            if (model.RepeatCount != 0 && model.RepeatCount % 5 == 0)
+            if (model.RepeatCount != 0 && model.RepeatCount % recentIntervalCount == 0)
             {
                 logger.DebugFormat("Broadcasting recent messages");
 
