@@ -42,6 +42,12 @@ namespace TPPCore.Service.Example.Parrot
                 new[] {"parrot", "broadcastInterval"}, 1000);
             recentIntervalCount =  context.ConfigReader.GetCheckedValueOrDefault<int>(
                 new[] {"parrot", "recentIntervalCount"}, 5);
+
+            context.PubSubClient.Subscribe(ParrotTopics.Broadcast,
+                (topic, message) =>
+                {
+                    logger.DebugFormat("Pub/sub echo {0}: {1}", topic, message);
+                });
         }
 
         public void Run()
