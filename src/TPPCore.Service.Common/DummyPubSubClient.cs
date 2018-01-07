@@ -1,4 +1,5 @@
 using log4net;
+using System;
 using System.Collections.Generic;
 
 namespace TPPCore.Service.Common
@@ -21,16 +22,43 @@ namespace TPPCore.Service.Common
             System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         public List<DummyPubSubClientMessage> Messages;
+        private List<(string Topic, Action<string,string> Handler)> handlers;
 
         public DummyPubSubClient()
         {
             Messages = new List<DummyPubSubClientMessage>();
+            handlers = new List<(string topic, Action<string,string> handler)>();
         }
 
         public void Publish(string topic, string message)
         {
             logger.DebugFormat("Publish: {0} {1}", topic, message);
             Messages.Add(new DummyPubSubClientMessage(topic, message));
+
+            foreach (var item in handlers)
+            {
+                if (item.Topic.Equals(topic, StringComparison.InvariantCulture))
+                {
+                    item.Handler(topic, message);
+                }
+            }
+        }
+
+        public void Subscribe(string topic, Action<string, string> handler)
+        {
+            logger.DebugFormat("Subscribe: {0} {1}", topic, handler);
+
+            var handlerItem = (Topic: topic, Handler: handler);
+            if (!handlers.Contains(handlerItem))
+            {
+                handlers.Add(handlerItem);
+            }
+        }
+
+        public void Unsubscribe(string topic, Action<string, string> handler)
+        {
+            var handlerItem = (Topic: topic, Handler: handler);
+            handlers.Remove(handlerItem);
         }
     }
 }
