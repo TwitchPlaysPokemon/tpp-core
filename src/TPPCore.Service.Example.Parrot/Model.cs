@@ -5,6 +5,8 @@ namespace TPPCore.Service.Example.Parrot
 {
     public class Model
     {
+        private const int maxMessages = 100;
+
         public ReadOnlyCollection<string> RecentMessages
         {
             get { return recentMessages.AsReadOnly(); }
@@ -33,6 +35,7 @@ namespace TPPCore.Service.Example.Parrot
         {
             repeatCount += 1;
             recentMessages.Add(currentMessage);
+            removeOldMessages();
         }
 
         public void RepeatNewMessage(string message)
@@ -44,6 +47,15 @@ namespace TPPCore.Service.Example.Parrot
             }
 
             recentMessages.Add(message);
+            removeOldMessages();
+        }
+
+        private void removeOldMessages()
+        {
+            while (recentMessages.Count > maxMessages)
+            {
+                recentMessages.RemoveAt(0);
+            }
         }
     }
 }
