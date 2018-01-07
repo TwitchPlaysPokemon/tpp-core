@@ -54,9 +54,9 @@ namespace TPPCore.Service.Common
             runner.UseCancelKeyPress();
             runner.Run();
             runner.StopRestfulServer();
+            logger.Info("Service stopped.");
+            // Remove loggers etc for unit test runners or manual control
             runner.CleanUp();
-
-            logger.Info("Service stopped");
 
             return 0;
         }
@@ -128,7 +128,14 @@ namespace TPPCore.Service.Common
                 try
                 {
                     logger.Info("Running service");
-                    service.Run();
+                    if (service is IServiceAsync)
+                    {
+                        (service as IServiceAsync).RunAsync().Wait();
+                    }
+                    else
+                    {
+                        service.Run();
+                    }
                 }
                 catch (Exception error)
                 {
@@ -145,7 +152,14 @@ namespace TPPCore.Service.Common
 
         public async Task RunAsync()
         {
-            await Task.Run(new Action(service.Run));
+            if (service is IServiceAsync)
+            {
+                await (service as IServiceAsync).RunAsync();
+            }
+            else
+            {
+                await Task.Run(new Action(service.Run));
+            }
         }
 
         public void StopRestfulServer()

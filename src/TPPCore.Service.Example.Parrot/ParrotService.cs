@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace TPPCore.Service.Example.Parrot
 {
-    public class ParrotService : IService
+    public class ParrotService : IServiceAsync
     {
         private static readonly ILog logger = LogManager.GetLogger(
             System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -46,8 +46,7 @@ namespace TPPCore.Service.Example.Parrot
 
         public void Run()
         {
-            var task = runAsync();
-            task.Wait();
+            RunAsync().Wait();
         }
 
         public void Shutdown()
@@ -55,7 +54,7 @@ namespace TPPCore.Service.Example.Parrot
             running = false;
         }
 
-        private async Task runAsync()
+        public async Task RunAsync()
         {
             while (running)
             {

@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 namespace TPPCore.Service.Common
 {
     public interface IService
@@ -5,5 +7,10 @@ namespace TPPCore.Service.Common
         void Initialize(ServiceContext context);
         void Run();
         void Shutdown();
+    }
+
+    public interface IServiceAsync : IService
+    {
+        Task RunAsync();
     }
 }
