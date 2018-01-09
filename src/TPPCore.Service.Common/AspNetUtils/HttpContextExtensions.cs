@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;
 
-namespace TPPCore.Service.Common
+namespace TPPCore.Service.Common.AspNetUtils
 {
     public static class HttpContextExtensions
     {
