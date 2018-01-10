@@ -43,6 +43,13 @@ namespace TPPCore.Service.Common.TestUtils
         public async Task SetUpAsync(string[] args)
         {
             Runner.Configure(args);
+
+            if (Runner.Context.RestfulServer.Context.LocalAuthenticationPassword == null)
+            {
+                Runner.Context.RestfulServer.SetPassword("testing");
+                Runner.Context.InitRestfulClient();
+            }
+
             await Runner.StartRestfulServerAsync();
             runAsyncTask = Runner.RunAsync();
         }

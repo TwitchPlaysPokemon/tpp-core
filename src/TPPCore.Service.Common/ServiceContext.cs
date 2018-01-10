@@ -1,4 +1,8 @@
+using System;
+using System.Collections.Generic;
 using System.Net;
+using System.Net.Http;
+using TPPCore.Service.Common.AspNetUtils;
 
 namespace TPPCore.Service.Common
 {
@@ -10,6 +14,7 @@ namespace TPPCore.Service.Common
         public ConfigReader ConfigReader { get; private set; }
         public IPubSubClient PubSubClient { get; private set; }
         public RestfulServer RestfulServer { get; private set; }
+        public HttpClient RestfulClient { get; private set; }
         public ServiceAssignment ServiceAssignment { get; private set; }
 
         public ServiceContext() {
@@ -43,6 +48,20 @@ namespace TPPCore.Service.Common
                 RestfulServer.SetPassword(password);
             }
         }
+
+        public void InitRestfulClient()
+        {
+            RestfulClient = new HttpClient();
+
+            var password = RestfulServer.Context.LocalAuthenticationPassword;
+
+            if (password != null)
+            {
+                RestfulClient.DefaultRequestHeaders.Add(
+                    LocalAuthenticationMiddleware.PasswordHeaderKey,
+                    password
+                );
+            }
         }
 
         public void InitServiceAssignment(ConfigReader configReader)

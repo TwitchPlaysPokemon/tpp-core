@@ -282,6 +282,8 @@ namespace TPPCore.Service.Common
 
             setUpPubSubClient();
             setUpRestfulServer();
+
+            context.InitRestfulClient();
         }
 
         private void setUpPubSubClient()
