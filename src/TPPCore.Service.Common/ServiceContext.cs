@@ -34,6 +34,15 @@ namespace TPPCore.Service.Common
         {
             host = IPAddress.Loopback ?? host;
             RestfulServer = new RestfulServer(host, port);
+
+            var password = ConfigReader.GetCheckedValueOrDefault<string>(
+                    new[] {"restful", "localAuthenticationPassword"}, null);
+
+            if (password != null)
+            {
+                RestfulServer.SetPassword(password);
+            }
+        }
         }
 
         public void InitServiceAssignment(ConfigReader configReader)

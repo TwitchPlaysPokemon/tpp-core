@@ -20,6 +20,8 @@ namespace TPPCore.Service.Common
         public readonly RestfulServerContext Context;
         public IWebHost AspNetWebHost { get; private set; }
 
+        private const string defaultPassword = "password";
+
         public RestfulServer(IPAddress host, int port = 0)
         {
             Context = new RestfulServerContext();
@@ -84,6 +86,19 @@ namespace TPPCore.Service.Common
             }
 
             throw new ArgumentException("No addresses");
+        }
+
+        /// <summary>
+        /// Set password for local authentication.
+        /// </summary>
+        public void SetPassword(string password)
+        {
+            if (password.Equals(defaultPassword, StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new Exception("Password not changed from example default.");
+            }
+
+            Context.LocalAuthenticationPassword = password;
         }
     }
 }

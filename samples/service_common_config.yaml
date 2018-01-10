@@ -7,6 +7,14 @@ service:
   pubSub: redis
 
 
+## Config for the RESTful web server. See the per-service template for
+## more options.
+restful:
+  ## Password to authenticate services. Change it from the default to a
+  ## long string or comment it out to disable.
+  localAuthenticationPassword: password
+
+
 ## Config for the Redis in-memory database instance.
 redis:
   host: localhost  ## Hostname.

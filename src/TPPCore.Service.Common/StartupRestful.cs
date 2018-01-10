@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using TPPCore.Service.Common.AspNetUtils;
 
 namespace TPPCore.Service.Common
 {
@@ -29,10 +30,12 @@ namespace TPPCore.Service.Common
 
         public void Configure(IApplicationBuilder app)
         {
+            // Order of the middleware is important
+            configureAuthentication(app);
             configureRoutes(app);
         }
 
-        void configureRoutes(IApplicationBuilder app)
+        private void configureRoutes(IApplicationBuilder app)
         {
             var routeBuilder = new RouteBuilder(app);
 
@@ -42,6 +45,19 @@ namespace TPPCore.Service.Common
             }
 
             app.UseRouter(routeBuilder.Build());
+        }
+
+        private void configureAuthentication(IApplicationBuilder app)
+        {
+            if (restfulContext.LocalAuthenticationPassword != null)
+            {
+                app.UseLocalAuthentication();
+                logger.Debug("Service using authentication.");
+            }
+            else
+            {
+                logger.Warn("Authentication not configured.");
+            }
         }
     }
 }

@@ -24,6 +24,11 @@ namespace TPPCore.Service.Common
         /// </summary>
         public int RealPort;
 
+        /// <summary>
+        /// Password to authenticate services
+        /// </summary>
+        public string LocalAuthenticationPassword;
+
         internal Action<RouteBuilder> routeBuilderAction;
 
         public RestfulServerContext()
