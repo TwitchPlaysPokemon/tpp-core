@@ -41,7 +41,7 @@ namespace TPPCore.Service.Common
 
             foreach (var item in handlers)
             {
-                if (item.Topic.Equals(topic, StringComparison.InvariantCulture))
+                if (item.Topic.Equals(topic, StringComparison.Ordinal))
                 {
                     item.Handler(topic, message);
                 }
