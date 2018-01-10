@@ -26,8 +26,7 @@ namespace TPPCore.Service.Example.Parrot.Tests
             var runner = newServiceRunner();
             await runner.SetUpAsync();
 
-            var httpClient = new HttpClient();
-
+            var httpClient = runner.Runner.Context.RestfulClient;
             var uri = new Uri(runner.Runner.Context.RestfulServer.Context.GetUri(),
                 "/message/current");
             var response = await httpClient.GetAsync(uri);
@@ -48,8 +47,7 @@ namespace TPPCore.Service.Example.Parrot.Tests
             var runner = newServiceRunner();
             await runner.SetUpAsync();
 
-            var httpClient = new HttpClient();
-
+            var httpClient = runner.Runner.Context.RestfulClient;
             var jsonDoc = new JObject();
             jsonDoc.Add("message", "wow");
 
