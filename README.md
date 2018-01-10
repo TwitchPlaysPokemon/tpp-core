@@ -39,10 +39,17 @@ Once you have those tools installed,
 
 If your IDE does not support SLN files, use `dotnet sln` to manage the file to keep it in sync with the CSPROJ files in the repository. This file is for use with Visual Studio, MSBuild, code completion, etc.
 
+For more details, such as creating new projects, see the [dotnet command documentation](https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet?tabs=netcore2x).
+
 
 ## Source Overview
 
-TODO: tell the user about the example programs once they are written to show the architecture.
+The core separated into components based on the microservice architecture. Each microservice (or service for short) is intended to run and be able to restart independently. Services communicate directly with each other using RESTful web services (HTTP). Services also communicate indirectly by messages in a pub/sub system.
+
+The source code is organized into several projects according to their usage. For example, `TPPCore.Service.Common` is a project that outputs a library assembly and `TPPCore.Service.Example.Parrot` is a project that outputs a command line program assembly.
+
+The Parrot example service is a simple service intended to demonstrate the basic functionality. It loops infinitely sending messages to the pub/sub client which is a thin wrapper to the Redis client. To query or change the state in service, it exposes simple RESTful HTTP endpoints that accept and send JSON formatted body messages. Internally, it uses the ASP.NET Core framework to start up a Kestrel web host. Be sure to look at the service's test code too.
+
 
 ## Running
 
