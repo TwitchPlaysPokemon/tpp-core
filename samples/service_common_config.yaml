@@ -20,7 +20,7 @@ redis:
 
 
 ## Config to allow each service to communiate to each other
-serviceAdvertisement:
+serviceAssignment:
   ## Static mapping uses fixed IP addresses and port numbers. The key
   ## is the service name and then value is the host/port assignment
   static:

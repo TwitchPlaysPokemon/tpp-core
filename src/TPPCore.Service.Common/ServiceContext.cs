@@ -10,6 +10,7 @@ namespace TPPCore.Service.Common
         public ConfigReader ConfigReader { get; private set; }
         public IPubSubClient PubSubClient { get; private set; }
         public RestfulServer RestfulServer { get; private set; }
+        public ServiceAssignment ServiceAssignment { get; private set; }
 
         public ServiceContext() {
         }
@@ -33,6 +34,12 @@ namespace TPPCore.Service.Common
         {
             host = IPAddress.Loopback ?? host;
             RestfulServer = new RestfulServer(host, port);
+        }
+
+        public void InitServiceAssignment(ConfigReader configReader)
+        {
+            ServiceAssignment = new ServiceAssignment();
+            ServiceAssignment.LoadFromConfig(ConfigReader);
         }
     }
 }

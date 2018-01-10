@@ -278,6 +278,7 @@ namespace TPPCore.Service.Common
             context = new ServiceContext();
 
             context.InitConfigReader(configReader);
+            context.InitServiceAssignment(configReader);
 
             setUpPubSubClient();
             setUpRestfulServer();
