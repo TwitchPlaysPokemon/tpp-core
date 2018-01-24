@@ -79,12 +79,18 @@ namespace TPPCore.Service.Common
         /// </summary>
         public void Configure(string[] args)
         {
-            Debug.Assert(options == null);
+            var options = parseCommandLineArgs(args);
+            Configure(options);
+        }
+
+        public void Configure(ServiceRunnerOptions options)
+        {
+            Debug.Assert(this.options == null);
             Debug.Assert(context == null);
 
             logger.Info("Configuring service");
 
-            options = parseCommandLineArgs(args);
+            this.options = options;
             setUpLogging();
             processConfigFiles();
             setUpContext();
@@ -270,6 +276,11 @@ namespace TPPCore.Service.Common
             foreach (var path in options.ConfigFiles)
             {
                 configReader.Load(path);
+            }
+
+            if (options.ConfigStream != null)
+            {
+                configReader.Load(options.ConfigStream);
             }
         }
 

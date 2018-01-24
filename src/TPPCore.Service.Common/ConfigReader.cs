@@ -97,6 +97,21 @@ namespace TPPCore.Service.Common
         }
 
         /// <summary>
+        /// Read configuration from a stream containg YAML markup.
+        /// </summary>
+        public void Load(Stream stream)
+        {
+             var yamlStream = new YamlStream();
+
+            using (var streamReader = new StreamReader(stream))
+            {
+                yamlStream.Load(streamReader);
+            }
+
+            processYamlStream(yamlStream);
+        }
+
+        /// <summary>
         /// Read configuration from a YAML string.
         /// </summary>
         public void LoadString(string content)

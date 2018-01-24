@@ -1,6 +1,7 @@
 using CommandLine;
 using CommandLine.Text;
 using System.Collections.Generic;
+using System.IO;
 
 namespace TPPCore.Service.Common
 {
@@ -20,5 +21,7 @@ namespace TPPCore.Service.Common
         [Option('c', "config",
             HelpText = "Path of configuration file")]
         public IEnumerable<string> ConfigFiles { get; set; }
+
+        public Stream ConfigStream { get; set; }
     }
 }

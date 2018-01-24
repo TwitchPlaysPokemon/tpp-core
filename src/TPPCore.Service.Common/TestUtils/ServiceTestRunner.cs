@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using CommandLine;
 
 namespace TPPCore.Service.Common.TestUtils
 {
@@ -35,6 +36,10 @@ namespace TPPCore.Service.Common.TestUtils
             SetUpAsync(args).Wait();
         }
 
+        public void SetUp(ServiceRunnerOptions options) {
+            SetUpAsync(options).Wait();
+        }
+
         public async Task SetUpAsync()
         {
             await SetUpAsync(new string[] {});
@@ -43,7 +48,16 @@ namespace TPPCore.Service.Common.TestUtils
         public async Task SetUpAsync(string[] args)
         {
             Runner.Configure(args);
+            await setUpCommon();
+        }
 
+        public async Task SetUpAsync(ServiceRunnerOptions options)
+        {
+            Runner.Configure(options);
+            await setUpCommon();
+        }
+
+        private async Task setUpCommon() {
             if (Runner.Context.RestfulServer.Context.LocalAuthenticationPassword == null)
             {
                 Runner.Context.RestfulServer.SetPassword("testing");
@@ -65,6 +79,13 @@ namespace TPPCore.Service.Common.TestUtils
             await runAsyncTask;
             await Runner.StopRestfulServerAsync();
             Runner.CleanUp();
+        }
+
+        public static ServiceRunnerOptions GetDefaultOptions()
+        {
+            var argResult = Parser.Default.ParseArguments<ServiceRunnerOptions>(new string[] {});
+            var parsedResult = (Parsed<ServiceRunnerOptions>) argResult;
+            return parsedResult.Value;
         }
     }
 }
