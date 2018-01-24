@@ -1,0 +1,5 @@
+chat:
+  providers:
+    - dummy
+
+  dummy:

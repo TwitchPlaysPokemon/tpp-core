@@ -1,0 +1,45 @@
+## Config for TPPCore.Service.Chat
+
+## See service_template_config.yaml for option details
+restful:
+  host: localhost
+  port: 5200
+
+
+## Configuration for the chat service
+chat:
+  providers:
+    - dummy
+    - irc
+    - twitch
+    - mixer
+
+  dummy:
+
+  irc:
+    host: example.com
+    ## Port number. Default 6667, 6697 for SSL.
+    port: 6667
+    ssl: false
+    nickname: example
+    # password: hunter2
+    channels:
+      - "#channel1"
+      - "#channel2"
+
+  twitch:
+    ## Below is same as IRC
+    host: irc.chat.twitch.tv
+    port: 443
+    ssl: true
+    nickname: example
+    password: oauth:abcdef1234567890
+    channels:
+      - "#channel1"
+      - "#channel2"
+
+    ## Twitch specifc config starts here
+
+  mixer:
+    host: mixer.com
+    oauthToken: abcdef1234567890
