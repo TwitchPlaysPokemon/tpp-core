@@ -29,14 +29,10 @@ namespace TPPCore.Service.Example.Parrot.Tests
             var httpClient = runner.Runner.Context.RestfulClient;
             var uri = new Uri(runner.Runner.Context.RestfulServer.Context.GetUri(),
                 "/message/current");
-            var response = await httpClient.GetAsync(uri);
-            var body = await response.Content.ReadAsStringAsync();
+            var result = await httpClient.GetJsonAsync(uri);
 
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-            var jsonDoc = JObject.Parse(body);
-
-            Assert.Equal("hello world!", jsonDoc.GetValue("message").ToString());
+            Assert.Equal(HttpStatusCode.OK, result.Response.StatusCode);
+            Assert.Equal("hello world!", result.JsonDoc.Value<string>("message"));
 
             await runner.TearDownAsync();
         }
@@ -54,10 +50,9 @@ namespace TPPCore.Service.Example.Parrot.Tests
             var uri = new Uri(runner.Runner.Context.RestfulServer.Context.GetUri(),
                 "/message/new");
 
-            var content = new StringContent(jsonDoc.ToString());
-            var response = await httpClient.PostAsync(uri, content);
+            var result = await httpClient.PostJsonAsync(uri, jsonDoc);
 
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal(HttpStatusCode.OK, result.Response.StatusCode);
 
             await runner.TearDownAsync();
         }

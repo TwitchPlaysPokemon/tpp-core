@@ -38,9 +38,11 @@ namespace TPPCore.Service.Example.Parrot
         {
             var jsonDoc = await context.ReadJsonAsync();
 
-            var message = jsonDoc.GetValue("message").ToString();
+            var message = jsonDoc.Value<string>("message");
 
             model.RepeatNewMessage(message);
+
+            await context.RespondJsonAsync(new JObject());
         }
     }
 }

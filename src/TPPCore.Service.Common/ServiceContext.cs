@@ -14,7 +14,7 @@ namespace TPPCore.Service.Common
         public ConfigReader ConfigReader { get; private set; }
         public IPubSubClient PubSubClient { get; private set; }
         public RestfulServer RestfulServer { get; private set; }
-        public HttpClient RestfulClient { get; private set; }
+        public RestfulClient RestfulClient { get; private set; }
         public ServiceAssignment ServiceAssignment { get; private set; }
 
         public ServiceContext() {
@@ -51,7 +51,7 @@ namespace TPPCore.Service.Common
 
         public void InitRestfulClient()
         {
-            RestfulClient = new HttpClient();
+            RestfulClient = new RestfulClient();
 
             var password = RestfulServer.Context.LocalAuthenticationPassword;
 
