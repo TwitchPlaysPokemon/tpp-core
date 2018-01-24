@@ -174,6 +174,11 @@ namespace TPPCore.Service.Common
                         throw;
                     }
                 }
+
+                if (!options.RestartOnError)
+                {
+                    break;
+                }
             }
         }
 
