@@ -3,7 +3,9 @@
 
 ## Config for the service runner.
 service:
-  ## The pub/sub implementation to use. One of redis (default), dummy.
+  ## The pub/sub implementation to use. One of redis (recommended),
+  ## dummy (default). The dummy pub/sub doesn't work across services and is
+  ## intended for testing only.
   pubSub: redis
 
 

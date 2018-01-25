@@ -6,6 +6,7 @@ using System.Threading;
 using TPPCore.Utils;
 using System;
 using TPPCore.Service.Chat.DataModels;
+using TPPCore.Service.Chat.Irc;
 
 namespace TPPCore.Service.Chat.Providers.Irc
 {
@@ -13,6 +14,7 @@ namespace TPPCore.Service.Chat.Providers.Irc
     {
         private static readonly ILog logger = LogManager.GetLogger(
             System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private const int keepAliveInterval = 60_000;
 
         public string Name { get { return "irc"; } }
 
@@ -21,7 +23,14 @@ namespace TPPCore.Service.Chat.Providers.Irc
         private StandardIrcClient ircClient;
         private ConnectConfig connectConfig;
         private bool isRunning = false;
+        private Timer keepAliveTimer;
 
+        public IrcProvider()
+        {
+            keepAliveTimer = new Timer(state => keepAliveTimerCallback(),
+                null,
+                Timeout.Infinite, Timeout.Infinite);
+        }
 
         public void Configure(ProviderContext providerContext)
         {
@@ -34,18 +43,25 @@ namespace TPPCore.Service.Chat.Providers.Irc
                     new[] {"chat", Name, "port"}),
                 Ssl = context.Service.ConfigReader.GetCheckedValue<bool>(
                     new[] {"chat", Name, "ssl"}),
+                Timeout = context.Service.ConfigReader.GetCheckedValue<int>(
+                    new[] {"chat", Name, "timeout"}),
                 Nickname = context.Service.ConfigReader.GetCheckedValue<string>(
                     new[] {"chat", Name, "nickname"}),
                 Password = context.Service.ConfigReader.GetCheckedValueOrDefault<string>(
-                    new[] {"chat", Name, "nickname"}, null),
+                    new[] {"chat", Name, "password"}, null),
                 Channels = context.Service.ConfigReader.GetCheckedValue<string[]>(
                     new[] {"chat", Name, "channels"}),
+                MaxMessageBurst = context.Service.ConfigReader.GetCheckedValue<int>(
+                    new[] {"chat", Name, "rateLimit", "maxMessageBurst"}),
+                CounterPeriod = context.Service.ConfigReader.GetCheckedValue<int>(
+                    new[] {"chat", Name, "rateLimit", "counterPeriod"}),
             };
         }
 
         public void Run()
         {
             isRunning = true;
+            keepAliveTimer.Change(0, keepAliveInterval);
 
             while (isRunning)
             {
@@ -56,7 +72,7 @@ namespace TPPCore.Service.Chat.Providers.Irc
                 if (ircClient.IsRegistered)
                 {
                     logger.Info("Logged in.");
-                    setUpEvents();
+                    setUpEventHandlers();
                     joinChannels();
                     disconnectEvent.Wait();
                     logger.Info("Disconnected.");
@@ -79,13 +95,19 @@ namespace TPPCore.Service.Chat.Providers.Irc
             isRunning = false;
 
             cleanUpIrcClient();
+
+            if (keepAliveTimer != null)
+            {
+                keepAliveTimer.Dispose();
+                keepAliveTimer = null;
+            }
         }
 
         private void initIrcClient()
         {
             ircClient = new StandardIrcClient();
-            // TODO: Allow this to be customized
-            ircClient.FloodPreventer = new IrcStandardFloodPreventer(20, 30000);
+            ircClient.FloodPreventer = new IrcStandardFloodPreventer(
+                connectConfig.MaxMessageBurst, connectConfig.CounterPeriod);
 
             ircClient.RawMessageReceived +=
                 (object sender, IrcRawMessageEventArgs args) =>
@@ -94,6 +116,18 @@ namespace TPPCore.Service.Chat.Providers.Irc
             ircClient.RawMessageSent +=
                 (object sender, IrcRawMessageEventArgs args) =>
                     logger.DebugFormat("IRC SEND: {0}", args.RawContent);
+
+            ircClient.Error +=
+                (object sender, IrcErrorEventArgs args) =>
+                    logger.Error("IRC client exception", args.Error);
+
+            ircClient.ProtocolError +=
+                (object sender, IrcProtocolErrorEventArgs args) =>
+                    logger.ErrorFormat("IRC client got back error {0} {1} {2}",
+                        args.Code, string.Join(", ", args.Parameters),
+                        args.Message);
+
+            addRawLineHandlers();
         }
 
         private void cleanUpIrcClient()
@@ -105,7 +139,8 @@ namespace TPPCore.Service.Chat.Providers.Irc
                     return;
                 }
 
-                try {
+                try
+                {
                     if (ircClient.IsConnected)
                     {
                         ircClient.Quit(5, "");
@@ -138,8 +173,7 @@ namespace TPPCore.Service.Chat.Providers.Irc
 
                     connect();
 
-                    // TODO: allow configuring timeout
-                    connectEvent.Wait(120000);
+                    connectEvent.Wait(connectConfig.Timeout);
                 }
 
                 if (!ircClient.IsConnected)
@@ -150,7 +184,7 @@ namespace TPPCore.Service.Chat.Providers.Irc
                 }
 
                 logger.Info("Connected. Logging in...");
-                var success = registerEvent.Wait(120000);
+                var success = registerEvent.Wait(connectConfig.Timeout);
 
                 if (!success)
                 {
@@ -178,10 +212,40 @@ namespace TPPCore.Service.Chat.Providers.Irc
                 connectConfig.Ssl, regInfo);
         }
 
-        private void setUpEvents()
+        private void keepAliveTimerCallback()
         {
-            // TODO: this is a good place to set up the delegates
-            // Add handlers to broadcast chat messages received.
+            lock (thisLock)
+            {
+                if (ircClient == null || !ircClient.IsRegistered)
+                {
+                    return;
+                }
+
+                var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                // FIXME: calling this results in the RawMessageSent event handler
+                // return null for args
+                ircClient.SendRawMessage($"PING :{timestamp}");
+            }
+        }
+
+        private void setUpEventHandlers()
+        {
+            ircClient.LocalUser.JoinedChannel += localUserJoinedEventHandler;
+            ircClient.LocalUser.LeftChannel += localUserPartedEventHandler;
+            ircClient.LocalUser.MessageReceived += localUserMessageEventHandler;
+            ircClient.LocalUser.NoticeReceived += localUserNoticeEventHandler;
+        }
+
+        private void addRawLineHandlers()
+        {
+            ircClient.RawMessageReceived += (sender, args) =>
+            {
+                var rawEvent = new RawContentEvent()
+                {
+                        RawContent = args.RawContent
+                };
+                context.PublishChatEvent(rawEvent);
+            };
         }
 
         private void joinChannels()
@@ -231,6 +295,116 @@ namespace TPPCore.Service.Chat.Providers.Irc
             message.CheckUnsafeChars();
             // FIXME: check if we are actually sending to a user;
             ircClient.LocalUser.SendMessage(user, message);
+        }
+
+        private void localUserJoinedEventHandler(object sender, IrcChannelEventArgs args)
+        {
+            logger.InfoFormat("Client joined channel {0}", args.Channel);
+
+            var localUser = (IrcLocalUser) sender;
+            addHandlersToChannel(args.Channel);
+        }
+
+        private void localUserPartedEventHandler(object sender, IrcChannelEventArgs args)
+        {
+            logger.InfoFormat("Client parted channel {0}", args.Channel);
+
+            var localUser = (IrcLocalUser) sender;
+            removeHandlersFromChannel(args.Channel);
+        }
+
+        private void localUserMessageEventHandler(object sender, IrcMessageEventArgs args)
+        {
+            publishLocalUserMessage(args, false);
+        }
+
+        private void localUserNoticeEventHandler(object sender, IrcMessageEventArgs args)
+        {
+            publishLocalUserMessage(args, true);
+        }
+
+        private void publishLocalUserMessage(IrcMessageEventArgs args, bool isNotice)
+        {
+            var chatMessage = new ChatMessage() {
+                ProviderName = Name,
+                TextContent = args.Text,
+                IsNotice = isNotice,
+            };
+
+            // Received a private message from a user or a server.
+            if (args.Source is IrcUser)
+            {
+                var ircUser = args.Source as IrcUser;
+                chatMessage.Sender = ircUser.ToChatUserModel();
+            }
+
+            context.PublishChatEvent(chatMessage);
+        }
+
+        private void addHandlersToChannel(IrcChannel channel) {
+            channel.UserJoined += userJoinedChannelEventHandler;
+            channel.UserLeft += userPartedChannelEventHandler;
+            channel.MessageReceived += channelMessageEventHandler;
+            channel.NoticeReceived += channelNoticeEventHandler;
+        }
+
+        private void removeHandlersFromChannel(IrcChannel channel) {
+            channel.UserJoined -= userJoinedChannelEventHandler;
+            channel.UserLeft -= userPartedChannelEventHandler;
+            channel.MessageReceived -= channelMessageEventHandler;
+            channel.NoticeReceived -= channelNoticeEventHandler;
+        }
+
+        private void userJoinedChannelEventHandler(object sender, IrcChannelUserEventArgs args)
+        {
+            var channel = (IrcChannel) sender;
+            var chatEvent = new UserEvent() {
+                ProviderName = Name,
+                EventType = UserEventTypes.Join,
+                Channel = channel.Name.ToLowerIrc(),
+                User = args.ChannelUser.User.ToChatUserModel(),
+            };
+        }
+
+        private void userPartedChannelEventHandler(object sender, IrcChannelUserEventArgs args)
+        {
+            var channel = (IrcChannel) sender;
+            var chatEvent = new UserEvent() {
+                ProviderName = Name,
+                EventType = UserEventTypes.Part,
+                Channel = channel.Name.ToLowerIrc(),
+                User = args.ChannelUser.User.ToChatUserModel(),
+            };
+        }
+
+        private void channelMessageEventHandler(object sender, IrcMessageEventArgs args)
+        {
+            publishChannelMessage(sender, args, false);
+        }
+
+        private void channelNoticeEventHandler(object sender, IrcMessageEventArgs args)
+        {
+            publishChannelMessage(sender, args, true);
+        }
+
+        private void publishChannelMessage(object sender, IrcMessageEventArgs args, bool isNotice)
+        {
+            var channel = (IrcChannel) sender;
+
+            var chatMessage = new ChatMessage() {
+                ProviderName = Name,
+                TextContent = args.Text,
+                Channel = channel.Name.ToLowerIrc(),
+                IsNotice = isNotice,
+            };
+
+            if (args.Source is IrcUser)
+            {
+                var ircUser = args.Source as IrcUser;
+                chatMessage.Sender = ircUser.ToChatUserModel();
+            }
+
+            context.PublishChatEvent(chatMessage);
         }
     }
 }
