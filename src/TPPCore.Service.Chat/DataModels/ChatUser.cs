@@ -1,6 +1,6 @@
 using Newtonsoft.Json.Linq;
 
-namespace TPPCore.Service.Chat
+namespace TPPCore.Service.Chat.DataModels
 {
     public class ChatUser
     {

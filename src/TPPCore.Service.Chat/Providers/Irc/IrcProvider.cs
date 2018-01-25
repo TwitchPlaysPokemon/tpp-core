@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using TPPCore.Utils;
 using System;
+using TPPCore.Service.Chat.DataModels;
 
 namespace TPPCore.Service.Chat.Providers.Irc
 {
