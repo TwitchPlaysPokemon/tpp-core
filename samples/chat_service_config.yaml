@@ -42,6 +42,8 @@ chat:
     port: 443
     ssl: true
     timeout: 120000
+    ## If you just want an anonymous, read-only connection, comment out the
+    ## password field and set the nickname to justinfan1234567890
     nickname: example
     password: oauth:abcdef1234567890
     channels:

@@ -16,7 +16,7 @@ namespace TPPCore.Service.Chat.Providers.Irc
             System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private const int keepAliveInterval = 60_000;
 
-        public string Name { get { return "irc"; } }
+        public string Name { get; protected set; } = "irc";
 
         private Object thisLock = new Object();
         private ProviderContext context;
@@ -103,9 +103,14 @@ namespace TPPCore.Service.Chat.Providers.Irc
             }
         }
 
+        protected virtual StandardIrcClient newIrcClient()
+        {
+            return new StandardIrcClient();
+        }
+
         private void initIrcClient()
         {
-            ircClient = new StandardIrcClient();
+            ircClient = newIrcClient();
             ircClient.FloodPreventer = new IrcStandardFloodPreventer(
                 connectConfig.MaxMessageBurst, connectConfig.CounterPeriod);
 
@@ -242,7 +247,8 @@ namespace TPPCore.Service.Chat.Providers.Irc
             {
                 var rawEvent = new RawContentEvent()
                 {
-                        RawContent = args.RawContent
+                    ProviderName = Name,
+                    RawContent = args.RawContent
                 };
                 context.PublishChatEvent(rawEvent);
             };

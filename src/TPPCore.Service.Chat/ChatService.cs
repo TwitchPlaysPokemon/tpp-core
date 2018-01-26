@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using TPPCore.Service.Chat.Providers.Dummy;
 using TPPCore.Service.Common;
 using TPPCore.Service.Chat.Providers.Irc;
+using TPPCore.Service.Chat.Twitch;
 
 namespace TPPCore.Service.Chat
 {
@@ -106,8 +107,11 @@ namespace TPPCore.Service.Chat
                     return new DummyProvider();
                 case "irc":
                     return new IrcProvider();
+                case "twitch":
+                    return new TwitchProvider();
                 default:
-                    throw new System.NotImplementedException();
+                    throw new System.NotImplementedException(
+                        $"IRC provider {providerName} not implemented.");
             }
         }
     }

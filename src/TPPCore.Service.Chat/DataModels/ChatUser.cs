@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 
 namespace TPPCore.Service.Chat.DataModels
@@ -16,6 +17,29 @@ namespace TPPCore.Service.Chat.DataModels
                 username = Username,
                 nickname = Nickname
             });
+        }
+    }
+
+    public class ChatUserEqualityComparer : EqualityComparer<ChatUser>
+    {
+        public override bool Equals(ChatUser x, ChatUser y)
+        {
+            if (x.UserId != null && y.UserId != null)
+            {
+                return x.UserId.Equals(y.UserId);
+            }
+
+            return x.Username == y.Username;
+        }
+
+        public override int GetHashCode(ChatUser obj)
+        {
+            if (obj.UserId != null)
+            {
+                return obj.UserId.GetHashCode();
+            }
+
+            return obj.Username.GetHashCode();
         }
     }
 }
