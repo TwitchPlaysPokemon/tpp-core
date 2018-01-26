@@ -143,7 +143,7 @@ namespace TPPCore.Service.Chat.Providers.Irc
                 {
                     if (ircClient.IsConnected)
                     {
-                        ircClient.Quit(5, "");
+                        ircClient.Quit(connectConfig.Timeout, "");
                         ircClient.Disconnect();
                     }
 
@@ -265,11 +265,7 @@ namespace TPPCore.Service.Chat.Providers.Irc
 
             foreach (var ircUser in ircChannel.Users)
             {
-                var user = new ChatUser() {
-                    UserId = $"{ircUser.User.NickName}!{ircUser.User.UserName}@{ircUser.User.ServerName}",
-                    Nickname = ircUser.User.NickName,
-                    Username = ircUser.User.NickName.ToLowerIrc()
-                };
+                var user = ircUser.User.ToChatUserModel();
                 users.Add(user);
             }
 
@@ -364,6 +360,7 @@ namespace TPPCore.Service.Chat.Providers.Irc
                 Channel = channel.Name.ToLowerIrc(),
                 User = args.ChannelUser.User.ToChatUserModel(),
             };
+            context.PublishChatEvent(chatEvent);
         }
 
         private void userPartedChannelEventHandler(object sender, IrcChannelUserEventArgs args)
@@ -375,6 +372,7 @@ namespace TPPCore.Service.Chat.Providers.Irc
                 Channel = channel.Name.ToLowerIrc(),
                 User = args.ChannelUser.User.ToChatUserModel(),
             };
+            context.PublishChatEvent(chatEvent);
         }
 
         private void channelMessageEventHandler(object sender, IrcMessageEventArgs args)
