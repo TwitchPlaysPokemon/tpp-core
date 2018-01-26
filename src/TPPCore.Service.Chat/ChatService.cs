@@ -37,6 +37,7 @@ namespace TPPCore.Service.Chat
             {
                 routeBuilder
                     .MapGet("provider/{provider}/user_id", webHandler.GetUserId)
+                    .MapGet("provider/{provider}/username", webHandler.GetUsername)
                     .MapPost("chat/{provider}/{channel}/send", webHandler.PostSendMessage)
                     .MapPost("private_chat/{provider}/{user}/send", webHandler.PostSendPrivateMessage)
                     .MapGet("chat/{provider}/{channel}/room_list", webHandler.GetRoomList)

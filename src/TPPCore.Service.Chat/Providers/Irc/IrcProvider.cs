@@ -274,6 +274,11 @@ namespace TPPCore.Service.Chat.Providers.Irc
 
         public string GetUserId()
         {
+            return ircClient.LocalUser.ToChatUserModel().UserId;
+        }
+
+        public string GetUsername()
+        {
             return ircClient.LocalUser.UserName;
         }
 

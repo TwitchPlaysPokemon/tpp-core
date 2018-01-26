@@ -41,6 +41,36 @@ namespace TPPCore.Service.Chat.Tests
         }
 
         [Fact]
+        public async Task TestUserIdUsername()
+        {
+            var runner = newServiceRunner();
+            await runner.SetUpAsync(getOptions());
+
+            var httpClient = runner.Runner.Context.RestfulClient;
+            var uri = new Uri(
+                runner.Runner.Context.RestfulServer.Context.GetUri(),
+                "provider/dummy/username");
+            var result = await httpClient.GetJsonAsync(uri);
+            Assert.Equal(HttpStatusCode.OK, result.Response.StatusCode);
+
+            var jsonDoc = result.JsonDoc;
+            var username = jsonDoc.Value<string>("username");
+            Assert.Equal("dummy", username);
+
+            uri = new Uri(
+                runner.Runner.Context.RestfulServer.Context.GetUri(),
+                "provider/dummy/user_id");
+            result = await httpClient.GetJsonAsync(uri);
+            Assert.Equal(HttpStatusCode.OK, result.Response.StatusCode);
+
+            jsonDoc = result.JsonDoc;
+            var userId = jsonDoc.Value<string>("userId");
+            Assert.Equal("dummy", userId);
+
+            await runner.TearDownAsync();
+        }
+
+        [Fact]
         public async Task TestRoomList()
         {
             var runner = newServiceRunner();

@@ -45,6 +45,11 @@ namespace TPPCore.Service.Chat.Providers.Dummy
             return "dummy";
         }
 
+        public string GetUsername()
+        {
+            return "dummy";
+        }
+
         public async Task SendMessage(string channel, string message)
         {
             await Task.Delay(100);

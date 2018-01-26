@@ -27,6 +27,12 @@ namespace TPPCore.Service.Chat
             return provider.GetUserId();
         }
 
+        public string GetUsername(string providerName) {
+            var provider = providers[providerName];
+
+            return provider.GetUsername();
+        }
+
         public async Task SendMessage(string providerName, string channel, string message)
         {
             var provider = providers[providerName];

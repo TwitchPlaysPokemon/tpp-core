@@ -25,6 +25,15 @@ namespace TPPCore.Service.Chat
             await context.RespondJsonAsync(jsonDoc);
         }
 
+        public async Task GetUsername(HttpContext context)
+        {
+            var provider = (string) context.GetRouteValue("provider");
+            var username = chatFacade.GetUserId(provider);
+            var jsonDoc = JObject.FromObject(new { username = username });
+
+            await context.RespondJsonAsync(jsonDoc);
+        }
+
         public async Task PostSendMessage(HttpContext context)
         {
             var provider = (string) context.GetRouteValue("provider");

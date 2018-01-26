@@ -13,6 +13,7 @@ namespace TPPCore.Service.Chat
         void Shutdown();
 
         string GetUserId();
+        string GetUsername();
     }
 
     public interface IProviderThreaded : IProvider
