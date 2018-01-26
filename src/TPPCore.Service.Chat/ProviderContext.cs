@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using TPPCore.Service.Common;
 
 namespace TPPCore.Service.Chat
@@ -15,6 +16,7 @@ namespace TPPCore.Service.Chat
 
         public void PublishChatEvent(IPubSubEvent chatEvent)
         {
+            Debug.Assert(chatEvent.Topic != null);
             Service.PubSubClient.Publish(chatEvent.Topic, chatEvent.ToJObject());
         }
     }

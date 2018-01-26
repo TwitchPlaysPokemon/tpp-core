@@ -49,6 +49,7 @@ namespace TPPCore.Service.Chat.Providers.Dummy
         {
             await Task.Delay(100);
             var chatMessage = new ChatMessage() {
+                ProviderName = Name,
                 TextContent = message,
                 Channel = channel,
                 IsSelf = true
@@ -60,6 +61,7 @@ namespace TPPCore.Service.Chat.Providers.Dummy
         {
             await Task.Delay(100);
             var chatMessage = new ChatMessage() {
+                ProviderName = Name,
                 TextContent = message,
                 Channel = user,
                 IsSelf = true
@@ -93,6 +95,7 @@ namespace TPPCore.Service.Chat.Providers.Dummy
                 Nickname = $"Someone{userId}",
             };
             var chatMessage = new ChatMessage() {
+                ProviderName = Name,
                 Sender = user,
                 TextContent = "hello " + random.Next(0, 10000)
             };
