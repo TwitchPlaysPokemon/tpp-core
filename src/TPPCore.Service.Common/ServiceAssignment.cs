@@ -26,9 +26,9 @@ namespace TPPCore.Service.Common
             foreach (var name in serviceNames)
             {
                 var host = config.GetCheckedValue<string>(
-                    new[] {"serviceAssignment", "static", name, "host"});
+                    "serviceAssignment", "static", name, "host");
                 var port = config.GetCheckedValue<int>(
-                    new[] {"serviceAssignment", "static", name, "port"});
+                    "serviceAssignment", "static", name, "port");
                 var uri =  new Uri($"http://{host}:{port}");
 
                 logger.DebugFormat("Added service assignment {0} {1}", name, uri);

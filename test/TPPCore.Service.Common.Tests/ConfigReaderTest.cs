@@ -32,18 +32,18 @@ f: '123'
 g: [1, 2, 3]
             ");
 
-            Assert.Equal("hello", configReader.GetCheckedValue<string>(new[] {"a"}));
-            Assert.Equal(123, configReader.GetCheckedValue<int>(new[] {"b"}));
-            Assert.True(configReader.GetCheckedValue<bool>(new[] {"c"}));
-            Assert.Equal(123.456, configReader.GetCheckedValue<double>(new[] {"d"}));
-            Assert.Equal("hello world", configReader.GetCheckedValue<string>(new[] {"e"}));
-            Assert.Equal("123", configReader.GetCheckedValue<string>(new[] {"f"}));
-            Assert.Equal(new[] {1, 2, 3}, configReader.GetCheckedValue<int[]>(new[] {"g"}));
+            Assert.Equal("hello", configReader.GetCheckedValue<string>("a"));
+            Assert.Equal(123, configReader.GetCheckedValue<int>("b"));
+            Assert.True(configReader.GetCheckedValue<bool>("c"));
+            Assert.Equal(123.456, configReader.GetCheckedValue<double>("d"));
+            Assert.Equal("hello world", configReader.GetCheckedValue<string>("e"));
+            Assert.Equal("123", configReader.GetCheckedValue<string>("f"));
+            Assert.Equal(new[] {1, 2, 3}, configReader.GetCheckedValue<int[]>("g"));
 
             Assert.Equal("hi", configReader.GetCheckedValueOrDefault<string>(new[] {"no exist"}, "hi"));
 
-            Assert.Throws<ConfigKeyNotFoundException>(() => configReader.GetCheckedValue<string>(new[] {"no exist"}));
-            Assert.Throws<ConfigException>(() => configReader.GetCheckedValue<int>(new[] {"a"}));
+            Assert.Throws<ConfigKeyNotFoundException>(() => configReader.GetCheckedValue<string>("no exist"));
+            Assert.Throws<ConfigException>(() => configReader.GetCheckedValue<int>("a"));
         }
 
         [Fact]
@@ -62,7 +62,7 @@ key0.2:
         key2.2: value2.2
             ");
 
-            Assert.Equal("value2.2", configReader.GetCheckedValue<string>(new[] {"key0.2", "key1.2", "key2.2"}));
+            Assert.Equal("value2.2", configReader.GetCheckedValue<string>("key0.2", "key1.2", "key2.2"));
         }
 
         [Fact]

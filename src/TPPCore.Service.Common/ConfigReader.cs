@@ -158,7 +158,7 @@ namespace TPPCore.Service.Common
         /// </summary>
         /// <exception cref="ConfigKeyNotFoundException">Key does not exist.</exception>
         /// <exception cref="ConfigException">Value could not be deserialized</exception>
-        public T GetCheckedValue<T>(string[] key)
+        public T GetCheckedValue<T>(params string[] key)
         {
             YamlNode node;
             try

@@ -309,8 +309,8 @@ namespace TPPCore.Service.Common
 
             if (pubsubImpl == "redis")
             {
-                var host = configReader.GetCheckedValue<string>(new[] {"redis", "host"});
-                var port = configReader.GetCheckedValue<int>(new[] {"redis", "port"});
+                var host = configReader.GetCheckedValue<string>("redis", "host");
+                var port = configReader.GetCheckedValue<int>("redis", "port");
                 var extra = configReader.GetCheckedValueOrDefault<string>(new[] {"redis", "extra"}, "");
                 var redisClient = new RedisPubSubClient(host, port, extra);
 
