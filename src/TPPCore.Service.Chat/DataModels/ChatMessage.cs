@@ -8,7 +8,6 @@ namespace TPPCore.Service.Chat.DataModels
         public string TextContent;
         public string Channel;
         public bool IsNotice = false;
-        public bool IsSelf = false;
 
         public ChatMessage() : base(ChatTopics.Message)
         {
@@ -21,7 +20,6 @@ namespace TPPCore.Service.Chat.DataModels
             doc.Add("textContent", TextContent);
             doc.Add("channel", Channel);
             doc.Add("isNotice", IsNotice);
-            doc.Add("isSelf", IsSelf);
 
             return doc;
         }

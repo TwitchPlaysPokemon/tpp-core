@@ -7,6 +7,7 @@ namespace TPPCore.Service.Chat.DataModels
     {
         public string Topic { get; set; }
         public string ProviderName;
+        public bool IsSelf = false;
 
         public ChatEvent(string topic = ChatTopics.Other)
         {
@@ -22,6 +23,7 @@ namespace TPPCore.Service.Chat.DataModels
             {
                 topic = Topic,
                 providerName = ProviderName,
+                isSelf = IsSelf,
             });
         }
     }
