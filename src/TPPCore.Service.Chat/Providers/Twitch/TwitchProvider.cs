@@ -32,9 +32,7 @@ namespace TPPCore.Service.Chat.Twitch
 
         public async Task Run()
         {
-            var ircTask = Task.Run(() => twitchIrcProvider.Run());
-
-            await ircTask;
+            await twitchIrcProvider.Run();
         }
 
         public void Shutdown()
@@ -52,9 +50,9 @@ namespace TPPCore.Service.Chat.Twitch
             return twitchIrcProvider.GetUsername();
         }
 
-        public Task SendMessage(string channel, string message)
+        public async Task SendMessage(string channel, string message)
         {
-            return Task.Run(() => twitchIrcProvider.SendMessage(channel, message));
+            await twitchIrcProvider.SendMessage(channel, message);
         }
 
         public async Task SendPrivateMessage(string user, string message)
@@ -64,7 +62,7 @@ namespace TPPCore.Service.Chat.Twitch
 
         public async Task<IList<ChatUser>> GetRoomList(string channel)
         {
-            var users = twitchIrcProvider.GetRoomList(channel).ToList();
+            var users = (await twitchIrcProvider.GetRoomList(channel)).ToList();
 
             var response = await httpClient.GetAsync(roomListUrl);
             var jsonString = await response.Content.ReadAsStringAsync();

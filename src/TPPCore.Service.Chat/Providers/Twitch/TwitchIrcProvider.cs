@@ -1,5 +1,6 @@
-using IrcDotNet;
+using System.Threading.Tasks;
 using TPPCore.Service.Chat.Providers.Irc;
+using TPPCore.Irc;
 
 namespace TPPCore.Service.Chat.Twitch
 {
@@ -10,9 +11,30 @@ namespace TPPCore.Service.Chat.Twitch
             Name = "twitch";
         }
 
-        override protected StandardIrcClient newIrcClient()
+        override protected async Task login()
         {
-            return new TwitchIrcClient();
+            await base.login();
+            await ircClient.SendMessage("CAP", "REQ", null,
+                "twitch.tv/membership twitch.tv/tags twitch.tv/commands");
+        }
+
+        override protected void setUpEventHandlers()
+        {
+            base.setUpEventHandlers();
+            ircClient.CommandHandlers.AddOrCombine("USERNOTICE", userNoticeEventHandler);
+            ircClient.CommandHandlers.AddOrCombine("WHISPER", whisperEventHandler);
+        }
+
+        private Task userNoticeEventHandler(IrcClient client, Message message)
+        {
+            // TODO: publish this event
+            return Task.CompletedTask;
+        }
+
+        private Task whisperEventHandler(IrcClient client, Message message)
+        {
+            // TODO: publish this event
+            return Task.CompletedTask;
         }
     }
 }
