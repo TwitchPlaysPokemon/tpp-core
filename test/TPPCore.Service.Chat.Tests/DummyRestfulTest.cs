@@ -49,7 +49,7 @@ namespace TPPCore.Service.Chat.Tests
             var httpClient = runner.Runner.Context.RestfulClient;
             var uri = new Uri(
                 runner.Runner.Context.RestfulServer.Context.GetUri(),
-                "provider/dummy/username");
+                "client/dummyTest/username");
             var result = await httpClient.GetJsonAsync(uri);
             Assert.Equal(HttpStatusCode.OK, result.Response.StatusCode);
 
@@ -59,7 +59,7 @@ namespace TPPCore.Service.Chat.Tests
 
             uri = new Uri(
                 runner.Runner.Context.RestfulServer.Context.GetUri(),
-                "provider/dummy/user_id");
+                "client/dummyTest/user_id");
             result = await httpClient.GetJsonAsync(uri);
             Assert.Equal(HttpStatusCode.OK, result.Response.StatusCode);
 
@@ -79,7 +79,7 @@ namespace TPPCore.Service.Chat.Tests
             var httpClient = runner.Runner.Context.RestfulClient;
             var uri = new Uri(
                 runner.Runner.Context.RestfulServer.Context.GetUri(),
-                "chat/dummy/%23somechannel/room_list");
+                "chat/dummyTest/%23somechannel/room_list");
             var result = await httpClient.GetJsonAsync(uri);
 
             Assert.Equal(HttpStatusCode.OK, result.Response.StatusCode);
@@ -102,7 +102,7 @@ namespace TPPCore.Service.Chat.Tests
             var httpClient = runner.Runner.Context.RestfulClient;
             var uri = new Uri(
                 runner.Runner.Context.RestfulServer.Context.GetUri(),
-                "chat/dummy/%23somechannel/send");
+                "chat/dummyTest/%23somechannel/send");
             var inputDoc = JObject.FromObject(new { message = "hello world" });
             var result = await httpClient.PostJsonAsync(uri, inputDoc);
 

@@ -18,24 +18,24 @@ namespace TPPCore.Service.Chat
 
         public void RegisterProvider(IProvider provider)
         {
-            providers[provider.Name] = provider;
+            providers[provider.ClientName] = provider;
         }
 
-        public string GetUserId(string providerName) {
-            var provider = providers[providerName];
+        public string GetUserId(string clientName) {
+            var provider = providers[clientName];
 
             return provider.GetUserId();
         }
 
-        public string GetUsername(string providerName) {
-            var provider = providers[providerName];
+        public string GetUsername(string clientName) {
+            var provider = providers[clientName];
 
             return provider.GetUsername();
         }
 
-        public async Task SendMessage(string providerName, string channel, string message)
+        public async Task SendMessage(string clientName, string channel, string message)
         {
-            var provider = providers[providerName];
+            var provider = providers[clientName];
 
             if (provider is IProviderThreaded)
             {
@@ -47,9 +47,9 @@ namespace TPPCore.Service.Chat
             }
         }
 
-        public async Task SendPrivateMessage(string providerName, string user, string message)
+        public async Task SendPrivateMessage(string clientName, string user, string message)
         {
-            var provider = providers[providerName];
+            var provider = providers[clientName];
 
             if (provider is IProviderThreaded)
             {
@@ -61,9 +61,9 @@ namespace TPPCore.Service.Chat
             }
         }
 
-        public async Task<IList<ChatUser>> GetRoomList(string providerName, string channel)
+        public async Task<IList<ChatUser>> GetRoomList(string clientName, string channel)
         {
-            var provider = providers[providerName];
+            var provider = providers[clientName];
 
             if (provider is IProviderThreaded)
             {

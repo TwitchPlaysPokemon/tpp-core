@@ -8,7 +8,7 @@ namespace TPPCore.Service.Chat.Twitch
     {
         public TwitchIrcProvider()
         {
-            Name = "twitch";
+            ProviderName = "twitch";
         }
 
         override protected async Task login()

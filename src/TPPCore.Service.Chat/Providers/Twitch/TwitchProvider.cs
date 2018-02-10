@@ -14,7 +14,8 @@ namespace TPPCore.Service.Chat.Twitch
             System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private const string roomListUrl = "https://tmi.twitch.tv/group/user/twitchplayspokemon/chatters";
 
-        public string Name { get { return "twitch"; } }
+        public string ClientName { get { return twitchIrcProvider.ClientName; } }
+        public string ProviderName { get { return "twitch"; } }
 
         private TwitchIrcProvider twitchIrcProvider;
         private HttpClient httpClient;
@@ -25,9 +26,9 @@ namespace TPPCore.Service.Chat.Twitch
             httpClient = new HttpClient();
         }
 
-        public void Configure(ProviderContext providerContext)
+        public void Configure(string clientName, ProviderContext providerContext)
         {
-            twitchIrcProvider.Configure(providerContext);
+            twitchIrcProvider.Configure(clientName, providerContext);
         }
 
         public async Task Run()

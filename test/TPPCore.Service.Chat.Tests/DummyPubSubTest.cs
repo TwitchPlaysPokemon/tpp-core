@@ -57,6 +57,7 @@ namespace TPPCore.Service.Chat.Tests
 
             var chatMessage = JsonConvert.DeserializeObject<ChatMessage>(message.Message);
 
+            Assert.Equal("dummyTest", chatMessage.ClientName);
             Assert.Equal("dummy", chatMessage.ProviderName);
             Assert.StartsWith("someone", chatMessage.Sender.Username);
             Assert.StartsWith("hello", chatMessage.TextContent);

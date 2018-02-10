@@ -6,6 +6,7 @@ namespace TPPCore.Service.Chat.DataModels
     public class ChatEvent : IPubSubEvent
     {
         public string Topic { get; set; }
+        public string ClientName;
         public string ProviderName;
         public bool IsSelf = false;
 
@@ -17,11 +18,13 @@ namespace TPPCore.Service.Chat.DataModels
         public virtual JObject ToJObject()
         {
             Debug.Assert(Topic != null);
+            Debug.Assert(ClientName != null);
             Debug.Assert(ProviderName != null);
 
             return JObject.FromObject(new
             {
                 topic = Topic,
+                clientName = ClientName,
                 providerName = ProviderName,
                 isSelf = IsSelf,
             });

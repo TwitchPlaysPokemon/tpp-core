@@ -7,9 +7,10 @@ namespace TPPCore.Service.Chat
 {
     public interface IProvider
     {
-        string Name { get; }
+        string ClientName { get; }
+        string ProviderName { get; }
 
-        void Configure(ProviderContext providerContext);
+        void Configure(string clientName, ProviderContext providerContext);
         void Shutdown();
 
         string GetUserId();

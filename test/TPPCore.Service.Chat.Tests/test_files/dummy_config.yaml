@@ -1,5 +1,4 @@
 chat:
-  providers:
-    - dummy
-
-  dummy:
+  clients:
+    dummyTest:
+      provider: dummy

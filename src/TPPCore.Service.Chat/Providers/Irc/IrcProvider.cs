@@ -22,7 +22,8 @@ namespace TPPCore.Service.Chat.Providers.Irc
         private const int keepAliveInterval = 60_000;
         private const int minReconnectDelay = 2_000;
 
-        public string Name { get; protected set; } = "irc";
+        public string ClientName { get; private set; }
+        public string ProviderName { get; protected set; } = "irc";
 
         private Object thisLock = new Object();
         private ProviderContext context;
@@ -37,29 +38,30 @@ namespace TPPCore.Service.Chat.Providers.Irc
         {
         }
 
-        public void Configure(ProviderContext providerContext)
+        public void Configure(string clientName, ProviderContext providerContext)
         {
+            this.ClientName = clientName;
             this.context = providerContext;
 
             connectConfig = new ConnectConfig() {
                 Host = context.Service.ConfigReader.GetCheckedValue<string>(
-                    new[] {"chat", Name, "host"}),
+                    "chat", "clients", ClientName, "host"),
                 Port = context.Service.ConfigReader.GetCheckedValue<int>(
-                    new[] {"chat", Name, "port"}),
+                    "chat", "clients", ClientName, "port"),
                 Ssl = context.Service.ConfigReader.GetCheckedValue<bool>(
-                    new[] {"chat", Name, "ssl"}),
+                    "chat", "clients", ClientName, "ssl"),
                 Timeout = context.Service.ConfigReader.GetCheckedValue<int>(
-                    new[] {"chat", Name, "timeout"}),
+                    "chat", "clients", ClientName, "timeout"),
                 Nickname = context.Service.ConfigReader.GetCheckedValue<string>(
-                    new[] {"chat", Name, "nickname"}),
+                    "chat", "clients", ClientName, "nickname"),
                 Password = context.Service.ConfigReader.GetCheckedValueOrDefault<string>(
-                    new[] {"chat", Name, "password"}, null),
+                    new[] {"chat", "clients", ClientName, "password"}, null),
                 Channels = context.Service.ConfigReader.GetCheckedValue<string[]>(
-                    new[] {"chat", Name, "channels"}),
+                    "chat", "clients", ClientName, "channels"),
                 MaxMessageBurst = context.Service.ConfigReader.GetCheckedValue<int>(
-                    new[] {"chat", Name, "rateLimit", "maxMessageBurst"}),
+                    "chat", "clients", ClientName, "rateLimit", "maxMessageBurst"),
                 CounterPeriod = context.Service.ConfigReader.GetCheckedValue<int>(
-                    new[] {"chat", Name, "rateLimit", "counterPeriod"}),
+                    "chat", "clients", ClientName, "rateLimit", "counterPeriod"),
             };
         }
 
@@ -268,7 +270,8 @@ namespace TPPCore.Service.Chat.Providers.Irc
             {
                 var rawEvent = new RawContentEvent()
                 {
-                    ProviderName = Name,
+                    ClientName = ClientName,
+                    ProviderName = ProviderName,
                     RawContent = message.Raw
                 };
                 context.PublishChatEvent(rawEvent);
@@ -279,7 +282,8 @@ namespace TPPCore.Service.Chat.Providers.Irc
             {
                 var rawEvent = new RawContentEvent()
                 {
-                    ProviderName = Name,
+                    ClientName = ClientName,
+                    ProviderName = ProviderName,
                     RawContent = message.Raw,
                     IsSelf = true
                 };
@@ -379,7 +383,8 @@ namespace TPPCore.Service.Chat.Providers.Irc
         private void publishJoin(Message message)
         {
             var chatEvent = new UserEvent() {
-                ProviderName = Name,
+                ClientName = ClientName,
+                ProviderName = ProviderName,
                 EventType = UserEventTypes.Join,
                 Channel = message.TargetLower,
                 User = message.Prefix.ClientId.ToChatUserModel(),
@@ -391,7 +396,8 @@ namespace TPPCore.Service.Chat.Providers.Irc
         private void publishPart(Message message)
         {
             var chatEvent = new UserEvent() {
-                ProviderName = Name,
+                ClientName = ClientName,
+                ProviderName = ProviderName,
                 EventType = UserEventTypes.Part,
                 Channel =  message.TargetLower,
                 User = message.Prefix.ClientId.ToChatUserModel(),
@@ -403,7 +409,8 @@ namespace TPPCore.Service.Chat.Providers.Irc
         private void publishMessage(Message message, bool isNotice)
         {
             var chatMessage = new ChatMessage() {
-                ProviderName = Name,
+                ClientName = ClientName,
+                ProviderName = ProviderName,
                 TextContent = message.TrailingParameter,
                 Channel = message.TargetLower,
                 IsNotice = isNotice,

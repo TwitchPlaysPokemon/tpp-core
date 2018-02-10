@@ -9,14 +9,16 @@ namespace TPPCore.Service.Chat.Providers.Dummy
 {
     public class DummyProvider : IProviderAsync
     {
-        public string Name { get; } = "dummy";
+        public string ClientName { get; private set; }
+        public string ProviderName { get; } = "dummy";
 
         private bool running = true;
         private ProviderContext context;
         private int chatNoiseCounter = 2;
 
-        public void Configure(ProviderContext providerContext)
+        public void Configure(string clientName, ProviderContext providerContext)
         {
+            this.ClientName = clientName;
             this.context = providerContext;
         }
 
@@ -54,7 +56,8 @@ namespace TPPCore.Service.Chat.Providers.Dummy
         {
             await Task.Delay(100);
             var chatMessage = new ChatMessage() {
-                ProviderName = Name,
+                ClientName = ClientName,
+                ProviderName = ProviderName,
                 TextContent = message,
                 Channel = channel,
                 IsSelf = true
@@ -66,7 +69,8 @@ namespace TPPCore.Service.Chat.Providers.Dummy
         {
             await Task.Delay(100);
             var chatMessage = new ChatMessage() {
-                ProviderName = Name,
+                ClientName = ClientName,
+                ProviderName = ProviderName,
                 TextContent = message,
                 Channel = user,
                 IsSelf = true
@@ -100,7 +104,8 @@ namespace TPPCore.Service.Chat.Providers.Dummy
                 Nickname = $"Someone{userId}",
             };
             var chatMessage = new ChatMessage() {
-                ProviderName = Name,
+                ClientName = ClientName,
+                ProviderName = ProviderName,
                 Sender = user,
                 TextContent = "hello " + random.Next(0, 10000)
             };

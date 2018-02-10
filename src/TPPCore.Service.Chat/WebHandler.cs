@@ -18,8 +18,8 @@ namespace TPPCore.Service.Chat
 
         public async Task GetUserId(HttpContext context)
         {
-            var provider = (string) context.GetRouteValue("provider");
-            var userId = chatFacade.GetUserId(provider);
+            var client = (string) context.GetRouteValue("client");
+            var userId = chatFacade.GetUserId(client);
             var jsonDoc = JObject.FromObject(new { userId = userId });
 
             await context.RespondJsonAsync(jsonDoc);
@@ -27,8 +27,8 @@ namespace TPPCore.Service.Chat
 
         public async Task GetUsername(HttpContext context)
         {
-            var provider = (string) context.GetRouteValue("provider");
-            var username = chatFacade.GetUserId(provider);
+            var client = (string) context.GetRouteValue("client");
+            var username = chatFacade.GetUserId(client);
             var jsonDoc = JObject.FromObject(new { username = username });
 
             await context.RespondJsonAsync(jsonDoc);
@@ -36,32 +36,32 @@ namespace TPPCore.Service.Chat
 
         public async Task PostSendMessage(HttpContext context)
         {
-            var provider = (string) context.GetRouteValue("provider");
+            var client = (string) context.GetRouteValue("client");
             var channel = (string) context.GetRouteValue("channel");
             var inputDoc = await context.ReadJsonAsync();
             var message = inputDoc.Value<string>("message");
 
-            await chatFacade.SendMessage(provider, channel, message);
+            await chatFacade.SendMessage(client, channel, message);
             await context.RespondJsonAsync(inputDoc);
         }
 
         public async Task PostSendPrivateMessage(HttpContext context)
         {
-            var provider = (string) context.GetRouteValue("provider");
+            var client = (string) context.GetRouteValue("client");
             var user = (string) context.GetRouteValue("user");
             var inputDoc = await context.ReadJsonAsync();
             var message = inputDoc.Value<string>("message");
 
-            await chatFacade.SendPrivateMessage(provider, user, message);
+            await chatFacade.SendPrivateMessage(client, user, message);
             await context.RespondJsonAsync(inputDoc);
         }
 
         public async Task GetRoomList(HttpContext context)
         {
-            var provider = (string) context.GetRouteValue("provider");
+            var client = (string) context.GetRouteValue("client");
             var channel = (string) context.GetRouteValue("channel");
 
-            var users = await chatFacade.GetRoomList(provider, channel);
+            var users = await chatFacade.GetRoomList(client, channel);
 
             var jsonDoc = JObject.FromObject(new
             {

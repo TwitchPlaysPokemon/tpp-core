@@ -37,11 +37,11 @@ namespace TPPCore.Service.Chat
             context.RestfulServer.UseRoute((RouteBuilder routeBuilder) =>
             {
                 routeBuilder
-                    .MapGet("provider/{provider}/user_id", webHandler.GetUserId)
-                    .MapGet("provider/{provider}/username", webHandler.GetUsername)
-                    .MapPost("chat/{provider}/{channel}/send", webHandler.PostSendMessage)
-                    .MapPost("private_chat/{provider}/{user}/send", webHandler.PostSendPrivateMessage)
-                    .MapGet("chat/{provider}/{channel}/room_list", webHandler.GetRoomList)
+                    .MapGet("client/{client}/user_id", webHandler.GetUserId)
+                    .MapGet("client/{client}/username", webHandler.GetUsername)
+                    .MapPost("chat/{client}/{channel}/send", webHandler.PostSendMessage)
+                    .MapPost("private_chat/{client}/{user}/send", webHandler.PostSendPrivateMessage)
+                    .MapGet("chat/{client}/{channel}/room_list", webHandler.GetRoomList)
                     ;
             });
 
@@ -85,21 +85,24 @@ namespace TPPCore.Service.Chat
 
         private void createProviders()
         {
-            var providerNames = context.ConfigReader.GetCheckedValue<string[]>(
-                new[] {"chat", "providers"});
+            var clientNames = context.ConfigReader.GetCheckedValue<Dictionary<string,object>>(
+                "chat", "clients");
 
-            foreach (var providerName in providerNames)
+            foreach (var clientName in clientNames.Keys)
             {
-                var provider = newProvider(providerName);
+                var providerName = context.ConfigReader.GetCheckedValue<string>(
+                    "chat", "clients", clientName, "provider");
+                var provider = newProvider(clientName, providerName);
 
-                logger.InfoFormat("Configuring provider {0}", provider.Name);
-                provider.Configure(providerContext);
+                logger.InfoFormat("Configuring client {0} with provider {1}",
+                    clientName, provider.ProviderName);
+                provider.Configure(clientName, providerContext);
                 providers.Add(provider);
                 chatFacade.RegisterProvider(provider);
             }
         }
 
-        private IProvider newProvider(string providerName)
+        private IProvider newProvider(string clientName, string providerName)
         {
             switch (providerName)
             {
