@@ -1,0 +1,15 @@
+chat:
+  clients:
+    testClient:
+      provider: twitch
+      host: localhost
+      port: 0
+      ssl: false
+      timeout: 5000
+      nickname: exampleUser
+      password: oauth:abcdef1234567890
+      channels:
+        - "#channelTest"
+      rateLimit:
+        maxMessageBurst: 20
+        counterPeriod: 30000

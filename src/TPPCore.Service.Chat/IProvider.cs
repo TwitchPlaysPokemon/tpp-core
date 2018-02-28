@@ -5,15 +5,36 @@ using TPPCore.Service.Common;
 
 namespace TPPCore.Service.Chat
 {
+    /// <summary>
+    /// Connects to a website or server's chat endpoint.
+    /// </summary>
     public interface IProvider
     {
+        /// <summary>
+        /// Name used to reference and access the provider.
+        /// </summary>
+        /// <remarks>
+        /// This is the friendly name configured for example,
+        /// "twitchWelcomeBot" or "ircVoiceBot".
+        /// </remarks>
         string ClientName { get; }
+
+        /// <summary>
+        /// Name of the website or server's endpoint such as IRC or Twitch.
+        /// </summary>
         string ProviderName { get; }
 
         void Configure(string clientName, ProviderContext providerContext);
         void Shutdown();
 
+        /// <summary>
+        /// Account's unique user ID usually numerical identifier.
+        /// </summary>
         string GetUserId();
+
+        /// <summary>
+        /// Account's username that doesn't change often.
+        /// </summary>
         string GetUsername();
     }
 

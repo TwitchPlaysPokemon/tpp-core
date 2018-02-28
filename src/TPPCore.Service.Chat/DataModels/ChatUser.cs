@@ -3,6 +3,9 @@ using Newtonsoft.Json.Linq;
 
 namespace TPPCore.Service.Chat.DataModels
 {
+    /// <summary>
+    /// Identification of a chat user.
+    /// </summary>
     public class ChatUser
     {
         public string UserId;

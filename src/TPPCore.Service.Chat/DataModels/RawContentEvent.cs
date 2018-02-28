@@ -2,6 +2,9 @@ using Newtonsoft.Json.Linq;
 
 namespace TPPCore.Service.Chat.DataModels
 {
+    /// <summary>
+    /// Unparsed message from an endpoint.
+    /// </summary>
     public class RawContentEvent : ChatEvent
     {
         public string RawContent;

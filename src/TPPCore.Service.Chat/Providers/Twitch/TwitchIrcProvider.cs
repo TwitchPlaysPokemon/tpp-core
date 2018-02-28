@@ -1,6 +1,9 @@
 using System.Threading.Tasks;
 using TPPCore.Service.Chat.Providers.Irc;
 using TPPCore.Irc;
+using TPPCore.Service.Chat.Irc;
+using TPPCore.Service.Chat.DataModels;
+using System.Linq;
 
 namespace TPPCore.Service.Chat.Twitch
 {
@@ -25,15 +28,48 @@ namespace TPPCore.Service.Chat.Twitch
             ircClient.CommandHandlers.AddOrCombine("WHISPER", whisperEventHandler);
         }
 
+        override protected ChatUser getMessageSender(Message message)
+        {
+            return new ChatUser() {
+                UserId = message.Tags.ContainsKey("user-id")
+                    ? message.Tags["user-id"] : null,
+                Username = message.Tags.ContainsKey("login")
+                    ? message.Tags["login"]
+                    : (message.Prefix.ClientId != null
+                        ? message.Prefix.ClientId.Nickname : null),
+                Nickname = message.Tags.ContainsKey("display-name")
+                    ? message.Tags["display-name"] : null
+            };
+        }
+
         private Task userNoticeEventHandler(IrcClient client, Message message)
         {
-            // TODO: publish this event
+            var chatEvent = new LoyaltyEvent() {
+                ClientName = ClientName,
+                ProviderName = ProviderName,
+                TextContent = message.TrailingParameter,
+                Channel = message.TargetLower,
+                Sender = getMessageSender(message),
+                IsSelf = isMessageSelf(message)
+            };
+            message.Tags.ToList().ForEach(item => chatEvent.Meta.Add(item));
+
+            context.PublishChatEvent(chatEvent);
             return Task.CompletedTask;
         }
 
         private Task whisperEventHandler(IrcClient client, Message message)
         {
-            // TODO: publish this event
+            var chatMessage = new ChatMessage() {
+                ClientName = ClientName,
+                ProviderName = ProviderName,
+                TextContent = message.TrailingParameter,
+                Sender = getMessageSender(message),
+                IsSelf = isMessageSelf(message)
+            };
+            message.Tags.ToList().ForEach(item => chatMessage.Meta.Add(item));
+
+            context.PublishChatEvent(chatMessage);
             return Task.CompletedTask;
         }
     }

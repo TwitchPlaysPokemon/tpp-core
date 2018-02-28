@@ -3,37 +3,30 @@ using Newtonsoft.Json.Linq;
 namespace TPPCore.Service.Chat.DataModels
 {
     /// <summary>
-    /// A user's chat message.
+    /// Represents user initiated events such as subscription, hosting, etc.
     /// </summary>
-    public class ChatMessage : ChatEvent
+    public class LoyaltyEvent : ChatEvent
     {
+        public LoyaltyEvent() : base(ChatTopics.Loyalty) {
+        }
+
         /// <summary>
         /// Who sent this message.
         /// </summary>
         public ChatUser Sender;
 
         /// <summary>
-        /// Message contents.
+        /// Message contents such as a greeting or a textual representation of the event.
         /// </summary>
+        /// <remarks>
+        /// This value may be null.
+        /// </remarks>
         public string TextContent;
 
         /// <summary>
-        /// Originating chat room.
+        /// Chat room where event is occuring.
         /// </summary>
-        /// <remarks>
-        /// This value will be null if the message did not originate in a room,
-        /// ie, a private message or whisper.
-        /// </remarks>
         public string Channel;
-
-        /// <summary>
-        /// Whether the message is an IRC-style notice message.
-        /// </summary>
-        public bool IsNotice = false;
-
-        public ChatMessage() : base(ChatTopics.Message)
-        {
-        }
 
         override public JObject ToJObject()
         {
@@ -41,7 +34,6 @@ namespace TPPCore.Service.Chat.DataModels
             doc.Add("sender", Sender != null ? Sender.ToJObject() : null);
             doc.Add("textContent", TextContent);
             doc.Add("channel", Channel);
-            doc.Add("isNotice", IsNotice);
 
             return doc;
         }

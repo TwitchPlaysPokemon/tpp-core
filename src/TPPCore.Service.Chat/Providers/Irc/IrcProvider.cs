@@ -1,6 +1,7 @@
 using log4net;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Security;
@@ -26,7 +27,7 @@ namespace TPPCore.Service.Chat.Providers.Irc
         public string ProviderName { get; protected set; } = "irc";
 
         private Object thisLock = new Object();
-        private ProviderContext context;
+        protected ProviderContext context;
         protected IrcClient ircClient;
         protected TcpClient tcpClient;
         private StreamReader reader;
@@ -401,7 +402,7 @@ namespace TPPCore.Service.Chat.Providers.Irc
                 EventType = UserEventTypes.Part,
                 Channel =  message.TargetLower,
                 User = message.Prefix.ClientId.ToChatUserModel(),
-                IsSelf = ircClient.ClientId.NicknameEquals(message.Prefix.ClientId)
+                IsSelf = isMessageSelf(message)
             };
             context.PublishChatEvent(chatEvent);
         }
@@ -414,13 +415,24 @@ namespace TPPCore.Service.Chat.Providers.Irc
                 TextContent = message.TrailingParameter,
                 Channel = message.TargetLower,
                 IsNotice = isNotice,
-                Sender = message.Prefix.ClientId != null
-                    ? message.Prefix.ClientId.ToChatUserModel()
-                    : null,
-                IsSelf = ircClient.ClientId.NicknameEquals(message.Prefix.ClientId)
+                Sender = getMessageSender(message),
+                IsSelf = isMessageSelf(message)
             };
+            message.Tags.ToList().ForEach(item => chatMessage.Meta.Add(item));
 
             context.PublishChatEvent(chatMessage);
+        }
+
+        protected virtual bool isMessageSelf(Message message)
+        {
+            return ircClient.ClientId.NicknameEquals(message.Prefix.ClientId);
+        }
+
+        protected virtual ChatUser getMessageSender(Message message)
+        {
+            return message.Prefix.ClientId != null
+                ? message.Prefix.ClientId.ToChatUserModel()
+                : null;
         }
     }
 }

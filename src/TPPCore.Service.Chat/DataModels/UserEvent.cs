@@ -2,6 +2,9 @@ using Newtonsoft.Json.Linq;
 
 namespace TPPCore.Service.Chat.DataModels
 {
+    /// <summary>
+    /// Represents a change in a user's room membership.
+    /// </summary>
     public class UserEvent : ChatEvent
     {
         public string EventType;
