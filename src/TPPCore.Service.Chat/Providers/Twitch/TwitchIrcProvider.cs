@@ -1,7 +1,6 @@
 using System.Threading.Tasks;
 using TPPCore.Service.Chat.Providers.Irc;
 using TPPCore.Irc;
-using TPPCore.Service.Chat.Irc;
 using TPPCore.Service.Chat.DataModels;
 using System.Linq;
 

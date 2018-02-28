@@ -12,7 +12,7 @@ namespace TPPCore.Service.Chat.Twitch
     {
         private static readonly ILog logger = LogManager.GetLogger(
             System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        private const string roomListUrl = "https://tmi.twitch.tv/group/user/twitchplayspokemon/chatters";
+        private const string roomListUrl = "https://tmi.twitch.tv/group/user/{0}/chatters";
 
         public string ClientName { get { return twitchIrcProvider.ClientName; } }
         public string ProviderName { get { return "twitch"; } }
@@ -65,7 +65,12 @@ namespace TPPCore.Service.Chat.Twitch
         {
             var users = (await twitchIrcProvider.GetRoomList(channel)).ToList();
 
-            var response = await httpClient.GetAsync(roomListUrl);
+            // TODO: Customize the IRC client's ChannelTracker to grab the
+            // user-id from the tags.
+            users.ForEach(item => { item.UserId = null; item.Nickname = null; });
+
+            var url = string.Format(roomListUrl, channel.TrimStart('#'));
+            var response = await httpClient.GetAsync(url);
             var jsonString = await response.Content.ReadAsStringAsync();
             var jsonDoc = JObject.Parse(jsonString);
 

@@ -1,18 +1,15 @@
 using log4net;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
-using System.Threading;
 using System.Threading.Tasks;
 using TPPCore.Irc;
 using TPPCore.Service.Chat.DataModels;
 using TPPCore.Service.Chat.Irc;
-using TPPCore.Utils;
 
 namespace TPPCore.Service.Chat.Providers.Irc
 {
@@ -388,7 +385,7 @@ namespace TPPCore.Service.Chat.Providers.Irc
                 ProviderName = ProviderName,
                 EventType = UserEventTypes.Join,
                 Channel = message.TargetLower,
-                User = message.Prefix.ClientId.ToChatUserModel(),
+                User = getMessageSender(message),
                 IsSelf = ircClient.ClientId.NicknameEquals(message.Prefix.ClientId)
             };
             context.PublishChatEvent(chatEvent);
@@ -401,7 +398,7 @@ namespace TPPCore.Service.Chat.Providers.Irc
                 ProviderName = ProviderName,
                 EventType = UserEventTypes.Part,
                 Channel =  message.TargetLower,
-                User = message.Prefix.ClientId.ToChatUserModel(),
+                User = getMessageSender(message),
                 IsSelf = isMessageSelf(message)
             };
             context.PublishChatEvent(chatEvent);
