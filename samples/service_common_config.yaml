@@ -32,6 +32,9 @@ redis:
 ## Config to allow each service to communiate to each other
 serviceAssignment:
   ## Static mapping uses fixed IP addresses and port numbers. The key
-  ## is the service name and then value is the host/port assignment
+  ## is the service name and then value is the host/port assignment.
+  ## Note this mapping doesn't affect the service's config, you'll need
+  ## to update it here too.
   static:
+    chat: {host: localhost, port: 5200}
     parrot: {host: localhost, port: 5100}
