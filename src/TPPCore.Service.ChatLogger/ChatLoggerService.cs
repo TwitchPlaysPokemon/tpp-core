@@ -15,12 +15,6 @@ namespace TPPCore.Service.ChatLogger
             this.context = context;
             LogManager.Configure(this.context);
 
-            Thread t = new Thread(ThreadProc)
-            {
-                Name = "Logging_Thread_1"
-            };
-            t.Start();
-
             context.PubSubClient.Subscribe(ChatTopics.Raw,
                 (topic, message) =>
                 {
@@ -30,17 +24,12 @@ namespace TPPCore.Service.ChatLogger
 
         public void Run()
         {
-            mre.Reset();
+            mre.WaitOne();
         }
 
         public void Shutdown()
         {
             mre.Set();
-        }
-
-        private static void ThreadProc()
-        {
-            mre.WaitOne();
         }
     }
 }
