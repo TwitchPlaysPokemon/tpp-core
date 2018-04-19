@@ -1,4 +1,5 @@
-﻿using TPPCore.Service.Chat;
+﻿using System.Threading;
+using TPPCore.Service.Chat;
 using TPPCore.Service.Common;
 
 namespace TPPCore.Service.ChatLogger
@@ -6,13 +7,19 @@ namespace TPPCore.Service.ChatLogger
     public class ChatLoggerService : IService
     {
         private ServiceContext context;
-        private bool running;
+
+        private static ManualResetEvent mre = new ManualResetEvent(false);
 
         public void Initialize(ServiceContext context)
         {
             this.context = context;
-            running = true;
             LogManager.Configure(this.context);
+
+            Thread t = new Thread(ThreadProc)
+            {
+                Name = "Logging_Thread_1"
+            };
+            t.Start();
 
             context.PubSubClient.Subscribe(ChatTopics.Raw,
                 (topic, message) =>
@@ -23,12 +30,17 @@ namespace TPPCore.Service.ChatLogger
 
         public void Run()
         {
-            while (running) ;
+            mre.Reset();
         }
 
         public void Shutdown()
         {
-            running = false;
+            mre.Set();
+        }
+
+        private static void ThreadProc()
+        {
+            mre.WaitOne();
         }
     }
 }
