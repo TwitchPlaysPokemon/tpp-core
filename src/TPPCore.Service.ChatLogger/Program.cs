@@ -2,12 +2,12 @@
 
 namespace TPPCore.Service.ChatLogger
 {
-	class Program
+    class Program
     {
         static void Main(string[] args)
         {
-			var service = new ChatLoggerService();
-			ServiceRunner.Run(service, args);
-		}
+            var service = new ChatLoggerService();
+            ServiceRunner.Run(service, args);
+        }
     }
 }
