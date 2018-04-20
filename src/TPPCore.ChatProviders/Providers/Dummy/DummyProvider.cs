@@ -6,7 +6,7 @@ using TPPCore.ChatProviders.DataModels;
 
 namespace TPPCore.ChatProviders.Providers.Dummy
 {
-	public class DummyProvider : IProviderAsync
+    public class DummyProvider : IProviderAsync
     {
         public string ClientName { get; private set; }
         public string ProviderName { get; } = "dummy";

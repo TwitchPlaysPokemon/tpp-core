@@ -3,7 +3,7 @@ using TPPCore.ChatProviders.DataModels;
 
 namespace TPPCore.ChatProviders.Irc
 {
-	public static class IrcExtensions
+    public static class IrcExtensions
     {
         public static ChatUser ToChatUserModel(this ClientId clientId)
         {

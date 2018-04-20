@@ -4,10 +4,10 @@ using TPPCore.ChatProviders.DataModels;
 
 namespace TPPCore.ChatProviders
 {
-	/// <summary>
-	/// Connects to a website or server's chat endpoint.
-	/// </summary>
-	public interface IProvider
+    /// <summary>
+    /// Connects to a website or server's chat endpoint.
+    /// </summary>
+    public interface IProvider
     {
         /// <summary>
         /// Name used to reference and access the provider.

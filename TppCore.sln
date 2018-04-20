@@ -3,6 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 15.0.26730.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D8024CEB-AA9A-43AA-A221-F7A4C26C17DA}"
+	ProjectSection(SolutionItems) = preProject
+		src\TPPCore.ChatProviders\TPPCore.ChatProviders.csproj = src\TPPCore.ChatProviders\TPPCore.ChatProviders.csproj
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TPPCore.Service.Common", "src\TPPCore.Service.Common\TPPCore.Service.Common.csproj", "{BE22B0FD-E88D-4790-899E-6BCF73EEB4D7}"
 EndProject
