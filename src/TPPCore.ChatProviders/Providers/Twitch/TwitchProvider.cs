@@ -4,9 +4,9 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using log4net;
 using Newtonsoft.Json.Linq;
-using TPPCore.Service.Chat.DataModels;
+using TPPCore.ChatProviders.DataModels;
 
-namespace TPPCore.Service.Chat.Twitch
+namespace TPPCore.ChatProviders.Twitch
 {
     public class TwitchProvider : IProviderAsync
     {

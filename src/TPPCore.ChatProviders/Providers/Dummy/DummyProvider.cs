@@ -2,12 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using TPPCore.Service.Chat.DataModels;
-using TPPCore.Service.Common;
+using TPPCore.ChatProviders.DataModels;
 
-namespace TPPCore.Service.Chat.Providers.Dummy
+namespace TPPCore.ChatProviders.Providers.Dummy
 {
-    public class DummyProvider : IProviderAsync
+	public class DummyProvider : IProviderAsync
     {
         public string ClientName { get; private set; }
         public string ProviderName { get; } = "dummy";

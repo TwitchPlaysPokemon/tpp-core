@@ -8,10 +8,10 @@ using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Threading.Tasks;
 using TPPCore.Irc;
-using TPPCore.Service.Chat.DataModels;
-using TPPCore.Service.Chat.Irc;
+using TPPCore.ChatProviders.DataModels;
+using TPPCore.ChatProviders.Irc;
 
-namespace TPPCore.Service.Chat.Providers.Irc
+namespace TPPCore.ChatProviders.Providers.Irc
 {
     public class IrcProvider : IProviderAsync
     {

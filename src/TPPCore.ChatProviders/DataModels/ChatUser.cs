@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 
-namespace TPPCore.Service.Chat.DataModels
+namespace TPPCore.ChatProviders.DataModels
 {
     /// <summary>
     /// Identification of a chat user.

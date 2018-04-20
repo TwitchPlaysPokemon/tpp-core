@@ -1,6 +1,6 @@
 using Newtonsoft.Json.Linq;
 
-namespace TPPCore.Service.Chat.DataModels
+namespace TPPCore.ChatProviders.DataModels
 {
     /// <summary>
     /// Represents a change in a user's room membership.

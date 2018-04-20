@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Newtonsoft.Json.Linq;
 using TPPCore.Service.Common.AspNetUtils;
+using TPPCore.ChatProviders;
 
 namespace TPPCore.Service.Chat
 {

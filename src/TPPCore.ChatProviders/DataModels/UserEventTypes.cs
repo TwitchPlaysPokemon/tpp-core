@@ -1,4 +1,4 @@
-namespace TPPCore.Service.Chat.DataModels
+namespace TPPCore.ChatProviders.DataModels
 {
     public static class UserEventTypes
     {

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <PackageReference Include="log4net" Version="2.0.8" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TPPCore.Service.Common\TPPCore.Service.Common.csproj" />
+    <ProjectReference Include="..\TPPCore.Irc\TPPCore.Irc.csproj" />
+    <ProjectReference Include="..\TPPCore.Utils\TPPCore.Utils.csproj" />
+  </ItemGroup>
+</Project>

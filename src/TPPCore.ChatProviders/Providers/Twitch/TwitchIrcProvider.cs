@@ -1,10 +1,10 @@
 using System.Threading.Tasks;
-using TPPCore.Service.Chat.Providers.Irc;
+using TPPCore.ChatProviders.Providers.Irc;
 using TPPCore.Irc;
-using TPPCore.Service.Chat.DataModels;
+using TPPCore.ChatProviders.DataModels;
 using System.Linq;
 
-namespace TPPCore.Service.Chat.Twitch
+namespace TPPCore.ChatProviders.Twitch
 {
     public class TwitchIrcProvider : IrcProvider
     {

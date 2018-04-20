@@ -1,4 +1,4 @@
-namespace TPPCore.Service.Chat.Providers.Irc
+namespace TPPCore.ChatProviders.Providers.Irc
 {
     public class ConnectConfig
     {

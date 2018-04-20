@@ -1,5 +1,5 @@
 ﻿using System.Threading;
-using TPPCore.Service.Chat;
+using TPPCore.ChatProviders;
 using TPPCore.Service.Common;
 
 namespace TPPCore.Service.ChatLogger
