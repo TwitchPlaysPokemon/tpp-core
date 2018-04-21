@@ -3,9 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 15.0.26730.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D8024CEB-AA9A-43AA-A221-F7A4C26C17DA}"
-	ProjectSection(SolutionItems) = preProject
-		src\TPPCore.ChatProviders\TPPCore.ChatProviders.csproj = src\TPPCore.ChatProviders\TPPCore.ChatProviders.csproj
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TPPCore.Service.Common", "src\TPPCore.Service.Common\TPPCore.Service.Common.csproj", "{BE22B0FD-E88D-4790-899E-6BCF73EEB4D7}"
 EndProject
@@ -32,6 +29,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TPPCore.Service.ChatLogger", "src\TPPCore.Service.ChatLogger\TPPCore.Service.ChatLogger.csproj", "{2AA7FFBC-E354-417C-90A5-35F6E80AE5BE}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TPPCore.Service.ChatLogger.Tests", "test\TPPCore.Service.ChatLogger.Tests\TPPCore.Service.ChatLogger.Tests.csproj", "{DDBF13A9-3802-47F1-BF8F-90935CA28511}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TPPCore.ChatProviders", "src\TPPCore.ChatProviders\TPPCore.ChatProviders.csproj", "{8CD289F4-03FF-43DC-A443-763126182185}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -187,6 +186,18 @@ Global
 		{DDBF13A9-3802-47F1-BF8F-90935CA28511}.Release|x64.Build.0 = Release|Any CPU
 		{DDBF13A9-3802-47F1-BF8F-90935CA28511}.Release|x86.ActiveCfg = Release|Any CPU
 		{DDBF13A9-3802-47F1-BF8F-90935CA28511}.Release|x86.Build.0 = Release|Any CPU
+		{8CD289F4-03FF-43DC-A443-763126182185}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8CD289F4-03FF-43DC-A443-763126182185}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8CD289F4-03FF-43DC-A443-763126182185}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8CD289F4-03FF-43DC-A443-763126182185}.Debug|x64.Build.0 = Debug|Any CPU
+		{8CD289F4-03FF-43DC-A443-763126182185}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8CD289F4-03FF-43DC-A443-763126182185}.Debug|x86.Build.0 = Debug|Any CPU
+		{8CD289F4-03FF-43DC-A443-763126182185}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8CD289F4-03FF-43DC-A443-763126182185}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8CD289F4-03FF-43DC-A443-763126182185}.Release|x64.ActiveCfg = Release|Any CPU
+		{8CD289F4-03FF-43DC-A443-763126182185}.Release|x64.Build.0 = Release|Any CPU
+		{8CD289F4-03FF-43DC-A443-763126182185}.Release|x86.ActiveCfg = Release|Any CPU
+		{8CD289F4-03FF-43DC-A443-763126182185}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -204,6 +215,7 @@ Global
 		{C3569F41-2F93-40CD-B45C-D3EB64EC8F87} = {EE3DFBF9-43CF-419C-BC9F-C36364FC1C73}
 		{2AA7FFBC-E354-417C-90A5-35F6E80AE5BE} = {D8024CEB-AA9A-43AA-A221-F7A4C26C17DA}
 		{DDBF13A9-3802-47F1-BF8F-90935CA28511} = {EE3DFBF9-43CF-419C-BC9F-C36364FC1C73}
+		{8CD289F4-03FF-43DC-A443-763126182185} = {D8024CEB-AA9A-43AA-A221-F7A4C26C17DA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB177054-A584-4B2A-BA72-D3195C6BF3B5}
