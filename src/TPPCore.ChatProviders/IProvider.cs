@@ -1,9 +1,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using TPPCore.Service.Chat.DataModels;
-using TPPCore.Service.Common;
+using TPPCore.ChatProviders.DataModels;
 
-namespace TPPCore.Service.Chat
+namespace TPPCore.ChatProviders
 {
     /// <summary>
     /// Connects to a website or server's chat endpoint.

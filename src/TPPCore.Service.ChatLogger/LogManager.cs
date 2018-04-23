@@ -2,7 +2,7 @@
 using System.IO;
 using TPPCore.Service.Common;
 using Newtonsoft.Json;
-using TPPCore.Service.Chat.DataModels;
+using TPPCore.ChatProviders.DataModels;
 
 namespace TPPCore.Service.ChatLogger
 {

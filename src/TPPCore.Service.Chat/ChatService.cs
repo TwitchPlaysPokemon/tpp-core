@@ -2,10 +2,11 @@ using log4net;
 using Microsoft.AspNetCore.Routing;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using TPPCore.Service.Chat.Providers.Dummy;
+using TPPCore.ChatProviders.Providers.Dummy;
 using TPPCore.Service.Common;
-using TPPCore.Service.Chat.Providers.Irc;
-using TPPCore.Service.Chat.Twitch;
+using TPPCore.ChatProviders.Providers.Irc;
+using TPPCore.ChatProviders.Twitch;
+using TPPCore.ChatProviders;
 
 namespace TPPCore.Service.Chat
 {

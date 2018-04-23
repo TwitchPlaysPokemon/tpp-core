@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using TPPCore.Service.Common;
 
-namespace TPPCore.Service.Chat
+namespace TPPCore.ChatProviders
 {
     public class ProviderContext
     {

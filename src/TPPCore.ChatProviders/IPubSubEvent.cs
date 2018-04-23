@@ -1,6 +1,6 @@
 using Newtonsoft.Json.Linq;
 
-namespace TPPCore.Service.Chat
+namespace TPPCore.ChatProviders
 {
     /// <summary>
     /// Represents an object that can be put into a pub/sub system.

@@ -4,11 +4,12 @@ using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using TPPCore.Service.Chat.DataModels;
+using TPPCore.ChatProviders.DataModels;
 using TPPCore.Service.Common;
 using TPPCore.Service.Common.TestUtils;
 using Xunit;
 using Xunit.Abstractions;
+using TPPCore.ChatProviders;
 
 namespace TPPCore.Service.Chat.Tests
 {

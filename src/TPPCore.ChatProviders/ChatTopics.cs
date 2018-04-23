@@ -1,4 +1,4 @@
-namespace TPPCore.Service.Chat
+namespace TPPCore.ChatProviders
 {
     public static class ChatTopics
     {

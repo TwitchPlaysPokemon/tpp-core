@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Newtonsoft.Json.Linq;
 
-namespace TPPCore.Service.Chat.DataModels
+namespace TPPCore.ChatProviders.DataModels
 {
     /// <summary>
     /// Represents a chat activity such as a message, subscription, or poll.

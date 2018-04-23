@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using TPPCore.Service.Chat.DataModels;
+using TPPCore.ChatProviders.DataModels;
 using TPPCore.Service.Common;
 
-namespace TPPCore.Service.Chat
+namespace TPPCore.ChatProviders
 {
     public class ChatFacade
     {
