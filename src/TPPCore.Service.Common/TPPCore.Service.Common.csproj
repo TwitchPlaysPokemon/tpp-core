@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\TPPCore.Client.Common\TPPCore.Client.Common.csproj" />
     <ProjectReference Include="..\TPPCore.Utils\TPPCore.Utils.csproj" />
   </ItemGroup>
 

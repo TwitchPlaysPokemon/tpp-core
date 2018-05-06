@@ -18,7 +18,7 @@ namespace TPPCore.ChatProviders.DataModels
             {
                 userId = UserId,
                 username = Username,
-                nickname = Nickname
+                nickname = Nickname,
             });
         }
     }

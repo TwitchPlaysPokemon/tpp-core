@@ -77,7 +77,7 @@ namespace TPPCore.ChatProviders.Providers.Dummy
             context.PublishChatEvent(chatMessage);
         }
 
-        public async Task<IList<ChatUser>> GetRoomList(string channel)
+        public async Task<PostRoomList> GetRoomList(string channel)
         {
             await Task.Delay(100);
             var user1 = new ChatUser() {
@@ -90,7 +90,12 @@ namespace TPPCore.ChatProviders.Providers.Dummy
                 Username = "someone",
                 Nickname = "Someone",
             };
-            return new List<ChatUser>() { user1, user2 };
+            var roomList = new PostRoomList
+            {
+                NumUsers = 2,
+                Viewers = new List<ChatUser>() { user1, user2 },
+            };
+            return roomList;
         }
 
         private ChatMessage newFakeReceivedMessage() {

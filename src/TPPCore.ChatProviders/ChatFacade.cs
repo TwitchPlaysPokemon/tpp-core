@@ -61,7 +61,7 @@ namespace TPPCore.ChatProviders
             }
         }
 
-        public async Task<IList<ChatUser>> GetRoomList(string clientName, string channel)
+        public async Task<PostRoomList> GetRoomList(string clientName, string channel)
         {
             var provider = providers[clientName];
 

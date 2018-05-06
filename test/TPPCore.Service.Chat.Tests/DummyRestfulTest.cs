@@ -1,10 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Reflection;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
+using TPPCore.ChatProviders.DataModels;
+using TPPCore.Client.Chat;
 using TPPCore.Service.Common;
 using TPPCore.Service.Common.TestUtils;
 using Xunit;
@@ -21,7 +17,7 @@ namespace TPPCore.Service.Chat.Tests
             this.output = output;
         }
 
-        private ServiceTestRunner newServiceRunner()
+        private ServiceTestRunner NewServiceRunner()
         {
             return new ServiceTestRunner(new ChatService());
         }
@@ -43,29 +39,16 @@ namespace TPPCore.Service.Chat.Tests
         [Fact]
         public async Task TestUserIdUsername()
         {
-            var runner = newServiceRunner();
+            var runner = NewServiceRunner();
             await runner.SetUpAsync(getOptions());
 
             var httpClient = runner.Runner.Context.RestfulClient;
-            var uri = new Uri(
-                runner.Runner.Context.RestfulServer.Context.GetUri(),
-                "client/dummyTest/username");
-            var result = await httpClient.GetJsonAsync(uri);
-            Assert.Equal(HttpStatusCode.OK, result.Response.StatusCode);
+            ChatClient client = new ChatClient(runner.Runner.Context.RestfulServer.Context.GetUri().ToString(), "dummyTest", httpClient);
+            var result = await client.GetUserName();
+            Assert.Equal("dummy", result);
 
-            var jsonDoc = result.JsonDoc;
-            var username = jsonDoc.Value<string>("username");
-            Assert.Equal("dummy", username);
-
-            uri = new Uri(
-                runner.Runner.Context.RestfulServer.Context.GetUri(),
-                "client/dummyTest/user_id");
-            result = await httpClient.GetJsonAsync(uri);
-            Assert.Equal(HttpStatusCode.OK, result.Response.StatusCode);
-
-            jsonDoc = result.JsonDoc;
-            var userId = jsonDoc.Value<string>("userId");
-            Assert.Equal("dummy", userId);
+            result = await client.GetUserId();
+            Assert.Equal("dummy", result);
 
             await runner.TearDownAsync();
         }
@@ -73,22 +56,15 @@ namespace TPPCore.Service.Chat.Tests
         [Fact]
         public async Task TestRoomList()
         {
-            var runner = newServiceRunner();
+            var runner = NewServiceRunner();
             await runner.SetUpAsync(getOptions());
 
             var httpClient = runner.Runner.Context.RestfulClient;
-            var uri = new Uri(
-                runner.Runner.Context.RestfulServer.Context.GetUri(),
-                "chat/dummyTest/%23somechannel/room_list");
-            var result = await httpClient.GetJsonAsync(uri);
-
-            Assert.Equal(HttpStatusCode.OK, result.Response.StatusCode);
-
-            var jsonDoc = result.JsonDoc;
-            var users = jsonDoc.Value<JArray>("users");
-
-            Assert.Equal(2, users.Count);
-            Assert.Equal("dummy", (string) users.SelectToken("[0].username"));
+            ChatClient client = new ChatClient(runner.Runner.Context.RestfulServer.Context.GetUri().ToString(), "dummyTest", httpClient);
+            var result = await client.GetRoomList("%23somechannel");
+            ChatUser dummy = result.Viewers[0];
+            Assert.Equal(2, result.NumUsers);
+            Assert.Equal("dummy", dummy.Username);
 
             await runner.TearDownAsync();
         }
@@ -96,17 +72,12 @@ namespace TPPCore.Service.Chat.Tests
         [Fact]
         public async Task TestSendMessage()
         {
-            var runner = newServiceRunner();
+            var runner = NewServiceRunner();
             await runner.SetUpAsync(getOptions());
 
             var httpClient = runner.Runner.Context.RestfulClient;
-            var uri = new Uri(
-                runner.Runner.Context.RestfulServer.Context.GetUri(),
-                "chat/dummyTest/%23somechannel/send");
-            var inputDoc = JObject.FromObject(new { message = "hello world" });
-            var result = await httpClient.PostJsonAsync(uri, inputDoc);
-
-            Assert.Equal(HttpStatusCode.OK, result.Response.StatusCode);
+            ChatClient client = new ChatClient(runner.Runner.Context.RestfulServer.Context.GetUri().ToString(), "dummyTest", httpClient);
+            await client.SendMessage("%23somechannel", "hello world");
 
             await runner.TearDownAsync();
         }

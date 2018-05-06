@@ -15,6 +15,14 @@ namespace TPPCore.Service.Common.AspNetUtils
             context.Response.ContentType = "application/json";
             await context.Response.WriteAsync(doc.ToString());
         }
+        /// <summary>
+        /// Sets the appropriate HTTP headers and writes the given string object.
+        /// </summary>
+        public async static Task RespondStringAsync(this HttpContext context, string doc)
+        {
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync(doc);
+        }
 
         /// <summary>
         /// Reads a JSON formatted document body from a POST request.
@@ -25,6 +33,16 @@ namespace TPPCore.Service.Common.AspNetUtils
             var text = await reader.ReadToEndAsync();
             var jsonDoc = JObject.Parse(text);
             return jsonDoc;
+        }
+
+        /// <summary>
+        /// Reads a string body from a POST request.
+        /// </summary>
+        public async static Task<string> ReadStringAsync(this HttpContext context)
+        {
+            var reader = new StreamReader(context.Request.Body);
+            var text = await reader.ReadToEndAsync();
+            return text;
         }
     }
 }

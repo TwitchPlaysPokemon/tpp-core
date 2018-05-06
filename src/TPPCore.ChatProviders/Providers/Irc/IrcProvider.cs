@@ -297,7 +297,7 @@ namespace TPPCore.ChatProviders.Providers.Irc
             // such as netsplits
         }
 
-        public Task<IList<ChatUser>> GetRoomList(string channel)
+        public Task<PostRoomList> GetRoomList(string channel)
         {
             var ircChannel = ircClient.ChannelTracker[channel];
 
@@ -309,7 +309,13 @@ namespace TPPCore.ChatProviders.Providers.Irc
                 users.Add(user);
             }
 
-            return Task.FromResult((IList<ChatUser>) users);
+            var roomlist = new PostRoomList()
+            {
+                NumUsers = users.Count,
+                Viewers = users
+            };
+
+            return Task.FromResult((PostRoomList) roomlist);
         }
 
         public string GetUserId()

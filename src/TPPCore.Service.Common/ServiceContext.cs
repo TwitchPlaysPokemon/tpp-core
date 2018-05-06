@@ -1,7 +1,5 @@
-using System;
-using System.Collections.Generic;
 using System.Net;
-using System.Net.Http;
+using TPPCore.Client.Common;
 using TPPCore.Service.Common.AspNetUtils;
 
 namespace TPPCore.Service.Common
