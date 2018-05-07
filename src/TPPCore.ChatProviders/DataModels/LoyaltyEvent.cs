@@ -1,5 +1,3 @@
-using Newtonsoft.Json.Linq;
-
 namespace TPPCore.ChatProviders.DataModels
 {
     /// <summary>
@@ -27,15 +25,5 @@ namespace TPPCore.ChatProviders.DataModels
         /// Chat room where event is occuring.
         /// </summary>
         public string Channel;
-
-        override public JObject ToJObject()
-        {
-            var doc = base.ToJObject();
-            doc.Add("sender", Sender != null ? Sender.ToJObject() : null);
-            doc.Add("textContent", TextContent);
-            doc.Add("channel", Channel);
-
-            return doc;
-        }
     }
 }

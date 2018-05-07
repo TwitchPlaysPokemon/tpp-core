@@ -42,7 +42,7 @@ namespace TPPCore.ChatProviders
         void Run();
         void SendMessage(string channel, string message);
         void SendPrivateMessage(string user, string message);
-        PostRoomList GetRoomList(string channel);
+        IList<ChatUser> GetRoomList(string channel);
     }
 
     public interface IProviderAsync : IProvider
@@ -50,6 +50,6 @@ namespace TPPCore.ChatProviders
         Task Run();
         Task SendMessage(string channel, string message);
         Task SendPrivateMessage(string user, string message);
-        Task<PostRoomList> GetRoomList(string channel);
+        Task<IList<ChatUser>> GetRoomList(string channel);
     }
 }

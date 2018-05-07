@@ -8,7 +8,7 @@ namespace TPPCore.Client.Common
     public class RestfulClientResult
     {
         public HttpResponseMessage Response;
-        public JObject JsonDoc;
+        public string Serialized;
     }
 
     public class RestfulClient : HttpClient
@@ -33,21 +33,21 @@ namespace TPPCore.Client.Common
             return new RestfulClientResult()
             {
                 Response = response,
-                JsonDoc = JObject.Parse(body)
+                Serialized = body
             };
         }
 
         public async Task<RestfulClientResult> PostJsonAsync(
-            Uri uri, JObject jsonDoc)
+            Uri uri, string Seralized)
         {
-            var content = new StringContent(jsonDoc.ToString());
+            var content = new StringContent(Seralized);
             var response = await PostAsync(uri, content);
             var body = await response.Content.ReadAsStringAsync();
 
             return new RestfulClientResult()
             {
                 Response = response,
-                JsonDoc = JObject.Parse(body)
+                Serialized = body
             };
         }
     }

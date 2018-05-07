@@ -1,5 +1,3 @@
-using Newtonsoft.Json.Linq;
-
 namespace TPPCore.ChatProviders.DataModels
 {
     /// <summary>
@@ -13,15 +11,6 @@ namespace TPPCore.ChatProviders.DataModels
 
         public UserEvent() : base(ChatTopics.UserEvent)
         {
-        }
-
-        override public JObject ToJObject()
-        {
-            var doc = base.ToJObject();
-            doc.Add("eventType", EventType);
-            doc.Add("channel", Channel);
-            doc.Add("user", User.ToJObject());
-            return doc;
         }
     }
 }

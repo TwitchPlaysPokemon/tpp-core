@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using log4net;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using TPPCore.ChatProviders.DataModels;
 
@@ -61,9 +62,9 @@ namespace TPPCore.ChatProviders.Twitch
             await SendMessage("#jtv", $".w {user} message");
         }
 
-        public async Task<PostRoomList> GetRoomList(string channel)
+        public async Task<IList<ChatUser>> GetRoomList(string channel)
         {
-            var users = (await twitchIrcProvider.GetRoomList(channel)).Viewers;
+            var users = (await twitchIrcProvider.GetRoomList(channel)).ToList();
 
             // TODO: Customize the IRC client's ChannelTracker to grab the
             // user-id from the tags.
@@ -72,71 +73,36 @@ namespace TPPCore.ChatProviders.Twitch
             var url = string.Format(roomListUrl, channel.TrimStart('#'));
             var response = await httpClient.GetAsync(url);
             var jsonString = await response.Content.ReadAsStringAsync();
-            var jsonDoc = JObject.Parse(jsonString);
+            ChatList chatList = JsonConvert.DeserializeObject<ChatList>(jsonString);
 
-            var moderators = jsonDoc.SelectToken("chatters.moderators")
-                .Select(item => (string) item);
-            var staff = jsonDoc.SelectToken("chatters.staff")
-                .Select(item => (string) item);
-            var admins = jsonDoc.SelectToken("chatters.admins")
-                .Select(item => (string) item);
-            var global_mods = jsonDoc.SelectToken("chatters.global_mods")
-                .Select(item => (string) item);
-            var viewers = jsonDoc.SelectToken("chatters.viewers")
-                .Select(item => (string) item);
+            var moderators = chatList.moderators;
+            var staff = chatList.staff;
+            var admins = chatList.admins;
+            var global_mods = chatList.global_mods;
+            var viewers = chatList.viewers;
 
-            PostRoomList roomList;
-
-            List<ChatUser> Viewers = new List<ChatUser> { };
-            List<ChatUser> Moderators = new List<ChatUser> { };
-            List<ChatUser> GlobalMods = new List<ChatUser> { };
-            List<ChatUser> Admins = new List<ChatUser> { };
-            List<ChatUser> Staff = new List<ChatUser> { };
-
-            foreach (string viewer in viewers)
+            foreach (var username in viewers)
             {
-                var user = new ChatUser() { Username = viewer };
-                Viewers.Add(user);
-                users.Add(user);
-            }
-            foreach (string moderator in moderators)
-            {
-                var user = new ChatUser() { Username = moderator };
-                Moderators.Add(user);
-                users.Add(user);
-            }
-            foreach (string globalmoderator in global_mods)
-            {
-                var user = new ChatUser() { Username = globalmoderator };
-                GlobalMods.Add(user);
-                users.Add(user);
-            }
-            foreach (string admin in admins)
-            {
-                var user = new ChatUser() { Username = admin };
-                Admins.Add(user);
-                users.Add(user);
-            }
-            foreach (string staffmember in staff)
-            {
-                var user = new ChatUser() { Username = staffmember };
-                Staff.Add(user);
+                var user = new ChatUser() { Username = username, AccessLevel = AccessLevel.Viewer };
                 users.Add(user);
             }
 
-            var processedUsers = users.Distinct(new ChatUserEqualityComparer()).ToList();
-
-            roomList = new PostRoomList()
+            foreach (var username in moderators)
             {
-                NumUsers = processedUsers.Count,
-                Viewers = Viewers,
-                Moderators = Moderators,
-                GlobalMods = GlobalMods,
-                Admins = Admins,
-                Staff = Staff,
-                ClientName = ClientName,
-            };
-            return roomList;
+                var user = new ChatUser() { Username = username, AccessLevel = AccessLevel.Moderator };
+                users.Add(user);
+            }
+
+            foreach (var usernames in new[] { global_mods, admins, staff })
+            {
+                foreach (var username in usernames)
+                {
+                    var user = new ChatUser() { Username = username, AccessLevel = AccessLevel.Staff };
+                    users.Add(user);
+                }
+            }
+
+            return users.Distinct(new ChatUserEqualityComparer()).ToList();
         }
     }
 }

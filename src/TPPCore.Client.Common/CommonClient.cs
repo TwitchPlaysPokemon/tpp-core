@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace TPPCore.Client.Common
@@ -21,11 +22,9 @@ namespace TPPCore.Client.Common
                 throw new HttpRequestException();
         }
 
-        public static async Task PostAsync(Uri requestUri, JObject message, RestfulClient HttpClient)
+        public static string Escape(string toEscape)
         {
-            RestfulClientResult msg = await HttpClient.PostJsonAsync(requestUri, message);
-            if (!msg.Response.IsSuccessStatusCode)
-                throw new HttpRequestException();
+            return Regex.Replace(toEscape, @"[^\w%]", m => "%" + ((int)m.Value[0]).ToString("X2"));
         }
     }
 }

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Newtonsoft.Json.Linq;
 
 namespace TPPCore.ChatProviders.DataModels
 {
@@ -11,16 +10,8 @@ namespace TPPCore.ChatProviders.DataModels
         public string UserId;
         public string Username;
         public string Nickname;
+        public AccessLevel AccessLevel;
 
-        public JObject ToJObject()
-        {
-            return JObject.FromObject(new
-            {
-                userId = UserId,
-                username = Username,
-                nickname = Nickname,
-            });
-        }
     }
 
     public class ChatUserEqualityComparer : EqualityComparer<ChatUser>

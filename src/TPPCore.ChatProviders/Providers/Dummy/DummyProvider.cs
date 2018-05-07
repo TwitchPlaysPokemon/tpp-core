@@ -77,25 +77,24 @@ namespace TPPCore.ChatProviders.Providers.Dummy
             context.PublishChatEvent(chatMessage);
         }
 
-        public async Task<PostRoomList> GetRoomList(string channel)
+        public async Task<IList<ChatUser>> GetRoomList(string channel)
         {
             await Task.Delay(100);
-            var user1 = new ChatUser() {
+            var user1 = new ChatUser()
+            {
                 UserId = "dummy",
                 Username = "dummy",
                 Nickname = "Dummy",
+                AccessLevel = AccessLevel.Viewer,
             };
-            var user2 = new ChatUser() {
+            var user2 = new ChatUser()
+            {
                 UserId = "someone",
                 Username = "someone",
                 Nickname = "Someone",
+                AccessLevel = AccessLevel.Moderator,
             };
-            var roomList = new PostRoomList
-            {
-                NumUsers = 2,
-                Viewers = new List<ChatUser>() { user1, user2 },
-            };
-            return roomList;
+            return new List<ChatUser>() { user1, user2 };
         }
 
         private ChatMessage newFakeReceivedMessage() {

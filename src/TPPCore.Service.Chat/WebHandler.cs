@@ -23,18 +23,18 @@ namespace TPPCore.Service.Chat
         {
             var client = (string) context.GetRouteValue("client");
             var userId = chatFacade.GetUserId(client);
-            var jsonDoc = JObject.FromObject(new { userId });
+            var jsonDoc = JsonConvert.SerializeObject(userId);
 
-            await context.RespondJsonAsync(jsonDoc);
+            await context.RespondStringAsync(jsonDoc);
         }
 
         public async Task GetUsername(HttpContext context)
         {
             var client = (string) context.GetRouteValue("client");
             var username = chatFacade.GetUsername(client);
-            var jsonDoc = JObject.FromObject(new { username });
+            var jsonDoc = JsonConvert.SerializeObject(username);
 
-            await context.RespondJsonAsync(jsonDoc);
+            await context.RespondStringAsync(jsonDoc);
         }
 
         public async Task PostSendMessage(HttpContext context)
@@ -67,6 +67,7 @@ namespace TPPCore.Service.Chat
             var channel = (string) context.GetRouteValue("channel");
 
             var RoomList = await chatFacade.GetRoomList(client, channel);
+
             string serialized = JsonConvert.SerializeObject(RoomList);
             await context.RespondStringAsync(serialized);
         }

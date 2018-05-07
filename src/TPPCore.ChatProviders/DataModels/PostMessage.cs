@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-
-namespace TPPCore.ChatProviders.DataModels
+﻿namespace TPPCore.ChatProviders.DataModels
 {
     /// <summary>
     /// A message to send to chat.
@@ -16,14 +14,5 @@ namespace TPPCore.ChatProviders.DataModels
         /// Message to send.
         /// </summary>
         public string Message;
-
-        override public JObject ToJObject()
-        {
-            var doc = base.ToJObject();
-            doc.Add("channel", Channel);
-            doc.Add("message", Message);
-
-            return doc;
-        }
     }
 }

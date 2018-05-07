@@ -1,4 +1,4 @@
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 
 namespace TPPCore.ChatProviders
 {
@@ -8,6 +8,5 @@ namespace TPPCore.ChatProviders
     public interface IPubSubEvent
     {
         string Topic { get; }
-        JObject ToJObject();
     }
 }

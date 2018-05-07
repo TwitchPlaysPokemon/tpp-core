@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using TPPCore.Service.Common;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
 
 namespace TPPCore.Service.Example.Parrot
 {
@@ -82,7 +83,7 @@ namespace TPPCore.Service.Example.Parrot
             var message = model.CurrentMessage;
             logger.DebugFormat("Broadcasting message {0}", message);
 
-            var jsonMessage = JObject.FromObject(new { message = message });
+            var jsonMessage = JsonConvert.SerializeObject(message);
             context.PubSubClient.Publish(ParrotTopics.Broadcast, jsonMessage);
 
             model.Repeat();
@@ -91,7 +92,7 @@ namespace TPPCore.Service.Example.Parrot
             {
                 logger.DebugFormat("Broadcasting recent messages");
 
-                var recentMessage = JObject.FromObject(new { recent = model.RecentMessages });
+                var recentMessage = JsonConvert.SerializeObject(model.RecentMessages);
                 context.PubSubClient.Publish(ParrotTopics.Recent, recentMessage);
             }
         }

@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using System.Diagnostics;
 using TPPCore.Service.Common;
 
@@ -10,14 +11,14 @@ namespace TPPCore.ChatProviders
 
         public ProviderContext(ServiceContext serviceContext, ChatFacade chatFacade)
         {
-            this.Service = serviceContext;
-            this.Chat = chatFacade;
+            Service = serviceContext;
+            Chat = chatFacade;
         }
 
         public void PublishChatEvent(IPubSubEvent chatEvent)
         {
             Debug.Assert(chatEvent.Topic != null);
-            Service.PubSubClient.Publish(chatEvent.Topic, chatEvent.ToJObject());
+            Service.PubSubClient.Publish(chatEvent.Topic, JsonConvert.SerializeObject(chatEvent));
         }
     }
 }

@@ -61,9 +61,9 @@ namespace TPPCore.Service.Chat.Tests
 
             var httpClient = runner.Runner.Context.RestfulClient;
             ChatClient client = new ChatClient(runner.Runner.Context.RestfulServer.Context.GetUri().ToString(), "dummyTest", httpClient);
-            var result = await client.GetRoomList("%23somechannel");
-            ChatUser dummy = result.Viewers[0];
-            Assert.Equal(2, result.NumUsers);
+            var result = await client.GetRoomList("#somechannel");
+            ChatUser dummy = result[0];
+            Assert.Equal(2, result.Count);
             Assert.Equal("dummy", dummy.Username);
 
             await runner.TearDownAsync();
@@ -77,7 +77,7 @@ namespace TPPCore.Service.Chat.Tests
 
             var httpClient = runner.Runner.Context.RestfulClient;
             ChatClient client = new ChatClient(runner.Runner.Context.RestfulServer.Context.GetUri().ToString(), "dummyTest", httpClient);
-            await client.SendMessage("%23somechannel", "hello world");
+            await client.SendMessage("#somechannel", "hello world");
 
             await runner.TearDownAsync();
         }
