@@ -8,7 +8,7 @@ namespace TPPCore.Service.Common.AspNetUtils
     public static class HttpContextExtensions
     {
         /// <summary>
-        /// Sets the appropriate HTTP headers and writes the given string object.
+        /// Sets the appropriate HTTP headers and writes the given JSON formatted string.
         /// </summary>
         public async static Task RespondStringAsync(this HttpContext context, string doc)
         {
@@ -17,7 +17,7 @@ namespace TPPCore.Service.Common.AspNetUtils
         }
 
         /// <summary>
-        /// Reads a string body from a POST request.
+        /// Reads a JSON formatted string body from a POST request.
         /// </summary>
         public async static Task<string> ReadStringAsync(this HttpContext context)
         {

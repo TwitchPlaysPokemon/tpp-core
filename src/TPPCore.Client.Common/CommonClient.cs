@@ -24,7 +24,7 @@ namespace TPPCore.Client.Common
 
         public static string Escape(string toEscape)
         {
-            return Regex.Replace(toEscape, @"[^\w%]", m => "%" + ((int)m.Value[0]).ToString("X2"));
+            return Uri.EscapeDataString(toEscape);
         }
     }
 }
