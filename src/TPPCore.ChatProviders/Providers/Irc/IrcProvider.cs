@@ -309,7 +309,7 @@ namespace TPPCore.ChatProviders.Providers.Irc
                 users.Add(user);
             }
 
-            return Task.FromResult((IList<ChatUser>) users);
+            return Task.FromResult((IList<ChatUser>)users);
         }
 
         public string GetUserId()

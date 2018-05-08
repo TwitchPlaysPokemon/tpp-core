@@ -8,9 +8,9 @@ namespace TPPCore.Service.Common
         /// Serializes the JSON object before calling
         /// <see cref="IPubSubClient.Publish"/>.
         /// </summary>
-        public static void Publish(this IPubSubClient client, string topic, JObject message)
+        public static void Publish(this IPubSubClient client, string topic, string message)
         {
-            client.Publish(topic, message.ToString());
+            client.Publish(topic, message);
         }
     }
 }

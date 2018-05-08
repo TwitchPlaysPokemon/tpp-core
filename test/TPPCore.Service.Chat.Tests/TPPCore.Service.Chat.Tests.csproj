@@ -14,6 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\TPPCore.Client.Chat\TPPCore.Client.Chat.csproj" />
     <ProjectReference Include="..\..\src\TPPCore.Service.Chat\TPPCore.Service.Chat.csproj" />
   </ItemGroup>
 

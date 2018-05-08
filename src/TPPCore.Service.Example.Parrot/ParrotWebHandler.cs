@@ -22,27 +22,27 @@ namespace TPPCore.Service.Example.Parrot
 
         public async Task GetRecent(HttpContext context)
         {
-            var jsonDoc = JObject.FromObject(new { messages = model.RecentMessages });
+            var jsonDoc = JsonConvert.SerializeObject(model.RecentMessages);
 
-            await context.RespondJsonAsync(jsonDoc);
+            await context.RespondStringAsync(jsonDoc);
         }
 
         public async Task GetCurrent(HttpContext context)
         {
-            var jsonDoc = JObject.FromObject(new { message = model.CurrentMessage });
+            var jsonDoc = JsonConvert.SerializeObject(model.CurrentMessage);
 
-            await context.RespondJsonAsync(jsonDoc);
+            await context.RespondStringAsync(jsonDoc);
         }
 
         public async Task PostMessage(HttpContext context)
         {
-            var jsonDoc = await context.ReadJsonAsync();
+            var jsonDoc = await context.ReadStringAsync();
 
-            var message = jsonDoc.Value<string>("message");
+            var message = JsonConvert.DeserializeObject<string>(jsonDoc);
 
             model.RepeatNewMessage(message);
 
-            await context.RespondJsonAsync(new JObject());
+            await context.RespondStringAsync(string.Empty);
         }
     }
 }

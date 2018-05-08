@@ -14,6 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\TPPCore.Client.Example.Parrot\TPPCore.Client.Example.Parrot.csproj" />
     <ProjectReference Include="..\..\src\TPPCore.Service.Example.Parrot\TPPCore.Service.Example.Parrot.csproj" />
   </ItemGroup>
 </Project>

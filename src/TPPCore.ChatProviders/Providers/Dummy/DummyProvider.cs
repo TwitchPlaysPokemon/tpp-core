@@ -80,15 +80,19 @@ namespace TPPCore.ChatProviders.Providers.Dummy
         public async Task<IList<ChatUser>> GetRoomList(string channel)
         {
             await Task.Delay(100);
-            var user1 = new ChatUser() {
+            var user1 = new ChatUser()
+            {
                 UserId = "dummy",
                 Username = "dummy",
                 Nickname = "Dummy",
+                AccessLevel = AccessLevel.Viewer,
             };
-            var user2 = new ChatUser() {
+            var user2 = new ChatUser()
+            {
                 UserId = "someone",
                 Username = "someone",
                 Nickname = "Someone",
+                AccessLevel = AccessLevel.Moderator,
             };
             return new List<ChatUser>() { user1, user2 };
         }

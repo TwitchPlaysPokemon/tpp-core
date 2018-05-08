@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using System.Diagnostics;
-using Newtonsoft.Json.Linq;
 
 namespace TPPCore.ChatProviders.DataModels
 {
@@ -42,22 +40,6 @@ namespace TPPCore.ChatProviders.DataModels
         {
             this.Topic = topic;
             Meta = new Dictionary<string,string>();
-        }
-
-        public virtual JObject ToJObject()
-        {
-            Debug.Assert(Topic != null);
-            Debug.Assert(ClientName != null);
-            Debug.Assert(ProviderName != null);
-
-            return JObject.FromObject(new
-            {
-                topic = Topic,
-                clientName = ClientName,
-                providerName = ProviderName,
-                isSelf = IsSelf,
-                meta = Meta
-            });
         }
     }
 }

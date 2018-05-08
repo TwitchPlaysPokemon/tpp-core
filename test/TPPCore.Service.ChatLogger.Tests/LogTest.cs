@@ -1,10 +1,11 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using TPPCore.ChatProviders;
+using TPPCore.ChatProviders.DataModels;
 using TPPCore.Service.Common;
 using TPPCore.Service.Common.TestUtils;
 using Xunit;
@@ -46,19 +47,6 @@ namespace TPPCore.Service.ChatLogger.Tests
             return new ServiceTestRunner(new ChatLoggerService());
         }
 
-        private JObject ToJObject(string RawContent)
-        {
-            return JObject.FromObject(new
-            {
-                topic = ChatTopics.Raw,
-                clientName = "test",
-                providerName = "test",
-                isSelf = false,
-                meta = Meta,
-                rawContent = RawContent
-            });
-        }
-
         [Fact]
         public async Task TestLogReadWrite()
         {
@@ -71,7 +59,16 @@ namespace TPPCore.Service.ChatLogger.Tests
 
             var dummyPubSub = (DummyPubSubClient)runner.Runner.Context.PubSubClient;
 
-            var jsonMessage = ToJObject(@"@badges=staff/1,bits/1000;bits=100;color=;display-name=dallas;emotes=;id=b34ccfc7-4977-403a-8a94-33c6bac34fb8;mod=0;room-id=1337;subscriber=0;tmi-sent-ts=1507246572675;turbo=1;user-id=1337;user-type=staff :ronni!ronni@ronni.tmi.twitch.tv PRIVMSG #dallas :cheer100");
+            RawContentEvent contentEvent = new RawContentEvent()
+            {
+                Topic = ChatTopics.Raw,
+                ClientName = "test",
+                ProviderName = "test",
+                IsSelf = false,
+                Meta = Meta,
+                RawContent = @"@badges=staff/1,bits/1000;bits=100;color=;display-name=dallas;emotes=;id=b34ccfc7-4977-403a-8a94-33c6bac34fb8;mod=0;room-id=1337;subscriber=0;tmi-sent-ts=1507246572675;turbo=1;user-id=1337;user-type=staff :ronni!ronni@ronni.tmi.twitch.tv PRIVMSG #dallas :cheer100"
+            };
+            var jsonMessage = JsonConvert.SerializeObject(contentEvent);
             dummyPubSub.Publish(ChatTopics.Raw, jsonMessage);
             string written1 = LogManager.dateTime.ToString("o") + " " + @"@badges=staff/1,bits/1000;bits=100;color=;display-name=dallas;emotes=;id=b34ccfc7-4977-403a-8a94-33c6bac34fb8;mod=0;room-id=1337;subscriber=0;tmi-sent-ts=1507246572675;turbo=1;user-id=1337;user-type=staff :ronni!ronni@ronni.tmi.twitch.tv PRIVMSG #dallas :cheer100";
 

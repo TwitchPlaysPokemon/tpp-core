@@ -1,5 +1,3 @@
-using Newtonsoft.Json.Linq;
-
 namespace TPPCore.ChatProviders.DataModels
 {
     /// <summary>
@@ -11,15 +9,6 @@ namespace TPPCore.ChatProviders.DataModels
 
         public RawContentEvent() : base(ChatTopics.Raw)
         {
-        }
-
-        override public JObject ToJObject()
-        {
-            var doc = base.ToJObject();
-
-            doc.Add("rawContent", RawContent);
-
-            return doc;
         }
     }
 }

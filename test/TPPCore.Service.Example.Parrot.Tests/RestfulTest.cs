@@ -1,11 +1,6 @@
-using System;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
-using TPPCore.Service.Common;
+using TPPCore.Client.Example.Parrot;
 using TPPCore.Service.Common.TestUtils;
-using TPPCore.Service.Example.Parrot;
 using Xunit;
 
 namespace TPPCore.Service.Example.Parrot.Tests
@@ -15,7 +10,7 @@ namespace TPPCore.Service.Example.Parrot.Tests
         public RestfulTest() {
         }
 
-        private ServiceTestRunner newServiceRunner()
+        private ServiceTestRunner NewServiceRunner()
         {
             return new ServiceTestRunner(new ParrotService());
         }
@@ -23,16 +18,14 @@ namespace TPPCore.Service.Example.Parrot.Tests
         [Fact]
         public async Task TestCurrent()
         {
-            var runner = newServiceRunner();
+            var runner = NewServiceRunner();
             await runner.SetUpAsync();
 
             var httpClient = runner.Runner.Context.RestfulClient;
-            var uri = new Uri(runner.Runner.Context.RestfulServer.Context.GetUri(),
-                "/message/current");
-            var result = await httpClient.GetJsonAsync(uri);
+            ParrotClient client = new ParrotClient(runner.Runner.Context.RestfulServer.Context.GetUri().ToString(), httpClient);
+            var result = await client.GetCurrent();
 
-            Assert.Equal(HttpStatusCode.OK, result.Response.StatusCode);
-            Assert.Equal("hello world!", result.JsonDoc.Value<string>("message"));
+            Assert.Equal("hello world!", result);
 
             await runner.TearDownAsync();
         }
@@ -40,19 +33,12 @@ namespace TPPCore.Service.Example.Parrot.Tests
         [Fact]
         public async Task TestNewMessage()
         {
-            var runner = newServiceRunner();
+            var runner = NewServiceRunner();
             await runner.SetUpAsync();
 
             var httpClient = runner.Runner.Context.RestfulClient;
-            var jsonDoc = new JObject();
-            jsonDoc.Add("message", "wow");
-
-            var uri = new Uri(runner.Runner.Context.RestfulServer.Context.GetUri(),
-                "/message/new");
-
-            var result = await httpClient.PostJsonAsync(uri, jsonDoc);
-
-            Assert.Equal(HttpStatusCode.OK, result.Response.StatusCode);
+            ParrotClient client = new ParrotClient(runner.Runner.Context.RestfulServer.Context.GetUri().ToString(), httpClient);
+            await client.PostMessage("wow");
 
             await runner.TearDownAsync();
         }

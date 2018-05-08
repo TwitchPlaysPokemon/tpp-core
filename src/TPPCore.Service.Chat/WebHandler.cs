@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Routing;
 using Newtonsoft.Json.Linq;
 using TPPCore.Service.Common.AspNetUtils;
 using TPPCore.ChatProviders;
+using TPPCore.ChatProviders.DataModels;
+using Newtonsoft.Json;
 
 namespace TPPCore.Service.Chat
 {
@@ -21,40 +23,42 @@ namespace TPPCore.Service.Chat
         {
             var client = (string) context.GetRouteValue("client");
             var userId = chatFacade.GetUserId(client);
-            var jsonDoc = JObject.FromObject(new { userId = userId });
+            var jsonDoc = JsonConvert.SerializeObject(userId);
 
-            await context.RespondJsonAsync(jsonDoc);
+            await context.RespondStringAsync(jsonDoc);
         }
 
         public async Task GetUsername(HttpContext context)
         {
             var client = (string) context.GetRouteValue("client");
-            var username = chatFacade.GetUserId(client);
-            var jsonDoc = JObject.FromObject(new { username = username });
+            var username = chatFacade.GetUsername(client);
+            var jsonDoc = JsonConvert.SerializeObject(username);
 
-            await context.RespondJsonAsync(jsonDoc);
+            await context.RespondStringAsync(jsonDoc);
         }
 
         public async Task PostSendMessage(HttpContext context)
         {
-            var client = (string) context.GetRouteValue("client");
-            var channel = (string) context.GetRouteValue("channel");
-            var inputDoc = await context.ReadJsonAsync();
-            var message = inputDoc.Value<string>("message");
+            var inputDoc = await context.ReadStringAsync();
+            PostMessage postMessage = JsonConvert.DeserializeObject<PostMessage>(inputDoc);
+            var client = postMessage.ClientName;
+            var channel = postMessage.Channel;
+            var message = postMessage.Message;
 
             await chatFacade.SendMessage(client, channel, message);
-            await context.RespondJsonAsync(inputDoc);
+            await context.RespondStringAsync(inputDoc);
         }
 
         public async Task PostSendPrivateMessage(HttpContext context)
         {
-            var client = (string) context.GetRouteValue("client");
-            var user = (string) context.GetRouteValue("user");
-            var inputDoc = await context.ReadJsonAsync();
-            var message = inputDoc.Value<string>("message");
+            var inputDoc = await context.ReadStringAsync();
+            PostPrivateMessage postPrivateMessage = JsonConvert.DeserializeObject<PostPrivateMessage>(inputDoc);
+            var client = postPrivateMessage.ClientName;
+            var user = postPrivateMessage.User;
+            var message = postPrivateMessage.Message;
 
             await chatFacade.SendPrivateMessage(client, user, message);
-            await context.RespondJsonAsync(inputDoc);
+            await context.RespondStringAsync(inputDoc);
         }
 
         public async Task GetRoomList(HttpContext context)
@@ -62,14 +66,10 @@ namespace TPPCore.Service.Chat
             var client = (string) context.GetRouteValue("client");
             var channel = (string) context.GetRouteValue("channel");
 
-            var users = await chatFacade.GetRoomList(client, channel);
+            var RoomList = await chatFacade.GetRoomList(client, channel);
 
-            var jsonDoc = JObject.FromObject(new
-            {
-                users = users.Select(user => user.ToJObject())
-            });
-
-            await context.RespondJsonAsync(jsonDoc);
+            string serialized = JsonConvert.SerializeObject(RoomList);
+            await context.RespondStringAsync(serialized);
         }
     }
 }
