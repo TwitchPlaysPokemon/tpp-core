@@ -1,9 +1,7 @@
 using log4net;
-using Newtonsoft.Json.Linq;
 using System.Threading.Tasks;
 using TPPCore.Service.Common;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 
 namespace TPPCore.Service.Example.Parrot

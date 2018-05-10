@@ -42,6 +42,8 @@ namespace TPPCore.Service.Chat
                     .MapGet("client/{client}/username", webHandler.GetUsername)
                     .MapPost("chat/{client}/{channel}/send", webHandler.PostSendMessage)
                     .MapPost("private_chat/{client}/{user}/send", webHandler.PostSendPrivateMessage)
+                    .MapPost("chat/{client}/{channel}/timeout", webHandler.TimeoutUser)
+                    .MapPost("chat/{client}/{channel}/ban", webHandler.BanUser)
                     .MapGet("chat/{client}/{channel}/room_list", webHandler.GetRoomList)
                     ;
             });
