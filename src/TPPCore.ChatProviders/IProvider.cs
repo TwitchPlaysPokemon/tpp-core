@@ -42,6 +42,8 @@ namespace TPPCore.ChatProviders
         void Run();
         void SendMessage(string channel, string message);
         void SendPrivateMessage(string user, string message);
+        void TimeoutUser(string user, string reason, int duration, string channel);
+        void BanUser(string user, string reason, string channel);
         IList<ChatUser> GetRoomList(string channel);
     }
 
@@ -50,6 +52,8 @@ namespace TPPCore.ChatProviders
         Task Run();
         Task SendMessage(string channel, string message);
         Task SendPrivateMessage(string user, string message);
+        Task TimeoutUser(string user, string reason, int duration, string channel);
+        Task BanUser(string user, string reason, string channel);
         Task<IList<ChatUser>> GetRoomList(string channel);
     }
 }

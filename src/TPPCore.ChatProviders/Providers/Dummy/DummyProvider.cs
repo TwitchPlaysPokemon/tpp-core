@@ -77,6 +77,34 @@ namespace TPPCore.ChatProviders.Providers.Dummy
             context.PublishChatEvent(chatMessage);
         }
 
+        public async Task TimeoutUser(string user, string reason, int duration, string channel)
+        {
+            await Task.Delay(100);
+            var chatMessage = new ChatMessage()
+            {
+                ClientName = ClientName,
+                ProviderName = ProviderName,
+                TextContent = $"/timeout {user} {duration} {reason}",
+                Channel = channel,
+                IsSelf = true,
+            };
+            context.PublishChatEvent(chatMessage);
+        }
+
+        public async Task BanUser(string user, string reason, string channel)
+        {
+            await Task.Delay(100);
+            var chatMessage = new ChatMessage()
+            {
+                ClientName = ClientName,
+                ProviderName = ProviderName,
+                TextContent = $"/ban {user} {reason}",
+                Channel = channel,
+                IsSelf = true
+            };
+            context.PublishChatEvent(chatMessage);
+        }
+
         public async Task<IList<ChatUser>> GetRoomList(string channel)
         {
             await Task.Delay(100);

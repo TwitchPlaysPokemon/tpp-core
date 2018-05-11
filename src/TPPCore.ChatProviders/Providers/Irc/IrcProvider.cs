@@ -340,6 +340,26 @@ namespace TPPCore.ChatProviders.Providers.Irc
             await ircClient.Privmsg(user, message);
         }
 
+        public async Task TimeoutUser(string user, string reason, int duration, string channel)
+        {
+            if (!channel.IsChannel())
+            {
+                throw new Exception("Not a channel");
+            }
+            //TODO: add timeouts in IRC
+            throw new NotImplementedException();
+        }
+
+        public async Task BanUser(string user, string reason, string channel)
+        {
+            if (!channel.IsChannel())
+            {
+                throw new Exception("Not a channel");
+            }
+            //TODO: add bans in IRC
+            throw new NotImplementedException();
+        }
+
         private Task joinedEventHandler(IrcClient client, Message message)
         {
             if (client.ClientId.NicknameEquals(message.Prefix.ClientId))

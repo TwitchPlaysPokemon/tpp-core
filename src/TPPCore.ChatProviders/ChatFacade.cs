@@ -7,8 +7,8 @@ namespace TPPCore.ChatProviders
 {
     public class ChatFacade
     {
-        private ServiceContext context;
-        private Dictionary<string,IProvider> providers;
+        private readonly ServiceContext context;
+        private readonly Dictionary<string, IProvider> providers;
 
         public ChatFacade(ServiceContext context)
         {
@@ -43,7 +43,7 @@ namespace TPPCore.ChatProviders
             }
             else
             {
-                await ((IProviderAsync) provider).SendMessage(channel, message);
+                await ((IProviderAsync)provider).SendMessage(channel, message);
             }
         }
 
@@ -57,7 +57,35 @@ namespace TPPCore.ChatProviders
             }
             else
             {
-                await ((IProviderAsync) provider).SendPrivateMessage(user, message);
+                await ((IProviderAsync)provider).SendPrivateMessage(user, message);
+            }
+        }
+
+        public async Task TimeoutUser(string clientName, string user, string reason, int duration, string channel)
+        {
+            var provider = providers[clientName];
+
+            if (provider is IProviderThreaded)
+            {
+                (provider as IProviderThreaded).TimeoutUser(user, reason, duration, channel);
+            }
+            else
+            {
+                await ((IProviderAsync)provider).TimeoutUser(user, reason, duration, channel);
+            }
+        }
+
+        public async Task BanUser(string clientName, string user, string reason, string channel)
+        {
+            var provider = providers[clientName];
+
+            if (provider is IProviderThreaded)
+            {
+                (provider as IProviderThreaded).BanUser(user, reason, channel);
+            }
+            else
+            {
+                await ((IProviderAsync)provider).BanUser(user, reason, channel);
             }
         }
 

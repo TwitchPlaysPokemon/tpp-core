@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -10,13 +9,15 @@ namespace TPPCore.Client.Chat
 {
     public class ChatClient
     {
-        private string Url;
+        private readonly string Url;
         private string Client;
-        private RestfulClient HttpClient;
-        public ChatClient(string Url, string Client, RestfulClient HttpClient)
+        private string Channel;
+        private readonly RestfulClient HttpClient;
+        public ChatClient(string Url, string Client, string Channel, RestfulClient HttpClient)
         {
             this.Url = Url;
             this.Client = Client;
+            this.Channel = Channel;
             this.HttpClient = HttpClient;
         }
 
@@ -34,7 +35,7 @@ namespace TPPCore.Client.Chat
             return userName;
         }
 
-        public async Task SendMessage(string Channel, string Message)
+        public async Task SendMessage(string Message)
         {
             PostMessage postMessage = new PostMessage { Channel = Channel, ClientName = Client, Message = Message };
             string message = JsonConvert.SerializeObject(postMessage);
@@ -48,7 +49,21 @@ namespace TPPCore.Client.Chat
             await CommonClient.PostAsync(new Uri($"{Url}private_chat/{CommonClient.Escape(Client)}/{CommonClient.Escape(User)}/send"), message, HttpClient);
         }
 
-        public async Task<IList<ChatUser>> GetRoomList(string Channel)
+        public async Task TimeoutUser(string User, string Reason = "", int Duration = 1)
+        {
+            PostTimeout postTimeout = new PostTimeout { User = User, Channel = Channel, ClientName = Client, Duration = Duration, Reason = Reason };
+            string message = JsonConvert.SerializeObject(postTimeout);
+            await CommonClient.PostAsync(new Uri($"{Url}chat/{CommonClient.Escape(Client)}/{CommonClient.Escape(Channel)}/timeout"), message, HttpClient);
+        }
+
+        public async Task BanUser(string User, string Reason = "")
+        {
+            PostBan postBan = new PostBan { User = User, Channel = Channel, ClientName = Client, Reason = Reason };
+            string message = JsonConvert.SerializeObject(postBan);
+            await CommonClient.PostAsync(new Uri($"{Url}chat/{CommonClient.Escape(Client)}/{CommonClient.Escape(Channel)}/ban"), message, HttpClient);
+        }
+
+        public async Task<IList<ChatUser>> GetRoomList()
         {
             string unparsed = await CommonClient.GetAsync(new Uri($"{Url}chat/{CommonClient.Escape(Client)}/{CommonClient.Escape(Channel)}/room_list"), HttpClient);
             IList<ChatUser> roomList = JsonConvert.DeserializeObject<IList<ChatUser>>(unparsed);
