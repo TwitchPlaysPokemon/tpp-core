@@ -94,19 +94,6 @@ namespace TPPCore.Service.Chat.Tests
                 {
                     var chatMessage = JsonConvert.DeserializeObject<ChatMessage>(message.Message);
                     output.WriteLine(chatMessage.TextContent);
-                    if (chatMessage.Emote.Ranges.Count >= 3)
-                    {
-                        output.WriteLine("\"" + chatMessage.Emote.Ranges[0].Emotes.Item1 + "\"");
-                        output.WriteLine(chatMessage.Emote.Ranges[0].Emotes.Item2.ToString());
-                        output.WriteLine(chatMessage.Emote.Ranges[0].Emotes.Item3.ToString());
-                        output.WriteLine("\"" + chatMessage.Emote.Ranges[1].Emotes.Item1 + "\"");
-                        output.WriteLine(chatMessage.Emote.Ranges[1].Emotes.Item2.ToString());
-                        output.WriteLine(chatMessage.Emote.Ranges[1].Emotes.Item3.ToString());
-                        output.WriteLine("\"" + chatMessage.Emote.Ranges[2].Emotes.Item1 + "\"");
-                        output.WriteLine(chatMessage.Emote.Ranges[2].Emotes.Item2.ToString());
-                        output.WriteLine(chatMessage.Emote.Ranges[2].Emotes.Item3.ToString());
-                        output.WriteLine(chatMessage.TextContent);
-                    }
                     if (chatMessage.Channel == "#dallas" && chatMessage.TextContent == "cheer100")
                     {
                         testFlag = true;
@@ -117,11 +104,7 @@ namespace TPPCore.Service.Chat.Tests
                         if (test[0].Emotes.Item1 == "Kappa" && test[0].Emotes.Item2 == 0 && test[0].Emotes.Item3 == 4 && test[1].Emotes.Item1 == "Kappa" && test[1].Emotes.Item2 == 12
                             && test[1].Emotes.Item3 == 16 && test[2].Emotes.Item1 == "Keepo" && test[2].Emotes.Item2 == 6 && test[2].Emotes.Item3 == 10)
                         {
-                            output.WriteLine("evaluated to true");
                             testFlag2 = true;
-                        } else
-                        {
-                            output.WriteLine("evaluated to false");
                         }
                     }
                 }
