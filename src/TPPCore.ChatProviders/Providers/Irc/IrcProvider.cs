@@ -41,7 +41,8 @@ namespace TPPCore.ChatProviders.Providers.Irc
             this.ClientName = clientName;
             this.context = providerContext;
 
-            connectConfig = new ConnectConfig() {
+            connectConfig = new ConnectConfig()
+            {
                 Host = context.Service.ConfigReader.GetCheckedValue<string>(
                     "chat", "clients", ClientName, "host"),
                 Port = context.Service.ConfigReader.GetCheckedValue<int>(
@@ -53,7 +54,7 @@ namespace TPPCore.ChatProviders.Providers.Irc
                 Nickname = context.Service.ConfigReader.GetCheckedValue<string>(
                     "chat", "clients", ClientName, "nickname"),
                 Password = context.Service.ConfigReader.GetCheckedValueOrDefault<string>(
-                    new[] {"chat", "clients", ClientName, "password"}, null),
+                    new[] { "chat", "clients", ClientName, "password" }, null),
                 Channels = context.Service.ConfigReader.GetCheckedValue<string[]>(
                     "chat", "clients", ClientName, "channels"),
                 MaxMessageBurst = context.Service.ConfigReader.GetCheckedValue<int>(
@@ -400,7 +401,8 @@ namespace TPPCore.ChatProviders.Providers.Irc
 
         private void publishJoin(Message message)
         {
-            var chatEvent = new UserEvent() {
+            var chatEvent = new UserEvent()
+            {
                 ClientName = ClientName,
                 ProviderName = ProviderName,
                 EventType = UserEventTypes.Join,
@@ -413,11 +415,12 @@ namespace TPPCore.ChatProviders.Providers.Irc
 
         private void publishPart(Message message)
         {
-            var chatEvent = new UserEvent() {
+            var chatEvent = new UserEvent()
+            {
                 ClientName = ClientName,
                 ProviderName = ProviderName,
                 EventType = UserEventTypes.Part,
-                Channel =  message.TargetLower,
+                Channel = message.TargetLower,
                 User = getMessageSender(message),
                 IsSelf = isMessageSelf(message)
             };
@@ -426,12 +429,18 @@ namespace TPPCore.ChatProviders.Providers.Irc
 
         private void publishMessage(Message message, bool isNotice)
         {
-            var chatMessage = new ChatMessage() {
+            var chatMessage = new ChatMessage()
+            {
                 ClientName = ClientName,
                 ProviderName = ProviderName,
                 TextContent = message.TrailingParameter,
                 Channel = message.TargetLower,
                 IsNotice = isNotice,
+                Emote = new ChatMessage.Emotes
+                {
+                    Ranges = new List<EmoteOccurance> { },
+                    Data = new Dictionary<string, Tuple<int, string>> { }
+                },
                 Sender = getMessageSender(message),
                 IsSelf = isMessageSelf(message)
             };

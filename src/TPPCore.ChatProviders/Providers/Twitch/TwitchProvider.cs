@@ -4,7 +4,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using log4net;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using TPPCore.ChatProviders.DataModels;
 
 namespace TPPCore.ChatProviders.Twitch
@@ -85,11 +84,11 @@ namespace TPPCore.ChatProviders.Twitch
             var jsonString = await response.Content.ReadAsStringAsync();
             ChatList chatList = JsonConvert.DeserializeObject<ChatList>(jsonString);
 
-            var moderators = chatList.moderators;
-            var staff = chatList.staff;
-            var admins = chatList.admins;
-            var global_mods = chatList.global_mods;
-            var viewers = chatList.viewers;
+            var moderators = chatList.chatters.moderators;
+            var staff = chatList.chatters.staff;
+            var admins = chatList.chatters.admins;
+            var global_mods = chatList.chatters.global_mods;
+            var viewers = chatList.chatters.viewers;
 
             foreach (var username in viewers)
             {
