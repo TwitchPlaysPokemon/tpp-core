@@ -58,67 +58,9 @@ namespace TPPCore.ChatProviders.Twitch
                 IsSelf = isMessageSelf(message)
             };
             message.Tags.ToList().ForEach(item => chatMessage.Meta.Add(item));
-            message.Tags.TryGetValue("emotes", out string value);
 
-            if (value != "" && value != null)
-            {
-                List<EmoteOccurance> emoteOccurances = new List<EmoteOccurance> { };
-                Dictionary<string, Tuple<int, string>> keyValuePairs = new Dictionary<string, Tuple<int, string>> { };
-                List<string> emotes = value.Split('/').ToList(); // / seperates emote types
-                foreach (string emote in emotes)
-                {
-                    int.TryParse(emote.Split(':')[0], out int emoteId); // : seperates the ID from the indexes
-                    string indexes = emote.Split(':')[1];
-                    if (emote.Contains(',')) // , seperates emote occurances
-                    {
-                        List<string> occurances = indexes.Split(',').ToList();
-                        foreach (string occurance in occurances)
-                        {
-                            int.TryParse(occurance.Split('-')[0], out int firstIndex); // - seperates the start index from the end index
-                            int.TryParse(occurance.Split('-')[1], out int secondIndex);
-                            string name = string.Empty;
-                            for (int i = firstIndex; i <= secondIndex; i++)
-                            {
-                                name += chatMessage.TextContent[i];
-                            }
-                            emoteOccurances.Add(new EmoteOccurance { Emotes = new Tuple<string, int, int>(name, firstIndex, secondIndex) });
-                            if (!keyValuePairs.ContainsKey(name))
-                            {
-                                keyValuePairs.Add(name, new Tuple<int, string>(emoteId, $"http://static-cdn.jtvnw.net/emoticons/v1/{emoteId}/3.0"));
-                            }
-                        }
-                    }
-                    else
-                    {
-                        int.TryParse(indexes.Split('-')[0], out int firstIndex);
-                        int.TryParse(indexes.Split('-')[1], out int secondIndex);
-                        string name = string.Empty;
-                        for (int i = firstIndex; i <= secondIndex; i++)
-                        {
-                            name += chatMessage.TextContent[i];
-                        }
-                        emoteOccurances.Add(new EmoteOccurance { Emotes = new Tuple<string, int, int>(name, firstIndex, secondIndex) });
-                        if (!keyValuePairs.ContainsKey(name))
-                        {
-                            keyValuePairs.Add(name, new Tuple<int, string>(emoteId, $"http://static-cdn.jtvnw.net/emoticons/v1/{emoteId}/3.0"));
-                        }
-                    }
-                }
-                chatMessage.Emote = new ChatMessage.Emotes
-                {
-                    Data = keyValuePairs,
-                    Ranges = emoteOccurances
-                };
-                Debug.Assert(chatMessage.Emote.Ranges[0] != null);
-            } else
-            {
-                chatMessage.Emote = new ChatMessage.Emotes
-                {
-                    Data = new Dictionary<string, Tuple<int, string>> { },
-                    Ranges = new List<EmoteOccurance> { }
-                };
-                Debug.Assert(chatMessage.Emote != null);
-            }
+            chatMessage = ProcessEmotes(chatMessage, message);
+
             context.PublishChatEvent(chatMessage);
 
             return Task.CompletedTask;
@@ -135,68 +77,11 @@ namespace TPPCore.ChatProviders.Twitch
                 IsSelf = isMessageSelf(message)
             };
             message.Tags.ToList().ForEach(item => chatEvent.Meta.Add(item));
-            message.Tags.TryGetValue("emotes", out string value);
 
-            if (value != "" && value != null)
-            {
-                List<EmoteOccurance> emoteOccurances = new List<EmoteOccurance> { };
-                Dictionary<string, Tuple<int, string>> keyValuePairs = new Dictionary<string, Tuple<int, string>> { };
-                List<string> emotes = value.Split('/').ToList(); // / seperates emote types
-                foreach (string emote in emotes)
-                {
-                    int.TryParse(emote.Split(':')[0], out int emoteId); // : seperates the ID from the indexes
-                    string indexes = emote.Split(':')[1];
-                    if (emote.Contains(',')) // , seperates emote occurances
-                    {
-                        List<string> occurances = indexes.Split(',').ToList();
-                        foreach (string occurance in occurances)
-                        {
-                            int.TryParse(occurance.Split('-')[0], out int firstIndex); // - seperates the start index from the end index
-                            int.TryParse(occurance.Split('-')[1], out int secondIndex);
-                            string name = string.Empty;
-                            for (int i = firstIndex; i <= secondIndex; i++)
-                            {
-                                name += chatEvent.TextContent[i];
-                            }
-                            emoteOccurances.Add(new EmoteOccurance { Emotes = new Tuple<string, int, int>(name, firstIndex, secondIndex) });
-                            if (!keyValuePairs.ContainsKey(name))
-                            {
-                                keyValuePairs.Add(name, new Tuple<int, string>(emoteId, $"http://static-cdn.jtvnw.net/emoticons/v1/{emoteId}/3.0"));
-                            }
-                        }
-                    }
-                    else
-                    {
-                        int.TryParse(indexes.Split('-')[0], out int firstIndex);
-                        int.TryParse(indexes.Split('-')[1], out int secondIndex);
-                        string name = string.Empty;
-                        for (int i = firstIndex; i <= secondIndex; i++)
-                        {
-                            name += chatEvent.TextContent[i];
-                        }
-                        emoteOccurances.Add(new EmoteOccurance { Emotes = new Tuple<string, int, int>(name, firstIndex, secondIndex) });
-                        if (!keyValuePairs.ContainsKey(name))
-                        {
-                            keyValuePairs.Add(name, new Tuple<int, string>(emoteId, $"http://static-cdn.jtvnw.net/emoticons/v1/{emoteId}/3.0"));
-                        }
-                    }
-                }
-                chatEvent.Emote = new LoyaltyEvent.Emotes
-                {
-                    Data = keyValuePairs,
-                    Ranges = emoteOccurances
-                };
-                Debug.Assert(chatEvent.Emote.Ranges[0] != null);
-            }
-            else
-            {
-                chatEvent.Emote = new LoyaltyEvent.Emotes
-                {
-                    Data = new Dictionary<string, Tuple<int, string>> { },
-                    Ranges = new List<EmoteOccurance> { }
-                };
-                Debug.Assert(chatEvent.Emote != null);
-            }
+            chatEvent = (LoyaltyEvent) ProcessEmotes(chatEvent, message);
+
+            chatEvent.Topic = ChatTopics.Loyalty;
+
             context.PublishChatEvent(chatEvent);
 
             return Task.CompletedTask;
@@ -213,8 +98,57 @@ namespace TPPCore.ChatProviders.Twitch
             };
             message.Tags.ToList().ForEach(item => chatMessage.Meta.Add(item));
 
+            chatMessage = ProcessEmotes(chatMessage, message);
+
             context.PublishChatEvent(chatMessage);
             return Task.CompletedTask;
+        }
+
+        private ChatMessage ProcessEmotes(ChatMessage chatMessage, Message message)
+        {
+            message.Tags.TryGetValue("emotes", out string value);
+
+            if (value != "" && value != null)
+            {
+                List<EmoteOccurance> emoteOccurances = new List<EmoteOccurance> { };
+                Dictionary<string, Tuple<int, string>> keyValuePairs = new Dictionary<string, Tuple<int, string>> { };
+                List<string> emotes = value.Split('/').ToList(); // / seperates emote types
+                foreach (string emote in emotes)
+                {
+                    string[] splitEmoteColon = emote.Split(':'); // : seperates the ID from the indexes
+                    if (splitEmoteColon.Length != 2 || !int.TryParse(splitEmoteColon[0], out int emoteId))
+                        continue;
+                    List<string> occurances = splitEmoteColon[1].Split(',').ToList(); // , seperates emote occurances
+                    foreach (string occurance in occurances)
+                    {
+                        int.TryParse(occurance.Split('-')[0], out int firstIndex); // - seperates the start index from the end index
+                        int.TryParse(occurance.Split('-')[1], out int secondIndex);
+                        string name = string.Empty;
+                        name = chatMessage.TextContent.Substring(firstIndex, (secondIndex + 1) - firstIndex);
+                        emoteOccurances.Add(new EmoteOccurance { Emotes = new Tuple<string, int, int>(name, firstIndex, secondIndex) });
+                        if (!keyValuePairs.ContainsKey(name))
+                        {
+                            keyValuePairs.Add(name, new Tuple<int, string>(emoteId, $"http://static-cdn.jtvnw.net/emoticons/v1/{emoteId}/3.0"));
+                        }
+                    }
+                }
+                chatMessage.Emote = new ChatMessage.Emotes
+                {
+                    Data = keyValuePairs,
+                    Ranges = emoteOccurances
+                };
+                Debug.Assert(chatMessage.Emote.Ranges[0] != null);
+            }
+            else
+            {
+                chatMessage.Emote = new ChatMessage.Emotes
+                {
+                    Data = new Dictionary<string, Tuple<int, string>> { },
+                    Ranges = new List<EmoteOccurance> { }
+                };
+                Debug.Assert(chatMessage.Emote != null);
+            }
+            return chatMessage;
         }
     }
 }

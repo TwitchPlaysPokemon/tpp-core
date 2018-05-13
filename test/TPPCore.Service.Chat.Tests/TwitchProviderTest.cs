@@ -93,19 +93,14 @@ namespace TPPCore.Service.Chat.Tests
                 if (message.Topic == ChatTopics.Message)
                 {
                     var chatMessage = JsonConvert.DeserializeObject<ChatMessage>(message.Message);
-                    output.WriteLine(chatMessage.TextContent);
                     if (chatMessage.Channel == "#dallas" && chatMessage.TextContent == "cheer100")
-                    {
                         testFlag = true;
-                    }
                     else if (chatMessage.TextContent == "Kappa Keepo Kappa")
                     {
                         var test = chatMessage.Emote.Ranges;
                         if (test[0].Emotes.Item1 == "Kappa" && test[0].Emotes.Item2 == 0 && test[0].Emotes.Item3 == 4 && test[1].Emotes.Item1 == "Kappa" && test[1].Emotes.Item2 == 12
                             && test[1].Emotes.Item3 == 16 && test[2].Emotes.Item1 == "Keepo" && test[2].Emotes.Item2 == 6 && test[2].Emotes.Item3 == 10)
-                        {
-                            testFlag2 = true;
-                        }
+                                testFlag2 = true;
                     }
                 }
             }
