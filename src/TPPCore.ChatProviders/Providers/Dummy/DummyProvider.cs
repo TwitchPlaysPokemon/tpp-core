@@ -61,6 +61,7 @@ namespace TPPCore.ChatProviders.Providers.Dummy
                 Channel = channel,
                 IsSelf = true
             };
+
             context.PublishChatEvent(chatMessage);
         }
 

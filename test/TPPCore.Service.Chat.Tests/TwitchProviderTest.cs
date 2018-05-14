@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using TPPCore.ChatProviders.DataModels;
@@ -10,6 +7,7 @@ using TPPCore.Service.Common.TestUtils;
 using Xunit;
 using Xunit.Abstractions;
 using TPPCore.ChatProviders;
+using System;
 
 namespace TPPCore.Service.Chat.Tests
 {
@@ -53,7 +51,8 @@ namespace TPPCore.Service.Chat.Tests
                 {
                     var line = reader.ReadLine();
 
-                    if (line == null) {
+                    if (line == null)
+                    {
                         break;
                     }
 
@@ -78,29 +77,35 @@ namespace TPPCore.Service.Chat.Tests
             replaceConfigPort(options, mockServer.Port);
             await runner.SetUpAsync(options);
 
-            await Task.Delay(5000);
+            await Task.Delay(8000);
 
-            var pubsub = (DummyPubSubClient) runner.Runner.Context.PubSubClient;
+            var pubsub = (DummyPubSubClient)runner.Runner.Context.PubSubClient;
 
             output.WriteLine("Num messages {0}", pubsub.Messages.Count);
             Assert.NotEmpty(pubsub.Messages);
 
             var testFlag = false;
+            var testFlag2 = false;
             // TODO: We want to check each type pub/sub topic is
             // working instead of just a single message.
             foreach (DummyPubSubClientMessage message in pubsub.Messages)
             {
-
                 if (message.Topic == ChatTopics.Message)
                 {
                     var chatMessage = JsonConvert.DeserializeObject<ChatMessage>(message.Message);
                     if (chatMessage.Channel == "#dallas" && chatMessage.TextContent == "cheer100")
-                    {
                         testFlag = true;
+                    else if (chatMessage.TextContent == "Kappa Keepo Kappa")
+                    {
+                        var test = chatMessage.Emote.Ranges;
+                        if (test[0].Emotes.Item1 == "Kappa" && test[0].Emotes.Item2 == 0 && test[0].Emotes.Item3 == 4 && test[1].Emotes.Item1 == "Kappa" && test[1].Emotes.Item2 == 12
+                            && test[1].Emotes.Item3 == 16 && test[2].Emotes.Item1 == "Keepo" && test[2].Emotes.Item2 == 6 && test[2].Emotes.Item3 == 10)
+                                testFlag2 = true;
                     }
                 }
             }
             Assert.True(testFlag);
+            Assert.True(testFlag2);
 
             await runner.TearDownAsync();
             mockServer.Stop();
