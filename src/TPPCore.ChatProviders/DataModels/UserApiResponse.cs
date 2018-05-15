@@ -8,62 +8,56 @@ namespace TPPCore.ChatProviders.DataModels
     public class UserApiResponse
     {
         /// <summary>
-        /// The total amount of users returned.
-        /// </summary>
-        public int _total;
-
-        /// <summary>
         /// The users queried.
         /// </summary>
-        public List<Users> users;
+        public List<Data> data;
 
-        public class Users
+        public class Data
         {
             /// <summary>
-            /// The ID of the user.
+            /// User’s ID.
             /// </summary>
-            public int _id;
+            public string id;
 
             /// <summary>
-            /// The user's bio
+            /// User’s login name.
             /// </summary>
-            /// <remarks>
-            /// This can be null.
-            /// </remarks>
-            public string bio;
+            public string login;
 
             /// <summary>
-            /// The time the user was created.
-            /// </summary>
-            public string created_at;
-
-            /// <summary>
-            /// The user's display name.
+            /// User’s display name.
             /// </summary>
             public string display_name;
 
             /// <summary>
-            /// Link to the user's logo.
-            /// </summary>
-            /// <remarks>
-            /// This can be null.
-            /// </remarks>
-            public string logo;
-
-            /// <summary>
-            /// The user's username.
-            /// </summary>
-            public string name;
-
-            /// <summary>
-            /// THe user's type, e.g. staff.
+            /// User’s type: "staff", "admin", "global_mod", or "".
             /// </summary>
             public string type;
 
             /// <summary>
-            /// When this was last updated.
+            /// User’s broadcaster type: "partner", "affiliate", or "".
             /// </summary>
-            public string updated_at;
+            public string broadcaster_type;
+
+            /// <summary>
+            /// User’s channel description.
+            /// </summary>
+            public string description;
+
+            /// <summary>
+            /// URL of the user’s profile image.
+            /// </summary>
+            public string profile_image_url;
+
+            /// <summary>
+            /// URL of the user’s offline image.
+            /// </summary>
+            public string offline_image_url;
+
+            /// <summary>
+            /// Total number of views of the user’s channel.
+            /// </summary>
+            public int view_count;
         }
     }
 }

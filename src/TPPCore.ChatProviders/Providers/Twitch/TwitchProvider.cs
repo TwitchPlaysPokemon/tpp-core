@@ -49,16 +49,14 @@ namespace TPPCore.ChatProviders.Twitch
             string clientID = context.Service.ConfigReader.GetCheckedValue<string>(
                     "chat", "clients", ClientName, "client_id");
             string url = NewApiUrl + "/users?login=" + GetUsername();
-            httpClient.DefaultRequestHeaders.Add("accept", "application/vnd.twitchtv.v5+json");
             httpClient.DefaultRequestHeaders.Add("client-id", clientID);
 
             HttpResponseMessage response = httpClient.GetAsync(url).Result;
             string JsonString = response.Content.ReadAsStringAsync().Result;
             UserApiResponse userResponse = JsonConvert.DeserializeObject<UserApiResponse>(JsonString);
 
-            string UserID = userResponse.users[0]._id.ToString();
+            string UserID = userResponse.data[0].id;
 
-            httpClient.DefaultRequestHeaders.Remove("accept");
             httpClient.DefaultRequestHeaders.Remove("client-id");
 
             return UserID;
