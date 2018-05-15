@@ -61,14 +61,14 @@ namespace TPPCore.ChatProviders.Twitch
             await SendMessage("#jtv", $".w {user} {message}");
         }
 
-        public async Task TimeoutUser(string user, string reason, int duration, string channel)
+        public async Task TimeoutUser(ChatUser user, string reason, int duration, string channel)
         {
-            await SendMessage(channel, $".timeout {user} {duration} {reason}");
+            await SendMessage(channel, $".timeout {user.Username} {duration} {reason}");
         }
 
-        public async Task BanUser(string user, string reason, string channel)
+        public async Task BanUser(ChatUser user, string reason, string channel)
         {
-            await SendMessage(channel, $".ban {user} {reason}");
+            await SendMessage(channel, $".ban {user.Username} {reason}");
         }
 
         public async Task<IList<ChatUser>> GetRoomList(string channel)

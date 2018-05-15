@@ -49,14 +49,14 @@ namespace TPPCore.Client.Chat
             await CommonClient.PostAsync(new Uri($"{Url}private_chat/{CommonClient.Escape(Client)}/{CommonClient.Escape(User)}/send"), message, HttpClient);
         }
 
-        public async Task TimeoutUser(string User, string Reason = "", int Duration = 1)
+        public async Task TimeoutUser(ChatUser User, string Reason = "", int Duration = 1)
         {
             PostTimeout postTimeout = new PostTimeout { User = User, Channel = Channel, ClientName = Client, Duration = Duration, Reason = Reason };
             string message = JsonConvert.SerializeObject(postTimeout);
             await CommonClient.PostAsync(new Uri($"{Url}chat/{CommonClient.Escape(Client)}/{CommonClient.Escape(Channel)}/timeout"), message, HttpClient);
         }
 
-        public async Task BanUser(string User, string Reason = "")
+        public async Task BanUser(ChatUser User, string Reason = "")
         {
             PostBan postBan = new PostBan { User = User, Channel = Channel, ClientName = Client, Reason = Reason };
             string message = JsonConvert.SerializeObject(postBan);

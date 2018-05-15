@@ -10,7 +10,8 @@ namespace TPPCore.ChatProviders.Irc
             return new ChatUser() {
                 UserId = clientId.ToString(),
                 Nickname = clientId.Nickname,
-                Username = clientId.NicknameLower
+                Username = clientId.NicknameLower,
+                Host = clientId.Host
             };
         }
     }
