@@ -13,12 +13,14 @@ namespace TPPCore.ChatProviders.Twitch
         private static readonly ILog logger = LogManager.GetLogger(
             System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private const string roomListUrl = "https://tmi.twitch.tv/group/user/{0}/chatters";
+        private const string NewApiUrl = "https://api.twitch.tv/helix/";
 
         public string ClientName { get { return twitchIrcProvider.ClientName; } }
         public string ProviderName { get { return "twitch"; } }
 
         private TwitchIrcProvider twitchIrcProvider;
         private HttpClient httpClient;
+        private ProviderContext context;
 
         public TwitchProvider()
         {
@@ -28,6 +30,7 @@ namespace TPPCore.ChatProviders.Twitch
 
         public void Configure(string clientName, ProviderContext providerContext)
         {
+            context = providerContext;
             twitchIrcProvider.Configure(clientName, providerContext);
         }
 
@@ -43,7 +46,22 @@ namespace TPPCore.ChatProviders.Twitch
 
         public string GetUserId()
         {
-            throw new System.NotImplementedException();
+            string clientID = context.Service.ConfigReader.GetCheckedValue<string>(
+                    "chat", "clients", ClientName, "client_id");
+            string url = NewApiUrl + "/users?login=" + GetUsername();
+            httpClient.DefaultRequestHeaders.Add("accept", "application/vnd.twitchtv.v5+json");
+            httpClient.DefaultRequestHeaders.Add("client-id", clientID);
+
+            HttpResponseMessage response = httpClient.GetAsync(url).Result;
+            string JsonString = response.Content.ReadAsStringAsync().Result;
+            UserApiResponse userResponse = JsonConvert.DeserializeObject<UserApiResponse>(JsonString);
+
+            string UserID = userResponse.users[0]._id.ToString();
+
+            httpClient.DefaultRequestHeaders.Remove("accept");
+            httpClient.DefaultRequestHeaders.Remove("client-id");
+
+            return UserID;
         }
 
         public string GetUsername()
