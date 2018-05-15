@@ -22,7 +22,7 @@ namespace TPPCore.Service.Chat.Tests
             return new ServiceTestRunner(new ChatService());
         }
 
-        private ServiceRunnerOptions getOptions() {
+        private ServiceRunnerOptions GetOptions() {
             var options = ServiceTestRunner.GetDefaultOptions();
             var assembly = typeof(DummyRestfulTest).Assembly;
 
@@ -40,7 +40,7 @@ namespace TPPCore.Service.Chat.Tests
         public async Task TestUserIdUsername()
         {
             var runner = NewServiceRunner();
-            await runner.SetUpAsync(getOptions());
+            await runner.SetUpAsync(GetOptions());
 
             var httpClient = runner.Runner.Context.RestfulClient;
             ChatClient client = new ChatClient(runner.Runner.Context.RestfulServer.Context.GetUri().ToString(), "dummyTest", "#somechannel", httpClient);
@@ -57,7 +57,7 @@ namespace TPPCore.Service.Chat.Tests
         public async Task TestRoomList()
         {
             var runner = NewServiceRunner();
-            await runner.SetUpAsync(getOptions());
+            await runner.SetUpAsync(GetOptions());
 
             var httpClient = runner.Runner.Context.RestfulClient;
             ChatClient client = new ChatClient(runner.Runner.Context.RestfulServer.Context.GetUri().ToString(), "dummyTest", "#somechannel", httpClient);
@@ -73,7 +73,7 @@ namespace TPPCore.Service.Chat.Tests
         public async Task TestSendMessage()
         {
             var runner = NewServiceRunner();
-            await runner.SetUpAsync(getOptions());
+            await runner.SetUpAsync(GetOptions());
 
             var httpClient = runner.Runner.Context.RestfulClient;
             ChatClient client = new ChatClient(runner.Runner.Context.RestfulServer.Context.GetUri().ToString(), "dummyTest", "#somechannel", httpClient);
@@ -86,14 +86,14 @@ namespace TPPCore.Service.Chat.Tests
         public async Task TestTimeoutBan()
         {
             var runner = NewServiceRunner();
-            await runner.SetUpAsync(getOptions());
+            await runner.SetUpAsync(GetOptions());
 
             var httpClient = runner.Runner.Context.RestfulClient;
             ChatClient client = new ChatClient(runner.Runner.Context.RestfulServer.Context.GetUri().ToString(), "dummyTest", "#somechannel", httpClient);
-            await client.TimeoutUser("dummy", "copypasta", 200);
+            await client.TimeoutUser(new ChatUser() { UserId = "dummy", Username = "dummy", Nickname = "Dummy", AccessLevel = AccessLevel.Viewer }, "copypasta", 200);
 
             await Task.Delay(200);
-            await client.BanUser("dummy", "copypasta");
+            await client.BanUser(new ChatUser() { UserId = "dummy", Username = "dummy", Nickname = "Dummy", AccessLevel = AccessLevel.Viewer }, "copypasta");
 
             await runner.TearDownAsync();
         }

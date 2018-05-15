@@ -27,7 +27,7 @@ namespace TPPCore.ChatProviders.Providers.Dummy
             {
                 foreach (var i in Enumerable.Range(0, chatNoiseCounter))
                 {
-                    var chatMessage = newFakeReceivedMessage();
+                    var chatMessage = NewFakeReceivedMessage();
                     context.PublishChatEvent(chatMessage);
                 }
 
@@ -78,28 +78,28 @@ namespace TPPCore.ChatProviders.Providers.Dummy
             context.PublishChatEvent(chatMessage);
         }
 
-        public async Task TimeoutUser(string user, string reason, int duration, string channel)
+        public async Task TimeoutUser(ChatUser user, string reason, int duration, string channel)
         {
             await Task.Delay(100);
             var chatMessage = new ChatMessage()
             {
                 ClientName = ClientName,
                 ProviderName = ProviderName,
-                TextContent = $"/timeout {user} {duration} {reason}",
+                TextContent = $"/timeout {user.Username} {duration} {reason}",
                 Channel = channel,
                 IsSelf = true,
             };
             context.PublishChatEvent(chatMessage);
         }
 
-        public async Task BanUser(string user, string reason, string channel)
+        public async Task BanUser(ChatUser user, string reason, string channel)
         {
             await Task.Delay(100);
             var chatMessage = new ChatMessage()
             {
                 ClientName = ClientName,
                 ProviderName = ProviderName,
-                TextContent = $"/ban {user} {reason}",
+                TextContent = $"/ban {user.Username} {reason}",
                 Channel = channel,
                 IsSelf = true
             };
@@ -126,7 +126,7 @@ namespace TPPCore.ChatProviders.Providers.Dummy
             return new List<ChatUser>() { user1, user2 };
         }
 
-        private ChatMessage newFakeReceivedMessage() {
+        private ChatMessage NewFakeReceivedMessage() {
             var random = new Random();
             var userId = random.Next(0, 1000000).ToString();
 

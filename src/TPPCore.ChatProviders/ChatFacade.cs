@@ -61,7 +61,7 @@ namespace TPPCore.ChatProviders
             }
         }
 
-        public async Task TimeoutUser(string clientName, string user, string reason, int duration, string channel)
+        public async Task TimeoutUser(string clientName, ChatUser user, string reason, int duration, string channel)
         {
             var provider = providers[clientName];
 
@@ -75,7 +75,7 @@ namespace TPPCore.ChatProviders
             }
         }
 
-        public async Task BanUser(string clientName, string user, string reason, string channel)
+        public async Task BanUser(string clientName, ChatUser user, string reason, string channel)
         {
             var provider = providers[clientName];
 

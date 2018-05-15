@@ -13,7 +13,7 @@
         /// <summary>
         /// The user to ban.
         /// </summary>
-        public string User;
+        public ChatUser User;
 
         /// <summary>
         /// The reason for the ban.

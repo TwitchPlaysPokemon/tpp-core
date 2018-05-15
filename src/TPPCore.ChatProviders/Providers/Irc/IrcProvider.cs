@@ -341,24 +341,23 @@ namespace TPPCore.ChatProviders.Providers.Irc
             await ircClient.Privmsg(user, message);
         }
 
-        public async Task TimeoutUser(string user, string reason, int duration, string channel)
+        public async Task TimeoutUser(ChatUser user, string reason, int duration, string channel)
         {
             if (!channel.IsChannel())
             {
                 throw new Exception("Not a channel");
             }
-            //TODO: add timeouts in IRC
-            throw new NotImplementedException();
+            await ircClient.SendMessage($"KICK #{channel} {user.Nickname} :{reason}");
         }
 
-        public async Task BanUser(string user, string reason, string channel)
+        public async Task BanUser(ChatUser user, string reason, string channel)
         {
             if (!channel.IsChannel())
             {
                 throw new Exception("Not a channel");
             }
-            //TODO: add bans in IRC
-            throw new NotImplementedException();
+            await ircClient.SendMessage($"MODE #{channel} +b {user.Nickname}!{user.Username}@{user.Host}");
+            await ircClient.SendMessage($"KICK #{channel} {user.Nickname} :{reason}");
         }
 
         private Task joinedEventHandler(IrcClient client, Message message)

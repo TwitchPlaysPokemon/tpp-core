@@ -13,7 +13,7 @@
         /// <summary>
         /// The user to time out.
         /// </summary>
-        public string User;
+        public ChatUser User;
 
         /// <summary>
         /// The reason for the timeout.

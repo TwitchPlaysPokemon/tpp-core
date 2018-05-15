@@ -7,9 +7,32 @@ namespace TPPCore.ChatProviders.DataModels
     /// </summary>
     public class ChatUser
     {
+        /// <summary>
+        /// The User ID of the user.
+        /// </summary>
         public string UserId;
+
+        /// <summary>
+        /// The Username of the user.
+        /// </summary>
         public string Username;
+
+        /// <summary>
+        /// The nickname of the user.
+        /// </summary>
         public string Nickname;
+
+        /// <summary>
+        /// The host name or IP address of the user.
+        /// </summary>
+        /// <remarks>
+        /// This is only user for IRC so far.
+        /// </remarks>
+        public string Host;
+
+        /// <summary>
+        /// The Access level of the user.
+        /// </summary>
         public AccessLevel AccessLevel;
 
     }
