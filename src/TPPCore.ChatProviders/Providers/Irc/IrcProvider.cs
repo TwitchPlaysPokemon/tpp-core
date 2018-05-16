@@ -312,12 +312,12 @@ namespace TPPCore.ChatProviders.Providers.Irc
 
             return Task.FromResult((IList<ChatUser>)users);
         }
-
-        public string GetUserId()
+#pragma warning disable 1998
+        public async Task<string> GetUserId()
         {
             return ircClient.ClientId.ToString();
         }
-
+#pragma warning restore 1998
         public string GetUsername()
         {
             return ircClient.ClientId.NicknameLower;

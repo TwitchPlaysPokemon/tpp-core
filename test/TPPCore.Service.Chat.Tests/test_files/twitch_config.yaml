@@ -8,6 +8,7 @@ chat:
       timeout: 5000
       nickname: exampleUser
       password: oauth:abcdef1234567890
+      client_id: uo6dggojyb8d6soh92zknwmi5ej1q2
       channels:
         - "#channelTest"
       rateLimit:

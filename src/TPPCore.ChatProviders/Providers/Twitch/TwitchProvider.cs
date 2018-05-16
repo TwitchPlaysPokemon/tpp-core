@@ -13,12 +13,14 @@ namespace TPPCore.ChatProviders.Twitch
         private static readonly ILog logger = LogManager.GetLogger(
             System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private const string roomListUrl = "https://tmi.twitch.tv/group/user/{0}/chatters";
+        private const string NewApiUrl = "https://api.twitch.tv/helix/";
 
         public string ClientName { get { return twitchIrcProvider.ClientName; } }
         public string ProviderName { get { return "twitch"; } }
 
         private TwitchIrcProvider twitchIrcProvider;
         private HttpClient httpClient;
+        private ProviderContext context;
 
         public TwitchProvider()
         {
@@ -28,6 +30,7 @@ namespace TPPCore.ChatProviders.Twitch
 
         public void Configure(string clientName, ProviderContext providerContext)
         {
+            context = providerContext;
             twitchIrcProvider.Configure(clientName, providerContext);
         }
 
@@ -41,9 +44,22 @@ namespace TPPCore.ChatProviders.Twitch
             twitchIrcProvider.Shutdown();
         }
 
-        public string GetUserId()
+        public async Task<string> GetUserId()
         {
-            throw new System.NotImplementedException();
+            string clientID = context.Service.ConfigReader.GetCheckedValue<string>(
+                    "chat", "clients", ClientName, "client_id");
+            string url = NewApiUrl + "/users?login=" + GetUsername();
+            httpClient.DefaultRequestHeaders.Add("client-id", clientID);
+
+            HttpResponseMessage response = await httpClient.GetAsync(url);
+            string JsonString = await response.Content.ReadAsStringAsync();
+            UserApiResponse userResponse = JsonConvert.DeserializeObject<UserApiResponse>(JsonString);
+
+            string UserID = userResponse.data[0].id;
+
+            httpClient.DefaultRequestHeaders.Remove("client-id");
+
+            return UserID;
         }
 
         public string GetUsername()

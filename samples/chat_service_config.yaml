@@ -51,6 +51,8 @@ chat:
       ## password field and set the nickname to justinfan1234567890
       nickname: example
       password: oauth:abcdef1234567890
+      ## Client ID is twitch unique
+      client_id: uo6dggojyb8d6soh92zknwmi5ej1q2
       channels:
         - "#channel1"
         - "#channel2"

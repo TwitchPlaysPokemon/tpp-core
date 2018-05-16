@@ -7,7 +7,6 @@ using TPPCore.Service.Common.TestUtils;
 using Xunit;
 using Xunit.Abstractions;
 using TPPCore.ChatProviders;
-using System;
 
 namespace TPPCore.Service.Chat.Tests
 {
