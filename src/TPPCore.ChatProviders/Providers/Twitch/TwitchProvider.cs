@@ -44,15 +44,15 @@ namespace TPPCore.ChatProviders.Twitch
             twitchIrcProvider.Shutdown();
         }
 
-        public string GetUserId()
+        public async Task<string> GetUserId()
         {
             string clientID = context.Service.ConfigReader.GetCheckedValue<string>(
                     "chat", "clients", ClientName, "client_id");
             string url = NewApiUrl + "/users?login=" + GetUsername();
             httpClient.DefaultRequestHeaders.Add("client-id", clientID);
 
-            HttpResponseMessage response = httpClient.GetAsync(url).Result;
-            string JsonString = response.Content.ReadAsStringAsync().Result;
+            HttpResponseMessage response = await httpClient.GetAsync(url);
+            string JsonString = await response.Content.ReadAsStringAsync();
             UserApiResponse userResponse = JsonConvert.DeserializeObject<UserApiResponse>(JsonString);
 
             string UserID = userResponse.data[0].id;

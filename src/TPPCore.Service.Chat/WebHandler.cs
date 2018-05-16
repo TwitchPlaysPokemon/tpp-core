@@ -20,7 +20,7 @@ namespace TPPCore.Service.Chat
         public async Task GetUserId(HttpContext context)
         {
             var client = (string) context.GetRouteValue("client");
-            var userId = chatFacade.GetUserId(client);
+            var userId = await chatFacade.GetUserId(client);
             var jsonDoc = JsonConvert.SerializeObject(userId);
 
             await context.RespondStringAsync(jsonDoc);

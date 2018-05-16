@@ -40,12 +40,12 @@ namespace TPPCore.ChatProviders.Providers.Dummy
         {
             running = false;
         }
-
-        public string GetUserId()
+#pragma warning disable 1998
+        public async Task<string> GetUserId()
         {
             return "dummy";
         }
-
+#pragma warning restore 1998
         public string GetUsername()
         {
             return "dummy";

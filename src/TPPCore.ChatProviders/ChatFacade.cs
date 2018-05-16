@@ -21,10 +21,17 @@ namespace TPPCore.ChatProviders
             providers[provider.ClientName] = provider;
         }
 
-        public string GetUserId(string clientName) {
+        public async Task<string> GetUserId(string clientName) {
             var provider = providers[clientName];
 
-            return provider.GetUserId();
+            if (provider is IProviderThreaded)
+            {
+                return (provider as IProviderThreaded).GetUserId();
+            }
+            else
+            {
+                return await ((IProviderAsync)provider).GetUserId();
+            }
         }
 
         public string GetUsername(string clientName) {

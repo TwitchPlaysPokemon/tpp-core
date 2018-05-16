@@ -27,11 +27,6 @@ namespace TPPCore.ChatProviders
         void Shutdown();
 
         /// <summary>
-        /// Account's unique user ID usually numerical identifier.
-        /// </summary>
-        string GetUserId();
-
-        /// <summary>
         /// Account's username that doesn't change often.
         /// </summary>
         string GetUsername();
@@ -40,6 +35,10 @@ namespace TPPCore.ChatProviders
     public interface IProviderThreaded : IProvider
     {
         void Run();
+        /// <summary>
+        /// Account's unique user ID usually numerical identifier.
+        /// </summary>
+        string GetUserId();
         void SendMessage(string channel, string message);
         void SendPrivateMessage(string user, string message);
         void TimeoutUser(ChatUser user, string reason, int duration, string channel);
@@ -50,6 +49,10 @@ namespace TPPCore.ChatProviders
     public interface IProviderAsync : IProvider
     {
         Task Run();
+        /// <summary>
+        /// Account's unique user ID usually numerical identifier.
+        /// </summary>
+        Task<string> GetUserId();
         Task SendMessage(string channel, string message);
         Task SendPrivateMessage(string user, string message);
         Task TimeoutUser(ChatUser user, string reason, int duration, string channel);
