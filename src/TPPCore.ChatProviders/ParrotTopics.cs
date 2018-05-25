@@ -1,4 +1,4 @@
-namespace TPPCore.Service.Example.Parrot
+namespace TPPCore.ChatProviders
 {
     /// <summary>
     /// Pub/sub topic strings

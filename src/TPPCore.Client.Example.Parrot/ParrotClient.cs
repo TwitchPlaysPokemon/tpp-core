@@ -8,8 +8,8 @@ namespace TPPCore.Client.Example.Parrot
 {
     public class ParrotClient
     {
-        private string Url;
-        private RestfulClient HttpClient;
+        private readonly string Url;
+        private readonly RestfulClient HttpClient;
         public ParrotClient(string Url, RestfulClient HttpClient)
         {
             this.Url = Url;
@@ -31,6 +31,18 @@ namespace TPPCore.Client.Example.Parrot
         {
             string serialized = JsonConvert.SerializeObject(message);
             await CommonClient.PostAsync(new Uri($"{Url}message/new"), serialized, HttpClient);
+        }
+        public async Task<string> GetContents(int Id)
+        {
+            string unparsed = await CommonClient.GetAsync(new Uri($"{Url}message/database/getcontents/{Id}"), HttpClient);
+            string parsed = JsonConvert.DeserializeObject<string>(unparsed);
+            return parsed;
+        }
+        public async Task<int> GetMaxId()
+        {
+            string unparsed = await CommonClient.GetAsync(new Uri($"{Url}message/database/getmaxkey"), HttpClient);
+            int parsed = JsonConvert.DeserializeObject<int>(unparsed);
+            return parsed;
         }
     }
 }

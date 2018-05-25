@@ -11,3 +11,11 @@ parrot:
   broadcastInterval: 1000
   ## Interval in broadcast count to broadcast recent messages
   recentIntervalCount: 5
+
+database:
+  database: postgres
+  host: localhost
+  appname: TPPCore
+  username: postgres
+  password: password
+  port: 5432

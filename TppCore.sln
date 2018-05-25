@@ -32,11 +32,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TPPCore.Service.ChatLogger.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TPPCore.ChatProviders", "src\TPPCore.ChatProviders\TPPCore.ChatProviders.csproj", "{8CD289F4-03FF-43DC-A443-763126182185}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPPCore.Client.Chat", "src\TPPCore.Client.Chat\TPPCore.Client.Chat.csproj", "{A9F3E559-ED93-45E3-923F-A012A9FD9AF3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TPPCore.Client.Chat", "src\TPPCore.Client.Chat\TPPCore.Client.Chat.csproj", "{A9F3E559-ED93-45E3-923F-A012A9FD9AF3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TPPCore.Client.Example.Parrot", "src\TPPCore.Client.Example.Parrot\TPPCore.Client.Example.Parrot.csproj", "{916F87E2-C9C6-4849-8D5F-2849683080F2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPPCore.Client.Common", "src\TPPCore.Client.Common\TPPCore.Client.Common.csproj", "{751C13E8-CB59-4385-8CCA-11301D63B06D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TPPCore.Client.Common", "src\TPPCore.Client.Common\TPPCore.Client.Common.csproj", "{751C13E8-CB59-4385-8CCA-11301D63B06D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TPPCore.Database", "src\TPPCore.Database\TPPCore.Database.csproj", "{4F8FEFC3-BD83-43C8-9193-CB766ACAB7CA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -240,6 +242,18 @@ Global
 		{751C13E8-CB59-4385-8CCA-11301D63B06D}.Release|x64.Build.0 = Release|Any CPU
 		{751C13E8-CB59-4385-8CCA-11301D63B06D}.Release|x86.ActiveCfg = Release|Any CPU
 		{751C13E8-CB59-4385-8CCA-11301D63B06D}.Release|x86.Build.0 = Release|Any CPU
+		{4F8FEFC3-BD83-43C8-9193-CB766ACAB7CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F8FEFC3-BD83-43C8-9193-CB766ACAB7CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F8FEFC3-BD83-43C8-9193-CB766ACAB7CA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4F8FEFC3-BD83-43C8-9193-CB766ACAB7CA}.Debug|x64.Build.0 = Debug|Any CPU
+		{4F8FEFC3-BD83-43C8-9193-CB766ACAB7CA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4F8FEFC3-BD83-43C8-9193-CB766ACAB7CA}.Debug|x86.Build.0 = Debug|Any CPU
+		{4F8FEFC3-BD83-43C8-9193-CB766ACAB7CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F8FEFC3-BD83-43C8-9193-CB766ACAB7CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F8FEFC3-BD83-43C8-9193-CB766ACAB7CA}.Release|x64.ActiveCfg = Release|Any CPU
+		{4F8FEFC3-BD83-43C8-9193-CB766ACAB7CA}.Release|x64.Build.0 = Release|Any CPU
+		{4F8FEFC3-BD83-43C8-9193-CB766ACAB7CA}.Release|x86.ActiveCfg = Release|Any CPU
+		{4F8FEFC3-BD83-43C8-9193-CB766ACAB7CA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -261,6 +275,7 @@ Global
 		{A9F3E559-ED93-45E3-923F-A012A9FD9AF3} = {D8024CEB-AA9A-43AA-A221-F7A4C26C17DA}
 		{916F87E2-C9C6-4849-8D5F-2849683080F2} = {D8024CEB-AA9A-43AA-A221-F7A4C26C17DA}
 		{751C13E8-CB59-4385-8CCA-11301D63B06D} = {D8024CEB-AA9A-43AA-A221-F7A4C26C17DA}
+		{4F8FEFC3-BD83-43C8-9193-CB766ACAB7CA} = {D8024CEB-AA9A-43AA-A221-F7A4C26C17DA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB177054-A584-4B2A-BA72-D3195C6BF3B5}
