@@ -2,7 +2,7 @@
 
 namespace TPPCore.Database
 {
-    public class PostgresqlDataProvider : DataProvider
+    public class PostgresqlDataProvider : IDataProvider
     {
         private NpgsqlConnection Connection;
 
@@ -15,7 +15,7 @@ namespace TPPCore.Database
         /// Execute a non-returning command.
         /// </summary>
         /// <param name="command"></param>
-        public override void ExecuteCommand(string command)
+        public void ExecuteCommand(string command)
         {
             Connection.Open();
 
@@ -33,7 +33,7 @@ namespace TPPCore.Database
         /// </summary>
         /// <param name="command"></param>
         /// <returns></returns>
-        public override string GetDataFromCommand(string command)
+        public string GetDataFromCommand(string command)
         {
             Connection.Open();
 

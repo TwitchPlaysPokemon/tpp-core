@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace TPPCore.Database
 {
-    public class MemoryDataProvider : DataProvider
+    public class MemoryDataProvider : IDataProvider
     {
         private Dictionary<int, Tuple<string, string>> memory = new Dictionary<int, Tuple<string, string>> { };
         private int Counter = 1;
@@ -13,7 +13,7 @@ namespace TPPCore.Database
         {
         }
 
-        public override void ExecuteCommand(string command)
+        public void ExecuteCommand(string command)
         {
             string action = command.Split(' ')[0];
             switch (action)
@@ -41,7 +41,7 @@ namespace TPPCore.Database
             }
         }
 
-        public override string GetDataFromCommand(string command)
+        public string GetDataFromCommand(string command)
         {
             string action = command.Split(' ')[0];
             switch (action)

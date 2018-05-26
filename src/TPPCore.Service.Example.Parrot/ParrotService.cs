@@ -19,8 +19,8 @@ namespace TPPCore.Service.Example.Parrot
         private ServiceContext context;
         private Model model;
         private ParrotWebHandler webHandler;
-        private DataProvider provider;
-        private ParrotRepository repository;
+        private IDataProvider provider;
+        private IParrotRepository repository;
         private DatabaseHandler handler;
         private bool running = true;
         private int broadcastInterval;

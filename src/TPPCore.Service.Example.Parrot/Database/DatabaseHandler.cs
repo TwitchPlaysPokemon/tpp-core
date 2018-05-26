@@ -8,8 +8,8 @@ namespace TPPCore.Service.Example.Parrot
 {
     public class DatabaseHandler
     {
-        private ParrotRepository _parrotRepository;
-        public DatabaseHandler(ParrotRepository parrotRepository)
+        private IParrotRepository _parrotRepository;
+        public DatabaseHandler(IParrotRepository parrotRepository)
         {
             _parrotRepository = parrotRepository;
         }
@@ -27,14 +27,12 @@ namespace TPPCore.Service.Example.Parrot
 
         public int GetMaxId()
         {
-            int.TryParse(_parrotRepository.GetMaxId(), out int result);
-            return result;
+            return _parrotRepository.GetMaxId();
         }
 
         public async Task GetMaxId(HttpContext httpContext)
         {
-            int.TryParse(_parrotRepository.GetMaxId(), out int result);
-            string jsondoc = JsonConvert.SerializeObject(result);
+            string jsondoc = JsonConvert.SerializeObject(_parrotRepository.GetMaxId());
 
             await httpContext.RespondStringAsync(jsondoc);
         }

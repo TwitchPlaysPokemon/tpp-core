@@ -41,7 +41,7 @@ namespace TPPCore.Service.Emotes.Test
         }
 
         [Fact]
-        public async Task EmoteTest()
+        public async Task EmoteFromIdTest()
         {
             if (!Directory.Exists("cache/"))
                 Directory.CreateDirectory("cache/");
@@ -66,50 +66,158 @@ namespace TPPCore.Service.Emotes.Test
             EmoteInfo info = JsonConvert.DeserializeObject<EmoteInfo>(jsonstring);
 
             Assert.Equal("kappa", info.Code.ToLower());
+            await runner.TearDownAsync();
+        }
 
-            await Task.Delay(500);
+        [Fact]
+        public async Task EmoteFromCodeTest()
+        {
+            if (!Directory.Exists("cache/"))
+                Directory.CreateDirectory("cache/");
 
-            result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/Kappa/getemotefromcode");
-            jsonstring = await result.Content.ReadAsStringAsync();
+            if (!File.Exists("cache/emotes.json"))
+            {
+                string json = File.ReadAllText("../../../test_files/cache.json");
+                File.WriteAllText("cache/emotes.json", json);
+            }
 
-            info = JsonConvert.DeserializeObject<EmoteInfo>(jsonstring);
+            var runner = NewServiceRunner();
+            await runner.SetUpAsync(GetOptions());
+
+            await Task.Delay(10000);
+
+            var httpClient = runner.Runner.Context.RestfulClient;
+
+            var result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/Kappa/getemotefromcode");
+            string jsonstring = await result.Content.ReadAsStringAsync();
+
+            EmoteInfo info = JsonConvert.DeserializeObject<EmoteInfo>(jsonstring);
 
             Assert.Equal(25, info.Id);
+            await runner.TearDownAsync();
+        }
 
-            result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/Kappa/codetoid");
-            jsonstring = await result.Content.ReadAsStringAsync();
+        [Fact]
+        public async Task CodeToIdTest()
+        {
+            if (!Directory.Exists("cache/"))
+                Directory.CreateDirectory("cache/");
+
+            if (!File.Exists("cache/emotes.json"))
+            {
+                string json = File.ReadAllText("../../../test_files/cache.json");
+                File.WriteAllText("cache/emotes.json", json);
+            }
+
+            var runner = NewServiceRunner();
+            await runner.SetUpAsync(GetOptions());
+
+            await Task.Delay(10000);
+
+            var httpClient = runner.Runner.Context.RestfulClient;
+
+            var result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/Kappa/codetoid");
+            string jsonstring = await result.Content.ReadAsStringAsync();
 
             int id = JsonConvert.DeserializeObject<int>(jsonstring);
 
             Assert.Equal(25, id);
+            await runner.TearDownAsync();
+        }
 
-            await Task.Delay(500);
+        [Fact]
+        public async Task IdToCodeTest()
+        {
 
-            result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/25/idtocode");
-            jsonstring = await result.Content.ReadAsStringAsync();
+            if (!Directory.Exists("cache/"))
+                Directory.CreateDirectory("cache/");
+
+            if (!File.Exists("cache/emotes.json"))
+            {
+                string json = File.ReadAllText("../../../test_files/cache.json");
+                File.WriteAllText("cache/emotes.json", json);
+            }
+
+            await Task.Delay(10000);
+
+            var runner = NewServiceRunner();
+            await runner.SetUpAsync(GetOptions());
+
+            var httpClient = runner.Runner.Context.RestfulClient;
+
+            var result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/25/idtocode");
+            string jsonstring = await result.Content.ReadAsStringAsync();
 
             string code = JsonConvert.DeserializeObject<string>(jsonstring);
 
-            Assert.Equal("kappa", code.ToLower());
+            Assert.Equal("Kappa", code);
+            await runner.TearDownAsync();
+        }
 
-            await Task.Delay(500);
+        [Fact]
+        public async Task IdToUrlTest()
+        {
+            if (!Directory.Exists("cache/"))
+                Directory.CreateDirectory("cache/");
 
-            result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/25/1.0/idtourl");
-            jsonstring = await result.Content.ReadAsStringAsync();
+            if (!File.Exists("cache/emotes.json"))
+            {
+                string json = File.ReadAllText("../../../test_files/cache.json");
+                File.WriteAllText("cache/emotes.json", json);
+            }
+
+            await Task.Delay(10000);
+
+            var runner = NewServiceRunner();
+            await runner.SetUpAsync(GetOptions());
+
+            var httpClient = runner.Runner.Context.RestfulClient;
+
+            var result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/25/1.0/idtourl");
+            string jsonstring = await result.Content.ReadAsStringAsync();
 
             string url = JsonConvert.DeserializeObject<string>(jsonstring);
 
             Assert.Equal("https://static-cdn.jtvnw.net/emoticons/v1/25/1.0", url);
+            await runner.TearDownAsync();
+        }
 
-            result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/findemotes/kap");
+        [Fact]
+        public async Task FindEmoteTest()
+        {
+            if (!Directory.Exists("cache/"))
+                Directory.CreateDirectory("cache/");
 
-            jsonstring = await result.Content.ReadAsStringAsync();
+            if (!File.Exists("cache/emotes.json"))
+            {
+                string json = File.ReadAllText("../../../test_files/cache.json");
+                File.WriteAllText("cache/emotes.json", json);
+            }
+
+            await Task.Delay(10000);
+
+            var runner = NewServiceRunner();
+            await runner.SetUpAsync(GetOptions());
+
+            var httpClient = runner.Runner.Context.RestfulClient;
+
+            var result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/findemotes/Kappa");
+
+            string jsonstring = await result.Content.ReadAsStringAsync();
 
             List<EmoteInfo> emoteinfo = JsonConvert.DeserializeObject<List<EmoteInfo>>(jsonstring);
 
-            Assert.Equal(emoteinfo[0].ImageUrls[0], info.ImageUrls[0]);
-            Assert.Equal(emoteinfo[0].ImageUrls[1], info.ImageUrls[1]);
-            Assert.Equal(emoteinfo[0].ImageUrls[2], info.ImageUrls[2]);
+            Assert.Equal("https://static-cdn.jtvnw.net/emoticons/v1/25/1.0", emoteinfo[0].ImageUrls[0]);
+            Assert.Equal("https://static-cdn.jtvnw.net/emoticons/v1/25/2.0", emoteinfo[0].ImageUrls[1]);
+            Assert.Equal("https://static-cdn.jtvnw.net/emoticons/v1/25/3.0", emoteinfo[0].ImageUrls[2]);
+
+            result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/findemotes/kappa");
+
+            jsonstring = await result.Content.ReadAsStringAsync();
+
+            emoteinfo = JsonConvert.DeserializeObject<List<EmoteInfo>>(jsonstring);
+
+            Assert.True(emoteinfo.Count == 0);
 
             await runner.TearDownAsync();
         }

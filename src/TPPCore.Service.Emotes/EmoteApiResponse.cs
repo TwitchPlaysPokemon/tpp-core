@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace TPPCore.ChatProviders.DataModels
+namespace TPPCore.Service.Emotes
 {
     public class EmoteApiResponse
     {

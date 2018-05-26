@@ -2,10 +2,10 @@
 
 namespace TPPCore.Service.Example.Parrot
 {
-    public class PostgresqlParrotRepository : ParrotRepository
+    public class PostgresqlParrotRepository : IParrotRepository
     {
-        private DataProvider _provider;
-        public PostgresqlParrotRepository(DataProvider provider)
+        private IDataProvider _provider;
+        public PostgresqlParrotRepository(IDataProvider provider)
         {
             _provider = provider;
         }
@@ -15,7 +15,7 @@ namespace TPPCore.Service.Example.Parrot
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public override string GetContents(int id)
+        public string GetContents(int id)
         {
             return _provider.GetDataFromCommand($"SELECT parrot_return_contents({id});");
         }
@@ -25,7 +25,7 @@ namespace TPPCore.Service.Example.Parrot
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public override string GetTimestamp(int id)
+        public string GetTimestamp(int id)
         {
             return _provider.GetDataFromCommand($"SELECT parrot_return_timestamp({id});");
         }
@@ -34,15 +34,17 @@ namespace TPPCore.Service.Example.Parrot
         /// Get the highest ID that's currently in the database.
         /// </summary>
         /// <returns></returns>
-        public override string GetMaxId()
+        public int GetMaxId()
         {
-            return _provider.GetDataFromCommand("SELECT parrot_return_max_key();");
+            string idstring =_provider.GetDataFromCommand("SELECT parrot_return_max_key();");
+            int.TryParse(idstring, out int result);
+            return result;
         }
 
         /// <summary>
         /// Remove all items.
         /// </summary>
-        public override void Remove()
+        public void Remove()
         {
             _provider.ExecuteCommand("SELECT parrot_delete();");
         }
@@ -51,7 +53,7 @@ namespace TPPCore.Service.Example.Parrot
         /// Remove the item with the specified ID.
         /// </summary>
         /// <param name="id"></param>
-        public override void Remove(int id)
+        public void Remove(int id)
         {
             _provider.ExecuteCommand($"SELECT parrot_delete({id});");
         }
@@ -60,7 +62,7 @@ namespace TPPCore.Service.Example.Parrot
         /// Insert an item into the database.
         /// </summary>
         /// <param name="message"></param>
-        public override void Insert(string message)
+        public void Insert(string message)
         {
             _provider.ExecuteCommand($"SELECT parrot_insert('{message}');");
         }

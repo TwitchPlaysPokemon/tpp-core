@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using TPPCore.ChatProviders.DataModels;
@@ -17,7 +16,8 @@ namespace TPPCore.Service.Emotes
     public class EmoteHandler
     {
         private ServiceContext context;
-        private EmoteApiResponse response;
+        private Dictionary<string, EmoteInfo> _emotesByCode = new Dictionary<string, EmoteInfo> { };
+        private Dictionary<int, EmoteInfo> _emotesById = new Dictionary<int, EmoteInfo> { };
         private HttpClient httpClient;
         private static readonly string URL = "https://api.twitch.tv/kraken/chat/emoticon_images";
         private readonly string _fileLocation;
@@ -36,7 +36,20 @@ namespace TPPCore.Service.Emotes
                 {
                     string serialized = await File.ReadAllTextAsync(_fileLocation);
                     EmoteApiResponse deserialized = JsonConvert.DeserializeObject<EmoteApiResponse>(serialized);
-                    response = deserialized;
+                    foreach (EmoteApiResponse.Emote emote in deserialized.emoticons)
+                    {
+                        EmoteInfo info = new EmoteInfo
+                        {
+                            Code = emote.code,
+                            Id = emote.id,
+                            ImageUrls = new List<string> { EmoteIdToUrl(emote.id, "1.0"), EmoteIdToUrl(emote.id, "2.0"), EmoteIdToUrl(emote.id, "3.0") }
+                        };
+                        if (!_emotesByCode.Keys.Contains(emote.code))
+                            _emotesByCode.Add(emote.code, info);
+
+                        if (!_emotesById.Keys.Contains(emote.id))
+                            _emotesById.Add(emote.id, info);
+                    }
                 }
             } catch
             {
@@ -54,12 +67,30 @@ namespace TPPCore.Service.Emotes
                 {
                     string JsonString = await responseMessage.Content.ReadAsStringAsync();
                     EmoteApiResponse apiResponse = JsonConvert.DeserializeObject<EmoteApiResponse>(JsonString);
-                    if (apiResponse != response)
+                    bool changed = false;
+                    foreach (EmoteApiResponse.Emote emote in apiResponse.emoticons)
                     {
+                        EmoteInfo info = new EmoteInfo
+                        {
+                            Code = emote.code,
+                            Id = emote.id,
+                            ImageUrls = new List<string> { EmoteIdToUrl(emote.id, "1.0"), EmoteIdToUrl(emote.id, "2.0"), EmoteIdToUrl(emote.id, "3.0") }
+                        };
+                        if (!_emotesByCode.Keys.Contains(emote.code))
+                        {
+                            _emotesByCode.Add(emote.code, info);
+                            changed = true;
+                        }
 
-                        response = apiResponse;
-                        await File.WriteAllTextAsync(_fileLocation, JsonString);
+                        if (!_emotesById.Keys.Contains(emote.id))
+                        {
+                            _emotesById.Add(emote.id, info);
+                            changed = true;
+                        }
                     }
+
+                    if (changed)
+                        await File.WriteAllTextAsync(_fileLocation, JsonString);
                 }
                 else
                 {
@@ -75,13 +106,8 @@ namespace TPPCore.Service.Emotes
         {
             string unparsed = (string)context.GetRouteValue("id");
             int.TryParse(unparsed, out int Id);
-            EmoteApiResponse.Emote emote = response.emoticons.Where(x => x.id == Id).First();
-            EmoteInfo info = new EmoteInfo
-            {
-                Code = emote.code,
-                Id = emote.id,
-                ImageUrls = new List<string> { $"https://static-cdn.jtvnw.net/emoticons/v1/{emote.id}/1.0", $"https://static-cdn.jtvnw.net/emoticons/v1/{emote.id}/2.0", $"https://static-cdn.jtvnw.net/emoticons/v1/{emote.id}/3.0" }
-            };
+
+            _emotesById.TryGetValue(Id, out EmoteInfo info);
 
             string JsonResponse = JsonConvert.SerializeObject(info);
 
@@ -91,13 +117,8 @@ namespace TPPCore.Service.Emotes
         public async Task GetEmoteFromCode(HttpContext context)
         {
             string code = (string)context.GetRouteValue("code");
-            EmoteApiResponse.Emote emote = response.emoticons.Where(x => Regex.IsMatch(code.ToLower(), x.code.ToLower())).First();
-            EmoteInfo info = new EmoteInfo
-            {
-                Code = emote.code,
-                Id = emote.id,
-                ImageUrls = new List<string> { $"https://static-cdn.jtvnw.net/emoticons/v1/{emote.id}/1.0", $"https://static-cdn.jtvnw.net/emoticons/v1/{emote.id}/2.0", $"https://static-cdn.jtvnw.net/emoticons/v1/{emote.id}/3.0" }
-            };
+
+            _emotesByCode.TryGetValue(code, out EmoteInfo info);
 
             string JsonResponse = JsonConvert.SerializeObject(info);
 
@@ -107,10 +128,10 @@ namespace TPPCore.Service.Emotes
         public async Task EmoteCodeToId(HttpContext context)
         {
             string code = (string)context.GetRouteValue("code");
-            EmoteApiResponse.Emote emote = response.emoticons.Where(x => Regex.IsMatch(code.ToLower(), x.code.ToLower())).First();
-            int Id = emote.id;
 
-            string JsonResponse = JsonConvert.SerializeObject(Id);
+            int? id = _emotesByCode[code]?.Id;
+
+            string JsonResponse = JsonConvert.SerializeObject(id);
 
             await context.RespondStringAsync(JsonResponse);
         }
@@ -119,8 +140,8 @@ namespace TPPCore.Service.Emotes
         {
             string unparsed = (string)context.GetRouteValue("id");
             int.TryParse(unparsed, out int Id);
-            EmoteApiResponse.Emote emote = response.emoticons.Where(x => x.id == Id).First();
-            string code = emote.code;
+
+            string code = _emotesById[Id]?.Code;
 
             string JsonRespose = JsonConvert.SerializeObject(code);
 
@@ -139,23 +160,18 @@ namespace TPPCore.Service.Emotes
             await context.RespondStringAsync(JsonResponse);
         }
 
+        public string EmoteIdToUrl(int id, string scale)
+        {
+            return $"https://static-cdn.jtvnw.net/emoticons/v1/{id}/{scale}";
+        }
+
         public async Task FindEmotes(HttpContext context)
         {
             string text = (string)context.GetRouteValue("text");
 
-            IEnumerable<EmoteApiResponse.Emote> matches = response.emoticons.Where(x => x.code.ToLower().Contains(text.ToLower()));
-            List<EmoteInfo> prepared = new List<EmoteInfo> { };
-            foreach (EmoteApiResponse.Emote emote in matches)
-            {
-                prepared.Add(new EmoteInfo
-                {
-                    Code = emote.code,
-                    Id = emote.id,
-                    ImageUrls = new List<string> { $"https://static-cdn.jtvnw.net/emoticons/v1/{emote.id}/1.0", $"https://static-cdn.jtvnw.net/emoticons/v1/{emote.id}/2.0", $"https://static-cdn.jtvnw.net/emoticons/v1/{emote.id}/3.0" }
-                });
-            }
+            List<EmoteInfo> info = _emotesByCode.Values.Where(x => x.Code.Contains(text)).ToList();
 
-            string JsonResponse = JsonConvert.SerializeObject(prepared);
+            string JsonResponse = JsonConvert.SerializeObject(info);
 
             await context.RespondStringAsync(JsonResponse);
         }
