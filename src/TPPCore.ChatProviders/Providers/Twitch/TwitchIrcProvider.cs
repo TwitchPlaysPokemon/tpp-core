@@ -19,7 +19,7 @@ namespace TPPCore.ChatProviders.Twitch
         override protected async Task login()
         {
             await base.login();
-            await ircClient.SendMessage("CAP", "REQ", null,
+            await ircClient.SendParamsTrailing("CAP", "REQ",
                 "twitch.tv/membership twitch.tv/tags twitch.tv/commands");
         }
 

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,39 +11,39 @@ namespace TPPCore.Irc
     public static class IrcClientExtensions
     {
         /// <summary>
-        /// Convenience method to skip creating a new message object.
+        /// Send string command and parameters.
         /// </summary>
         /// <remarks>
-        /// To indicate that the last parameter is a trailing parameter,
-        /// separate it by passing null between the parameters and the trailing
-        /// parameters.
+        /// This is a convenience method to skip creating a new message object.
+        /// To send a tailing parameter, use <see cref="SendParamsTrailing"/>.
         /// </remarks>
-        public static async Task SendMessage(this IrcClient client,
+        public static async Task SendParams(this IrcClient client,
         string command, params string[] parameters)
         {
-            var leadingParams = new List<string>();
-            string trailingParam = null;
-            var hasTrailing = false;
+            await client.SendMessage(new Message(command, parameters));
+        }
 
-            foreach (var part in parameters)
-            {
-                if (hasTrailing)
-                {
-                    Debug.Assert(trailingParam == null);
-                    trailingParam = part;
-                }
-                else if (part != null)
-                {
-                    leadingParams.Add(part);
-                }
-                else
-                {
-                    hasTrailing = true;
-                }
+        /// <summary>
+        /// Send string command and parameters with trailing parameter.
+        /// </summary>
+        /// <remarks>
+        /// This is a convenience method to skip creating a new message object.
+        /// To send without a trailing parameter <see cref="SendParams"/>.
+        /// </remarks>
+        public static async Task SendParamsTrailing(this IrcClient client,
+        string command, params string[] parameters)
+        {
+            string[] leadingParams = null;
+            String trailingParam = null;
+
+            if (parameters.Length > 0) {
+                var leadingCount = parameters.Length - 1;
+                leadingParams = parameters.Take(leadingCount).ToArray();
+                trailingParam = parameters.Last();
             }
 
-            await client.SendMessage(new Message(
-                command, leadingParams.ToArray(), trailingParam));
+            await client.SendMessage(
+                new Message(command, leadingParams, trailingParam));
         }
 
         /// <summary>
@@ -85,10 +84,10 @@ namespace TPPCore.Irc
         {
             if (password != null)
             {
-                await client.SendMessage("PASS", password);
+                await client.SendParams("PASS", password);
             }
-            await client.SendMessage("NICK", nickname);
-            await client.SendMessage("USER", username, "8", "*", null, realName);
+            await client.SendParams("NICK", nickname);
+            await client.SendParamsTrailing("USER", username, "8", "*", realName);
         }
 
         /// <summary>
@@ -97,7 +96,7 @@ namespace TPPCore.Irc
         public static async Task Join(this IrcClient client,
         params string[] channels)
         {
-            await client.SendMessage("JOIN", string.Join(",", channels));
+            await client.SendParams("JOIN", string.Join(",", channels));
         }
 
         /// <summary>
@@ -106,7 +105,7 @@ namespace TPPCore.Irc
         public static async Task Join(this IrcClient client, string channel,
         string key)
         {
-            await client.SendMessage("JOIN", channel, key);
+            await client.SendParams("JOIN", channel, key);
         }
 
         /// <summary>
@@ -115,7 +114,7 @@ namespace TPPCore.Irc
         public static async Task Part(this IrcClient client,
         params string[] channels)
         {
-            await client.SendMessage("PART", string.Join(",", channels));
+            await client.SendParams("PART", string.Join(",", channels));
         }
 
         /// <summary>
@@ -124,7 +123,7 @@ namespace TPPCore.Irc
         public static async Task Part(this IrcClient client, string channel,
         string partMessage)
         {
-            await client.SendMessage("PART", channel, null, partMessage);
+            await client.SendParamsTrailing("PART", channel, partMessage);
         }
 
         /// <summary>
@@ -154,7 +153,7 @@ namespace TPPCore.Irc
         public static async Task Notice(this IrcClient client,
         string destination, string text)
         {
-            await client.SendMessage("NOTICE", destination, null, text);
+            await client.SendParamsTrailing("NOTICE", destination, text);
         }
     }
 }

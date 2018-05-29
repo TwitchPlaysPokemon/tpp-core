@@ -91,7 +91,7 @@ namespace TPPCore.ChatProviders.Providers.Irc
 
             if (ircClient != null)
             {
-                ircClient.SendMessage("QUIT").Wait();
+                ircClient.SendParams("QUIT").Wait();
             }
         }
 
@@ -148,7 +148,7 @@ namespace TPPCore.ChatProviders.Providers.Irc
 
             if (tcpClient.Connected)
             {
-                await ircClient.SendMessage("QUIT");
+                await ircClient.SendParams("QUIT");
                 tcpClient.Close();
             }
 
@@ -244,7 +244,7 @@ namespace TPPCore.ChatProviders.Providers.Irc
                     catch (IrcTimeoutException)
                     {
                         var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                        await ircClient.SendMessage("PING", null, timestamp.ToString());
+                        await ircClient.SendParamsTrailing("PING", timestamp.ToString());
                     }
                 }
             }
@@ -347,7 +347,7 @@ namespace TPPCore.ChatProviders.Providers.Irc
             {
                 throw new Exception("Not a channel");
             }
-            await ircClient.SendMessage($"KICK #{channel} {user.Nickname} :{reason}");
+            await ircClient.SendParamsTrailing("KICK", channel, user.Nickname, reason);
         }
 
         public async Task BanUser(ChatUser user, string reason, string channel)
@@ -356,8 +356,8 @@ namespace TPPCore.ChatProviders.Providers.Irc
             {
                 throw new Exception("Not a channel");
             }
-            await ircClient.SendMessage($"MODE #{channel} +b {user.Nickname}!{user.Username}@{user.Host}");
-            await ircClient.SendMessage($"KICK #{channel} {user.Nickname} :{reason}");
+            await ircClient.SendParams("MODE", channel, "+b", $"{user.Nickname}!{user.Username}@{user.Host}");
+            await ircClient.SendParamsTrailing("KICK", channel, user.Nickname, reason);
         }
 
         private Task joinedEventHandler(IrcClient client, Message message)

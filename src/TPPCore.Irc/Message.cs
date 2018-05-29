@@ -149,18 +149,9 @@ namespace TPPCore.Irc
         string trailingParameter = null)
         : this()
         {
+            Debug.Assert(!command.Contains(" "));
             this.Command = command;
-
-            if (parameters != null)
-            {
-                this.Parameters = new List<string>(parameters);
-            }
-
-            if (trailingParameter != null)
-            {
-                HasTrailing = true;
-                this.Parameters.Add(trailingParameter);
-            }
+            InitParameters(parameters, trailingParameter);
         }
 
         public Message(string command, string[] parameters,
@@ -171,9 +162,30 @@ namespace TPPCore.Irc
 
         public Message(int numericalReplyCode, string[] parameters,
         string trailingParameter = null)
-        : this(null, parameters, trailingParameter)
+        : this()
         {
             this.NumericReply = numericalReplyCode;
+            InitParameters(parameters, trailingParameter);
+        }
+
+        private void InitParameters(string[] parameters = null,
+        string trailingParameter = null)
+        {
+            if (parameters != null)
+            {
+                this.Parameters = new List<string>(parameters);
+                Debug.Assert(!parameters.Contains(null));
+                Debug.Assert(
+                    !Parameters.Exists(param => param.Contains(" ")));
+            } else {
+                this.Parameters = new List<string>();
+            }
+
+            if (trailingParameter != null)
+            {
+                HasTrailing = true;
+                this.Parameters.Add(trailingParameter);
+            }
         }
 
         /// <summary>
