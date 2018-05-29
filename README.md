@@ -48,15 +48,31 @@ The core separated into components based on the microservice architecture. Each 
 
 The source code is organized into several projects according to their usage. For example, `TPPCore.Service.Common` is a project that outputs a library assembly and `TPPCore.Service.Example.Parrot` is a project that outputs a command line program assembly.
 
-The Parrot example service is a simple service intended to demonstrate the basic functionality. It loops infinitely sending messages to the pub/sub client which is a thin wrapper to the Redis client. To query or change the state in service, it exposes simple RESTful HTTP endpoints that accept and send JSON formatted body messages. Internally, it uses the ASP.NET Core framework to start up a Kestrel web host. Be sure to look at the service's test code too.
+The Parrot example service is a simple service intended to demonstrate the basic functionality. It loops infinitely sending messages to the pub/sub client which is a thin wrapper to the Redis client. To query or change the state in service, it exposes simple RESTful HTTP endpoints that accept and send JSON formatted body messages. Internally, it uses the ASP.NET Core framework to start up a Kestrel web host.
+
+To interact with the Parrot service, a corresponding client is provided in `TPPCore.Client.Example.Parrot`. It wraps serialization and deserialization of the JSON messages. To see usage of the client, see the service's test code within the `test` folder.
+
+### Directory structure
+
+| Project | Summary |
+| --------- | ------- |
+| TPPCore.ChatProviders | Modules to connect to website chat API endpoints |
+| TPPCore.Client.Chat | Client to interact with the Chat service |
+| TPPCore.Client.Common | Base code for clients that access a service's API |
+| TPPCore.Client.Example.Parrot | Client to interact with the Parrot service |
+| TPPCore.Irc | Async IRC library |
+| TPPCore.Service.Chat | Service for running Chat Providers and providing a unified interface for chatting |
+| TPPCore.Service.Chat | Service for logging Chat service events |
+| TPPCore.Service.Common | Framework for services |
+| TPPCore.Service.Example.Parrot | Example service |
 
 
 ## Running
 
-TODO: describe how to run things
+Services are intended to start up independently from one another.
 
 
-### Example commands
+### How to invoke services
 
 Checking the command line options of the Parrot service:
 
@@ -68,14 +84,18 @@ Running the parrot service with configuration files:
 
 Note that `--config` switch is not repeated for each configuration filename.
 
+### How to run minimal Twitch Plays
+
+TODO: describe this once it is complete
+
 
 ## I want to contribute
 
 Yes, please! Any help is appreciated.
 Because this project is still very fresh and barebones, it might be hard for you to find a good place to start though.
 Depending on your workflow, you can do one of the following:
-- Contact one of the core contributors to get invited into the TPP Developer Discord, where you can get directly involved into relevant discussions.
-  We are willing to help you get started, just hit someone up. If you don't know where, a Twitch whisper works. Preferably, whisper Chaos_lord2.
+- Join the channel #public-dev on the [TPP community Discord](https://discord.gg/twitchplayspokemon) and contact one of the core contributors. Optionally, you may ask to get invited into the TPP Developer Discord, where you can get directly involved into relevant discussions.
+  We are willing to help you get started, just hit someone up. If you don't know where, a Twitch whisper or Discord DM works. Preferably, whisper or DM Chaos_lord2.
 - If you already know what you want to add/change, feel free to just tinker around and submit a pull request.
-- We'll try to organize things that need to be done as Github issues. You can browse through them and see if something fits for you.
+- We'll try to organize things that need to be done as Github issues and project cards. You can browse through them and see if something fits for you.
   Don't be shy to ask for help if necessary. You don't need to do something all by yourself to get started.
