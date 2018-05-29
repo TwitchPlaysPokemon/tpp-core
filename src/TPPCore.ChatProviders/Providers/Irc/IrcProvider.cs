@@ -1,4 +1,5 @@
 using log4net;
+using Polly;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,6 +20,7 @@ namespace TPPCore.ChatProviders.Providers.Irc
             System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private const int keepAliveInterval = 60_000;
         private const int minReconnectDelay = 2_000;
+        private const int maxReconnectDelay = 60_000;
 
         public string ClientName { get; private set; }
         public string ProviderName { get; protected set; } = "irc";
@@ -31,9 +33,18 @@ namespace TPPCore.ChatProviders.Providers.Irc
         private StreamWriter writer;
         private ConnectConfig connectConfig;
         private bool isRunning = false;
+        private Policy reconnectPolicy;
 
         public IrcProvider()
         {
+            reconnectPolicy = Policy
+                .Handle<SocketException>()
+                .Or<AuthenticationException>()
+                .Or<IrcTimeoutException>()
+                .WaitAndRetryForeverAsync(
+                    retryAttempt => GetReconnectTime(retryAttempt),
+                    ReconnectPolicyHandler
+                );
         }
 
         public void Configure(string clientName, ProviderContext providerContext)
@@ -70,11 +81,20 @@ namespace TPPCore.ChatProviders.Providers.Irc
 
             while (isRunning)
             {
-                if (!(await connectAndLogin()))
+                var result = await reconnectPolicy.ExecuteAndCaptureAsync(
+                    async () =>
+                    {
+                        if (!isRunning)
+                        {
+                            return false;
+                        }
+                        await ConnectAndLogin();
+                        return true;
+                    });
+
+                if (!result.Result)
                 {
-                    // FIXME: use backoff
-                    await Task.Delay(60_000);
-                    continue;
+                    break;
                 }
 
                 await loopForever();
@@ -159,25 +179,26 @@ namespace TPPCore.ChatProviders.Providers.Irc
             writer = null;
         }
 
-        private async Task<bool> connectAndLogin()
+        private async Task ConnectAndLogin()
         {
-            try
-            {
-                await connect();
-                initIrcClient();
-                await login();
-            }
-            catch (Exception error)
-            when (error is SocketException
-            || error is AuthenticationException
-            || error is IrcTimeoutException)
-            {
-                logger.Error("Connection failure.", error);
-                await cleanUpIrcClient();
-                return false;
-            }
+            await connect();
+            initIrcClient();
+            await login();
+        }
 
-            return true;
+        private TimeSpan GetReconnectTime(int retryAttempt)
+        {
+            return TimeSpan.FromSeconds(Math.Max(
+                minReconnectDelay / 1000,
+                Math.Min(maxReconnectDelay / 1000, Math.Pow(2, retryAttempt)))
+            );
+        }
+
+        private async Task ReconnectPolicyHandler(Exception exception, TimeSpan timespan)
+        {
+            logger.Error("Connection failure.", exception);
+            await cleanUpIrcClient();
+            logger.InfoFormat("Retrying connection in {0}", timespan);
         }
 
         private async Task connect()
