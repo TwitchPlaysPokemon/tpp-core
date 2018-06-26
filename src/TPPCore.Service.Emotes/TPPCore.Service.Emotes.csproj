@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -6,7 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TPPCore.ChatProviders\TPPCore.ChatProviders.csproj" />
     <ProjectReference Include="..\TPPCore.Service.Common\TPPCore.Service.Common.csproj" />
   </ItemGroup>
 

@@ -1,9 +1,9 @@
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using TPPCore.ChatProviders.DataModels;
 using TPPCore.Service.Common;
 using TPPCore.Service.Common.TestUtils;
 using Xunit;
@@ -58,12 +58,12 @@ namespace TPPCore.Service.Emotes.Test
             await Task.Delay(10000);
 
             var httpClient = runner.Runner.Context.RestfulClient;
-            var result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/25/getemotefromid");
+            var result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/fromid/25");
             if (!result.IsSuccessStatusCode)
                 throw new HttpRequestException("Error " + result.StatusCode.ToString());
             string jsonstring = await result.Content.ReadAsStringAsync();
 
-            EmoteInfo info = JsonConvert.DeserializeObject<EmoteInfo>(jsonstring);
+            TwitchEmote info = JsonConvert.DeserializeObject<TwitchEmote>(jsonstring);
 
             Assert.Equal("kappa", info.Code.ToLower());
             await runner.TearDownAsync();
@@ -88,10 +88,10 @@ namespace TPPCore.Service.Emotes.Test
 
             var httpClient = runner.Runner.Context.RestfulClient;
 
-            var result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/Kappa/getemotefromcode");
+            var result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/fromcode/Kappa");
             string jsonstring = await result.Content.ReadAsStringAsync();
 
-            EmoteInfo info = JsonConvert.DeserializeObject<EmoteInfo>(jsonstring);
+            TwitchEmote info = JsonConvert.DeserializeObject<TwitchEmote>(jsonstring);
 
             Assert.Equal(25, info.Id);
             await runner.TearDownAsync();
@@ -116,7 +116,7 @@ namespace TPPCore.Service.Emotes.Test
 
             var httpClient = runner.Runner.Context.RestfulClient;
 
-            var result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/Kappa/codetoid");
+            var result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/codetoid/Kappa");
             string jsonstring = await result.Content.ReadAsStringAsync();
 
             int id = JsonConvert.DeserializeObject<int>(jsonstring);
@@ -138,14 +138,17 @@ namespace TPPCore.Service.Emotes.Test
                 File.WriteAllText("cache/emotes.json", json);
             }
 
-            await Task.Delay(10000);
 
             var runner = NewServiceRunner();
             await runner.SetUpAsync(GetOptions());
 
+            await Task.Delay(10000);
+
             var httpClient = runner.Runner.Context.RestfulClient;
 
-            var result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/25/idtocode");
+            var result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/idtocode/25");
+            if (!result.IsSuccessStatusCode)
+                throw new HttpRequestException("Error " + result.StatusCode.ToString());
             string jsonstring = await result.Content.ReadAsStringAsync();
 
             string code = JsonConvert.DeserializeObject<string>(jsonstring);
@@ -166,14 +169,45 @@ namespace TPPCore.Service.Emotes.Test
                 File.WriteAllText("cache/emotes.json", json);
             }
 
-            await Task.Delay(10000);
 
             var runner = NewServiceRunner();
             await runner.SetUpAsync(GetOptions());
 
+            await Task.Delay(10000);
+
             var httpClient = runner.Runner.Context.RestfulClient;
 
-            var result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/25/1.0/idtourl");
+            var result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/idtourl/25/1.0");
+            string jsonstring = await result.Content.ReadAsStringAsync();
+
+            string url = JsonConvert.DeserializeObject<string>(jsonstring);
+
+            Assert.Equal("https://static-cdn.jtvnw.net/emoticons/v1/25/1.0", url);
+            await runner.TearDownAsync();
+        }
+
+        [Fact]
+        public async Task IdToUrlNoSizeTest()
+        {
+            if (!Directory.Exists("cache/"))
+                Directory.CreateDirectory("cache/");
+
+            if (!File.Exists("cache/emotes.json"))
+            {
+                string json = File.ReadAllText("../../../test_files/cache.json");
+                File.WriteAllText("cache/emotes.json", json);
+            }
+
+
+            var runner = NewServiceRunner();
+            await runner.SetUpAsync(GetOptions());
+
+            await Task.Delay(10000);
+
+            var httpClient = runner.Runner.Context.RestfulClient;
+
+            var result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/idtourl/25");
+
             string jsonstring = await result.Content.ReadAsStringAsync();
 
             string url = JsonConvert.DeserializeObject<string>(jsonstring);
@@ -194,30 +228,31 @@ namespace TPPCore.Service.Emotes.Test
                 File.WriteAllText("cache/emotes.json", json);
             }
 
-            await Task.Delay(10000);
 
             var runner = NewServiceRunner();
             await runner.SetUpAsync(GetOptions());
 
+            await Task.Delay(10000);
+
             var httpClient = runner.Runner.Context.RestfulClient;
 
-            var result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/findemotes/Kappa");
+            var result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/findin/Kappa");
 
             string jsonstring = await result.Content.ReadAsStringAsync();
 
-            List<EmoteInfo> emoteinfo = JsonConvert.DeserializeObject<List<EmoteInfo>>(jsonstring);
+            List<TwitchEmote> emoteinfo = JsonConvert.DeserializeObject<List<TwitchEmote>>(jsonstring);
 
             Assert.Equal("https://static-cdn.jtvnw.net/emoticons/v1/25/1.0", emoteinfo[0].ImageUrls[0]);
             Assert.Equal("https://static-cdn.jtvnw.net/emoticons/v1/25/2.0", emoteinfo[0].ImageUrls[1]);
             Assert.Equal("https://static-cdn.jtvnw.net/emoticons/v1/25/3.0", emoteinfo[0].ImageUrls[2]);
 
-            result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/findemotes/kappa");
+            result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/findin/kappa");
 
             jsonstring = await result.Content.ReadAsStringAsync();
 
-            emoteinfo = JsonConvert.DeserializeObject<List<EmoteInfo>>(jsonstring);
+            emoteinfo = JsonConvert.DeserializeObject<List<TwitchEmote>>(jsonstring);
 
-            Assert.True(emoteinfo.Count == 0);
+            Assert.True(emoteinfo.Where(x => x.Code == "kappa" || x.Code == "Kappa").Count() == 0);
 
             await runner.TearDownAsync();
         }

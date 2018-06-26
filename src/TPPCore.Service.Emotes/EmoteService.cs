@@ -27,12 +27,13 @@ namespace TPPCore.Service.Emotes
             context.RestfulServer.UseRoute((RouteBuilder routeBuilder) =>
             {
                 routeBuilder
-                    .MapGet("emote/{id}/getemotefromid", emoteHandler.GetEmoteFromId)
-                    .MapGet("emote/{code}/getemotefromcode", emoteHandler.GetEmoteFromCode)
-                    .MapGet("emote/{code}/codetoid", emoteHandler.EmoteCodeToId)
-                    .MapGet("emote/{id}/idtocode", emoteHandler.EmoteIdToCode)
-                    .MapGet("emote/{id}/{scale}/idtourl", emoteHandler.EmoteIdToUrl)
-                    .MapGet("emote/findemotes/{text}", emoteHandler.FindEmotes)
+                    .MapGet("emote/fromid/{id}", emoteHandler.GetEmoteFromId)
+                    .MapGet("emote/fromcode/{code}", emoteHandler.GetEmoteFromCode)
+                    .MapGet("emote/codetoid/{code}", emoteHandler.EmoteCodeToId)
+                    .MapGet("emote/idtocode/{id}", emoteHandler.EmoteIdToCode)
+                    .MapGet("emote/idtourl/{id}/{scale}", emoteHandler.EmoteIdToUrl)
+                    .MapGet("emote/idtourl/{id}", emoteHandler.EmoteIdToUrlNoScale)
+                    .MapGet("emote/findin/{text}", emoteHandler.FindEmotes)
                     ;
             });
         }
