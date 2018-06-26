@@ -29,10 +29,6 @@ namespace TPPCore.Service.Emotes
                 routeBuilder
                     .MapGet("emote/fromid/{id}", emoteHandler.GetEmoteFromId)
                     .MapGet("emote/fromcode/{code}", emoteHandler.GetEmoteFromCode)
-                    .MapGet("emote/codetoid/{code}", emoteHandler.EmoteCodeToId)
-                    .MapGet("emote/idtocode/{id}", emoteHandler.EmoteIdToCode)
-                    .MapGet("emote/idtourl/{id}/{scale}", emoteHandler.EmoteIdToUrl)
-                    .MapGet("emote/idtourl/{id}", emoteHandler.EmoteIdToUrlNoScale)
                     .MapGet("emote/findin/{text}", emoteHandler.FindEmotes)
                     ;
             });

@@ -111,53 +111,6 @@ namespace TPPCore.Service.Emotes
             await context.RespondStringAsync(JsonConvert.SerializeObject(info));
         }
 
-        public async Task EmoteCodeToId(HttpContext context)
-        {
-            string code = (string)context.GetRouteValue("code");
-
-            int? id = _emotesByCode[code]?.Id;
-
-            await context.RespondStringAsync(JsonConvert.SerializeObject(id));
-        }
-
-        public async Task EmoteIdToCode(HttpContext context)
-        {
-            string unparsed = (string)context.GetRouteValue("id");
-            int.TryParse(unparsed, out int Id);
-
-            string code = _emotesById[Id]?.Code;
-
-            await context.RespondStringAsync(JsonConvert.SerializeObject(code));
-        }
-
-        public async Task EmoteIdToUrl(HttpContext context)
-        {
-            string unparsed = (string)context.GetRouteValue("id");
-            int.TryParse(unparsed, out int Id);
-
-            string scale = (string)context.GetRouteValue("scale");
-
-            string URL = EmoteIdToUrl(Id, scale);
-
-            await context.RespondStringAsync(JsonConvert.SerializeObject(URL));
-        }
-
-        public async Task EmoteIdToUrlNoScale(HttpContext context)
-        {
-            string unparsed = (string)context.GetRouteValue("id");
-            int.TryParse(unparsed, out int Id);
-            string URL = EmoteIdToUrl(Id, "1.0");
-
-            string JsonResponse = JsonConvert.SerializeObject(URL);
-
-            await context.RespondStringAsync(JsonResponse);
-        }
-
-        public string EmoteIdToUrl(int id, string scale)
-        {
-            return $"https://static-cdn.jtvnw.net/emoticons/v1/{id}/{scale}";
-        }
-
         public async Task FindEmotes(HttpContext context)
         {
             string text = (string)context.GetRouteValue("text");
