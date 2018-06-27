@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 using TPPCore.Service.Common;
 using Microsoft.AspNetCore.Routing;
 using Newtonsoft.Json;
+using TPPCore.ChatProviders;
+using TPPCore.Database;
 
 namespace TPPCore.Service.Example.Parrot
 {
@@ -17,6 +19,9 @@ namespace TPPCore.Service.Example.Parrot
         private ServiceContext context;
         private Model model;
         private ParrotWebHandler webHandler;
+        private IDataProvider provider;
+        private IParrotRepository repository;
+        private DatabaseHandler handler;
         private bool running = true;
         private int broadcastInterval;
         private int recentIntervalCount;
@@ -31,12 +36,24 @@ namespace TPPCore.Service.Example.Parrot
         {
             this.context = context;
 
+            string Database = context.ConfigReader.GetCheckedValue<string>("database", "database");
+            string Host = context.ConfigReader.GetCheckedValue<string>("database", "host");
+            string AppName = context.ConfigReader.GetCheckedValue<string>("database", "appname");
+            string Username = context.ConfigReader.GetCheckedValue<string>("database", "username");
+            string Password = context.ConfigReader.GetCheckedValue<string>("database", "password");
+            int Port = context.ConfigReader.GetCheckedValue<int>("database", "port");
+            provider = new PostgresqlDataProvider(Database, Host, AppName, Username, Password, Port);
+            repository = new PostgresqlParrotRepository(provider);
+            handler = new DatabaseHandler(repository);
+
             context.RestfulServer.UseRoute((RouteBuilder routeBuilder) =>
             {
                 routeBuilder
                     .MapGet("message/recent", webHandler.GetRecent)
                     .MapGet("message/current", webHandler.GetCurrent)
                     .MapPost("message/new", webHandler.PostMessage)
+                    .MapGet("message/database/getcontents/{id}", handler.GetContents)
+                    .MapGet("message/database/getmaxkey", handler.GetMaxId)
                     ;
             });
 
@@ -68,7 +85,7 @@ namespace TPPCore.Service.Example.Parrot
             {
                 await Task.Delay(broadcastInterval);
 
-                broadcastMessage();
+                BroadcastMessage();
             }
 
             logger.Info("Parrot shutting down");
@@ -76,13 +93,14 @@ namespace TPPCore.Service.Example.Parrot
             logger.Info("Goodbye!");
         }
 
-        private void broadcastMessage()
+        private void BroadcastMessage()
         {
             var message = model.CurrentMessage;
             logger.DebugFormat("Broadcasting message {0}", message);
 
             var jsonMessage = JsonConvert.SerializeObject(message);
             context.PubSubClient.Publish(ParrotTopics.Broadcast, jsonMessage);
+            handler.SaveToDatabase(jsonMessage);
 
             model.Repeat();
 

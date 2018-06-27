@@ -1,0 +1,104 @@
+﻿{
+  "emoticons": [
+    {
+      "id": 1,
+      "code": "\\:-?\\)",
+      "emoticon_set": 0
+    },
+    {
+      "id": 2,
+      "code": "\\:-?\\(",
+      "emoticon_set": 0
+    },
+    {
+      "id": 3,
+      "code": "\\:-?D",
+      "emoticon_set": 0
+    },
+    {
+      "id": 4,
+      "code": "\\&gt\\;\\(",
+      "emoticon_set": 0
+    },
+    {
+      "id": 5,
+      "code": "\\:-?[z|Z|\\|]",
+      "emoticon_set": 0
+    },
+    {
+      "id": 6,
+      "code": "[oO](_|\\.)[oO]",
+      "emoticon_set": 0
+    },
+    {
+      "id": 7,
+      "code": "B-?\\)",
+      "emoticon_set": 0
+    },
+    {
+      "id": 8,
+      "code": "\\:-?(o|O)",
+      "emoticon_set": 0
+    },
+    {
+      "id": 9,
+      "code": "\\&lt\\;3",
+      "emoticon_set": 0
+    },
+    {
+      "id": 10,
+      "code": "\\:-?[\\\\/]",
+      "emoticon_set": 0
+    },
+    {
+      "id": 11,
+      "code": "\\;-?\\)",
+      "emoticon_set": 0
+    },
+    {
+      "id": 12,
+      "code": "\\:-?(p|P)",
+      "emoticon_set": 0
+    },
+    {
+      "id": 13,
+      "code": "\\;-?(p|P)",
+      "emoticon_set": 0
+    },
+    {
+      "id": 14,
+      "code": "R-?\\)",
+      "emoticon_set": 0
+    },
+    {
+      "id": 15,
+      "code": "JKanStyle",
+      "emoticon_set": 0
+    },
+    {
+      "id": 16,
+      "code": "OptimizePrime",
+      "emoticon_set": 0
+    },
+    {
+      "id": 17,
+      "code": "StoneLightning",
+      "emoticon_set": 0
+    },
+    {
+      "id": 18,
+      "code": "TheRinger",
+      "emoticon_set": 0
+    },
+    {
+      "id": 22,
+      "code": "RedCoat",
+      "emoticon_set": 0
+    },
+    {
+      "id": 25,
+      "code": "Kappa",
+      "emoticon_set": 0
+    }
+  ]
+}
