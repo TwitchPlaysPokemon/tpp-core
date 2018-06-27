@@ -104,7 +104,23 @@ namespace TPPCore.Service.Emotes
             await context.RespondStringAsync(JsonConvert.SerializeObject(info));
         }
 
-        public async Task FindEmotes(HttpContext context)
+        public async Task FindEmotesPost(HttpContext context)
+        {
+            string unparsed = await context.ReadStringAsync();
+            string text = JsonConvert.DeserializeObject<string>(unparsed);
+
+            text = Uri.UnescapeDataString(text);
+            string[] parts = text.Split(new[] { ' ' });
+            List<EmoteInfo> info = new List<EmoteInfo> { };
+            foreach (string part in parts)
+            {
+                info.AddRange(_emotesByCode.Values.Where(x => part == x.Code).ToList());
+            }
+
+            await context.RespondStringAsync(JsonConvert.SerializeObject(info));
+        }
+
+        public async Task FindEmotesGet(HttpContext context)
         {
             string text = (string)context.GetRouteValue("text");
 
@@ -115,7 +131,6 @@ namespace TPPCore.Service.Emotes
             {
                 info.AddRange(_emotesByCode.Values.Where(x => part == x.Code).ToList());
             }
-
             await context.RespondStringAsync(JsonConvert.SerializeObject(info));
         }
     }

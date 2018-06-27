@@ -139,7 +139,7 @@ namespace TPPCore.Service.Emotes.Test
 
             Assert.True(emoteinfo == null || emoteinfo.Where(x => x.Code == "kappa" || x.Code == "Kappa").Count() == 0);
 
-            escaped = Regex.Escape("<3");
+            escaped = Uri.EscapeDataString("<3");
 
             result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/findin/" + escaped);
 
@@ -148,6 +148,19 @@ namespace TPPCore.Service.Emotes.Test
             emoteinfo = JsonConvert.DeserializeObject<List<TwitchEmote>>(jsonstring);
 
             Assert.True(emoteinfo.Count() > 0);
+
+            escaped = "test :)";
+
+            string serialised = JsonConvert.SerializeObject(escaped);
+            result = await httpClient.PostAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/findin", new StringContent(serialised));
+
+            jsonstring = await result.Content.ReadAsStringAsync();
+
+            emoteinfo = JsonConvert.DeserializeObject<List<TwitchEmote>>(jsonstring);
+
+            Assert.True(emoteinfo.Count > 0);
+
+            Assert.Equal(1, emoteinfo[0].Id);
 
             await runner.TearDownAsync();
         }
