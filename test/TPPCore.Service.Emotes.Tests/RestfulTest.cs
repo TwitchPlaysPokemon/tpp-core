@@ -1,8 +1,10 @@
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TPPCore.Service.Common;
 using TPPCore.Service.Common.TestUtils;
@@ -117,7 +119,9 @@ namespace TPPCore.Service.Emotes.Test
 
             var httpClient = runner.Runner.Context.RestfulClient;
 
-            var result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/findin/Kappa");
+            string escaped = Uri.EscapeDataString("Hello there Kappa");
+
+            var result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/findin/" + escaped);
 
             string jsonstring = await result.Content.ReadAsStringAsync();
 
@@ -133,7 +137,17 @@ namespace TPPCore.Service.Emotes.Test
 
             emoteinfo = JsonConvert.DeserializeObject<List<TwitchEmote>>(jsonstring);
 
-            Assert.True(emoteinfo.Where(x => x.Code == "kappa" || x.Code == "Kappa").Count() == 0);
+            Assert.True(emoteinfo == null || emoteinfo.Where(x => x.Code == "kappa" || x.Code == "Kappa").Count() == 0);
+
+            escaped = Regex.Escape("<3");
+
+            result = await httpClient.GetAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/findin/" + escaped);
+
+            jsonstring = await result.Content.ReadAsStringAsync();
+
+            emoteinfo = JsonConvert.DeserializeObject<List<TwitchEmote>>(jsonstring);
+
+            Assert.True(emoteinfo.Count() > 0);
 
             await runner.TearDownAsync();
         }

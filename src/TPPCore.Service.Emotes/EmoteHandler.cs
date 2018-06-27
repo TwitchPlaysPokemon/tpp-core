@@ -1,10 +1,13 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using TPPCore.Service.Common;
@@ -37,6 +40,7 @@ namespace TPPCore.Service.Emotes
                     EmoteApiResponse deserialized = JsonConvert.DeserializeObject<EmoteApiResponse>(serialized);
                     foreach (EmoteApiResponse.Emote emote in deserialized.emoticons)
                     {
+                        emote.code = WebUtility.HtmlDecode(Regex.Unescape(emote.code));
                         TwitchEmote info = new TwitchEmote(emote.id, emote.code);
 
                         if (!_emotesByCode.Keys.Contains(emote.code))
@@ -65,6 +69,7 @@ namespace TPPCore.Service.Emotes
                     bool changed = false;
                     foreach (EmoteApiResponse.Emote emote in apiResponse.emoticons)
                     {
+                        emote.code = WebUtility.HtmlDecode(Regex.Unescape(emote.code));
                         TwitchEmote info = new TwitchEmote(emote.id, emote.code);
                         if (!_emotesByCode.Keys.Contains(emote.code))
                         {
@@ -115,7 +120,13 @@ namespace TPPCore.Service.Emotes
         {
             string text = (string)context.GetRouteValue("text");
 
-            List<EmoteInfo> info = _emotesByCode.Values.Where(x => x.Code.Contains(text)).ToList();
+            text = Uri.UnescapeDataString(text);
+            string[] parts = text.Split(new[] { ' ' });
+            List<EmoteInfo> info = new List<EmoteInfo> { };
+            foreach (string part in parts)
+            {
+                info.AddRange(_emotesByCode.Values.Where(x => part == x.Code).ToList());
+            }
 
             await context.RespondStringAsync(JsonConvert.SerializeObject(info));
         }
