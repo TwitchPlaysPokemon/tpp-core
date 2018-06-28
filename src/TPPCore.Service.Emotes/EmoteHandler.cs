@@ -1,10 +1,13 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using TPPCore.Service.Common;
@@ -14,11 +17,10 @@ namespace TPPCore.Service.Emotes
 {
     public class EmoteHandler
     {
-        private ServiceContext context;
-        private Dictionary<string, EmoteInfo> _emotesByCode = new Dictionary<string, EmoteInfo> { };
-        private Dictionary<int, EmoteInfo> _emotesById = new Dictionary<int, EmoteInfo> { };
-        private HttpClient httpClient;
-        private static readonly string URL = "https://api.twitch.tv/kraken/chat/emoticon_images";
+        private readonly ServiceContext context;
+        public Dictionary<string, EmoteInfo> _emotesByCode = new Dictionary<string, EmoteInfo> { };
+        public Dictionary<int, EmoteInfo> _emotesById = new Dictionary<int, EmoteInfo> { };
+        private readonly HttpClient httpClient = new HttpClient();
         private readonly string _fileLocation;
 
         public EmoteHandler(ServiceContext context, string fileLocation)
@@ -37,8 +39,12 @@ namespace TPPCore.Service.Emotes
                     EmoteApiResponse deserialized = JsonConvert.DeserializeObject<EmoteApiResponse>(serialized);
                     foreach (EmoteApiResponse.Emote emote in deserialized.emoticons)
                     {
-                        TwitchEmote info = new TwitchEmote(emote.id, emote.code);
+                        emote.code = WebUtility.HtmlDecode(Regex.Unescape(emote.code.Replace("-?", "")));
+                        List<Tuple<string, string>> tuples = TwitchEmoteInterface.ProblematicEmotes.Where(x => x.Item1 == emote.code).ToList();
+                        if (tuples.Count > 0)
+                            emote.code = tuples[0].Item2;
 
+                        TwitchEmote info = new TwitchEmote(emote.id, emote.code);
                         if (!_emotesByCode.Keys.Contains(emote.code))
                             _emotesByCode.Add(emote.code, info);
 
@@ -49,47 +55,34 @@ namespace TPPCore.Service.Emotes
             } catch
             {
             }
+            TwitchEmoteInterface emoteInterface = new TwitchEmoteInterface();
+            string JsonString = await emoteInterface.GetEmotes(context, httpClient, token);
+            EmoteApiResponse apiResponse = JsonConvert.DeserializeObject<EmoteApiResponse>(JsonString);
 
-            string clientId = context.ConfigReader.GetCheckedValue<string>("emote", "client_id");
-            httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.Add("accept", "application/vnd.twitchtv.v5+json");
-            httpClient.DefaultRequestHeaders.Add("client-id", clientId);
-            try
+            bool changed = false;
+            foreach (EmoteApiResponse.Emote emote in apiResponse.emoticons)
             {
-                HttpResponseMessage responseMessage = await httpClient.GetAsync(URL, token);
+                emote.code = WebUtility.HtmlDecode(Regex.Unescape(emote.code.Replace("-?", "")));
+                List<Tuple<string, string>> tuples = TwitchEmoteInterface.ProblematicEmotes.Where(x => x.Item1 == emote.code).ToList();
+                if (tuples.Count > 0)
+                    emote.code = tuples[0].Item2;
 
-                if (responseMessage.IsSuccessStatusCode)
+                TwitchEmote info = new TwitchEmote(emote.id, emote.code);
+                if (!_emotesByCode.Keys.Contains(emote.code))
                 {
-                    string JsonString = await responseMessage.Content.ReadAsStringAsync();
-                    EmoteApiResponse apiResponse = JsonConvert.DeserializeObject<EmoteApiResponse>(JsonString);
-                    bool changed = false;
-                    foreach (EmoteApiResponse.Emote emote in apiResponse.emoticons)
-                    {
-                        TwitchEmote info = new TwitchEmote(emote.id, emote.code);
-                        if (!_emotesByCode.Keys.Contains(emote.code))
-                        {
-                            _emotesByCode.Add(emote.code, info);
-                            changed = true;
-                        }
-
-                        if (!_emotesById.Keys.Contains(emote.id))
-                        {
-                            _emotesById.Add(emote.id, info);
-                            changed = true;
-                        }
-                    }
-
-                    if (changed)
-                        await File.WriteAllTextAsync(_fileLocation, JsonString);
+                    _emotesByCode.Add(emote.code, info);
+                    changed = true;
                 }
-                else
+
+                if (!_emotesById.Keys.Contains(emote.id))
                 {
-                    await GetEmotes(token);
+                    _emotesById.Add(emote.id, info);
+                    changed = true;
                 }
-            } catch
-            {
-                return;
             }
+
+            if (changed)
+                await File.WriteAllTextAsync(_fileLocation, JsonString);
         }
 
         public async Task GetEmoteFromId(HttpContext context)
@@ -111,12 +104,33 @@ namespace TPPCore.Service.Emotes
             await context.RespondStringAsync(JsonConvert.SerializeObject(info));
         }
 
-        public async Task FindEmotes(HttpContext context)
+        public async Task FindEmotesPost(HttpContext context)
+        {
+            string unparsed = await context.ReadStringAsync();
+            string text = JsonConvert.DeserializeObject<string>(unparsed);
+
+            text = Uri.UnescapeDataString(text);
+            string[] parts = text.Split(new[] { ' ' });
+            List<EmoteInfo> info = new List<EmoteInfo> { };
+            foreach (string part in parts)
+            {
+                info.AddRange(_emotesByCode.Values.Where(x => part == x.Code).ToList());
+            }
+
+            await context.RespondStringAsync(JsonConvert.SerializeObject(info));
+        }
+
+        public async Task FindEmotesGet(HttpContext context)
         {
             string text = (string)context.GetRouteValue("text");
 
-            List<EmoteInfo> info = _emotesByCode.Values.Where(x => x.Code.Contains(text)).ToList();
-
+            text = Uri.UnescapeDataString(text);
+            string[] parts = text.Split(new[] { ' ' });
+            List<EmoteInfo> info = new List<EmoteInfo> { };
+            foreach (string part in parts)
+            {
+                info.AddRange(_emotesByCode.Values.Where(x => part == x.Code).ToList());
+            }
             await context.RespondStringAsync(JsonConvert.SerializeObject(info));
         }
     }
