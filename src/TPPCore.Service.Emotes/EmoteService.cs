@@ -9,7 +9,7 @@ namespace TPPCore.Service.Emotes
     public class EmoteService : IServiceAsync
     {
         private ServiceContext context;
-        private EmoteHandler emoteHandler;
+        protected EmoteHandler emoteHandler;
         private CancellationTokenSource token = new CancellationTokenSource();
         string fileLocation;
 
