@@ -2,7 +2,7 @@
 
 namespace TPPCore.Service.Emotes
 {
-    public class TwitchEmote : EmoteInfo
+    internal class TwitchEmote : EmoteInfo
     {
         public TwitchEmote(int id, string code)
         {

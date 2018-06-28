@@ -7,7 +7,7 @@ using TPPCore.Service.Common;
 
 namespace TPPCore.Service.Emotes
 {
-    public class TwitchEmoteInterface
+    internal class TwitchEmoteInterface
     {
         private static readonly string URL = "https://api.twitch.tv/kraken/chat/emoticon_images";
 
