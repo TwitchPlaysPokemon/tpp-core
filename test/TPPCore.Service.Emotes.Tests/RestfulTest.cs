@@ -149,10 +149,7 @@ namespace TPPCore.Service.Emotes.Test
 
             Assert.True(emoteinfo.Count() > 0);
 
-            escaped = "test :)";
-
-            string serialised = JsonConvert.SerializeObject(escaped);
-            result = await httpClient.PostAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/findin", new StringContent(serialised));
+            result = await httpClient.PostAsync(runner.Runner.Context.RestfulServer.Context.GetUri().ToString() + "emote/findin", new StringContent("test :)"));
 
             jsonstring = await result.Content.ReadAsStringAsync();
 

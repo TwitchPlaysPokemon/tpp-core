@@ -52,7 +52,8 @@ namespace TPPCore.Service.Emotes
                             _emotesById.Add(emote.id, info);
                     }
                 }
-            } catch
+            }
+            catch
             {
             }
             TwitchEmoteInterface emoteInterface = new TwitchEmoteInterface();
@@ -104,12 +105,8 @@ namespace TPPCore.Service.Emotes
             await context.RespondStringAsync(JsonConvert.SerializeObject(info));
         }
 
-        public async Task FindEmotesPost(HttpContext context)
+        private List<EmoteInfo> FindEmotes(string text)
         {
-            string unparsed = await context.ReadStringAsync();
-            string text = JsonConvert.DeserializeObject<string>(unparsed);
-
-            text = Uri.UnescapeDataString(text);
             string[] parts = text.Split(new[] { ' ' });
             List<EmoteInfo> info = new List<EmoteInfo> { };
             foreach (string part in parts)
@@ -117,21 +114,18 @@ namespace TPPCore.Service.Emotes
                 info.AddRange(_emotesByCode.Values.Where(x => part == x.Code).ToList());
             }
 
-            await context.RespondStringAsync(JsonConvert.SerializeObject(info));
+            return info;
+
+        }
+
+        public async Task FindEmotesPost(HttpContext context)
+        {
+            await context.RespondStringAsync(JsonConvert.SerializeObject(FindEmotes(await context.ReadStringAsync())));
         }
 
         public async Task FindEmotesGet(HttpContext context)
         {
-            string text = (string)context.GetRouteValue("text");
-
-            text = Uri.UnescapeDataString(text);
-            string[] parts = text.Split(new[] { ' ' });
-            List<EmoteInfo> info = new List<EmoteInfo> { };
-            foreach (string part in parts)
-            {
-                info.AddRange(_emotesByCode.Values.Where(x => part == x.Code).ToList());
-            }
-            await context.RespondStringAsync(JsonConvert.SerializeObject(info));
+            await context.RespondStringAsync(JsonConvert.SerializeObject(FindEmotes(Uri.UnescapeDataString((string)context.GetRouteValue("text")))));
         }
     }
 }
