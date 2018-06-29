@@ -16,8 +16,8 @@ env:
 install:
   - dotnet restore
 script:
-  - psql -c "ALTER USER postgres WITH PASSWORD 'password';" -U postgres
-  - psql -c "create database postgres;" -U postgres
+  - sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'password';" -U postgres
+  - sudo -u postgres psql -c "create database postgres;" -U postgres
   - dotnet build
   - find test/ -maxdepth 4 -name "*Tests.csproj" -type f -print0 | xargs -0 -L1 dotnet test --no-build
 ...
