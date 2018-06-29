@@ -1,7 +1,15 @@
-﻿namespace TPPCore.Service.Example.Parrot
+﻿using TPPCore.Service.Common;
+
+namespace TPPCore.Service.Example.Parrot
 {
     public interface IParrotRepository
     {
+        /// <summary>
+        /// Set up the database.
+        /// </summary>
+        /// <param name="context"></param>
+        void Configure(ServiceContext context);
+
         /// <summary>
         /// Get the contents of the item with the specified ID.
         /// </summary>

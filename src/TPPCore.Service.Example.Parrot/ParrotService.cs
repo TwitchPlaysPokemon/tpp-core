@@ -46,6 +46,8 @@ namespace TPPCore.Service.Example.Parrot
             repository = new PostgresqlParrotRepository(provider);
             handler = new DatabaseHandler(repository);
 
+            repository.Configure(context);
+
             context.RestfulServer.UseRoute((RouteBuilder routeBuilder) =>
             {
                 routeBuilder

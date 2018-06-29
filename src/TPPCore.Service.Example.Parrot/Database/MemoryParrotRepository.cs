@@ -1,4 +1,5 @@
 ﻿using TPPCore.Database;
+using TPPCore.Service.Common;
 
 namespace TPPCore.Service.Example.Parrot
 {
@@ -8,6 +9,10 @@ namespace TPPCore.Service.Example.Parrot
         public MemoryParrotRepository(IDataProvider provider)
         {
             _provider = provider;
+        }
+
+        public void Configure(ServiceContext context)
+        {
         }
 
         /// <summary>

@@ -1,4 +1,6 @@
-﻿using TPPCore.Database;
+﻿using System.IO;
+using TPPCore.Database;
+using TPPCore.Service.Common;
 
 namespace TPPCore.Service.Example.Parrot
 {
@@ -8,6 +10,13 @@ namespace TPPCore.Service.Example.Parrot
         public PostgresqlParrotRepository(IDataProvider provider)
         {
             _provider = provider;
+        }
+
+        public void Configure(ServiceContext context)
+        {
+            string filepath = context.ConfigReader.GetCheckedValue<string>("database", "setup");
+            string commands = File.ReadAllText(filepath);
+            _provider.ExecuteCommand(commands);
         }
 
         /// <summary>
