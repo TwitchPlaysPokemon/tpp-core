@@ -1,4 +1,5 @@
 ﻿using Npgsql;
+using System.Threading.Tasks;
 
 namespace TPPCore.Database
 {
@@ -15,16 +16,16 @@ namespace TPPCore.Database
         /// Execute a non-returning command.
         /// </summary>
         /// <param name="command"></param>
-        public void ExecuteCommand(string command)
+        public async Task ExecuteCommand(string command)
         {
-            Connection.Open();
+            await Connection.OpenAsync();
 
             NpgsqlCommand npgsqlCommand = new NpgsqlCommand()
             {
                 Connection = Connection,
                 CommandText = command
             };
-            npgsqlCommand.ExecuteNonQuery();
+            await npgsqlCommand.ExecuteNonQueryAsync();
             Connection.Close();
         }
 
@@ -33,9 +34,9 @@ namespace TPPCore.Database
         /// </summary>
         /// <param name="command"></param>
         /// <returns></returns>
-        public string GetDataFromCommand(string command)
+        public async Task<string> GetDataFromCommand(string command)
         {
-            Connection.Open();
+            await Connection.OpenAsync();
 
             NpgsqlCommand npgsqlCommand = new NpgsqlCommand()
             {

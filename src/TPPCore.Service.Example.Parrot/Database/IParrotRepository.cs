@@ -1,4 +1,5 @@
-﻿using TPPCore.Service.Common;
+﻿using System.Threading.Tasks;
+using TPPCore.Service.Common;
 
 namespace TPPCore.Service.Example.Parrot
 {
@@ -8,43 +9,43 @@ namespace TPPCore.Service.Example.Parrot
         /// Set up the database.
         /// </summary>
         /// <param name="context"></param>
-        void Configure(ServiceContext context);
+        Task Configure(ServiceContext context);
 
         /// <summary>
         /// Get the contents of the item with the specified ID.
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        string GetContents(int id);
+        Task<string> GetContents(int id);
 
         /// <summary>
         /// Get the timestamp that the item was created.
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        string GetTimestamp(int id);
+        Task<string> GetTimestamp(int id);
 
         /// <summary>
         /// Get the highest ID that's currently in the database.
         /// </summary>
         /// <returns></returns>
-        int GetMaxId();
+        Task<int> GetMaxId();
 
         /// <summary>
         /// Remove all items.
         /// </summary>
-        void Remove();
+        Task Remove();
 
         /// <summary>
         /// Remove the item with the specified ID.
         /// </summary>
         /// <param name="id"></param>
-        void Remove(int id);
+        Task Remove(int id);
 
         /// <summary>
         /// Insert an item into the database.
         /// </summary>
         /// <param name="message"></param>
-        void Insert(string message);
+        Task Insert(string message);
     }
 }

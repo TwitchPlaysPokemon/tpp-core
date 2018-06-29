@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Threading.Tasks;
 using TPPCore.Database;
 using TPPCore.Service.Common;
 
@@ -12,11 +13,16 @@ namespace TPPCore.Service.Example.Parrot
             _provider = provider;
         }
 
-        public void Configure(ServiceContext context)
+        /// <summary>
+        /// Set up the database.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public async Task Configure(ServiceContext context)
         {
             string filepath = context.ConfigReader.GetCheckedValue<string>("database", "setup");
-            string commands = File.ReadAllText(filepath);
-            _provider.ExecuteCommand(commands);
+            string commands = await File.ReadAllTextAsync(filepath);
+            await _provider.ExecuteCommand(commands);
         }
 
         /// <summary>
@@ -24,9 +30,9 @@ namespace TPPCore.Service.Example.Parrot
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public string GetContents(int id)
+        public async Task<string> GetContents(int id)
         {
-            return _provider.GetDataFromCommand($"SELECT parrot_return_contents({id});");
+            return await _provider.GetDataFromCommand($"SELECT parrot_return_contents({id});");
         }
 
         /// <summary>
@@ -34,18 +40,18 @@ namespace TPPCore.Service.Example.Parrot
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public string GetTimestamp(int id)
+        public async Task<string> GetTimestamp(int id)
         {
-            return _provider.GetDataFromCommand($"SELECT parrot_return_timestamp({id});");
+            return await _provider.GetDataFromCommand($"SELECT parrot_return_timestamp({id});");
         }
 
         /// <summary>
         /// Get the highest ID that's currently in the database.
         /// </summary>
         /// <returns></returns>
-        public int GetMaxId()
+        public async Task<int> GetMaxId()
         {
-            string idstring =_provider.GetDataFromCommand("SELECT parrot_return_max_key();");
+            string idstring = await _provider.GetDataFromCommand("SELECT parrot_return_max_key();");
             int.TryParse(idstring, out int result);
             return result;
         }
@@ -53,27 +59,27 @@ namespace TPPCore.Service.Example.Parrot
         /// <summary>
         /// Remove all items.
         /// </summary>
-        public void Remove()
+        public async Task Remove()
         {
-            _provider.ExecuteCommand("SELECT parrot_delete();");
+            await _provider.ExecuteCommand("SELECT parrot_delete();");
         }
 
         /// <summary>
         /// Remove the item with the specified ID.
         /// </summary>
         /// <param name="id"></param>
-        public void Remove(int id)
+        public async Task Remove(int id)
         {
-            _provider.ExecuteCommand($"SELECT parrot_delete({id});");
+            await _provider.ExecuteCommand($"SELECT parrot_delete({id});");
         }
 
         /// <summary>
         /// Insert an item into the database.
         /// </summary>
         /// <param name="message"></param>
-        public void Insert(string message)
+        public async Task Insert(string message)
         {
-            _provider.ExecuteCommand($"SELECT parrot_insert('{message}');");
+            await _provider.ExecuteCommand($"SELECT parrot_insert('{message}');");
         }
     }
 }

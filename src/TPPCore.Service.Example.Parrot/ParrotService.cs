@@ -87,7 +87,7 @@ namespace TPPCore.Service.Example.Parrot
             {
                 await Task.Delay(broadcastInterval);
 
-                BroadcastMessage();
+                await BroadcastMessage();
             }
 
             logger.Info("Parrot shutting down");
@@ -95,14 +95,14 @@ namespace TPPCore.Service.Example.Parrot
             logger.Info("Goodbye!");
         }
 
-        private void BroadcastMessage()
+        private async Task BroadcastMessage()
         {
             var message = model.CurrentMessage;
             logger.DebugFormat("Broadcasting message {0}", message);
 
             var jsonMessage = JsonConvert.SerializeObject(message);
             context.PubSubClient.Publish(ParrotTopics.Broadcast, jsonMessage);
-            handler.SaveToDatabase(jsonMessage);
+            await handler.SaveToDatabase(jsonMessage);
 
             model.Repeat();
 
