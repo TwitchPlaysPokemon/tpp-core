@@ -14,25 +14,25 @@ namespace TPPCore.Service.Example.Parrot
             _parrotRepository = parrotRepository;
         }
 
-        public void SaveToDatabase(string serialized)
+        public async Task SaveToDatabase(string serialized)
         {
             string unserialized = JsonConvert.DeserializeObject<string>(serialized);
-            _parrotRepository.Insert(unserialized);
+            await _parrotRepository.Insert(unserialized);
         }
 
-        public string GetContents(int id)
+        public async Task<string> GetContents(int id)
         {
-            return _parrotRepository.GetContents(id);
+            return await _parrotRepository.GetContents(id);
         }
 
-        public int GetMaxId()
+        public async Task<int> GetMaxId()
         {
-            return _parrotRepository.GetMaxId();
+            return await _parrotRepository.GetMaxId();
         }
 
         public async Task GetMaxId(HttpContext httpContext)
         {
-            string jsondoc = JsonConvert.SerializeObject(_parrotRepository.GetMaxId());
+            string jsondoc = JsonConvert.SerializeObject(await _parrotRepository.GetMaxId());
 
             await httpContext.RespondStringAsync(jsondoc);
         }
@@ -40,25 +40,25 @@ namespace TPPCore.Service.Example.Parrot
         public async Task GetContents(HttpContext httpContext)
         {
             int.TryParse((string)httpContext.GetRouteValue("id"), out int result);
-            string contents = _parrotRepository.GetContents(result);
+            string contents = await _parrotRepository.GetContents(result);
             string jsondoc = JsonConvert.SerializeObject(contents);
 
             await httpContext.RespondStringAsync(jsondoc);
         }
 
-        public string GetTimestamp(int id)
+        public async Task<string> GetTimestamp(int id)
         {
-            return _parrotRepository.GetTimestamp(id);
+            return await _parrotRepository.GetTimestamp(id);
         }
 
-        public void ClearDatabase()
+        public async Task ClearDatabase()
         {
-            _parrotRepository.Remove();
+            await _parrotRepository.Remove();
         }
 
-        public void RemoveFromDatabase(int id)
+        public async Task RemoveFromDatabase(int id)
         {
-            _parrotRepository.Remove(id);
+            await _parrotRepository.Remove(id);
         }
     }
 }

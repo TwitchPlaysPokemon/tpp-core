@@ -1,4 +1,5 @@
 database:
+  setup: ../../../test_files/ParrotDatabaseSetup.sql
   database: postgres
   host: localhost
   appname: TPPCore

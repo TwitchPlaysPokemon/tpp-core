@@ -1,4 +1,6 @@
-﻿using TPPCore.Database;
+﻿using System.Threading.Tasks;
+using TPPCore.Database;
+using TPPCore.Service.Common;
 
 namespace TPPCore.Service.Example.Parrot
 {
@@ -9,15 +11,24 @@ namespace TPPCore.Service.Example.Parrot
         {
             _provider = provider;
         }
-
+#pragma warning disable 1998
+        /// <summary>
+        /// Set up the database.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public async Task Configure(ServiceContext context)
+        {
+        }
+#pragma warning restore 1998
         /// <summary>
         /// Get the contents of the item with the specified ID.
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public string GetContents(int id)
+        public async Task<string> GetContents(int id)
         {
-            return _provider.GetDataFromCommand($"contents {id}");
+            return await _provider.GetDataFromCommand($"contents {id}");
         }
 
         /// <summary>
@@ -25,18 +36,18 @@ namespace TPPCore.Service.Example.Parrot
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public string GetTimestamp(int id)
+        public async Task<string> GetTimestamp(int id)
         {
-            return _provider.GetDataFromCommand($"timestamp {id}");
+            return await _provider.GetDataFromCommand($"timestamp {id}");
         }
 
         /// <summary>
         /// Get the highest ID that's currently in the database.
         /// </summary>
         /// <returns></returns>
-        public int GetMaxId()
+        public async Task<int> GetMaxId()
         {
-            string key = _provider.GetDataFromCommand("maxkey");
+            string key = await _provider.GetDataFromCommand("maxkey");
             int.TryParse(key, out int result);
             return result;
         }
@@ -45,27 +56,27 @@ namespace TPPCore.Service.Example.Parrot
         /// <summary>
         /// Remove all items.
         /// </summary>
-        public void Remove()
+        public async Task Remove()
         {
-            _provider.ExecuteCommand("removeall");
+            await _provider.ExecuteCommand("removeall");
         }
 
         /// <summary>
         /// Remove the item with the specified ID.
         /// </summary>
         /// <param name="id"></param>
-        public void Remove(int id)
+        public async Task Remove(int id)
         {
-            _provider.ExecuteCommand($"remove {id}");
+            await _provider.ExecuteCommand($"remove {id}");
         }
 
         /// <summary>
         /// Insert an item into the database.
         /// </summary>
         /// <param name="message"></param>
-        public void Insert(string message)
+        public async Task Insert(string message)
         {
-            _provider.ExecuteCommand($"insert {message}");
+            await _provider.ExecuteCommand($"insert {message}");
         }
     }
 }

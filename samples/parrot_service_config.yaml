@@ -13,6 +13,7 @@ parrot:
   recentIntervalCount: 5
 
 database:
+  setup: ../../../Database/ParrotDatabaseSetup.sql
   database: postgres
   host: localhost
   appname: TPPCore

@@ -4,11 +4,10 @@
  * by ensuring that you have name the database what is in the config,
  * the host and port is correct, and the username and password is correct
  * the application name can be set to anything, but it helps identify the service
- * furthermore, the database must contain the table 'parrot', details are listed below
  */
  
 --creation of the "parrot" table
-CREATE TABLE parrot(
+CREATE TABLE IF NOT EXISTS parrot(
 ID SERIAL PRIMARY KEY,
 contents TEXT NOT NULL,
 timestamp TIMESTAMP WITHOUT TIME ZONE DEFAULT (now() at time zone 'utc')

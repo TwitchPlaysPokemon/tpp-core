@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace TPPCore.Database
 {
@@ -12,8 +13,8 @@ namespace TPPCore.Database
         public MemoryDataProvider(string Database, string Host, string ApplicationName, string Username, string Password, int Port)
         {
         }
-
-        public void ExecuteCommand(string command)
+#pragma warning disable 1998
+        public async Task ExecuteCommand(string command)
         {
             string action = command.Split(' ')[0];
             switch (action)
@@ -41,7 +42,7 @@ namespace TPPCore.Database
             }
         }
 
-        public string GetDataFromCommand(string command)
+        public async Task<string> GetDataFromCommand(string command)
         {
             string action = command.Split(' ')[0];
             switch (action)
@@ -72,5 +73,6 @@ namespace TPPCore.Database
                     return string.Empty;
             }
         }
+#pragma warning restore 1998
     }
 }
