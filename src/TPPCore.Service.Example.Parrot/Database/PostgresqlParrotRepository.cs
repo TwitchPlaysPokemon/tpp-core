@@ -30,19 +30,9 @@ namespace TPPCore.Service.Example.Parrot
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public async Task<string> GetContents(int id)
+        public async Task<string[]> GetRecord(int id)
         {
-            return await _provider.GetDataFromCommand($"SELECT parrot_return_contents({id});");
-        }
-
-        /// <summary>
-        /// Get the timestamp that the item was created.
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public async Task<string> GetTimestamp(int id)
-        {
-            return await _provider.GetDataFromCommand($"SELECT parrot_return_timestamp({id});");
+            return await _provider.GetDataFromCommand($"SELECT * FROM parrot_return_contents({id});");
         }
 
         /// <summary>
@@ -51,7 +41,7 @@ namespace TPPCore.Service.Example.Parrot
         /// <returns></returns>
         public async Task<int> GetMaxId()
         {
-            string idstring = await _provider.GetDataFromCommand("SELECT parrot_return_max_key();");
+            string idstring = (await _provider.GetDataFromCommand("SELECT parrot_return_max_key();"))[0];
             int.TryParse(idstring, out int result);
             return result;
         }
@@ -59,7 +49,7 @@ namespace TPPCore.Service.Example.Parrot
         /// <summary>
         /// Remove all items.
         /// </summary>
-        public async Task Remove()
+        public async Task Wipe()
         {
             await _provider.ExecuteCommand("SELECT parrot_delete();");
         }

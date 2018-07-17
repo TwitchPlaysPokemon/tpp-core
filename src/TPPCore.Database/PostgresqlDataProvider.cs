@@ -1,4 +1,5 @@
 ﻿using Npgsql;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace TPPCore.Database
@@ -18,7 +19,10 @@ namespace TPPCore.Database
         /// <param name="command"></param>
         public async Task ExecuteCommand(string command)
         {
-            await Connection.OpenAsync();
+            if (Connection.State == System.Data.ConnectionState.Closed)
+            {
+                await Connection.OpenAsync();
+            }
 
             NpgsqlCommand npgsqlCommand = new NpgsqlCommand()
             {
@@ -26,7 +30,11 @@ namespace TPPCore.Database
                 CommandText = command
             };
             await npgsqlCommand.ExecuteNonQueryAsync();
-            Connection.Close();
+
+            if (Connection.State == System.Data.ConnectionState.Open)
+            {
+                Connection.Close();
+            }
         }
 
         /// <summary>
@@ -34,9 +42,12 @@ namespace TPPCore.Database
         /// </summary>
         /// <param name="command"></param>
         /// <returns></returns>
-        public async Task<string> GetDataFromCommand(string command)
+        public async Task<string[]> GetDataFromCommand(string command)
         {
-            await Connection.OpenAsync();
+            if (Connection.State == System.Data.ConnectionState.Closed)
+            {
+                await Connection.OpenAsync();
+            }
 
             NpgsqlCommand npgsqlCommand = new NpgsqlCommand()
             {
@@ -44,13 +55,19 @@ namespace TPPCore.Database
                 CommandText = command
             };
             NpgsqlDataReader reader = npgsqlCommand.ExecuteReader();
-            string result = string.Empty;
-            while (reader.Read())
+            List<string> results = new List<string> { };
+            object[] values = new object[reader.FieldCount];
+            reader.Read();
+            reader.GetValues(values);
+            foreach (object item in values)
             {
-                result += reader.GetString(0);
+                results.Add(item.ToString());
             }
-            Connection.Close();
-            return result;
+            if (Connection.State == System.Data.ConnectionState.Open)
+            {
+                Connection.Close();
+            }
+            return results.ToArray();
         }
 
     }

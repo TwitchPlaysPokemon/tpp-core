@@ -1,5 +1,4 @@
-﻿using System;
-using TPPCore.Service.Common;
+﻿using TPPCore.Service.Common;
 
 namespace TPPCore.Service.Example.Parrot
 {

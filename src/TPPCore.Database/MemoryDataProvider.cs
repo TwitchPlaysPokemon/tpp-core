@@ -42,35 +42,25 @@ namespace TPPCore.Database
             }
         }
 
-        public async Task<string> GetDataFromCommand(string command)
+        public async Task<string[]> GetDataFromCommand(string command)
         {
             string action = command.Split(' ')[0];
             switch (action)
             {
-                case "contents":
+                case "record":
                     try
                     {
                         int.TryParse(command.Substring(8), out int result);
                         memory.TryGetValue(result, out Tuple<string, string> value);
-                        return value.Item1;
+                        return new string[] { result.ToString(), value.Item1, value.Item2 };
                     } catch
                     {
-                        return string.Empty;
-                    }
-                case "timestamp":
-                    try
-                    {
-                        int.TryParse(command.Substring(9), out int result);
-                        memory.TryGetValue(result, out Tuple<string, string> value);
-                        return value.Item2;
-                    } catch
-                    {
-                        return string.Empty;
+                        return new string[] { };
                     }
                 case "maxkey":
-                    return memory.Keys.Max().ToString();
+                    return new string[] { memory.Keys.Max().ToString() };
                 default:
-                    return string.Empty;
+                    return new string[] { };
             }
         }
 #pragma warning restore 1998

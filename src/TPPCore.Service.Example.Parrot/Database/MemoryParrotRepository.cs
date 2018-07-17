@@ -22,23 +22,13 @@ namespace TPPCore.Service.Example.Parrot
         }
 #pragma warning restore 1998
         /// <summary>
-        /// Get the contents of the item with the specified ID.
+        /// Get the record with the specified ID.
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public async Task<string> GetContents(int id)
+        public async Task<string[]> GetRecord(int id)
         {
-            return await _provider.GetDataFromCommand($"contents {id}");
-        }
-
-        /// <summary>
-        /// Get the timestamp that the item was created.
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public async Task<string> GetTimestamp(int id)
-        {
-            return await _provider.GetDataFromCommand($"timestamp {id}");
+            return await _provider.GetDataFromCommand($"record {id}");
         }
 
         /// <summary>
@@ -47,16 +37,23 @@ namespace TPPCore.Service.Example.Parrot
         /// <returns></returns>
         public async Task<int> GetMaxId()
         {
-            string key = await _provider.GetDataFromCommand("maxkey");
-            int.TryParse(key, out int result);
-            return result;
+            try
+            {
+                string key = (await _provider.GetDataFromCommand("maxkey"))[0];
+                int.TryParse(key, out int result);
+                return result;
+            }
+            catch
+            {
+                return 0;
+            }
         }
 
 
         /// <summary>
         /// Remove all items.
         /// </summary>
-        public async Task Remove()
+        public async Task Wipe()
         {
             await _provider.ExecuteCommand("removeall");
         }

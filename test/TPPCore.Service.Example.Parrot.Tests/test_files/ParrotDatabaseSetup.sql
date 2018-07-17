@@ -25,17 +25,9 @@ LANGUAGE plpgsql;
 
 --parrot_return_contents
 CREATE OR REPLACE FUNCTION parrot_return_contents(_id INT)
-RETURNS TEXT AS $$
+RETURNS SETOF parrot AS $$
 BEGIN
-RETURN (SELECT contents FROM parrot WHERE ID = _id);
-END; $$
-LANGUAGE plpgsql;
-
---parrot_return_timestamp
-CREATE OR REPLACE FUNCTION parrot_return_timestamp(_id INT)
-RETURNS TEXT AS $$
-BEGIN
-RETURN (SELECT cast(timestamp as TEXT) FROM parrot WHERE ID = _id);
+RETURN QUERY (SELECT * FROM parrot WHERE ID = _id);
 END; $$
 LANGUAGE plpgsql;
 

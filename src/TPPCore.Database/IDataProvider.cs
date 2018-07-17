@@ -15,6 +15,6 @@ namespace TPPCore.Database
         /// </summary>
         /// <param name="command"></param>
         /// <returns></returns>
-        Task<string> GetDataFromCommand(string command);
+        Task<string[]> GetDataFromCommand(string command);
     }
 }
