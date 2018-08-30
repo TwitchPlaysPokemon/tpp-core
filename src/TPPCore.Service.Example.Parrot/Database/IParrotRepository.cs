@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using TPPCore.ChatProviders.DataModels;
 using TPPCore.Service.Common;
 
 namespace TPPCore.Service.Example.Parrot
@@ -16,7 +17,7 @@ namespace TPPCore.Service.Example.Parrot
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        Task<string[]> GetRecord(int id);
+        Task<ParrotRecord> GetRecord(int id);
 
         /// <summary>
         /// Get the highest ID that's currently in the database.

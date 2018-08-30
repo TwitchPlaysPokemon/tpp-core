@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Newtonsoft.Json;
 using System.Threading.Tasks;
+using TPPCore.ChatProviders.DataModels;
 using TPPCore.Service.Common.AspNetUtils;
 
 namespace TPPCore.Service.Example.Parrot
@@ -42,18 +43,15 @@ namespace TPPCore.Service.Example.Parrot
 
         public async Task GetMaxId(HttpContext httpContext)
         {
-            string jsondoc = JsonConvert.SerializeObject(await handler.GetMaxId());
-
-            await httpContext.RespondStringAsync(jsondoc);
+            await httpContext.RespondJsonAsync(await handler.GetMaxId());
         }
 
-        public async Task GetContents(HttpContext httpContext)
+        public async Task GetRecord(HttpContext httpContext)
         {
             int.TryParse((string)httpContext.GetRouteValue("id"), out int result);
-            string contents = await handler.GetContents(result);
-            string jsondoc = JsonConvert.SerializeObject(contents);
+            ParrotRecord contents = await handler.GetRecord(result);
 
-            await httpContext.RespondStringAsync(jsondoc);
+            await httpContext.RespondJsonAsync(contents);
         }
 
         public async Task PostMessage(HttpContext context)

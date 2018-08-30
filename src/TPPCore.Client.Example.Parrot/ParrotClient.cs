@@ -2,6 +2,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using TPPCore.ChatProviders.DataModels;
 using TPPCore.Client.Common;
 
 namespace TPPCore.Client.Example.Parrot
@@ -32,10 +33,10 @@ namespace TPPCore.Client.Example.Parrot
             string serialized = JsonConvert.SerializeObject(message);
             await CommonClient.PostAsync(new Uri($"{Url}message/new"), serialized, HttpClient);
         }
-        public async Task<string> GetContents(int Id)
+        public async Task<ParrotRecord> GetRecord(int Id)
         {
-            string unparsed = await CommonClient.GetAsync(new Uri($"{Url}message/database/getcontents/{Id}"), HttpClient);
-            string parsed = JsonConvert.DeserializeObject<string>(unparsed);
+            string unparsed = await CommonClient.GetAsync(new Uri($"{Url}message/database/getrecord/{Id}"), HttpClient);
+            ParrotRecord parsed = JsonConvert.DeserializeObject<ParrotRecord>(unparsed);
             return parsed;
         }
         public async Task<int> GetMaxId()

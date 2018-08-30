@@ -7,14 +7,14 @@ namespace TPPCore.Database
 {
     public class MemoryDataProvider : IDataProvider
     {
-        private Dictionary<int, Tuple<string, string>> memory = new Dictionary<int, Tuple<string, string>> { };
+        private Dictionary<int, Tuple<string, DateTime>> memory = new Dictionary<int, Tuple<string, DateTime>> { };
         private int Counter = 1;
 
         public MemoryDataProvider(string Database, string Host, string ApplicationName, string Username, string Password, int Port)
         {
         }
 #pragma warning disable 1998
-        public async Task ExecuteCommand(string command)
+        public async Task ExecuteCommand(string command, IDbParameter[] parameters = null)
         {
             string action = command.Split(' ')[0];
             switch (action)
@@ -34,7 +34,7 @@ namespace TPPCore.Database
                     }
                 case "insert":
                     DateTime dateTime = DateTime.UtcNow;
-                    memory.Add(Counter, new Tuple<string, string>(command.Substring(6).Trim(), dateTime.ToString("o")));
+                    memory.Add(Counter, new Tuple<string, DateTime>(command.Substring(6).Trim(), dateTime));
                     Counter++;
                     break;
                 default:
@@ -42,7 +42,7 @@ namespace TPPCore.Database
             }
         }
 
-        public async Task<string[]> GetDataFromCommand(string command)
+        public async Task<object[]> GetDataFromCommand(string command, IDbParameter[] parameters = null)
         {
             string action = command.Split(' ')[0];
             switch (action)
@@ -51,16 +51,16 @@ namespace TPPCore.Database
                     try
                     {
                         int.TryParse(command.Substring(8), out int result);
-                        memory.TryGetValue(result, out Tuple<string, string> value);
-                        return new string[] { result.ToString(), value.Item1, value.Item2 };
+                        memory.TryGetValue(result, out Tuple<string, DateTime> value);
+                        return new object[] { result, value.Item1, value.Item2 };
                     } catch
                     {
-                        return new string[] { };
+                        return new object[] { };
                     }
                 case "maxkey":
-                    return new string[] { memory.Keys.Max().ToString() };
+                    return new object[] { memory.Keys.Max() };
                 default:
-                    return new string[] { };
+                    return new object[] { };
             }
         }
 #pragma warning restore 1998

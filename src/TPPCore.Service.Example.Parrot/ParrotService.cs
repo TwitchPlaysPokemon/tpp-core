@@ -54,7 +54,7 @@ namespace TPPCore.Service.Example.Parrot
                     .MapGet("message/recent", webHandler.GetRecent)
                     .MapGet("message/current", webHandler.GetCurrent)
                     .MapPost("message/new", webHandler.PostMessage)
-                    .MapGet("message/database/getcontents/{id}", webHandler.GetContents)
+                    .MapGet("message/database/getrecord/{id}", webHandler.GetRecord)
                     .MapGet("message/database/getmaxkey", webHandler.GetMaxId)
                     ;
             });

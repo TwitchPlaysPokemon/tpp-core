@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
+using TPPCore.ChatProviders.DataModels;
 using TPPCore.Database;
 using TPPCore.Service.Common;
 
@@ -26,9 +28,15 @@ namespace TPPCore.Service.Example.Parrot
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public async Task<string[]> GetRecord(int id)
+        public async Task<ParrotRecord> GetRecord(int id)
         {
-            return await _provider.GetDataFromCommand($"record {id}");
+            object[] data = await _provider.GetDataFromCommand($"record {id}", null);
+            return new ParrotRecord()
+            {
+                id = (int)data[0],
+                contents = (string)data[1],
+                timestamp = (DateTime)data[2]
+            };
         }
 
         /// <summary>
@@ -39,9 +47,8 @@ namespace TPPCore.Service.Example.Parrot
         {
             try
             {
-                string key = (await _provider.GetDataFromCommand("maxkey"))[0];
-                int.TryParse(key, out int result);
-                return result;
+                int key = (int)(await _provider.GetDataFromCommand("maxkey", null))[0];
+                return key;
             }
             catch
             {
@@ -55,7 +62,7 @@ namespace TPPCore.Service.Example.Parrot
         /// </summary>
         public async Task Wipe()
         {
-            await _provider.ExecuteCommand("removeall");
+            await _provider.ExecuteCommand("removeall", null);
         }
 
         /// <summary>
@@ -64,7 +71,7 @@ namespace TPPCore.Service.Example.Parrot
         /// <param name="id"></param>
         public async Task Remove(int id)
         {
-            await _provider.ExecuteCommand($"remove {id}");
+            await _provider.ExecuteCommand($"remove {id}", null);
         }
 
         /// <summary>
@@ -73,7 +80,7 @@ namespace TPPCore.Service.Example.Parrot
         /// <param name="message"></param>
         public async Task Insert(string message)
         {
-            await _provider.ExecuteCommand($"insert {message}");
+            await _provider.ExecuteCommand($"insert {message}", null);
         }
     }
 }

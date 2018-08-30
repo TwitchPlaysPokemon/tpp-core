@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using TPPCore.ChatProviders.DataModels;
 
 namespace TPPCore.Service.Example.Parrot
 {
@@ -15,19 +16,14 @@ namespace TPPCore.Service.Example.Parrot
             await _parrotRepository.Insert(data);
         }
 
-        public async Task<string> GetContents(int id)
+        public async Task<ParrotRecord> GetRecord(int id)
         {
-            return (await _parrotRepository.GetRecord(id))[1];
+            return await _parrotRepository.GetRecord(id);
         }
 
         public async Task<int> GetMaxId()
         {
             return await _parrotRepository.GetMaxId();
-        }
-
-        public async Task<string> GetTimestamp(int id)
-        {
-            return (await _parrotRepository.GetRecord(id))[2];
         }
 
         public async Task ClearDatabase()

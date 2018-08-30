@@ -8,13 +8,13 @@ namespace TPPCore.Database
         /// Execute a non-returning command.
         /// </summary>
         /// <param name="command"></param>
-        Task ExecuteCommand(string command);
+        Task ExecuteCommand(string command, IDbParameter[] parameters);
 
         /// <summary>
         /// Execute a command that returns a value.
         /// </summary>
         /// <param name="command"></param>
         /// <returns></returns>
-        Task<string[]> GetDataFromCommand(string command);
+        Task<object[]> GetDataFromCommand(string command, IDbParameter[] parameters);
     }
 }

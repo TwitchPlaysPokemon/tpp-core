@@ -1,5 +1,5 @@
 ﻿using Npgsql;
-using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace TPPCore.Database
@@ -17,18 +17,43 @@ namespace TPPCore.Database
         /// Execute a non-returning command.
         /// </summary>
         /// <param name="command"></param>
-        public async Task ExecuteCommand(string command)
+        public async Task ExecuteCommand(string command, IDbParameter[] parameters)
         {
             if (Connection.State == System.Data.ConnectionState.Closed)
             {
                 await Connection.OpenAsync();
             }
 
+            while (Connection.State != System.Data.ConnectionState.Open)
+                await Task.Delay(1);
+
             NpgsqlCommand npgsqlCommand = new NpgsqlCommand()
             {
                 Connection = Connection,
                 CommandText = command
             };
+
+            PostgresqlParameter[] postgresqlParameters = (PostgresqlParameter[])parameters;
+
+            foreach (PostgresqlParameter parameter in postgresqlParameters)
+            {
+                npgsqlCommand.Parameters.Add(parameter.parameterName, parameter.type);
+            }
+
+            while (Connection.State != System.Data.ConnectionState.Open)
+                await Task.Delay(1);
+
+            npgsqlCommand.Prepare();
+
+            foreach (PostgresqlParameter parameter in postgresqlParameters)
+            {
+                var param = npgsqlCommand.Parameters.Where(x => x.ParameterName == parameter.parameterName).First();
+                param.Value = parameter.value;
+            }
+
+            while (Connection.State != System.Data.ConnectionState.Open)
+                await Task.Delay(1);
+
             await npgsqlCommand.ExecuteNonQueryAsync();
 
             if (Connection.State == System.Data.ConnectionState.Open)
@@ -42,32 +67,52 @@ namespace TPPCore.Database
         /// </summary>
         /// <param name="command"></param>
         /// <returns></returns>
-        public async Task<string[]> GetDataFromCommand(string command)
+        public async Task<object[]> GetDataFromCommand(string command, IDbParameter[] parameters)
         {
             if (Connection.State == System.Data.ConnectionState.Closed)
             {
                 await Connection.OpenAsync();
             }
 
+            while (Connection.State != System.Data.ConnectionState.Open)
+                await Task.Delay(1);
+
             NpgsqlCommand npgsqlCommand = new NpgsqlCommand()
             {
                 Connection = Connection,
                 CommandText = command
             };
+
+            PostgresqlParameter[] postgresqlParameters = (PostgresqlParameter[])parameters;
+
+            foreach (PostgresqlParameter parameter in postgresqlParameters)
+            {
+                npgsqlCommand.Parameters.Add(parameter.parameterName, parameter.type);
+            }
+
+            while (Connection.State != System.Data.ConnectionState.Open)
+                await Task.Delay(1);
+
+            npgsqlCommand.Prepare();
+
+            foreach (PostgresqlParameter parameter in postgresqlParameters)
+            {
+                var param = npgsqlCommand.Parameters.Where(x => x.ParameterName == parameter.parameterName).First();
+                param.Value = parameter.value;
+            }
+
+
+            while (Connection.State != System.Data.ConnectionState.Open)
+                await Task.Delay(1);
             NpgsqlDataReader reader = npgsqlCommand.ExecuteReader();
-            List<string> results = new List<string> { };
             object[] values = new object[reader.FieldCount];
             reader.Read();
             reader.GetValues(values);
-            foreach (object item in values)
-            {
-                results.Add(item.ToString());
-            }
             if (Connection.State == System.Data.ConnectionState.Open)
             {
                 Connection.Close();
             }
-            return results.ToArray();
+            return values;
         }
 
     }
