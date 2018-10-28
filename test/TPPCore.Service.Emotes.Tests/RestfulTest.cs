@@ -2,9 +2,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TPPCore.Service.Common;
 using TPPCore.Service.Common.TestUtils;
@@ -165,6 +163,11 @@ namespace TPPCore.Service.Emotes.Test
         }
     }
 
-
+    public class EmoteInfo
+    {
+        public string Code;
+        public int Id;
+        public string[] ImageUrls;
+    }
 
 }

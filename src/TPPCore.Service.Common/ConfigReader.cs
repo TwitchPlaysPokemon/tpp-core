@@ -53,7 +53,7 @@ namespace TPPCore.Service.Common
         private Dictionary<string[],string> configData;
         private Dictionary<string[],YamlNode> configNodes;
         private YamlMappingVisitor visitor;
-        private Deserializer yamlDeserializer;
+        private IDeserializer yamlDeserializer;
 
         public int Count { get { return configData.Count; } }
         public string this[string[] key] { get { return configData[key]; } }

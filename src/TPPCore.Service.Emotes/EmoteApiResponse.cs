@@ -20,11 +20,6 @@ namespace TPPCore.Service.Emotes
             /// The regex of the emote.
             /// </summary>
             public string code;
-
-            /// <summary>
-            /// The set that the emoticon belongs in
-            /// </summary>
-            public int emoticon_set;
         }
     }
 }
