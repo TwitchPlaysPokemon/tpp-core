@@ -17,6 +17,7 @@ namespace TPPCore.Database
         /// Execute a non-returning command.
         /// </summary>
         /// <param name="command"></param>
+        /// <param name="parameters"></param>
         public async Task ExecuteCommand(string command, IDbParameter[] parameters)
         {
             if (Connection.State == System.Data.ConnectionState.Closed)
@@ -43,11 +44,11 @@ namespace TPPCore.Database
             while (Connection.State != System.Data.ConnectionState.Open)
                 await Task.Delay(1);
 
-            npgsqlCommand.Prepare();
+            await npgsqlCommand.PrepareAsync();
 
             foreach (PostgresqlParameter parameter in postgresqlParameters)
             {
-                var param = npgsqlCommand.Parameters.Where(x => x.ParameterName == parameter.parameterName).First();
+                var param = npgsqlCommand.Parameters.First(x => x.ParameterName == parameter.parameterName);
                 param.Value = parameter.value;
             }
 
@@ -93,11 +94,11 @@ namespace TPPCore.Database
             while (Connection.State != System.Data.ConnectionState.Open)
                 await Task.Delay(1);
 
-            npgsqlCommand.Prepare();
+            await npgsqlCommand.PrepareAsync();
 
             foreach (PostgresqlParameter parameter in postgresqlParameters)
             {
-                var param = npgsqlCommand.Parameters.Where(x => x.ParameterName == parameter.parameterName).First();
+                var param = npgsqlCommand.Parameters.First(x => x.ParameterName == parameter.parameterName);
                 param.Value = parameter.value;
             }
 

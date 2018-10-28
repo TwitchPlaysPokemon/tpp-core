@@ -46,6 +46,8 @@ namespace TPPCore.Service.Example.Parrot.Tests
             var httpClient = runner.Runner.Context.RestfulClient;
             ParrotClient client = new ParrotClient(runner.Runner.Context.RestfulServer.Context.GetUri().ToString(), httpClient);
 
+            await Task.Delay(1000);
+
             var result = await client.GetCurrent();
 
             Assert.Equal("hello world!", result);

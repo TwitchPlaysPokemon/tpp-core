@@ -5,6 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NPGSQL" Version="3.2.7" />
+    <PackageReference Include="NPGSQL" Version="4.0.3" />
   </ItemGroup>
 </Project>
