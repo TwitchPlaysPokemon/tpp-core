@@ -25,16 +25,13 @@ namespace TPPCore.Service.Common
     }
 
     /// <summary>
-    /// Reads configuration from YAML files and stores them as a mapping.
+    /// Reads configuration from JSON files and stores them in a list.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The class maps key/value pairs as string arrays to strings, but
+    /// The class stores jsons as string arrays, but
     /// typical usage is intended with <see cref="GetCheckedValue"> that
     /// automatically parses and converts values.
-    /// </para>
-    /// <para>
-    /// A string array is used for the key to allow nesting of mappings.
     /// </para>
     /// </remarks>
     public class ConfigReader : IList<string>
@@ -43,15 +40,8 @@ namespace TPPCore.Service.Common
             System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
-        /// YAML model that is read from the config.
+        /// JSON model that is read from the config.
         /// </summary>
-        /*public readonly List<YamlDocument> YamlDocuments;
-
-        private Dictionary<string[],string> configData;
-        private Dictionary<string[],YamlNode> configNodes;
-        private YamlMappingVisitor visitor;
-        private IDeserializer yamlDeserializer;
-        */
         public int Count => Jsons.Count;
         public string this[int index] { get => Jsons[index]; set => Jsons[index] = value; }
         public bool IsReadOnly => false; 
@@ -60,39 +50,15 @@ namespace TPPCore.Service.Common
 
         public ConfigReader()
         {
-            /*YamlDocuments = new List<YamlDocument>();
-            var comparer = new StringEnumerableEqualityComparer<string[]>();
-            configData = new Dictionary<string[], string>(comparer);
-            configNodes = new Dictionary<string[], YamlNode>(comparer);
-            visitor = new YamlMappingVisitor();
-            visitor.ProcessKeyValuePair = addToConfig;
-            yamlDeserializer = new DeserializerBuilder()
-                .WithNamingConvention(new CamelCaseNamingConvention())
-                .Build();*/
             Jsons = new List<string>();
         }
 
-        /*private void addToConfig(string[] key, YamlNode value)
-        {
-            configData.Add(key, value.ToString());
-            configNodes.Add(key, value);
-        }*/
-
         /// <summary>
-        /// Read configuration from a YAML file.
+        /// Read configuration from a JSON file.
         /// </summary>
         public void Load(string path)
         {
             logger.InfoFormat("Loading config file {0}", path);
-
-            /*var yamlStream = new YamlStream();
-
-            using (var stream = new StreamReader(path))
-            {
-                yamlStream.Load(stream);
-            }
-
-            processYamlStream(yamlStream);*/
 
             try
             {
@@ -113,18 +79,10 @@ namespace TPPCore.Service.Common
         }
 
         /// <summary>
-        /// Read configuration from a stream containg YAML markup.
+        /// Read configuration from a stream containg JSON markup.
         /// </summary>
         public void Load(Stream stream)
         {
-            /*var yamlStream = new YamlStream();
-
-            using (var streamReader = new StreamReader(stream))
-            {
-                yamlStream.Load(streamReader);
-            }
-
-            processYamlStream(yamlStream);*/
             try
             {
                 string content;
@@ -143,16 +101,10 @@ namespace TPPCore.Service.Common
         }
 
         /// <summary>
-        /// Read configuration from a YAML string.
+        /// Read configuration from a JSON string.
         /// </summary>
         public void LoadString(string content)
         {
-            /*var yamlStream = new YamlStream();
-
-            yamlStream.Load(new StringReader(content));
-
-            processYamlStream(yamlStream);*/
-
             try
             {
                 JsonConvert.DeserializeObject(content);
@@ -163,16 +115,6 @@ namespace TPPCore.Service.Common
                 throw new ConfigException("Failed to deserialize json.", exception);
             }
         }
-
-        /*void processYamlStream(YamlStream yamlStream)
-        {
-            foreach (var document in yamlStream)
-            {
-                YamlDocuments.Add(document);
-            }
-
-            yamlStream.Accept(visitor);
-        }*/
 
         public bool Contains(string item)
         {
