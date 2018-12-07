@@ -26,7 +26,7 @@ namespace TPPCore.Service.Emotes
 
         public async Task<string> GetEmotes(ServiceContext context, HttpClient httpClient, CancellationToken token)
         {
-            string clientId = context.ConfigReader.GetCheckedValue<string>("emote", "client_id");
+            string clientId = context.ConfigReader.GetCheckedValue<string, EmotesConfig>("emote", "client_id");
             httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Add("accept", "application/vnd.twitchtv.v5+json");
             httpClient.DefaultRequestHeaders.Add("client-id", clientId);

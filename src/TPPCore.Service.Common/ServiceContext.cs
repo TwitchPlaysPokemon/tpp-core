@@ -38,7 +38,7 @@ namespace TPPCore.Service.Common
             host = IPAddress.Loopback ?? host;
             RestfulServer = new RestfulServer(host, port);
 
-            var password = ConfigReader.GetCheckedValueOrDefault<string>(
+            var password = ConfigReader.GetCheckedValueOrDefault<string, ServiceRunnerConfig>(
                     new[] {"restful", "localAuthenticationPassword"}, null);
 
             if (password != null)

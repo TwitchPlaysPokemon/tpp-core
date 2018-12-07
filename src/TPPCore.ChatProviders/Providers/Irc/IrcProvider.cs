@@ -51,27 +51,21 @@ namespace TPPCore.ChatProviders.Providers.Irc
         {
             this.ClientName = clientName;
             this.context = providerContext;
+            ChatServiceConfig.ChatConfig.ClientConfig provider = context.Service.ConfigReader
+                .GetCheckedValue<List<ChatServiceConfig.ChatConfig.ClientConfig>, ChatServiceConfig>("chat", "clients")
+                .First(x => x.client == clientName);
 
             connectConfig = new ConnectConfig()
             {
-                Host = context.Service.ConfigReader.GetCheckedValue<string>(
-                    "chat", "clients", ClientName, "host"),
-                Port = context.Service.ConfigReader.GetCheckedValue<int>(
-                    "chat", "clients", ClientName, "port"),
-                Ssl = context.Service.ConfigReader.GetCheckedValue<bool>(
-                    "chat", "clients", ClientName, "ssl"),
-                Timeout = context.Service.ConfigReader.GetCheckedValue<int>(
-                    "chat", "clients", ClientName, "timeout"),
-                Nickname = context.Service.ConfigReader.GetCheckedValue<string>(
-                    "chat", "clients", ClientName, "nickname"),
-                Password = context.Service.ConfigReader.GetCheckedValueOrDefault<string>(
-                    new[] { "chat", "clients", ClientName, "password" }, null),
-                Channels = context.Service.ConfigReader.GetCheckedValue<string[]>(
-                    "chat", "clients", ClientName, "channels"),
-                MaxMessageBurst = context.Service.ConfigReader.GetCheckedValue<int>(
-                    "chat", "clients", ClientName, "rateLimit", "maxMessageBurst"),
-                CounterPeriod = context.Service.ConfigReader.GetCheckedValue<int>(
-                    "chat", "clients", ClientName, "rateLimit", "counterPeriod"),
+                Host = provider.host,
+                Port = provider.port,
+                Ssl = provider.ssl,
+                Timeout = provider.timeout,
+                Nickname = provider.nickname,
+                Password = provider.password,
+                Channels = provider.channels,
+                MaxMessageBurst = provider.rateLimit.maxMessageBurst,
+                CounterPeriod = provider.rateLimit.counterPeriod
             };
         }
 

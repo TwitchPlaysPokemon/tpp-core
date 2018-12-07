@@ -20,11 +20,11 @@ Once we've reached a certain level of development, we will provide more detailed
 
 You will need
 
-* [.NET Core SDK v2.0+](https://www.microsoft.com/net/download)
+* [.NET Core SDK v2.1+](https://www.microsoft.com/net/download)
 * An IDE supporting C# development such as [Visual Studio Code](https://code.visualstudio.com/Download?wt.mc_id=DotNet_Home) (free & open-source, cross-platform), [Visual Studio](https://www.visualstudio.com/) (free, Windows), or [JetBrains Rider](https://www.jetbrains.com/rider/) (paid, cross-platform).
 * [Git](https://git-scm.com/downloads) (and additional GUI tools if not using command line)
 * [Redis](https://redis.io/download) for pub/sub
-* TODO: list database once we use it
+* [PostgreSql v9.4+](https://www.postgresql.org/)
 
 Once you have those tools installed,
 
@@ -62,7 +62,7 @@ To interact with the Parrot service, a corresponding client is provided in `TPPC
 | TPPCore.Client.Example.Parrot | Client to interact with the Parrot service |
 | TPPCore.Irc | Async IRC library |
 | TPPCore.Service.Chat | Service for running Chat Providers and providing a unified interface for chatting |
-| TPPCore.Service.Chat | Service for logging Chat service events |
+| TPPCore.Service.ChatLogger | Service for logging Chat service events |
 | TPPCore.Service.Common | Framework for services |
 | TPPCore.Service.Example.Parrot | Example service |
 
@@ -80,7 +80,7 @@ Checking the command line options of the Parrot service:
 
 Running the parrot service with configuration files:
 
-    dotnet TPPCore.Service.Example.Parrot.dll --log-config log4net.config --config service_common_config.yaml parrot_service_config.yaml
+    dotnet TPPCore.Service.Example.Parrot.dll --log-config log4net.config --config service_common_config.json parrot_service_config.json
 
 Note that `--config` switch is not repeated for each configuration filename.
 

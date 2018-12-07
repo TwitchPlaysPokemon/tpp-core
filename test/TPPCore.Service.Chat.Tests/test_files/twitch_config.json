@@ -1,0 +1,24 @@
+{
+  "chat": {
+    "clients": [
+      {
+        "client": "twitch123",
+        "provider": "twitch",
+        "host": "localhost",
+        "port": 0,
+        "ssl": false,
+        "timeout": 5000,
+        "nickname": "exampleUser",
+        "password": "oauth:abcdef1234567890",
+        "client_id": "uo6dggojyb8d6soh92zknwmi5ej1q2",
+        "channels": [
+          "#channelTest"
+        ],
+        "ratelimit": {
+          "maxMessageBurst": 20,
+          "counterPeriod": 30000
+        }
+      }
+    ]
+  }
+}

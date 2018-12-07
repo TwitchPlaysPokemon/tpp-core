@@ -7,6 +7,7 @@ using TPPCore.Service.Common;
 using TPPCore.ChatProviders.Providers.Irc;
 using TPPCore.ChatProviders.Twitch;
 using TPPCore.ChatProviders;
+using TPPCore.ChatProviders.DataModels;
 
 namespace TPPCore.Service.Chat
 {
@@ -88,24 +89,22 @@ namespace TPPCore.Service.Chat
 
         private void createProviders()
         {
-            var clientNames = context.ConfigReader.GetCheckedValue<Dictionary<string,object>>(
+            var clientNames = context.ConfigReader.GetCheckedValue<List<ChatServiceConfig.ChatConfig.ClientConfig>, ChatServiceConfig>(
                 "chat", "clients");
 
-            foreach (var clientName in clientNames.Keys)
+            foreach (var clientName in clientNames)
             {
-                var providerName = context.ConfigReader.GetCheckedValue<string>(
-                    "chat", "clients", clientName, "provider");
-                var provider = newProvider(clientName, providerName);
+                var provider = newProvider(clientName.provider);
 
                 logger.InfoFormat("Configuring client {0} with provider {1}",
-                    clientName, provider.ProviderName);
-                provider.Configure(clientName, providerContext);
+                    clientName.client, provider.ProviderName);
+                provider.Configure(clientName.client, providerContext);
                 providers.Add(provider);
                 chatFacade.RegisterProvider(provider);
             }
         }
 
-        private IProvider newProvider(string clientName, string providerName)
+        private IProvider newProvider(string providerName)
         {
             switch (providerName)
             {

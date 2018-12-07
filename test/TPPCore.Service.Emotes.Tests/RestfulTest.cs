@@ -156,7 +156,7 @@ namespace TPPCore.Service.Emotes.Test
             var assembly = typeof(RestfulTest).Assembly;
 
             options.ConfigStream = assembly.GetManifestResourceStream(
-                "TPPCore.Service.Emotes.Tests.test_files.emote_config.yaml");
+                "TPPCore.Service.Emotes.Tests.test_files.emote_config.json");
             Assert.NotNull(options.ConfigStream);
 
             return options;

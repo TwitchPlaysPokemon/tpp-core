@@ -1,9 +1,0 @@
-## Config for TPPCore.Service.ChatLogger
-
-## See service_template_config.yaml for option details
-restful:
-  host: localhost
-  port: 5300
-## Log location
-log:
-  path: logs/

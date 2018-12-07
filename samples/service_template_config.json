@@ -1,0 +1,12 @@
+//Common options that may be unique to each microservice.
+//This file is a template that should be created for each service.
+{
+  "restful": {
+    //Address of web host for RESTful service to be bound.
+    "host": "localhost",
+    ## Port number of the web host for the RESTful service to be bound.
+    ## Use 0 to automatically use a free port. Typically, a fixed port
+    ## is assigned to each service and also included in a common file
+    ## in a service advertisement section.
+    "port": 0
+}

@@ -31,7 +31,7 @@ namespace TPPCore.Service.ChatLogger.Tests
             output.WriteLine(string.Join(", ", assembly.GetManifestResourceNames()));
 
             options.ConfigStream = assembly.GetManifestResourceStream(
-                "TPPCore.Service.ChatLogger.Tests.test_files.chat_log_test_config.yaml");
+                "TPPCore.Service.ChatLogger.Tests.test_files.chat_log_test_config.json");
             Assert.NotNull(options.ConfigStream);
 
             return options;

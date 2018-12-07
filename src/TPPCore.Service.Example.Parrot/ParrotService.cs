@@ -36,12 +36,12 @@ namespace TPPCore.Service.Example.Parrot
         {
             this.context = context;
 
-            string Database = context.ConfigReader.GetCheckedValue<string>("database", "database");
-            string Host = context.ConfigReader.GetCheckedValue<string>("database", "host");
-            string AppName = context.ConfigReader.GetCheckedValue<string>("database", "appname");
-            string Username = context.ConfigReader.GetCheckedValue<string>("database", "username");
-            string Password = context.ConfigReader.GetCheckedValue<string>("database", "password");
-            int Port = context.ConfigReader.GetCheckedValue<int>("database", "port");
+            string Database = context.ConfigReader.GetCheckedValue<string, ParrotConfig>("database", "database");
+            string Host = context.ConfigReader.GetCheckedValue<string, ParrotConfig>("database", "host");
+            string AppName = context.ConfigReader.GetCheckedValue<string, ParrotConfig>("database", "appname");
+            string Username = context.ConfigReader.GetCheckedValue<string, ParrotConfig>("database", "username");
+            string Password = context.ConfigReader.GetCheckedValue<string, ParrotConfig>("database", "password");
+            int Port = context.ConfigReader.GetCheckedValue<int, ParrotConfig>("database", "port");
             provider = new PostgresqlDataProvider(Database, Host, AppName, Username, Password, Port);
             repository = new PostgresqlParrotRepository(provider);
             handler = new DatabaseHandler(repository);
@@ -59,9 +59,9 @@ namespace TPPCore.Service.Example.Parrot
                     ;
             });
 
-            broadcastInterval = context.ConfigReader.GetCheckedValueOrDefault<int>(
+            broadcastInterval = context.ConfigReader.GetCheckedValueOrDefault<int, ParrotConfig>(
                 new[] {"parrot", "broadcastInterval"}, 1000);
-            recentIntervalCount =  context.ConfigReader.GetCheckedValueOrDefault<int>(
+            recentIntervalCount =  context.ConfigReader.GetCheckedValueOrDefault<int, ParrotConfig>(
                 new[] {"parrot", "recentIntervalCount"}, 5);
 
             context.PubSubClient.Subscribe(ParrotTopics.Broadcast,

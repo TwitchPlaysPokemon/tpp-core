@@ -31,7 +31,7 @@ namespace TPPCore.Service.Chat.Tests
             output.WriteLine(string.Join(", ", assembly.GetManifestResourceNames()));
 
             options.ConfigStream = assembly.GetManifestResourceStream(
-                "TPPCore.Service.Chat.Tests.test_files.dummy_config.yaml");
+                "TPPCore.Service.Chat.Tests.test_files.dummy_config.json");
             Assert.NotNull(options.ConfigStream);
 
             return options;

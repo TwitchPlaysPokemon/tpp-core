@@ -16,7 +16,7 @@ namespace TPPCore.Service.Emotes
         public void Initialize(ServiceContext context)
         {
             this.context = context;
-            string Cachelocation = context.ConfigReader.GetCheckedValue<string>("emote", "cache_location");
+            string Cachelocation = context.ConfigReader.GetCheckedValue<string, EmotesConfig>("emote", "cache_location");
             if (!Directory.Exists(Cachelocation))
                 Directory.CreateDirectory(Cachelocation);
             fileLocation = Cachelocation + "emotes.json";

@@ -20,7 +20,7 @@ namespace TPPCore.Service.Example.Parrot
         /// <returns></returns>
         public async Task Configure(ServiceContext context)
         {
-            string filepath = context.ConfigReader.GetCheckedValue<string>("database", "setup");
+            string filepath = context.ConfigReader.GetCheckedValue<string, ParrotConfig>("database", "setup");
             string commands = await File.ReadAllTextAsync(filepath);
             await _provider.ExecuteCommand(commands);
         }

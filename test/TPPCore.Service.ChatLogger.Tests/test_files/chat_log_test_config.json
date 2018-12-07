@@ -1,0 +1,10 @@
+{
+  "restful": {
+    "host": "localhost",
+    "port": 5300
+  },
+  //Log location
+  "log": {
+    "path": "logs/"
+  }
+}

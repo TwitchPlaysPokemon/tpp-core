@@ -8,28 +8,19 @@ namespace TPPCore.Service.Common
     /// <summary>
     /// Maps service names to URIs with configured host and port numbers.
     /// </summary>
-    public class ServiceAssignment : Dictionary<string,Uri>
+    public class ServiceAssignment : Dictionary<ServiceAssignmentConfig.ServiceAssignment.ServiceType, Uri>
     {
         private static readonly ILog logger = LogManager.GetLogger(
             System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         public void LoadFromConfig(ConfigReader config)
         {
-            var serviceNames = config.Keys
-                .Where(key =>
-                    key.Length == 3
-                    && key[0].Equals("serviceAssignment")
-                    && key[1].Equals("static")
-                    )
-                .Select(key => key[2]);
+            List<ServiceAssignmentConfig.ServiceAssignment.ServiceType> serviceNames =
+                config.GetCheckedValueOrDefault<List<ServiceAssignmentConfig.ServiceAssignment.ServiceType>, ServiceAssignmentConfig>(new[] {"serviceAssignment", "static"}, new List<ServiceAssignmentConfig.ServiceAssignment.ServiceType>());
 
             foreach (var name in serviceNames)
             {
-                var host = config.GetCheckedValue<string>(
-                    "serviceAssignment", "static", name, "host");
-                var port = config.GetCheckedValue<int>(
-                    "serviceAssignment", "static", name, "port");
-                var uri =  new Uri($"http://{host}:{port}");
+                var uri =  new Uri($"http://{name.host}:{name.port}");
 
                 logger.DebugFormat("Added service assignment {0} {1}", name, uri);
                 Add(name, uri);
