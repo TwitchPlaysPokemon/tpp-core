@@ -42,11 +42,12 @@ namespace TPPCore.Service.Emotes
 
         public async Task RunAsync()
         {
+            await emoteHandler.GetEmotes(token.Token, true);
             while (!token.IsCancellationRequested)
             {
                 try
                 {
-                    await emoteHandler.GetEmotes(token.Token);
+                    await emoteHandler.GetEmotes(token.Token, false);
                     await Task.Delay(1800000, token.Token);
                 } catch
                 {

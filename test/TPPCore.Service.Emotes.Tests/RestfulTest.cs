@@ -117,13 +117,32 @@ namespace TPPCore.Service.Emotes.Test
             Assert.Equal(1, emoteInfo[0].Id);
         }
 
+        [Fact]
+        public async Task EscapedEmotesTest()
+        {
+            var emoteInfo = await Get<EmoteInfo>(FromCode, ":\\");
+            Assert.NotNull(emoteInfo);
+            Assert.Equal(10, emoteInfo.Id);
+        }
+
+        [Fact]
+        public async Task MultipleCodesTest()
+        {
+            var emoteInfo1 = await Get<EmoteInfo>(FromCode, ":)");
+            Assert.NotNull(emoteInfo1);
+            Assert.Equal(1, emoteInfo1.Id);
+
+            var emoteInfo2 = await Get<EmoteInfo>(FromCode, ":-)");
+            Assert.NotNull(emoteInfo2);
+            Assert.Equal(1, emoteInfo2.Id);
+        }
     }
 
     public class TestEmoteService : EmoteService
     {
         public void WaitForEmotes()
         {
-            emoteHandler.GetEmotes(new System.Threading.CancellationToken()).Wait();
+            emoteHandler.GetEmotes(new System.Threading.CancellationToken(), true).Wait();
         }
     }
 

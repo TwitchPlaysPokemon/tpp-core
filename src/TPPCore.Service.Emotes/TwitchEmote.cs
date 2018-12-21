@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace TPPCore.Service.Emotes
+﻿namespace TPPCore.Service.Emotes
 {
     internal class TwitchEmote : EmoteInfo
     {
