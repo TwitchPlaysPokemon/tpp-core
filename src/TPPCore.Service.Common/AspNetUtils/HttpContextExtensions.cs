@@ -1,7 +1,7 @@
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 namespace TPPCore.Service.Common.AspNetUtils
 {
@@ -14,6 +14,14 @@ namespace TPPCore.Service.Common.AspNetUtils
         {
             context.Response.ContentType = "application/json";
             await context.Response.WriteAsync(doc);
+        }
+
+        /// <summary>
+        /// Serializes the object into a JSON string, then writes the string.
+        /// </summary>
+        public async static Task RespondJsonAsync(this HttpContext context, object doc)
+        {
+            await context.RespondStringAsync(JsonConvert.SerializeObject(doc));
         }
 
         /// <summary>

@@ -1,5 +1,7 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Threading.Tasks;
+using TPPCore.ChatProviders.DataModels;
 using TPPCore.Database;
 using TPPCore.Service.Common;
 
@@ -22,7 +24,7 @@ namespace TPPCore.Service.Example.Parrot
         {
             string filepath = context.ConfigReader.GetCheckedValue<string, ParrotConfig>("database", "setup");
             string commands = await File.ReadAllTextAsync(filepath);
-            await _provider.ExecuteCommand(commands);
+            await _provider.ExecuteCommand(commands, new PostgresqlParameter[] { });
         }
 
         /// <summary>
@@ -30,19 +32,21 @@ namespace TPPCore.Service.Example.Parrot
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public async Task<string> GetContents(int id)
+        public async Task<ParrotRecord> GetRecord(int id)
         {
-            return await _provider.GetDataFromCommand($"SELECT parrot_return_contents({id});");
-        }
-
-        /// <summary>
-        /// Get the timestamp that the item was created.
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public async Task<string> GetTimestamp(int id)
-        {
-            return await _provider.GetDataFromCommand($"SELECT parrot_return_timestamp({id});");
+            PostgresqlParameter[] parameters = new[] { new PostgresqlParameter()
+            {
+                parameterName = "id",
+                type = NpgsqlTypes.NpgsqlDbType.Integer,
+                value = id
+            }};
+            object[] data = await _provider.GetDataFromCommand($"SELECT * FROM parrot WHERE ID = @id;", parameters);
+            return new ParrotRecord()
+            {
+                id = (int)data[0],
+                contents = (string)data[1],
+                timestamp = (DateTime)data[2]
+            };
         }
 
         /// <summary>
@@ -51,17 +55,16 @@ namespace TPPCore.Service.Example.Parrot
         /// <returns></returns>
         public async Task<int> GetMaxId()
         {
-            string idstring = await _provider.GetDataFromCommand("SELECT parrot_return_max_key();");
-            int.TryParse(idstring, out int result);
-            return result;
+            int id = (int)(await _provider.GetDataFromCommand("SELECT CAST(ID as INT) FROM parrot ORDER BY ID DESC LIMIT 1;", new PostgresqlParameter[] { }))[0];
+            return id;
         }
 
         /// <summary>
         /// Remove all items.
         /// </summary>
-        public async Task Remove()
+        public async Task Wipe()
         {
-            await _provider.ExecuteCommand("SELECT parrot_delete();");
+            await _provider.ExecuteCommand("DELETE FROM parrot;", new PostgresqlParameter[] { });
         }
 
         /// <summary>
@@ -70,7 +73,13 @@ namespace TPPCore.Service.Example.Parrot
         /// <param name="id"></param>
         public async Task Remove(int id)
         {
-            await _provider.ExecuteCommand($"SELECT parrot_delete({id});");
+            PostgresqlParameter[] parameters = new[] { new PostgresqlParameter()
+            {
+                parameterName = "id",
+                type = NpgsqlTypes.NpgsqlDbType.Integer,
+                value = id
+            }};
+            await _provider.ExecuteCommand($"DELETE FROM parrot WHERE ID = @id;", parameters);
         }
 
         /// <summary>
@@ -79,7 +88,13 @@ namespace TPPCore.Service.Example.Parrot
         /// <param name="message"></param>
         public async Task Insert(string message)
         {
-            await _provider.ExecuteCommand($"SELECT parrot_insert('{message}');");
+            PostgresqlParameter[] parameters = new[] { new PostgresqlParameter()
+            {
+                parameterName = "message",
+                type = NpgsqlTypes.NpgsqlDbType.Text,
+                value = message
+            }};
+            await _provider.ExecuteCommand("INSERT INTO parrot(contents) VALUES(@message);", parameters);
         }
     }
 }

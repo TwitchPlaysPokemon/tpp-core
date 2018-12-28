@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System.IO;
 using System.Threading.Tasks;
-using TPPCore.Service.Common;
+using TPPCore.ChatProviders.DataModels;
 using TPPCore.Service.Common.AspNetUtils;
 
 namespace TPPCore.Service.Example.Parrot
@@ -14,10 +13,12 @@ namespace TPPCore.Service.Example.Parrot
     class ParrotWebHandler
     {
         private readonly Model model;
+        private readonly DatabaseHandler handler;
 
-        public ParrotWebHandler(Model model)
+        public ParrotWebHandler(Model model, DatabaseHandler handler)
         {
             this.model = model;
+            this.handler = handler;
         }
 
         public async Task GetRecent(HttpContext context)
@@ -27,11 +28,30 @@ namespace TPPCore.Service.Example.Parrot
             await context.RespondStringAsync(jsonDoc);
         }
 
+        public async Task SaveToDatabase(string serialized)
+        {
+            string unserialized = JsonConvert.DeserializeObject<string>(serialized);
+            await handler.SaveToDatabase(unserialized);
+        }
+
         public async Task GetCurrent(HttpContext context)
         {
             var jsonDoc = JsonConvert.SerializeObject(model.CurrentMessage);
 
             await context.RespondStringAsync(jsonDoc);
+        }
+
+        public async Task GetMaxId(HttpContext httpContext)
+        {
+            await httpContext.RespondJsonAsync(await handler.GetMaxId());
+        }
+
+        public async Task GetRecord(HttpContext httpContext)
+        {
+            int.TryParse((string)httpContext.GetRouteValue("id"), out int result);
+            ParrotRecord contents = await handler.GetRecord(result);
+
+            await httpContext.RespondJsonAsync(contents);
         }
 
         public async Task PostMessage(HttpContext context)

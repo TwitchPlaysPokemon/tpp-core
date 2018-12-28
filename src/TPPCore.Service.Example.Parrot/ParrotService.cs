@@ -29,7 +29,6 @@ namespace TPPCore.Service.Example.Parrot
         public ParrotService()
         {
             model = new Model();
-            webHandler = new ParrotWebHandler(model);
         }
 
         public void Initialize(ServiceContext context)
@@ -45,6 +44,7 @@ namespace TPPCore.Service.Example.Parrot
             provider = new PostgresqlDataProvider(Database, Host, AppName, Username, Password, Port);
             repository = new PostgresqlParrotRepository(provider);
             handler = new DatabaseHandler(repository);
+            webHandler = new ParrotWebHandler(model, handler);
 
             repository.Configure(context);
 
@@ -54,8 +54,8 @@ namespace TPPCore.Service.Example.Parrot
                     .MapGet("message/recent", webHandler.GetRecent)
                     .MapGet("message/current", webHandler.GetCurrent)
                     .MapPost("message/new", webHandler.PostMessage)
-                    .MapGet("message/database/getcontents/{id}", handler.GetContents)
-                    .MapGet("message/database/getmaxkey", handler.GetMaxId)
+                    .MapGet("message/database/getrecord/{id}", webHandler.GetRecord)
+                    .MapGet("message/database/getmaxkey", webHandler.GetMaxId)
                     ;
             });
 
@@ -102,7 +102,7 @@ namespace TPPCore.Service.Example.Parrot
 
             var jsonMessage = JsonConvert.SerializeObject(message);
             context.PubSubClient.Publish(ParrotTopics.Broadcast, jsonMessage);
-            await handler.SaveToDatabase(jsonMessage);
+            await webHandler.SaveToDatabase(jsonMessage);
 
             model.Repeat();
 

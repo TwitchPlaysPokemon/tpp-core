@@ -1,8 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
-using Newtonsoft.Json;
-using System.Threading.Tasks;
-using TPPCore.Service.Common.AspNetUtils;
+﻿using System.Threading.Tasks;
+using TPPCore.ChatProviders.DataModels;
 
 namespace TPPCore.Service.Example.Parrot
 {
@@ -14,15 +11,14 @@ namespace TPPCore.Service.Example.Parrot
             _parrotRepository = parrotRepository;
         }
 
-        public async Task SaveToDatabase(string serialized)
+        public async Task SaveToDatabase(string data)
         {
-            string unserialized = JsonConvert.DeserializeObject<string>(serialized);
-            await _parrotRepository.Insert(unserialized);
+            await _parrotRepository.Insert(data);
         }
 
-        public async Task<string> GetContents(int id)
+        public async Task<ParrotRecord> GetRecord(int id)
         {
-            return await _parrotRepository.GetContents(id);
+            return await _parrotRepository.GetRecord(id);
         }
 
         public async Task<int> GetMaxId()
@@ -30,30 +26,9 @@ namespace TPPCore.Service.Example.Parrot
             return await _parrotRepository.GetMaxId();
         }
 
-        public async Task GetMaxId(HttpContext httpContext)
-        {
-            string jsondoc = JsonConvert.SerializeObject(await _parrotRepository.GetMaxId());
-
-            await httpContext.RespondStringAsync(jsondoc);
-        }
-
-        public async Task GetContents(HttpContext httpContext)
-        {
-            int.TryParse((string)httpContext.GetRouteValue("id"), out int result);
-            string contents = await _parrotRepository.GetContents(result);
-            string jsondoc = JsonConvert.SerializeObject(contents);
-
-            await httpContext.RespondStringAsync(jsondoc);
-        }
-
-        public async Task<string> GetTimestamp(int id)
-        {
-            return await _parrotRepository.GetTimestamp(id);
-        }
-
         public async Task ClearDatabase()
         {
-            await _parrotRepository.Remove();
+            await _parrotRepository.Wipe();
         }
 
         public async Task RemoveFromDatabase(int id)

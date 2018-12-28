@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using TPPCore.ChatProviders.DataModels;
 using TPPCore.Client.Example.Parrot;
 using TPPCore.Service.Common;
 using TPPCore.Service.Common.TestUtils;
@@ -44,6 +45,9 @@ namespace TPPCore.Service.Example.Parrot.Tests
 
             var httpClient = runner.Runner.Context.RestfulClient;
             ParrotClient client = new ParrotClient(runner.Runner.Context.RestfulServer.Context.GetUri().ToString(), httpClient);
+
+            await Task.Delay(1000);
+
             var result = await client.GetCurrent();
 
             Assert.Equal("hello world!", result);
@@ -68,9 +72,11 @@ namespace TPPCore.Service.Example.Parrot.Tests
 
             await Task.Delay(500);
 
-            string contents = await client.GetContents(Id);
+            output.WriteLine(Id.ToString());
 
-            Assert.Equal("wow", contents);
+            ParrotRecord record = await client.GetRecord(Id);
+
+            Assert.Equal("wow", record.contents);
 
             await runner.TearDownAsync();
         }

@@ -1,4 +1,5 @@
 ﻿using Npgsql;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace TPPCore.Database
@@ -16,17 +17,50 @@ namespace TPPCore.Database
         /// Execute a non-returning command.
         /// </summary>
         /// <param name="command"></param>
-        public async Task ExecuteCommand(string command)
+        /// <param name="parameters"></param>
+        public async Task ExecuteCommand(string command, IDbParameter[] parameters)
         {
-            await Connection.OpenAsync();
+            if (Connection.State == System.Data.ConnectionState.Closed)
+            {
+                await Connection.OpenAsync();
+            }
+
+            while (Connection.State != System.Data.ConnectionState.Open)
+                await Task.Delay(1);
 
             NpgsqlCommand npgsqlCommand = new NpgsqlCommand()
             {
                 Connection = Connection,
                 CommandText = command
             };
+
+            PostgresqlParameter[] postgresqlParameters = (PostgresqlParameter[])parameters;
+
+            foreach (PostgresqlParameter parameter in postgresqlParameters)
+            {
+                npgsqlCommand.Parameters.Add(parameter.parameterName, parameter.type);
+            }
+
+            while (Connection.State != System.Data.ConnectionState.Open)
+                await Task.Delay(1);
+
+            await npgsqlCommand.PrepareAsync();
+
+            foreach (PostgresqlParameter parameter in postgresqlParameters)
+            {
+                var param = npgsqlCommand.Parameters.First(x => x.ParameterName == parameter.parameterName);
+                param.Value = parameter.value;
+            }
+
+            while (Connection.State != System.Data.ConnectionState.Open)
+                await Task.Delay(1);
+
             await npgsqlCommand.ExecuteNonQueryAsync();
-            Connection.Close();
+
+            if (Connection.State == System.Data.ConnectionState.Open)
+            {
+                Connection.Close();
+            }
         }
 
         /// <summary>
@@ -34,23 +68,52 @@ namespace TPPCore.Database
         /// </summary>
         /// <param name="command"></param>
         /// <returns></returns>
-        public async Task<string> GetDataFromCommand(string command)
+        public async Task<object[]> GetDataFromCommand(string command, IDbParameter[] parameters)
         {
-            await Connection.OpenAsync();
+            if (Connection.State == System.Data.ConnectionState.Closed)
+            {
+                await Connection.OpenAsync();
+            }
+
+            while (Connection.State != System.Data.ConnectionState.Open)
+                await Task.Delay(1);
 
             NpgsqlCommand npgsqlCommand = new NpgsqlCommand()
             {
                 Connection = Connection,
                 CommandText = command
             };
-            NpgsqlDataReader reader = npgsqlCommand.ExecuteReader();
-            string result = string.Empty;
-            while (reader.Read())
+
+            PostgresqlParameter[] postgresqlParameters = (PostgresqlParameter[])parameters;
+
+            foreach (PostgresqlParameter parameter in postgresqlParameters)
             {
-                result += reader.GetString(0);
+                npgsqlCommand.Parameters.Add(parameter.parameterName, parameter.type);
             }
-            Connection.Close();
-            return result;
+
+            while (Connection.State != System.Data.ConnectionState.Open)
+                await Task.Delay(1);
+
+            await npgsqlCommand.PrepareAsync();
+
+            foreach (PostgresqlParameter parameter in postgresqlParameters)
+            {
+                var param = npgsqlCommand.Parameters.First(x => x.ParameterName == parameter.parameterName);
+                param.Value = parameter.value;
+            }
+
+
+            while (Connection.State != System.Data.ConnectionState.Open)
+                await Task.Delay(1);
+            NpgsqlDataReader reader = npgsqlCommand.ExecuteReader();
+            object[] values = new object[reader.FieldCount];
+            reader.Read();
+            reader.GetValues(values);
+            if (Connection.State == System.Data.ConnectionState.Open)
+            {
+                Connection.Close();
+            }
+            return values;
         }
 
     }

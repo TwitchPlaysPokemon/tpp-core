@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using TPPCore.ChatProviders.DataModels;
 using TPPCore.Service.Common;
 
 namespace TPPCore.Service.Example.Parrot
@@ -12,18 +13,11 @@ namespace TPPCore.Service.Example.Parrot
         Task Configure(ServiceContext context);
 
         /// <summary>
-        /// Get the contents of the item with the specified ID.
+        /// Get the record with the corresponding id.
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        Task<string> GetContents(int id);
-
-        /// <summary>
-        /// Get the timestamp that the item was created.
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        Task<string> GetTimestamp(int id);
+        Task<ParrotRecord> GetRecord(int id);
 
         /// <summary>
         /// Get the highest ID that's currently in the database.
@@ -34,7 +28,7 @@ namespace TPPCore.Service.Example.Parrot
         /// <summary>
         /// Remove all items.
         /// </summary>
-        Task Remove();
+        Task Wipe();
 
         /// <summary>
         /// Remove the item with the specified ID.
