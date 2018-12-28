@@ -14,7 +14,7 @@ namespace TPPCore.Service.ChatLogger
 
         public static void Configure(ServiceContext context)
         {
-            LogLocation = context.ConfigReader.GetCheckedValue<string>("log", "path");
+            LogLocation = context.ConfigReader.GetCheckedValue<string, ChatLoggerConfig>("log", "path");
             if (LogLocation == null)
                 LogLocation = "logs/";
         }

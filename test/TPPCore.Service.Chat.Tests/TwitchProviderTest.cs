@@ -33,7 +33,7 @@ namespace TPPCore.Service.Chat.Tests
             output.WriteLine(string.Join(", ", assembly.GetManifestResourceNames()));
 
             options.ConfigStream = assembly.GetManifestResourceStream(
-                "TPPCore.Service.Chat.Tests.test_files.twitch_config.yaml");
+                "TPPCore.Service.Chat.Tests.test_files.twitch_config.json");
             Assert.NotNull(options.ConfigStream);
 
             return options;
@@ -55,7 +55,7 @@ namespace TPPCore.Service.Chat.Tests
                         break;
                     }
 
-                    line = line.Replace("port: 0", "port: " + port);
+                    line = line.Replace("\"port\": 0", "\"port\": " + port);
                     writer.WriteLine(line);
                 }
             }

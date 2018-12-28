@@ -1,8 +1,0 @@
-database:
-  setup: ../../../test_files/ParrotDatabaseSetup.sql
-  database: postgres
-  host: localhost
-  appname: TPPCore
-  username: postgres
-  password: password
-  port: 5432

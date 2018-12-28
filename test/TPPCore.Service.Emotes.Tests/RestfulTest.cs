@@ -2,9 +2,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TPPCore.Service.Common;
 using TPPCore.Service.Common.TestUtils;
@@ -119,13 +117,32 @@ namespace TPPCore.Service.Emotes.Test
             Assert.Equal(1, emoteInfo[0].Id);
         }
 
+        [Fact]
+        public async Task EscapedEmotesTest()
+        {
+            var emoteInfo = await Get<EmoteInfo>(FromCode, ":\\");
+            Assert.NotNull(emoteInfo);
+            Assert.Equal(10, emoteInfo.Id);
+        }
+
+        [Fact]
+        public async Task MultipleCodesTest()
+        {
+            var emoteInfo1 = await Get<EmoteInfo>(FromCode, ":)");
+            Assert.NotNull(emoteInfo1);
+            Assert.Equal(1, emoteInfo1.Id);
+
+            var emoteInfo2 = await Get<EmoteInfo>(FromCode, ":-)");
+            Assert.NotNull(emoteInfo2);
+            Assert.Equal(1, emoteInfo2.Id);
+        }
     }
 
     public class TestEmoteService : EmoteService
     {
         public void WaitForEmotes()
         {
-            emoteHandler.GetEmotes(new System.Threading.CancellationToken()).Wait();
+            emoteHandler.GetEmotes(new System.Threading.CancellationToken(), true).Wait();
         }
     }
 
@@ -158,13 +175,18 @@ namespace TPPCore.Service.Emotes.Test
             var assembly = typeof(RestfulTest).Assembly;
 
             options.ConfigStream = assembly.GetManifestResourceStream(
-                "TPPCore.Service.Emotes.Tests.test_files.emote_config.yaml");
+                "TPPCore.Service.Emotes.Tests.test_files.emote_config.json");
             Assert.NotNull(options.ConfigStream);
 
             return options;
         }
     }
 
-
+    public class EmoteInfo
+    {
+        public string Code;
+        public int Id;
+        public string[] ImageUrls;
+    }
 
 }

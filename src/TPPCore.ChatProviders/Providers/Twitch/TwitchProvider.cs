@@ -46,8 +46,10 @@ namespace TPPCore.ChatProviders.Twitch
 
         public async Task<string> GetUserId()
         {
-            string clientID = context.Service.ConfigReader.GetCheckedValue<string>(
-                    "chat", "clients", ClientName, "client_id");
+            ChatServiceConfig.ChatConfig.ClientConfig provider = context.Service.ConfigReader
+                .GetCheckedValue<List<ChatServiceConfig.ChatConfig.ClientConfig>, ChatServiceConfig>()
+                .First(x => x.provider == ClientName);
+            string clientID = provider.client_id;
             string url = NewApiUrl + "/users?login=" + GetUsername();
             httpClient.DefaultRequestHeaders.Add("client-id", clientID);
 

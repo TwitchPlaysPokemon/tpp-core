@@ -1,0 +1,10 @@
+{
+  "chat": {
+    "clients": [
+      {
+        "client": "dummyTest",
+        "provider": "dummy"
+      }
+    ]
+  }
+}

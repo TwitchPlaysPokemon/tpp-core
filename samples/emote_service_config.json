@@ -1,0 +1,10 @@
+{
+  "restful": {
+    "host": "localhost",
+    "port": 5500
+  },
+  "emote": {
+    "cache_location": "cache/",
+    "client_id": "ij482313pghtny5g1zyw9rkxkqqi9h"
+  }
+}

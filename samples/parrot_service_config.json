@@ -1,0 +1,24 @@
+//Config for TPPCore.Service.Example.Parrot
+
+//See service_template_config.yaml for option details
+{
+  "restful": {
+    "host": "localhost",
+    "port": 5100,
+  },
+  "parrot": {
+    //Interval in microseconds between each broadcast
+    "broadcastInterval": 1000,
+    //Interval in broadcast count to broadcast recent messages
+    "recentIntervalCount": 5
+  },
+  "database": {
+    "setup": "../../../Database/ParrotDatabaseSetup.sql",
+    "database": "postgres",
+    "host": "localhost",
+    "appname": "TPPCore",
+    "username": "postgres",
+    "password": "password",
+    "port": 5432
+  }
+}

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace TPPCore.Service.Emotes
+﻿namespace TPPCore.Service.Emotes
 {
     public class EmoteInfo
     {
@@ -15,6 +13,6 @@ namespace TPPCore.Service.Emotes
         /// <summary>
         /// The URLs of the emote
         /// </summary>
-        public List<string> ImageUrls { get; set; }
+        public virtual string[] ImageUrls { get; set; }
     }
 }

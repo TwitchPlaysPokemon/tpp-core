@@ -8,7 +8,6 @@ using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
-using YamlDotNet.RepresentationModel;
 
 namespace TPPCore.Service.Common
 {
@@ -304,14 +303,14 @@ namespace TPPCore.Service.Common
 
         private void setUpPubSubClient()
         {
-            var pubsubImpl = configReader.GetCheckedValueOrDefault<string>(
+            var pubsubImpl = configReader.GetCheckedValueOrDefault<string, ServiceRunnerConfig>(
                 new[] {"service", "pubSub"}, "dummy");
 
             if (pubsubImpl == "redis")
             {
-                var host = configReader.GetCheckedValue<string>("redis", "host");
-                var port = configReader.GetCheckedValue<int>("redis", "port");
-                var extra = configReader.GetCheckedValueOrDefault<string>(new[] {"redis", "extra"}, "");
+                var host = configReader.GetCheckedValue<string, ServiceRunnerConfig>("redis", "host");
+                var port = configReader.GetCheckedValue<int, ServiceRunnerConfig>("redis", "port");
+                var extra = configReader.GetCheckedValueOrDefault<string, ServiceRunnerConfig>(new[] {"redis", "extra"}, "");
                 var redisClient = new RedisPubSubClient(host, port, extra);
 
                 logger.InfoFormat("Using pub/sub Redis address at {0}:{1}", host, port);
@@ -326,9 +325,9 @@ namespace TPPCore.Service.Common
 
         private void setUpRestfulServer()
         {
-            var host = configReader.GetCheckedValueOrDefault<string>(
+            var host = configReader.GetCheckedValueOrDefault<string, ServiceRunnerConfig>(
                 new[] {"restful", "host"}, "localhost");
-            var port = configReader.GetCheckedValueOrDefault<int>(
+            var port = configReader.GetCheckedValueOrDefault<int, ServiceRunnerConfig>(
                 new[] {"restful", "port"}, 0);
 
             IPAddress ipAddress;

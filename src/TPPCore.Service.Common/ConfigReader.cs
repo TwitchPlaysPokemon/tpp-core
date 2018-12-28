@@ -1,13 +1,10 @@
 using log4net;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using TPPCore.Service.Common.YamlUtils;
-using TPPCore.Utils.Collections;
-using YamlDotNet.RepresentationModel;
-using YamlDotNet.Serialization;
-using YamlDotNet.Core;
-using YamlDotNet.Serialization.NamingConventions;
+using System.Reflection;
+using Newtonsoft.Json;
 
 namespace TPPCore.Service.Common
 {
@@ -28,129 +25,145 @@ namespace TPPCore.Service.Common
     }
 
     /// <summary>
-    /// Reads configuration from YAML files and stores them as a mapping.
+    /// Reads configuration from JSON files and stores them in a list.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The class maps key/value pairs as string arrays to strings, but
+    /// The class stores jsons as string arrays, but
     /// typical usage is intended with <see cref="GetCheckedValue"> that
     /// automatically parses and converts values.
     /// </para>
-    /// <para>
-    /// A string array is used for the key to allow nesting of mappings.
-    /// </para>
     /// </remarks>
-    public class ConfigReader : IReadOnlyDictionary<string[],string>
+    public class ConfigReader : IList<string>
     {
         private static readonly ILog logger = LogManager.GetLogger(
             System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
-        /// YAML model that is read from the config.
+        /// JSON model that is read from the config.
         /// </summary>
-        public readonly List<YamlDocument> YamlDocuments;
+        public int Count => Jsons.Count;
+        public string this[int index] { get => Jsons[index]; set => Jsons[index] = value; }
+        public bool IsReadOnly => false; 
 
-        private Dictionary<string[],string> configData;
-        private Dictionary<string[],YamlNode> configNodes;
-        private YamlMappingVisitor visitor;
-        private Deserializer yamlDeserializer;
-
-        public int Count { get { return configData.Count; } }
-        public string this[string[] key] { get { return configData[key]; } }
-        public IEnumerable<string[]> Keys { get { return configData.Keys; } }
-        public IEnumerable<string> Values { get  { return configData.Values; } }
+        private List<string> Jsons;
 
         public ConfigReader()
         {
-            YamlDocuments = new List<YamlDocument>();
-            var comparer = new StringEnumerableEqualityComparer<string[]>();
-            configData = new Dictionary<string[], string>(comparer);
-            configNodes = new Dictionary<string[], YamlNode>(comparer);
-            visitor = new YamlMappingVisitor();
-            visitor.ProcessKeyValuePair = addToConfig;
-            yamlDeserializer = new DeserializerBuilder()
-                .WithNamingConvention(new CamelCaseNamingConvention())
-                .Build();
-        }
-
-        private void addToConfig(string[] key, YamlNode value)
-        {
-            configData.Add(key, value.ToString());
-            configNodes.Add(key, value);
+            Jsons = new List<string>();
         }
 
         /// <summary>
-        /// Read configuration from a YAML file.
+        /// Read configuration from a JSON file.
         /// </summary>
         public void Load(string path)
         {
             logger.InfoFormat("Loading config file {0}", path);
 
-            var yamlStream = new YamlStream();
-
-            using (var stream = new StreamReader(path))
+            try
             {
-                yamlStream.Load(stream);
+                string content;
+                using (StreamReader reader = new StreamReader(path))
+                {
+                    content = reader.ReadToEnd();
+                }
+
+                JsonConvert.DeserializeObject(content);
+                Jsons.Add(content);
+            }
+            catch (Exception exception)
+            {
+                throw new ConfigException("Failed to deserialize json.", exception);
             }
 
-            processYamlStream(yamlStream);
         }
 
         /// <summary>
-        /// Read configuration from a stream containg YAML markup.
+        /// Read configuration from a stream containg JSON markup.
         /// </summary>
         public void Load(Stream stream)
         {
-             var yamlStream = new YamlStream();
-
-            using (var streamReader = new StreamReader(stream))
+            try
             {
-                yamlStream.Load(streamReader);
-            }
+                string content;
+                using (StreamReader reader = new StreamReader(stream))
+                {
+                    content = reader.ReadToEnd();
+                }
 
-            processYamlStream(yamlStream);
+                JsonConvert.DeserializeObject(content);
+                Jsons.Add(content);
+            }
+            catch (Exception exception)
+            {
+                throw new ConfigException("Failed to deserialize json.", exception);
+            }
         }
 
         /// <summary>
-        /// Read configuration from a YAML string.
+        /// Read configuration from a JSON string.
         /// </summary>
         public void LoadString(string content)
         {
-            var yamlStream = new YamlStream();
-
-            yamlStream.Load(new StringReader(content));
-
-            processYamlStream(yamlStream);
-        }
-
-        void processYamlStream(YamlStream yamlStream)
-        {
-            foreach (var document in yamlStream)
+            try
             {
-                YamlDocuments.Add(document);
+                JsonConvert.DeserializeObject(content);
+                Jsons.Add(content);
             }
-
-            yamlStream.Accept(visitor);
+            catch (Exception exception)
+            {
+                throw new ConfigException("Failed to deserialize json.", exception);
+            }
         }
 
-        public bool ContainsKey(string[] key)
+        public bool Contains(string item)
         {
-            return configData.ContainsKey(key);
+            return Jsons.Contains(item);
         }
 
-        public bool TryGetValue(string[] key, out string value)
+        public int IndexOf(string item)
         {
-            return configData.TryGetValue(key, out value);
+            return Jsons.IndexOf(item);
         }
 
-        public IEnumerator<KeyValuePair<string[],string>> GetEnumerator()
+        public IEnumerator<string> GetEnumerator()
         {
-            return configData.GetEnumerator();
+            return Jsons.GetEnumerator();
         }
 
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public void Insert(int index, string item)
+        {
+            Jsons.Insert(index, item);
+        }
+
+        public void RemoveAt(int index)
+        {
+            Jsons.RemoveAt(index);
+        }
+
+        public void Add(string item)
+        {
+            Jsons.Add(item);
+        }
+
+        public void Clear()
+        {
+            Jsons.Clear();
+        }
+
+        public void CopyTo(string[] array, int arrayIndex)
+        {
+            Jsons.CopyTo(array, arrayIndex);
+        }
+
+        public bool Remove(string item)
+        {
+            return Jsons.Remove(item);
         }
 
         /// <summary>
@@ -158,46 +171,79 @@ namespace TPPCore.Service.Common
         /// </summary>
         /// <exception cref="ConfigKeyNotFoundException">Key does not exist.</exception>
         /// <exception cref="ConfigException">Value could not be deserialized</exception>
-        public T GetCheckedValue<T>(params string[] key)
+        public TItemType GetCheckedValue<TItemType, TConfigType>(params string[] keys)
         {
-            YamlNode node;
-            try
+            TConfigType config = default(TConfigType);
+            bool notfoundexception = false;
+            foreach (string item in Jsons)
             {
-                node = configNodes[key];
-            }
-            catch (KeyNotFoundException error)
-            {
-                throw new ConfigKeyNotFoundException(
-                    $"The required key {string.Join(",", key)} was not found.",
-                    error
-                );
-            }
+                try
+                {
+                    config = JsonConvert.DeserializeObject<TConfigType>(item);
+                }
+                catch
+                {
+                    continue;
+                }
 
-            try
-            {
-                return yamlDeserializer.Deserialize<T>(
-                    new EventStreamParserAdapter(
-                        YamlNodeToEventStreamConverter.ConvertToEventStream(node)));
+                object field = config;
+                Type type = typeof(TConfigType);
+
+                foreach (string item2 in keys)
+                {
+                    try
+                    {
+                        FieldInfo fieldInfo = type.GetField(item2,
+                            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+                        if (fieldInfo == null || fieldInfo.GetValue(field) == null)
+                        {
+                            notfoundexception = true;
+                            break;
+                        }
+
+                        field = fieldInfo.GetValue(field);
+                        type = field.GetType();
+                        notfoundexception = false;
+                    }
+                    catch
+                    {
+                        notfoundexception = true;
+                        break;
+                    }
+                }
+
+                if (notfoundexception)
+                    continue;
+
+                try
+                {
+                    return (TItemType) field;
+                }
+                catch (InvalidCastException)
+                {
+                    throw new ConfigException(
+                        $"The desired item: {string.Join(".", keys)}, is not of type {typeof(TItemType)}.");
+                }
             }
-            catch (YamlException error)
-            {
-                throw new ConfigException(
-                    $"The value at key {string.Join(",", key)} is not the correct type."
-                    + $" Expected {typeof(T)} for value {node.ToString()}.", error);
-            }
+            if (notfoundexception)
+                throw new ConfigKeyNotFoundException($"The config key: {string.Join(".", keys)} could not be found in any json");
+            if (config == null || config.Equals(default(TConfigType)))
+                throw new ConfigException($"Could not convert any json to the supplied type, list: {string.Join(".", Jsons)}");
+
+            return default(TItemType);
         }
 
         /// <summary>
         /// Deserializes the config value for the given key and returns
         /// the given default value if key is not found.
         /// </summary>
-        public T GetCheckedValueOrDefault<T>(string[] key, T defaultValue)
+        public TItemType GetCheckedValueOrDefault<TItemType, TConfigType>(string[] keys, TItemType defaultValue)
         {
             try
             {
-                return GetCheckedValue<T>(key);
+                return GetCheckedValue<TItemType, TConfigType>(keys);
             }
-            catch (ConfigKeyNotFoundException)
+            catch (Exception ex) when (ex is ConfigKeyNotFoundException || ex is ConfigException)
             {
                 return defaultValue;
             }

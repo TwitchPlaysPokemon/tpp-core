@@ -29,7 +29,7 @@ namespace TPPCore.Service.Example.Parrot.Tests
             output.WriteLine(string.Join(", ", assembly.GetManifestResourceNames()));
 
             options.ConfigStream = assembly.GetManifestResourceStream(
-                "TPPCore.Service.Example.Parrot.Tests.test_files.database_config.yaml");
+                "TPPCore.Service.Example.Parrot.Tests.test_files.database_config.json");
             Assert.NotNull(options.ConfigStream);
 
             return options;
