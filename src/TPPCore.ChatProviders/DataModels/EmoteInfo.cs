@@ -1,4 +1,4 @@
-﻿namespace TPPCore.Service.Emotes
+﻿namespace TPPCore.ChatProviders.DataModels
 {
     public class EmoteInfo
     {

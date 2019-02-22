@@ -10,6 +10,7 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using TPPCore.ChatProviders.DataModels;
 using TPPCore.Service.Common;
 using TPPCore.Service.Common.AspNetUtils;
 

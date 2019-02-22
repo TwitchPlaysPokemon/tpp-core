@@ -40,9 +40,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TPPCore.Client.Common", "sr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TPPCore.Database", "src\TPPCore.Database\TPPCore.Database.csproj", "{4F8FEFC3-BD83-43C8-9193-CB766ACAB7CA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPPCore.Service.Emotes", "src\TPPCore.Service.Emotes\TPPCore.Service.Emotes.csproj", "{1E0E5046-88B0-4044-A306-17F8D56D517C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TPPCore.Service.Emotes", "src\TPPCore.Service.Emotes\TPPCore.Service.Emotes.csproj", "{1E0E5046-88B0-4044-A306-17F8D56D517C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TPPCore.Service.Emotes.Tests", "test\TPPCore.Service.Emotes.Tests\TPPCore.Service.Emotes.Tests.csproj", "{15AE79EB-61D8-4A97-8086-6AECFEF37CA4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPPCore.Client.Emotes", "TPPCore.Client.Emotes\TPPCore.Client.Emotes.csproj", "{D4346072-E272-45EE-94D5-B1547993B7B8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -282,6 +284,18 @@ Global
 		{15AE79EB-61D8-4A97-8086-6AECFEF37CA4}.Release|x64.Build.0 = Release|Any CPU
 		{15AE79EB-61D8-4A97-8086-6AECFEF37CA4}.Release|x86.ActiveCfg = Release|Any CPU
 		{15AE79EB-61D8-4A97-8086-6AECFEF37CA4}.Release|x86.Build.0 = Release|Any CPU
+		{D4346072-E272-45EE-94D5-B1547993B7B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4346072-E272-45EE-94D5-B1547993B7B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4346072-E272-45EE-94D5-B1547993B7B8}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D4346072-E272-45EE-94D5-B1547993B7B8}.Debug|x64.Build.0 = Debug|Any CPU
+		{D4346072-E272-45EE-94D5-B1547993B7B8}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D4346072-E272-45EE-94D5-B1547993B7B8}.Debug|x86.Build.0 = Debug|Any CPU
+		{D4346072-E272-45EE-94D5-B1547993B7B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4346072-E272-45EE-94D5-B1547993B7B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4346072-E272-45EE-94D5-B1547993B7B8}.Release|x64.ActiveCfg = Release|Any CPU
+		{D4346072-E272-45EE-94D5-B1547993B7B8}.Release|x64.Build.0 = Release|Any CPU
+		{D4346072-E272-45EE-94D5-B1547993B7B8}.Release|x86.ActiveCfg = Release|Any CPU
+		{D4346072-E272-45EE-94D5-B1547993B7B8}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -306,6 +320,7 @@ Global
 		{4F8FEFC3-BD83-43C8-9193-CB766ACAB7CA} = {D8024CEB-AA9A-43AA-A221-F7A4C26C17DA}
 		{1E0E5046-88B0-4044-A306-17F8D56D517C} = {D8024CEB-AA9A-43AA-A221-F7A4C26C17DA}
 		{15AE79EB-61D8-4A97-8086-6AECFEF37CA4} = {EE3DFBF9-43CF-419C-BC9F-C36364FC1C73}
+		{D4346072-E272-45EE-94D5-B1547993B7B8} = {D8024CEB-AA9A-43AA-A221-F7A4C26C17DA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB177054-A584-4B2A-BA72-D3195C6BF3B5}

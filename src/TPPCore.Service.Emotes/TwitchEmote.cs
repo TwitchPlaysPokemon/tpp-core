@@ -1,4 +1,6 @@
-﻿namespace TPPCore.Service.Emotes
+﻿using TPPCore.ChatProviders.DataModels;
+
+namespace TPPCore.Service.Emotes
 {
     internal class TwitchEmote : EmoteInfo
     {
