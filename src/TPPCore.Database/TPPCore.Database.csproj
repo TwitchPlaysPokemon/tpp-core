@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="MongoDB.Driver" Version="2.7.3" />
     <PackageReference Include="NPGSQL" Version="4.0.3" />
   </ItemGroup>
 </Project>
