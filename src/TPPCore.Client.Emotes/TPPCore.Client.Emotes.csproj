@@ -5,8 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\TPPCore.ChatProviders\TPPCore.ChatProviders.csproj" />
-    <ProjectReference Include="..\src\TPPCore.Client.Common\TPPCore.Client.Common.csproj" />
+    <ProjectReference Include="..\TPPCore.ChatProviders\TPPCore.ChatProviders.csproj" />
+    <ProjectReference Include="..\TPPCore.Client.Common\TPPCore.Client.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>

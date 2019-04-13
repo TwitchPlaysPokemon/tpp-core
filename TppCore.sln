@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26730.8
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28809.33
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D8024CEB-AA9A-43AA-A221-F7A4C26C17DA}"
 EndProject
@@ -44,7 +44,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TPPCore.Service.Emotes", "s
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TPPCore.Service.Emotes.Tests", "test\TPPCore.Service.Emotes.Tests\TPPCore.Service.Emotes.Tests.csproj", "{15AE79EB-61D8-4A97-8086-6AECFEF37CA4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPPCore.Client.Emotes", "TPPCore.Client.Emotes\TPPCore.Client.Emotes.csproj", "{D4346072-E272-45EE-94D5-B1547993B7B8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TPPCore.Client.Emotes", "src\TPPCore.Client.Emotes\TPPCore.Client.Emotes.csproj", "{DCE24F05-933B-443D-AF3C-9E2EA485A572}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -284,18 +284,18 @@ Global
 		{15AE79EB-61D8-4A97-8086-6AECFEF37CA4}.Release|x64.Build.0 = Release|Any CPU
 		{15AE79EB-61D8-4A97-8086-6AECFEF37CA4}.Release|x86.ActiveCfg = Release|Any CPU
 		{15AE79EB-61D8-4A97-8086-6AECFEF37CA4}.Release|x86.Build.0 = Release|Any CPU
-		{D4346072-E272-45EE-94D5-B1547993B7B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D4346072-E272-45EE-94D5-B1547993B7B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D4346072-E272-45EE-94D5-B1547993B7B8}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{D4346072-E272-45EE-94D5-B1547993B7B8}.Debug|x64.Build.0 = Debug|Any CPU
-		{D4346072-E272-45EE-94D5-B1547993B7B8}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{D4346072-E272-45EE-94D5-B1547993B7B8}.Debug|x86.Build.0 = Debug|Any CPU
-		{D4346072-E272-45EE-94D5-B1547993B7B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D4346072-E272-45EE-94D5-B1547993B7B8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D4346072-E272-45EE-94D5-B1547993B7B8}.Release|x64.ActiveCfg = Release|Any CPU
-		{D4346072-E272-45EE-94D5-B1547993B7B8}.Release|x64.Build.0 = Release|Any CPU
-		{D4346072-E272-45EE-94D5-B1547993B7B8}.Release|x86.ActiveCfg = Release|Any CPU
-		{D4346072-E272-45EE-94D5-B1547993B7B8}.Release|x86.Build.0 = Release|Any CPU
+		{DCE24F05-933B-443D-AF3C-9E2EA485A572}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DCE24F05-933B-443D-AF3C-9E2EA485A572}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DCE24F05-933B-443D-AF3C-9E2EA485A572}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{DCE24F05-933B-443D-AF3C-9E2EA485A572}.Debug|x64.Build.0 = Debug|Any CPU
+		{DCE24F05-933B-443D-AF3C-9E2EA485A572}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DCE24F05-933B-443D-AF3C-9E2EA485A572}.Debug|x86.Build.0 = Debug|Any CPU
+		{DCE24F05-933B-443D-AF3C-9E2EA485A572}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DCE24F05-933B-443D-AF3C-9E2EA485A572}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DCE24F05-933B-443D-AF3C-9E2EA485A572}.Release|x64.ActiveCfg = Release|Any CPU
+		{DCE24F05-933B-443D-AF3C-9E2EA485A572}.Release|x64.Build.0 = Release|Any CPU
+		{DCE24F05-933B-443D-AF3C-9E2EA485A572}.Release|x86.ActiveCfg = Release|Any CPU
+		{DCE24F05-933B-443D-AF3C-9E2EA485A572}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -320,7 +320,7 @@ Global
 		{4F8FEFC3-BD83-43C8-9193-CB766ACAB7CA} = {D8024CEB-AA9A-43AA-A221-F7A4C26C17DA}
 		{1E0E5046-88B0-4044-A306-17F8D56D517C} = {D8024CEB-AA9A-43AA-A221-F7A4C26C17DA}
 		{15AE79EB-61D8-4A97-8086-6AECFEF37CA4} = {EE3DFBF9-43CF-419C-BC9F-C36364FC1C73}
-		{D4346072-E272-45EE-94D5-B1547993B7B8} = {D8024CEB-AA9A-43AA-A221-F7A4C26C17DA}
+		{DCE24F05-933B-443D-AF3C-9E2EA485A572} = {D8024CEB-AA9A-43AA-A221-F7A4C26C17DA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB177054-A584-4B2A-BA72-D3195C6BF3B5}
