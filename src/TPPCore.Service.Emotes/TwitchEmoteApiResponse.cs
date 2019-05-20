@@ -2,7 +2,7 @@
 
 namespace TPPCore.Service.Emotes
 {
-    public class EmoteApiResponse
+    public class TwitchEmoteApiResponse
     {
         /// <summary>
         /// The list of the emotes.
@@ -14,7 +14,7 @@ namespace TPPCore.Service.Emotes
             /// <summary>
             /// The ID of the emote.
             /// </summary>
-            public int id;
+            public string id;
 
             /// <summary>
             /// The regex of the emote.

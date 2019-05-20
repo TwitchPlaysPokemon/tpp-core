@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Routing;
+﻿using System;
+using Microsoft.AspNetCore.Routing;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,21 +9,21 @@ namespace TPPCore.Service.Emotes
 {
     public class EmoteService : IServiceAsync
     {
-        private ServiceContext context;
         protected EmoteHandler emoteHandler;
         private CancellationTokenSource token = new CancellationTokenSource();
         string fileLocation;
+        private string bttvLocation;
 
         public void Initialize(ServiceContext context)
         {
-            this.context = context;
             string Cachelocation = context.ConfigReader.GetCheckedValue<string, EmotesConfig>("emote", "cache_location");
             if (!Directory.Exists(Cachelocation))
                 Directory.CreateDirectory(Cachelocation);
             fileLocation = Cachelocation + "emotes.json";
+            bttvLocation = Cachelocation + "bttv.json";
             if (!File.Exists(fileLocation))
                 File.Create(fileLocation);
-            emoteHandler = new EmoteHandler(context, fileLocation);
+            emoteHandler = new EmoteHandler(context, fileLocation, bttvLocation);
 
             context.RestfulServer.UseRoute((RouteBuilder routeBuilder) =>
             {
@@ -47,8 +48,10 @@ namespace TPPCore.Service.Emotes
             {
                 try
                 {
-                    await emoteHandler.GetEmotes(token.Token, false);
+                    GC.Collect(); //Yes I know you're not supposed to use GC.Collect(), but it cuts it down from 1.2GB to 600MB of RAM
+                    GC.WaitForPendingFinalizers();
                     await Task.Delay(1800000, token.Token);
+                    await emoteHandler.GetEmotes(token.Token, false);
                 } catch
                 {
                     break;

@@ -7,7 +7,7 @@ using TPPCore.Service.Common;
 
 namespace TPPCore.Service.Emotes
 {
-    internal class TwitchEmoteInterface
+    internal class TwitchEmoteInterface : IEmoteInterface
     {
         private const string URL = "https://api.twitch.tv/kraken/chat/emoticon_images";
 
@@ -30,10 +30,10 @@ namespace TPPCore.Service.Emotes
             new Tuple<string, string[]> (":(S|s)", new [] {":s", ":S", ":-s", ":-S"})
         };
 
-        public async Task<string> GetEmotes(ServiceContext context, HttpClient httpClient, CancellationToken token)
+        public async Task<string> GetEmotes(ServiceContext context, CancellationToken token)
         {
             string clientId = context.ConfigReader.GetCheckedValue<string, EmotesConfig>("emote", "client_id");
-            httpClient = new HttpClient();
+            HttpClient httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Add("accept", "application/vnd.twitchtv.v5+json");
             httpClient.DefaultRequestHeaders.Add("client-id", clientId);
             try
@@ -44,10 +44,8 @@ namespace TPPCore.Service.Emotes
                 {
                     return await responseMessage.Content.ReadAsStringAsync();
                 }
-                else
-                {
-                    return await GetEmotes(context, httpClient, token);
-                }
+
+                return await GetEmotes(context, token);
             }
             catch
             {

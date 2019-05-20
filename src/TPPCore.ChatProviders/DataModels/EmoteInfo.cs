@@ -9,7 +9,7 @@
         /// <summary>
         /// The ID of the emote
         /// </summary>
-        public int Id { get; set; }
+        public string Id { get; set; }
         /// <summary>
         /// The URLs of the emote
         /// </summary>

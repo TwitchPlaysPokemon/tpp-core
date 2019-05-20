@@ -63,7 +63,7 @@ namespace TPPCore.Service.Emotes.Test
         public async Task FromCodeTest()
         {
             var info = await Get<EmoteInfo>(FromCode, "Kappa");
-            Assert.Equal(25, info.Id);
+            Assert.Equal("25", info.Id);
         }
 
         [Fact]
@@ -114,7 +114,7 @@ namespace TPPCore.Service.Emotes.Test
         {
             var emoteInfo = await Get<List<EmoteInfo>>(FindIn, "test :)");
             Assert.NotEmpty(emoteInfo);
-            Assert.Equal(1, emoteInfo[0].Id);
+            Assert.Equal("1", emoteInfo[0].Id);
         }
 
         [Fact]
@@ -122,7 +122,7 @@ namespace TPPCore.Service.Emotes.Test
         {
             var emoteInfo = await Get<EmoteInfo>(FromCode, ":\\");
             Assert.NotNull(emoteInfo);
-            Assert.Equal(10, emoteInfo.Id);
+            Assert.Equal("10", emoteInfo.Id);
         }
 
         [Fact]
@@ -130,11 +130,26 @@ namespace TPPCore.Service.Emotes.Test
         {
             var emoteInfo1 = await Get<EmoteInfo>(FromCode, ":)");
             Assert.NotNull(emoteInfo1);
-            Assert.Equal(1, emoteInfo1.Id);
+            Assert.Equal("1", emoteInfo1.Id);
 
             var emoteInfo2 = await Get<EmoteInfo>(FromCode, ":-)");
             Assert.NotNull(emoteInfo2);
-            Assert.Equal(1, emoteInfo2.Id);
+            Assert.Equal("1", emoteInfo2.Id);
+        }
+
+        [Fact]
+        public async Task BttvTest()
+        {
+            var emoteInfo = await Get<EmoteInfo>(FromCode, "Wowee");
+            Assert.NotNull(emoteInfo);
+            Assert.Equal("58d2e73058d8950a875ad027", emoteInfo.Id);
+        }
+
+        [Fact]
+        public async Task NightTest()
+        {
+            var emoteInfo = await Get<EmoteInfo>(FromCode, "Blackappa");
+            Assert.Null(emoteInfo);
         }
     }
 
@@ -159,6 +174,11 @@ namespace TPPCore.Service.Emotes.Test
             {
                 string json = File.ReadAllText("../../../test_files/cache.json");
                 File.WriteAllText("cache/emotes.json", json);
+            }
+            if (!File.Exists("cache/bttv.json"))
+            {
+                string json = File.ReadAllText("../../../test_files/bttv.json");
+                File.WriteAllText("cache/bttv.json", json);
             }
             Runner = new ServiceTestRunner(new TestEmoteService());
             Runner.Service.Shutdown(); //don't bother running, we'll load emotes manually
@@ -185,7 +205,7 @@ namespace TPPCore.Service.Emotes.Test
     public class EmoteInfo
     {
         public string Code;
-        public int Id;
+        public string Id;
         public string[] ImageUrls;
     }
 
