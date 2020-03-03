@@ -1,0 +1,35 @@
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+tab_width = 4
+indent_style = space
+trim_trailing_whitespace = true
+max_line_length = 120
+
+[*.cs]
+csharp_wrap_enum_declaration = chop_always
+csharp_place_simple_enum_on_single_line = true
+csharp_style_var_for_built_in_types = false
+csharp_max_attribute_length_for_same_line = 120
+csharp_int_align_fields = true
+
+resharper_redundant_if_else_block_highlighting = do_not_show
+resharper_redundant_comma_in_initializer_highlighting = do_not_show
+resharper_redundant_comma_in_enum_declaration_highlighting = do_not_show
+
+# use own judgement for whether adding an argument name improves clarity or not
+resharper_arguments_style_named_expression_highlighting = do_not_show
+resharper_arguments_style_anonymous_function_highlighting = do_not_show
+resharper_arguments_style_literal_highlighting = do_not_show
+resharper_arguments_style_other_highlighting = do_not_show
+resharper_arguments_style_string_literal_highlighting = do_not_show
+resharper_redundant_default_member_initializer_highlighting = do_not_show
+
+# use own judgment for what declarations to group together tightly
+blank_lines_around_property = 0
+blank_lines_around_auto_property = 0
+blank_lines_around_type = 0
+blank_lines_after_block_statements = 0
