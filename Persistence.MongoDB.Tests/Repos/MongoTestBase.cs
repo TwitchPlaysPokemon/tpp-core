@@ -19,8 +19,8 @@ namespace Persistence.MongoDB.Tests.Repos
     {
         private static readonly Random Random = new Random();
 
-        private string _tempDbPath = null!;
-        private Process _mongod = null!;
+        private string? _tempDbPath;
+        private Process? _mongod;
         private MongoClient _client = null!;
         private readonly List<string> _temporaryDatabases = new List<string>();
 
@@ -54,11 +54,16 @@ namespace Persistence.MongoDB.Tests.Repos
         }
 
         [OneTimeTearDown]
-        public void TearDownMongodProcess()
+        public void TearDownMongoClient()
         {
-            _mongod.Kill();
-            _mongod.WaitForExit();
-            Directory.Delete(_tempDbPath, recursive: true);
+            _mongod?.Kill();
+            _mongod?.WaitForExit();
+            if (_tempDbPath != null)
+            {
+                Directory.Delete(_tempDbPath, recursive: true);
+            }
+            _mongod = null;
+            _tempDbPath = null;
         }
 
         [TearDown]
@@ -72,7 +77,7 @@ namespace Persistence.MongoDB.Tests.Repos
 
         protected IMongoDatabase CreateTemporaryDatabase()
         {
-            string dbName = "db-" + Random.Next();
+            string dbName = "testdb-" + Random.Next();
             _temporaryDatabases.Add(dbName);
             return _client.GetDatabase(dbName);
         }
