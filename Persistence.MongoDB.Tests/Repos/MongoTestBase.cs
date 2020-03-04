@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using MongoDB.Driver;
 using NUnit.Framework;
 
@@ -18,14 +19,23 @@ namespace Persistence.MongoDB.Tests.Repos
     {
         private static readonly Random Random = new Random();
 
-        private          string       _tempDbPath         = null!;
-        private          Process      _mongod             = null!;
-        private          MongoClient  _client             = null!;
+        private string _tempDbPath = null!;
+        private Process _mongod = null!;
+        private MongoClient _client = null!;
         private readonly List<string> _temporaryDatabases = new List<string>();
 
         [OneTimeSetUp]
-        public void SetUpMongodProcess()
+        public void SetUpMongoClient()
         {
+            // first try to connect to a mongodb running on the default port (e.g. CI or DEV environment)
+            _client = new MongoClient("mongodb://localhost");
+            bool success = _client.ListDatabaseNamesAsync(CancellationToken.None).Wait(TimeSpan.FromSeconds(5));
+            if (success)
+            {
+                // OK! just use that!
+                return;
+            }
+            // try to start our own instance instead
             _tempDbPath = Path.GetTempPath() + "mongo-temp-" + Random.Next();
             Directory.CreateDirectory(_tempDbPath);
             int port = Random.Next(20000, 60000);
@@ -36,7 +46,9 @@ namespace Persistence.MongoDB.Tests.Repos
             catch (Win32Exception ex)
             {
                 throw new AssertionException(
-                    "Failed to start mongod instance. Is MongoDB server installed and its /bin on the PATH?", ex);
+                    "Failed to either connect to a local MongoDB instance running on the default port, " +
+                    "or to start a custom mongod instance. " +
+                    "Is MongoDB running or the server software installed and its /bin on the PATH?", ex);
             }
             _client = new MongoClient($"mongodb://localhost:{port}");
         }
