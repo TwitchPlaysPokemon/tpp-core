@@ -49,12 +49,12 @@ namespace Inputting.Parsing
             string inputSequence = _maxSequenceLength > 1
                 ? $@"^(?<inputset>{inputSetRegex}(?<repeat>[1-{_maxSequenceLength}])??){{1,{_maxSequenceLength}}}$"
                 : $@"^(?<inputset>{inputSetRegex})$";
-            _regex = new Regex(inputSequence, RegexOptions.Compiled);
+            _regex = new Regex(inputSequence, RegexOptions.Compiled | RegexOptions.IgnoreCase);
         }
 
         public InputSequence? Parse(string text)
         {
-            var match = _regex.Match(text.ToLower());
+            var match = _regex.Match(text);
             if (!match.Success)
             {
                 return null;
