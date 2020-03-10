@@ -8,14 +8,18 @@ namespace Inputting.InputDefinitions
     /// </summary>
     public struct ButtonInputDefinition : IInputDefinition
     {
-        private readonly string _button;
+        private readonly string _name;
+        private readonly string _mapsTo;
+        private readonly bool _keepsName;
 
-        public ButtonInputDefinition(string button)
+        public ButtonInputDefinition(string name, string mapsTo, bool keepsName)
         {
-            _button = button;
+            _name = name;
+            _mapsTo = mapsTo;
+            _keepsName = keepsName;
         }
 
-        public string InputRegex => Regex.Escape(_button);
-        public Input? Parse(string str) => new Input(str, str, str, true);
+        public string InputRegex => Regex.Escape(_name);
+        public Input? Parse(string str) => new Input(_keepsName ? _name : _mapsTo, _mapsTo, str, true);
     }
 }

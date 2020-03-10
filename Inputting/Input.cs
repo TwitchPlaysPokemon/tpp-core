@@ -23,7 +23,7 @@ namespace Inputting
         public string OriginalText { get; }
         /// <summary>
         /// Any additional data this input might have,
-        /// e.g. coords for touchscreen inputs or input strength for analog sticks.
+        /// e.g. coords for touchscreen inputs or input intensity for analog sticks.
         /// </summary>
         public object AdditionalData { get; }
 

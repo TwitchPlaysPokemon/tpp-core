@@ -16,7 +16,7 @@ namespace Inputting.Parsing
         private readonly bool _multitouch;
 
         /// <summary>
-        /// Create a new input parser
+        /// Create a new contextual input parser from a base input parser and the configured additional restrictions.
         /// </summary>
         /// <param name="baseInputParser">the base input parser being decorated,
         /// whose output is subject to the additional restrictions imposed by this parser.</param>
