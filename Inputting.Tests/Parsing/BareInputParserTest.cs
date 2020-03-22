@@ -199,8 +199,8 @@ namespace Inputting.Tests.Parsing
                 new InputSet(new List<Input> {new Input("a", "a", "a", true)})
             ), _inputParser.Parse("aup.22a"));
             Assert.AreEqual(Seq(
-                new InputSet(new List<Input> {new Input("up", "up", "up", 1.0f)})
-            ), _inputParser.Parse("up"));
+                new InputSet(new List<Input> {new Input("up", "up", "UP", 1.0f)})
+            ), _inputParser.Parse("UP"));
             Assert.AreEqual(Seq(
                 new InputSet(new List<Input> {new Input("up", "up", "up.9", 0.9f)})
             ), _inputParser.Parse("up.9"));
