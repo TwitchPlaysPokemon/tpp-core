@@ -31,7 +31,7 @@ namespace Models
         /// </summary>
         public string SimpleName { get; private set; }
 
-        public string Color { get; private set; }
+        public string? Color { get; private set; }
 
         public DateTime FirstActiveAt { get; private set; }
         public DateTime LastActiveAt { get; private set; }
@@ -71,7 +71,7 @@ namespace Models
             string name,
             string twitchDisplayName,
             string simpleName,
-            string color,
+            string? color,
             DateTime firstActiveAt,
             DateTime lastActiveAt,
             DateTime? lastMessageAt,

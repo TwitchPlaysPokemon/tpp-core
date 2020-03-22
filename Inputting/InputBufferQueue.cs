@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Inputting
@@ -14,6 +15,7 @@ namespace Inputting
     public class InputBufferQueue<T>
     {
         private readonly Queue<T> _queue = new Queue<T>();
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(initialCount: 1);
 
         private readonly float _bufferLengthSeconds;
         private readonly float _speedupRate;
@@ -23,7 +25,7 @@ namespace Inputting
 
         private float _prevInputDuration;
 
-        private Queue<TaskCompletionSource<(T, float)>> _awaitedDequeueings =
+        private readonly Queue<TaskCompletionSource<(T, float)>> _awaitedDequeuings =
             new Queue<TaskCompletionSource<(T, float)>>();
 
         /// <summary>
@@ -56,7 +58,9 @@ namespace Inputting
 
         private float CalcInputDuration(float prevInputDuration)
         {
-            // if the target duration is n seconds and we have m inputs, each input has a duration of n/m
+            // if the target duration is n seconds and we have m inputs, each input has a duration of n/m.
+            // Also treat an empty queue as length 1, so Enqueue() can directly serve any awaited dequeueings
+            // without having to queue the item just to immediately dequeuing it again.
             float inputDuration = _bufferLengthSeconds / Math.Max(_queue.Count, 1);
             float delta = inputDuration - prevInputDuration;
             // smoothing. if delta > 0, time per input increased and therefore overall speed dropped
@@ -67,17 +71,28 @@ namespace Inputting
             return inputDuration;
         }
 
+        private float NextInputDuration()
+        {
+            _prevInputDuration = CalcInputDuration(_prevInputDuration);
+            return _prevInputDuration;
+        }
+
         /// <summary>
         /// Enqueue a new input.
         /// </summary>
         /// <param name="value">The input to enqueue.</param>
         public void Enqueue(T value)
         {
-            _queue.Enqueue(value);
-            if (_awaitedDequeueings.TryDequeue(out var task))
+            _semaphore.Wait();
+            if (_awaitedDequeuings.TryDequeue(out var task))
             {
-                task.SetResult(Dequeue());
+                task.SetResult((value, NextInputDuration()));
             }
+            else
+            {
+                _queue.Enqueue(value);
+            }
+            _semaphore.Release();
         }
 
         /// <summary>
@@ -86,10 +101,8 @@ namespace Inputting
         /// <returns>a (input, duration) tuple for the next input. The duration is in seconds</returns>
         public (T, float) Dequeue()
         {
-            float inputDuration = CalcInputDuration(_prevInputDuration);
-            _prevInputDuration = inputDuration;
-            var result = (_queue.Dequeue(), inputDuration);
-            return result;
+            float duration = NextInputDuration(); // calculate before dequeuing
+            return (_queue.Dequeue(), duration);
         }
 
         /// <summary>
@@ -101,7 +114,7 @@ namespace Inputting
             if (IsEmpty)
             {
                 var taskCompletionSource = new TaskCompletionSource<(T, float)>();
-                _awaitedDequeueings.Enqueue(taskCompletionSource);
+                _awaitedDequeuings.Enqueue(taskCompletionSource);
                 return await taskCompletionSource.Task;
             }
             else
@@ -117,9 +130,9 @@ namespace Inputting
         {
             _queue.Clear();
             _prevInputDuration = _bufferLengthSeconds;
-            while (_awaitedDequeueings.Any())
+            while (_awaitedDequeuings.Any())
             {
-                _awaitedDequeueings.Dequeue().SetCanceled();
+                _awaitedDequeuings.Dequeue().SetCanceled();
             }
         }
 
