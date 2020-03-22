@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -41,18 +41,24 @@ namespace TppAis
 
         private TppAis()
         {
-            _inputBufferQueue = new InputBufferQueue<QueuedInput>(/* timings can be customized*/);
+            _inputBufferQueue = new InputBufferQueue<QueuedInput>( /* timings can be customized*/);
 
             var rootConfig = LoadConfig();
 
             IUserRepo dummyUserRepo = new DummyUserRepo();
 
             var inputParser = InputParserBuilder.FromBare()
-                .Buttons("a", "b", "start", "select", "wait")
-                .StartSelectConflict()
-                .DPad(prefix: "")
-                .RemappedDPad(up: "n", down: "s", left: "w", right: "e", mapsToPrefix: "")
-                .AliasedButtons(("p", "wait"), ("xp", "wait"), ("exp", "wait"))
+                .AnalogStick(prefix: "l", allowSpin: true)
+                .AnalogStick(prefix: "r", allowSpin: true)
+                .RemappedAnalogStick("up", "down", "left", "right", "spinl", "spinr", mapsToPrefix: "l")
+                .RemappedAnalogStick(up: "n", down: "s", left: "w", right: "e", spinl: null, spinr: null,
+                    mapsToPrefix: "l")
+                .RemappedAnalogStick(up: "ln", down: "ls", left: "lw", right: "le", spinl: null, spinr: null,
+                    mapsToPrefix: "l")
+                .RemappedAnalogStick(up: "rn", down: "rs", left: "rw", right: "re", spinl: null, spinr: null,
+                    mapsToPrefix: "r")
+                .Buttons("A", "B", "X", "Y", "L", "R", "zl", "zr", "plus", "minus", "lstick", "rstick")
+                .Touchscreen(width: 1280, height: 720, multitouch: true, allowDrag: true)
                 .LengthRestrictions(maxSetLength: 2, maxSequenceLength: 1)
                 .Build();
 
