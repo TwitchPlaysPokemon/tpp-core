@@ -43,6 +43,13 @@ namespace Inputting.Parsing
             }
             var baseInputSequence = baseInputSequenceNullable.Value;
 
+            // check that "wait" is used without any other buttons per button set.
+            if (baseInputSequence.InputSets.Any(
+                inputSet => inputSet.Inputs.Count > 1 && inputSet.Inputs.Exists(i => i.EffectiveText == "wait")))
+            {
+                return null;
+            }
+
             // check for duplicates
             foreach (var inputSet in baseInputSequence.InputSets)
             {

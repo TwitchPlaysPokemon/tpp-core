@@ -122,5 +122,17 @@ namespace Inputting.Tests.Parsing
             // but this test should only fail if something got horribly slow.
             Assert.Less(stopwatch.Elapsed, TimeSpan.FromSeconds(1));
         }
+
+        [Test]
+        public void TestConflictWithWait()
+        {
+            _inputParser = InputParserBuilder.FromBare()
+                .Buttons("a", "wait")
+                .LengthRestrictions(maxSetLength: 2, maxSequenceLength: 4)
+                .Build();
+
+            Assert.AreEqual(Seq(Set("a"), Set("wait")), _inputParser.Parse("await"));
+            Assert.IsNull(_inputParser.Parse("a+wait"));
+        }
     }
 }
