@@ -30,7 +30,7 @@ namespace Inputting.InputDefinitions
             var strings = str.Split(".", count: 2);
             if (strings.Length == 1)
             {
-                return new Input(str, str, str, 1.0f);
+                return new Input(_keepsName ? _name : _mapsTo, _mapsTo, str, 1.0f);
             }
             else
             {
