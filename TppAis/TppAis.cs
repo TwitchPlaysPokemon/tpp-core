@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -12,6 +13,7 @@ using Inputting;
 using JsonNet.ContractResolvers;
 using log4net;
 using log4net.Config;
+using Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Persistence.Repos;
@@ -32,6 +34,10 @@ namespace TppAis
         private readonly InputBufferQueue<QueuedInput> _inputBufferQueue;
 
         private readonly Chat _chat;
+
+        private const float MaxPressDuration = 16 / 60f;
+        private const float MinInputDuration = 1 / 60f;
+        private const float EmptyQueueSleepDuration = 30 / 60f;
 
         private TppAis()
         {
@@ -94,6 +100,77 @@ namespace TppAis
             }
         };
 
+        private async Task HandleRequest(HttpListenerContext context)
+        {
+            var response = context.Response;
+
+            object data;
+            if (_inputBufferQueue.IsEmpty)
+            {
+                // do not block. instead, send some sleep frames
+                data = new
+                {
+                    DurationPress = 0f,
+                    DurationSleep = EmptyQueueSleepDuration,
+                    User = (User) null!,
+                    InputMap = new Dictionary<string, object>(),
+                };
+            }
+            else
+            {
+                (var queuedInput, float duration) = await _inputBufferQueue.DequeueWaitAsync();
+                var user = queuedInput.User;
+                var inputSet = queuedInput.InputSet;
+
+                float durationPress;
+                float durationSleep;
+                if (inputSet.Inputs.Exists(i => i.EffectiveText == "hold"))
+                {
+                    durationPress = duration;
+                    durationSleep = 0f;
+                }
+                else if (inputSet.Inputs.All(i => i.EffectiveText == "wait"))
+                {
+                    durationPress = 0f;
+                    durationSleep = duration;
+                }
+                else
+                {
+                    float sleep = duration - MaxPressDuration;
+                    if (sleep >= MinInputDuration)
+                    {
+                        durationPress = duration - sleep;
+                        durationSleep = sleep;
+                    }
+                    else
+                    {
+                        durationPress = Math.Max(MinInputDuration, duration - MinInputDuration);
+                        durationSleep = MinInputDuration;
+                    }
+                }
+
+                var inputMap = new Dictionary<string, object>();
+                foreach (var input in inputSet.Inputs)
+                {
+                    inputMap[input.EffectiveText] = input.AdditionalData;
+                }
+                data = new
+                {
+                    DurationPress = durationPress,
+                    DurationSleep = durationSleep,
+                    User = user,
+                    InputMap = inputMap,
+                };
+            }
+
+            response.ContentType = MediaTypeNames.Application.Json;
+            var buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(
+                data, settings: SerializerSettings, formatting: Formatting.Indented));
+            response.ContentLength64 = buffer.Length;
+            await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+            response.OutputStream.Close();
+        }
+
         private async Task RunWebServer()
         {
             var listener = new HttpListener();
@@ -102,29 +179,7 @@ namespace TppAis
             while (listener.IsListening)
             {
                 var context = await listener.GetContextAsync();
-                // var request = context.Request;
-                var response = context.Response;
-
-                (var queuedInput, float duration) = await _inputBufferQueue.DequeueWaitAsync();
-                var user = queuedInput.User;
-                var inputSet = queuedInput.InputSet;
-
-                var inputMap = new Dictionary<string, object>();
-                foreach (var input in inputSet.Inputs)
-                {
-                    inputMap[input.EffectiveText] = input.AdditionalData;
-                }
-
-                response.ContentType = MediaTypeNames.Application.Json;
-                var buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new
-                {
-                    Duration = duration,
-                    User = user,
-                    InputMap = inputMap,
-                }, settings: SerializerSettings, formatting: Formatting.Indented));
-                response.ContentLength64 = buffer.Length;
-                await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
-                response.OutputStream.Close();
+                await HandleRequest(context);
             }
             listener.Stop();
         }
