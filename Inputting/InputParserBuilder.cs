@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using Inputting.InputDefinitions;
 using Inputting.Parsing;
 
@@ -86,7 +84,7 @@ namespace Inputting
         /// Aliased buttons get recognized and displayed by their name, but executed as the button they map to.
         /// </summary>
         /// <param name="aliases">varargs of alias tuples <c>(name, mapsTo)</c> to be added.</param>
-        public InputParserBuilder AliasedButtons(params (string, string)[] aliases)
+        public InputParserBuilder AliasedButtons(params (string name, string mapsTo)[] aliases)
         {
             foreach ((string name, string mapsTo) in aliases)
             {
@@ -100,7 +98,7 @@ namespace Inputting
         /// Remapped buttons get recognized by their name, but displayed and executed as the button they map to.
         /// </summary>
         /// <param name="remappings">varargs of remapping tuples <c>(name, mapsTo)</c> to be added</param>
-        public InputParserBuilder RemappedButtons(params (string, string)[] remappings)
+        public InputParserBuilder RemappedButtons(params (string name, string mapsTo)[] remappings)
         {
             foreach ((string name, string mapsTo) in remappings)
             {
@@ -174,6 +172,32 @@ namespace Inputting
         }
 
         /// <summary>
+        /// Adds some aliased analog inputs, e.g. <c>("break", "R")</c>.
+        /// </summary>
+        /// <param name="aliases">varargs of alias tuples <c>(name, mapsTo)</c> to be added</param>
+        public InputParserBuilder AliasedAnalogInputs(params (string name, string mapsTo)[] aliases)
+        {
+            foreach ((string name, string mapsTo) in aliases)
+            {
+                _inputDefinitions.Add(new AnalogInputDefinition(name: name, mapsTo: mapsTo, keepsName: true));
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// Adds some remapped analog inputs, e.g. <c>("break", "R")</c>.
+        /// </summary>
+        /// <param name="remappings">varargs of remapping tuples <c>(name, mapsTo)</c> to be added</param>
+        public InputParserBuilder RemappedAnalogInputs(params (string name, string mapsTo)[] remappings)
+        {
+            foreach ((string name, string mapsTo) in remappings)
+            {
+                _inputDefinitions.Add(new AnalogInputDefinition(name: name, mapsTo: mapsTo, keepsName: false));
+            }
+            return this;
+        }
+
+        /// <summary>
         /// Add an analog stick. This is a shortcut for adding analog inputs for "up"/"down"/"left"/"right",
         /// plus configuring respective conflicts like inputting opposing directions.
         /// </summary>
@@ -193,6 +217,76 @@ namespace Inputting
                 string spinr = prefix + "spinr";
                 Buttons(spinl, spinr);
                 Conflicts((spinl, up), (spinl, down), (spinl, left), (spinl, right));
+                Conflicts((spinr, up), (spinr, down), (spinr, left), (spinr, right));
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an aliased analog stick. This is a shortcut for adding aliased analog inputs for
+        /// "up"/"down"/"left"/"right", plus configuring respective conflicts, like inputting opposing directions.
+        /// </summary>
+        /// <param name="up">analog input that maps to "up"</param>
+        /// <param name="down">analog input that maps to "down"</param>
+        /// <param name="left">analog input that maps to "left"</param>
+        /// <param name="right">analog input that maps to "right"</param>
+        /// <param name="spinl">(optional) analog input that maps to "spinl", or <c>null</c> if none.</param>
+        /// <param name="spinr">(optional) analog input that maps to "spinr", or <c>null</c> if none.</param>
+        /// <param name="mapsToPrefix">prefix for the analog stick that the alias names map to,
+        /// which will get prepended to "up"/"down"/"left"/"right"</param>
+        public InputParserBuilder AliasedAnalogStick(
+            string up, string down, string left, string right,
+            string? spinl, string? spinr, string mapsToPrefix)
+        {
+            string targetUp = mapsToPrefix + "up";
+            string targetDown = mapsToPrefix + "down";
+            string targetLeft = mapsToPrefix + "left";
+            string targetRight = mapsToPrefix + "right";
+            AliasedAnalogInputs((up, targetUp), (down, targetDown), (left, targetLeft), (right, targetRight));
+            Conflicts((up, down), (left, right));
+            if (spinl != null)
+            {
+                AliasedButtons((spinl, mapsToPrefix + "spinl"));
+                Conflicts((spinl, up), (spinl, down), (spinl, left), (spinl, right));
+            }
+            if (spinr != null)
+            {
+                AliasedButtons((spinr, mapsToPrefix + "spinr"));
+                Conflicts((spinr, up), (spinr, down), (spinr, left), (spinr, right));
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a remapped analog stick. This is a shortcut for adding remapped analog inputs for
+        /// "up"/"down"/"left"/"right", plus configuring respective conflicts, like inputting opposing directions.
+        /// </summary>
+        /// <param name="up">analog input that maps to "up"</param>
+        /// <param name="down">analog input that maps to "down"</param>
+        /// <param name="left">analog input that maps to "left"</param>
+        /// <param name="right">analog input that maps to "right"</param>
+        /// <param name="spinl">(optional) analog input that maps to "spinl", or <c>null</c> if none.</param>
+        /// <param name="spinr">(optional) analog input that maps to "spinr", or <c>null</c> if none.</param>
+        /// <param name="mapsToPrefix">prefix for the analog stick that the remapping names map to,
+        /// which will get prepended to "up"/"down"/"left"/"right"</param>
+        public InputParserBuilder RemappedAnalogStick(
+            string up, string down, string left, string right,
+            string? spinl, string? spinr, string mapsToPrefix)
+        {
+            string targetUp = mapsToPrefix + "up";
+            string targetDown = mapsToPrefix + "down";
+            string targetLeft = mapsToPrefix + "left";
+            string targetRight = mapsToPrefix + "right";
+            RemappedAnalogInputs((up, targetUp), (down, targetDown), (left, targetLeft), (right, targetRight));
+            Conflicts((up, down), (left, right));
+            if (spinl != null)
+            {
+                RemappedButtons((spinl, mapsToPrefix + "spinl"));
+                Conflicts((spinl, up), (spinl, down), (spinl, left), (spinl, right));
+            }
+            if (spinr != null)
+            {
+                RemappedButtons((spinr, mapsToPrefix + "spinr"));
                 Conflicts((spinr, up), (spinr, down), (spinr, left), (spinr, right));
             }
             return this;
