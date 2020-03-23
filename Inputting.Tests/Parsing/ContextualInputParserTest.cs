@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Inputting.InputDefinitions;
 using Inputting.Parsing;
 using NUnit.Framework;
 
@@ -48,14 +49,14 @@ namespace Inputting.Tests.Parsing
 
             Assert.AreEqual(Seq(new InputSet(new List<Input>
                 {
-                    new Input("234,123", "touch", "234,123", (234, 123)),
-                    new Input("11,22", "touch", "11,22", (11, 22)),
+                    new Input("234,123", "touch", "234,123", new TouchCoords(234, 123)),
+                    new Input("11,22", "touch", "11,22", new TouchCoords(11, 22)),
                 })
             ), _inputParser.Parse("234,123+11,22"));
             Assert.AreEqual(Seq(new InputSet(new List<Input>
                 {
-                    new Input("234,123", "touch", "234,123", (234, 123)),
-                    new Input("11,22>33,44", "drag", "11,22>33,44", (11, 22, 33, 44)),
+                    new Input("234,123", "touch", "234,123", new TouchCoords(234, 123)),
+                    new Input("11,22>33,44", "drag", "11,22>33,44", new TouchDragCoords(11, 22, 33, 44)),
                 })
             ), _inputParser.Parse("234,123+11,22>33,44"));
 
