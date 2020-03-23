@@ -25,6 +25,8 @@ namespace Inputting.InputDefinitions
         }
 
         public string InputRegex => Regex.Escape(_name);
-        public Input? Parse(string str) => new Input(_name, EffectiveText, str, additionalData: (_x, _y));
+
+        public Input? Parse(string str)
+            => new Input(_name, EffectiveText, str, additionalData: new TouchCoords(_x, _y));
     }
 }

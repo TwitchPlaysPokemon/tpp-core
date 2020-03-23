@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Inputting.InputDefinitions;
 using Inputting.Parsing;
 using NUnit.Framework;
 
@@ -106,14 +107,14 @@ namespace Inputting.Tests.Parsing
                 new InputSet(new List<Input> {new Input("a", "a", "a", true)}),
                 new InputSet(new List<Input>
                 {
-                    new Input("234,123", "touch", "234,123", additionalData: (234, 123))
+                    new Input("234,123", "touch", "234,123", additionalData: new TouchCoords(234, 123))
                 }),
                 new InputSet(new List<Input> {new Input("a", "a", "a", true)})
             ), _inputParser.Parse("a234,123a"));
             Assert.AreEqual(Seq(
                 new InputSet(new List<Input>
                 {
-                    new Input("239,159", "touch", "239,159", additionalData: (239, 159))
+                    new Input("239,159", "touch", "239,159", additionalData: new TouchCoords(239, 159))
                 })
             ), _inputParser.Parse("239,159"));
             Assert.IsNull(_inputParser.Parse("240,159"));
@@ -134,14 +135,16 @@ namespace Inputting.Tests.Parsing
                 new InputSet(new List<Input> {new Input("a", "a", "a", true)}),
                 new InputSet(new List<Input>
                 {
-                    new Input("234,123>222,111", "drag", "234,123>222,111", additionalData: (234, 123, 222, 111))
+                    new Input("234,123>222,111", "drag", "234,123>222,111",
+                        additionalData: new TouchDragCoords(234, 123, 222, 111))
                 }),
                 new InputSet(new List<Input> {new Input("a", "a", "a", true)})
             ), _inputParser.Parse("a234,123>222,111a"));
             Assert.AreEqual(Seq(
                 new InputSet(new List<Input>
                 {
-                    new Input("239,159>0,0", "drag", "239,159>0,0", additionalData: (239, 159, 0, 0))
+                    new Input("239,159>0,0", "drag", "239,159>0,0",
+                        additionalData: new TouchDragCoords(239, 159, 0, 0))
                 })
             ), _inputParser.Parse("239,159>0,0"));
             Assert.IsNull(_inputParser.Parse("240,159>0,0"));
@@ -172,13 +175,13 @@ namespace Inputting.Tests.Parsing
 
             Assert.AreEqual(Seq(
                 new InputSet(new List<Input> {new Input("a", "a", "a", true)}),
-                new InputSet(new List<Input> {new Input("move1", "touch", "move1", (42, 69))}),
-                new InputSet(new List<Input> {new Input("move1", "touch", "move1", (42, 69))}),
+                new InputSet(new List<Input> {new Input("move1", "touch", "move1", new TouchCoords(42, 69))}),
+                new InputSet(new List<Input> {new Input("move1", "touch", "move1", new TouchCoords(42, 69))}),
                 new InputSet(new List<Input> {new Input("a", "a", "a", true)})
             ), _inputParser.Parse("amove12a"));
             Assert.AreEqual(Seq(
-                new InputSet(new List<Input> {new Input("234,123", "touch", "234,123", (234, 123))}),
-                new InputSet(new List<Input> {new Input("move1", "touch", "move1", (42, 69))})
+                new InputSet(new List<Input> {new Input("234,123", "touch", "234,123", new TouchCoords(234, 123))}),
+                new InputSet(new List<Input> {new Input("move1", "touch", "move1", new TouchCoords(42, 69))})
             ), _inputParser.Parse("234,123move1"));
             Assert.IsNull(_inputParser.Parse("234,123+move1"));
         }
@@ -234,7 +237,7 @@ namespace Inputting.Tests.Parsing
                 Seq(new InputSet(new[] {new Input("UP", "UP", "up.2", 0.2f)})),
                 _inputParser.Parse("up.2"));
             Assert.AreEqual(
-                Seq(new InputSet(new[] {new Input("MOVE1", "touch", "move1", (10, 20))})),
+                Seq(new InputSet(new[] {new Input("MOVE1", "touch", "move1", new TouchCoords(10, 20))})),
                 _inputParser.Parse("move1"));
         }
     }

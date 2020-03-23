@@ -29,7 +29,21 @@
             {
                 return null;
             }
-            return new Input(str, EffectiveText, str, additionalData: (x, y));
+            return new Input(str, EffectiveText, str, additionalData: new TouchCoords(x, y));
         }
+    }
+
+    public struct TouchCoords
+    {
+        public int X { get; }
+        public int Y { get; }
+
+        public TouchCoords(int x, int y)
+        {
+            X = x;
+            Y = y;
+        }
+
+        public override string ToString() => $"({X},{Y})";
     }
 }
