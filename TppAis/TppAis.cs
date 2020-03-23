@@ -160,6 +160,16 @@ namespace TppAis
                 {
                     inputMap[input.EffectiveText] = input.AdditionalData;
                 }
+                var touches = inputSet.Inputs
+                    .Where(i => i.EffectiveText == "touch")
+                    .Select(i => i.AdditionalData)
+                    .ToList();
+                var drags = inputSet.Inputs
+                    .Where(i => i.EffectiveText == "drag")
+                    .Select(i => i.AdditionalData)
+                    .ToList();
+                if (touches.Any()) inputMap["touch"] = touches;
+                if (drags.Any()) inputMap["drag"] = drags;
                 data = new
                 {
                     DurationPress = durationPress,
