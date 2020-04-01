@@ -1,8 +1,8 @@
 using System;
 using System.Threading.Tasks;
-using Models;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
+using Persistence.Models;
 using Persistence.Repos;
 
 namespace Persistence.MongoDB.Repos

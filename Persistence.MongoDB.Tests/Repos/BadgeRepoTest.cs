@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using NUnit.Framework;
+using Persistence.Models;
 using Persistence.MongoDB.Repos;
 
 namespace Persistence.MongoDB.Tests.Repos

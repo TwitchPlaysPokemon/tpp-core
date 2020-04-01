@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Models;
 using MongoDB.Driver;
 using NUnit.Framework;
+using Persistence.Models;
 using Persistence.MongoDB.Repos;
 using Persistence.Repos;
 
