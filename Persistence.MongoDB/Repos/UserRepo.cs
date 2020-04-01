@@ -53,7 +53,7 @@ namespace Persistence.MongoDB.Repos
 
         public async Task<User> RecordUser(UserInfo userInfo)
         {
-            var update = Builders<User>.Update
+            UpdateDefinition<User> update = Builders<User>.Update
                 .Set(u => u.TwitchDisplayName, userInfo.TwitchDisplayName)
                 .Set(u => u.SimpleName, userInfo.SimpleName)
                 .Set(u => u.Color, userInfo.Color)
