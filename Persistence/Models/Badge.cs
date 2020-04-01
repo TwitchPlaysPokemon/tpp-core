@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.Serialization;
 
 namespace Persistence.Models
 {
@@ -27,13 +26,13 @@ namespace Persistence.Models
 
         public enum BadgeSource
         {
-            [DataMember(Name = "pinball")]             Pinball,
-            [DataMember(Name = "run_caught")]          RunCaught,
-            [DataMember(Name = "crate")]               Crate,
-            [DataMember(Name = "manual_creation")]     ManualCreation,
-            [DataMember(Name = "manual_distribution")] ManualDistribution,
-            [DataMember(Name = "breaking")]            Breaking,
-            [DataMember(Name = "transmutation")]       Transmutation,
+            Pinball,
+            RunCaught,
+            Crate,
+            ManualCreation,
+            ManualDistribution,
+            Breaking,
+            Transmutation,
         }
 
         /// <summary>

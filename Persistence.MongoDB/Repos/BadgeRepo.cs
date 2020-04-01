@@ -27,7 +27,7 @@ namespace Persistence.MongoDB.Repos
                 cm.MapProperty(b => b.UserId).SetElementName("user");
                 cm.MapProperty(b => b.Species).SetElementName("species");
                 cm.MapProperty(b => b.Source).SetElementName("source")
-                    .SetSerializer(EnumDataMemberAttributeSerializer<Badge.BadgeSource>.Instance);
+                    .SetSerializer(BadgeSourceSerializer.Instance);
                 cm.MapProperty(b => b.CreatedAt).SetElementName("created_at");
             });
         }
