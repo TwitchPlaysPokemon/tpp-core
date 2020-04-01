@@ -1,11 +1,10 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
+using System;
 using System.Runtime.Serialization;
 
 namespace Models
 {
     // properties need setters for deserialization
-    [SuppressMessage("ReSharper", "AutoPropertyCanBeMadeGetOnly.Local")]
+    // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
     public class Badge : IEquatable<Badge>
     {
         /// <summary>
