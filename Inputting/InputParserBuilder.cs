@@ -138,6 +138,21 @@ namespace Inputting
         }
 
         /// <summary>
+        /// Add some buttons that alias to a touchscreen coordinate each, e.g. <c>("move2", (319, 90))</c>.
+        /// This is a convenience method for doing the same as <see cref="AliasedTouchscreenInput"/>
+        /// but for multiple aliases at once.
+        /// </summary>
+        /// <param name="aliases">3-tuples of name, x-coordinate and y-coordinate</param>
+        public InputParserBuilder AliasedTouchscreenInputs(params (string name, int x, int y)[] aliases)
+        {
+            foreach ((string name, int x, int y) in aliases)
+            {
+                AliasedTouchscreenInput(name, x, y);
+            }
+            return this;
+        }
+
+        /// <summary>
         /// Add some sets of conflicting inputs, for example <c>("start", "select")</c>.
         /// These combinations of inputs cannot appear in the same input set.
         /// </summary>
