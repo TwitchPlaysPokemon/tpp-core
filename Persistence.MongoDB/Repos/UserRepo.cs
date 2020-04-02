@@ -1,10 +1,8 @@
-﻿using System;
-using System.Linq;
+using System;
 using System.Threading.Tasks;
-using Microsoft.VisualBasic;
-using Models;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
+using Persistence.Models;
 using Persistence.Repos;
 
 namespace Persistence.MongoDB.Repos
@@ -53,35 +51,9 @@ namespace Persistence.MongoDB.Repos
             });
         }
 
-        private static readonly (string, string)[] DefaultTwitchColors =
-        {
-            ("Red", "ff0000"),
-            ("Blue", "0000ff"),
-            ("Green", "00ff00"),
-            ("FireBrick", "b22222"),
-            ("Coral", "ff7f50"),
-            ("YellowGreen", "9acd32"),
-            ("OrangeRed", "ff4500"),
-            ("SeaGreen", "2e8b57"),
-            ("GoldenRod", "daa520"),
-            ("Chocolate", "d2691e"),
-            ("CadetBlue", "5f9ea0"),
-            ("DodgerBlue", "1e90ff"),
-            ("HotPink", "ff69b4"),
-            ("BlueViolet", "8a2be2"),
-            ("SpringGreen", "00ff7f"),
-        };
-
-        private static string GetDefaultColor(string simpleName)
-        {
-            // ported from old core, no idea if this is still correct
-            int n = Strings.Asc(simpleName.First()) + Strings.Asc(simpleName.Last());
-            return DefaultTwitchColors[n % DefaultTwitchColors.Length].Item2;
-        }
-
         public async Task<User> RecordUser(UserInfo userInfo)
         {
-            var update = Builders<User>.Update
+            UpdateDefinition<User> update = Builders<User>.Update
                 .Set(u => u.TwitchDisplayName, userInfo.TwitchDisplayName)
                 .Set(u => u.SimpleName, userInfo.SimpleName)
                 .Set(u => u.Color, userInfo.Color)
@@ -107,7 +79,7 @@ namespace Persistence.MongoDB.Repos
                 name: userInfo.SimpleName,
                 twitchDisplayName: userInfo.TwitchDisplayName,
                 simpleName: userInfo.SimpleName,
-                color: userInfo.Color ?? GetDefaultColor(userInfo.SimpleName),
+                color: userInfo.Color,
                 firstActiveAt: userInfo.UpdatedAt,
                 lastActiveAt: userInfo.UpdatedAt,
                 lastMessageAt: userInfo.FromMessage ? userInfo.UpdatedAt : (DateTime?) null,

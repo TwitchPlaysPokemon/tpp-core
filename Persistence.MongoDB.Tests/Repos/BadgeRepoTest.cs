@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using NUnit.Framework;
+using Persistence.Models;
 using Persistence.MongoDB.Repos;
 
 namespace Persistence.MongoDB.Tests.Repos
 {
     public class BadgeRepoTest : MongoTestBase
     {
-        private IMongoDatabase _database  = null!;
-        private BadgeRepo      _badgeRepo = null!;
+        private IMongoDatabase _database = null!;
+        private BadgeRepo _badgeRepo = null!;
 
         [SetUp]
         public void SetUp()
@@ -25,11 +25,11 @@ namespace Persistence.MongoDB.Tests.Repos
         public async Task TestInsert()
         {
             // when
-            var badge = await _badgeRepo.AddBadge(null, "16", Badge.BadgeSource.ManualCreation);
+            Badge badge = await _badgeRepo.AddBadge(null, "16", Badge.BadgeSource.ManualCreation);
 
             // then
             Assert.AreNotEqual(string.Empty, badge.Id);
-            var badgeFromDatabase = await _badgeRepo.Collection.Find(b => b.Id == badge.Id).FirstAsync();
+            Badge badgeFromDatabase = await _badgeRepo.Collection.Find(b => b.Id == badge.Id).FirstOrDefaultAsync();
             Assert.NotNull(badgeFromDatabase);
             Assert.AreNotSame(badgeFromDatabase, badge);
             Assert.AreEqual(badgeFromDatabase, badge);
@@ -44,11 +44,11 @@ namespace Persistence.MongoDB.Tests.Repos
         {
             // when
             string randomSpecies = Guid.NewGuid().ToString();
-            var badge = await _badgeRepo.AddBadge(null, randomSpecies, Badge.BadgeSource.RunCaught);
+            Badge badge = await _badgeRepo.AddBadge(null, randomSpecies, Badge.BadgeSource.RunCaught);
 
             // then
-            var badgesCollectionBson = _database.GetCollection<BsonDocument>("badges");
-            var badgeBson = await badgesCollectionBson.Find(FilterDefinition<BsonDocument>.Empty).FirstAsync();
+            IMongoCollection<BsonDocument> badgesCollectionBson = _database.GetCollection<BsonDocument>("badges");
+            BsonDocument badgeBson = await badgesCollectionBson.Find(FilterDefinition<BsonDocument>.Empty).FirstAsync();
             Assert.AreEqual(BsonObjectId.Create(ObjectId.Parse(badge.Id)), badgeBson["_id"]);
             Assert.AreEqual(BsonNull.Value, badgeBson["user"]);
             Assert.AreEqual(BsonString.Create(randomSpecies), badgeBson["species"]);
@@ -59,15 +59,15 @@ namespace Persistence.MongoDB.Tests.Repos
         public async Task TestFindByUser()
         {
             // given
-            var badgeUserA1 = await _badgeRepo.AddBadge("userA", "1", Badge.BadgeSource.Pinball);
-            var badgeUserA2 = await _badgeRepo.AddBadge("userA", "2", Badge.BadgeSource.Pinball);
-            var badgeUserB = await _badgeRepo.AddBadge("userB", "3", Badge.BadgeSource.Pinball);
-            var badgeNobody = await _badgeRepo.AddBadge(null, "4", Badge.BadgeSource.Pinball);
+            Badge badgeUserA1 = await _badgeRepo.AddBadge("userA", "1", Badge.BadgeSource.Pinball);
+            Badge badgeUserA2 = await _badgeRepo.AddBadge("userA", "2", Badge.BadgeSource.Pinball);
+            Badge badgeUserB = await _badgeRepo.AddBadge("userB", "3", Badge.BadgeSource.Pinball);
+            Badge badgeNobody = await _badgeRepo.AddBadge(null, "4", Badge.BadgeSource.Pinball);
 
             // when
-            var resultUserA = await _badgeRepo.FindByUser("userA");
-            var resultUserB = await _badgeRepo.FindByUser("userB");
-            var resultNobody = await _badgeRepo.FindByUser(null);
+            List<Badge> resultUserA = await _badgeRepo.FindByUser("userA");
+            List<Badge> resultUserB = await _badgeRepo.FindByUser("userB");
+            List<Badge> resultNobody = await _badgeRepo.FindByUser(null);
 
             // then
             Assert.AreEqual(new List<Badge> {badgeUserA1, badgeUserA2}, resultUserA);
