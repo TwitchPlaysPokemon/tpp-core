@@ -71,7 +71,6 @@ namespace Inputting.Parsing
                     (def, new Queue<Capture>(match.Groups[$"input{i}"].Captures.OrderBy(c => c.Index))))
                 .Where(tuple => tuple.Item2.Any())
                 .ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2);
-            // Queue<Capture> capturesInput = new Queue<Capture>(match.Groups["input"].Captures.OrderBy(c => c.Index));
             var capturesHold = new Queue<Capture>(match.Groups["hold"].Captures.OrderBy(c => c.Index));
             var capturesRepeat = new Queue<Capture>(match.Groups["repeat"].Captures.OrderBy(c => c.Index));
 
