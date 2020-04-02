@@ -1,4 +1,4 @@
-﻿namespace Inputting.InputDefinitions
+namespace Inputting.InputDefinitions
 {
     /// <summary>
     /// A touchscreen drag input is an input in the form of <c>x1,y1>x2,y2</c>, e.g. <c>120,215>80,170</c>,
@@ -19,7 +19,8 @@
             _height = height;
         }
 
-        public string InputRegex => @"\d{1,4},\d{1,4}>\d{1,4},\d{1,4}";
+        private const string Number = @"(?:0|[1-9]\d{0,3})";
+        public string InputRegex => $@"{Number},{Number}>{Number},{Number}";
 
         public Input? Parse(string str)
         {

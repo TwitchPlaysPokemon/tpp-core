@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using Inputting.InputDefinitions;
 using Inputting.Parsing;
@@ -117,8 +117,17 @@ namespace Inputting.Tests.Parsing
                     new Input("239,159", "touch", "239,159", additionalData: new TouchCoords(239, 159))
                 })
             ), _inputParser.Parse("239,159"));
+            Assert.AreEqual(Seq(
+                new InputSet(new List<Input>
+                {
+                    new Input("0,0", "touch", "0,0", additionalData: new TouchCoords(0, 0))
+                })
+            ), _inputParser.Parse("0,0"));
             Assert.IsNull(_inputParser.Parse("240,159"));
             Assert.IsNull(_inputParser.Parse("239,160"));
+            // disallow leading zeroes
+            Assert.IsNull(_inputParser.Parse("0000,0000"));
+            Assert.IsNull(_inputParser.Parse("012,023"));
         }
 
         [Test]
@@ -151,6 +160,9 @@ namespace Inputting.Tests.Parsing
             Assert.IsNull(_inputParser.Parse("239,160>0,0"));
             Assert.IsNull(_inputParser.Parse("0,0>239,160"));
             Assert.IsNull(_inputParser.Parse("0,0>239,160"));
+            // disallow leading zeroes
+            Assert.IsNull(_inputParser.Parse("0000,0000>0000,0000"));
+            Assert.IsNull(_inputParser.Parse("012,023>0,0"));
 
             // drag disabled
             _inputParser = InputParserBuilder.FromBare()
