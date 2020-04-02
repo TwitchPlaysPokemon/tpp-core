@@ -11,7 +11,7 @@ namespace Persistence.MongoDB.Serializers
     /// A serializer for storing enums in the database as strings using a provided translation mapping.
     /// The recommended usage is to create a subclass for each enum that gets stored in the database.
     /// </summary>
-    public abstract class EnumToStringUsingTranslationMappingSerializer<T> : SerializerBase<T> where T : struct
+    public abstract class EnumToStringUsingTranslationMappingSerializer<T> : SerializerBase<T> where T : Enum
     {
         private readonly ImmutableDictionary<T, string> _translation;
         private readonly ImmutableDictionary<string, T> _translationBack;
