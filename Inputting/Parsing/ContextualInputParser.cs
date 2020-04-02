@@ -36,12 +36,12 @@ namespace Inputting.Parsing
 
         public InputSequence? Parse(string text)
         {
-            var baseInputSequenceNullable = _baseInputParser.Parse(text);
+            InputSequence? baseInputSequenceNullable = _baseInputParser.Parse(text);
             if (baseInputSequenceNullable == null)
             {
                 return null;
             }
-            var baseInputSequence = baseInputSequenceNullable.Value;
+            InputSequence baseInputSequence = baseInputSequenceNullable.Value;
 
             // check that "wait" is used without any other buttons per button set.
             if (baseInputSequence.InputSets.Any(
@@ -51,12 +51,12 @@ namespace Inputting.Parsing
             }
 
             // check for duplicates
-            foreach (var inputSet in baseInputSequence.InputSets)
+            foreach (InputSet inputSet in baseInputSequence.InputSets)
             {
                 // all effective inputs must be unique, independently from any eventual additional data.
                 // touchscreen inputs are an exception. those get checked separately below.
                 var seen = new HashSet<string>();
-                var effectiveInputs =
+                IEnumerable<string> effectiveInputs =
                     from input in inputSet.Inputs
                     where input.EffectiveText != TouchscreenInputDefinition.EffectiveText
                     where input.EffectiveText != TouchscreenDragInputDefinition.EffectiveText
@@ -94,7 +94,7 @@ namespace Inputting.Parsing
             }
 
             // get all possible 2-item-combinations from each button set to check for conflicts
-            var combinations =
+            IEnumerable<(string, string)> combinations =
                 from inputSet in baseInputSequence.InputSets
                 from s1 in inputSet.Inputs
                 from s2 in inputSet.Inputs

@@ -1,4 +1,4 @@
-namespace Inputting.InputDefinitions
+﻿namespace Inputting.InputDefinitions
 {
     /// <summary>
     /// A touchscreen drag input is an input in the form of <c>x1,y1>x2,y2</c>, e.g. <c>120,215>80,170</c>,
@@ -24,9 +24,9 @@ namespace Inputting.InputDefinitions
 
         public Input? Parse(string str)
         {
-            var positions = str.Split(">", count: 2);
-            var posFromSplit = positions[0].Split(",", count: 2);
-            var posToSplit = positions[1].Split(",", count: 2);
+            string[] positions = str.Split(">", count: 2);
+            string[] posFromSplit = positions[0].Split(",", count: 2);
+            string[] posToSplit = positions[1].Split(",", count: 2);
             (int x1, int y1) = (int.Parse(posFromSplit[0]), int.Parse(posFromSplit[1]));
             (int x2, int y2) = (int.Parse(posToSplit[0]), int.Parse(posToSplit[1]));
             if (x1 >= _width || x2 >= _width || y1 >= _height || y2 >= _height)

@@ -74,7 +74,7 @@ namespace Inputting
         public void Enqueue(T value)
         {
             _queue.Enqueue(value);
-            if (_awaitedDequeueings.TryDequeue(out var task))
+            if (_awaitedDequeueings.TryDequeue(out TaskCompletionSource<(T, float)> task))
             {
                 task.SetResult(Dequeue());
             }
@@ -88,7 +88,7 @@ namespace Inputting
         {
             float inputDuration = CalcInputDuration(_prevInputDuration);
             _prevInputDuration = inputDuration;
-            var result = (_queue.Dequeue(), inputDuration);
+            (T, float inputDuration) result = (_queue.Dequeue(), inputDuration);
             return result;
         }
 

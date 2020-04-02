@@ -24,9 +24,9 @@ namespace Persistence.MongoDB.Serializers
         {
             DeserLookup = new Dictionary<string, T>();
             SerLookup = new Dictionary<T, string>();
-            foreach (var enumValue in Enum.GetValues(typeof(T)).Cast<T>())
+            foreach (T enumValue in Enum.GetValues(typeof(T)).Cast<T>())
             {
-                var enumValueMemberInfo = typeof(T).GetMember(enumValue.ToString()!).First();
+                MemberInfo enumValueMemberInfo = typeof(T).GetMember(enumValue.ToString()!).First();
                 var attr = (DataMemberAttribute?) enumValueMemberInfo
                     .GetCustomAttribute(typeof(DataMemberAttribute));
                 if (attr == null || !attr.IsNameSetExplicitly || DeserLookup.ContainsKey(attr.Name))
@@ -42,7 +42,7 @@ namespace Persistence.MongoDB.Serializers
         public override T Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
         {
             string rawString = context.Reader.ReadString();
-            if (DeserLookup.TryGetValue(rawString, out var result))
+            if (DeserLookup.TryGetValue(rawString, out T result))
             {
                 return result;
             }

@@ -27,7 +27,7 @@ namespace Inputting.InputDefinitions
 
         public Input? Parse(string str)
         {
-            var strings = str.Split(".", count: 2);
+            string[] strings = str.Split(".", count: 2);
             if (strings.Length == 1)
             {
                 return new Input(_keepsName ? _name : _mapsTo, _mapsTo, str, 1.0f);

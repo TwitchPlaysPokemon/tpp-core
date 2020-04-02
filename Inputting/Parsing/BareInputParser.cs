@@ -34,7 +34,8 @@ namespace Inputting.Parsing
             _inputDefinitions = inputDefinitions.ToList();
             _maxSequenceLength = maxSequenceLength;
 
-            var inputRegexGroups = _inputDefinitions.Select((def, i) => $@"(?<input{i}>{def.InputRegex})");
+            IEnumerable<string> inputRegexGroups = _inputDefinitions
+                .Select((def, i) => $@"(?<input{i}>{def.InputRegex})");
             string inputRegex = string.Join("|", inputRegexGroups);
             string inputSetRegex = $@"(?:{inputRegex})";
             if (maxSetLength > 1)
@@ -54,14 +55,14 @@ namespace Inputting.Parsing
 
         public InputSequence? Parse(string text)
         {
-            var match = _regex.Match(text);
+            Match match = _regex.Match(text);
             if (!match.Success)
             {
                 return null;
             }
 
             // Get the indexes that each input set ends at
-            var inputSetEndIndexes = match.Groups["inputset"].Captures
+            IEnumerable<int> inputSetEndIndexes = match.Groups["inputset"].Captures
                 .OrderBy(c => c.Index)
                 .Select(c => c.Index + c.Length);
             // Get all captures as queues for easy consumption
@@ -79,12 +80,12 @@ namespace Inputting.Parsing
             {
                 var inputs = new List<Input>();
                 var inputWithIndexes = new List<(int, Input)>();
-                foreach (var (def, queue) in defsToCaptureQueues)
+                foreach ((IInputDefinition def, Queue<Capture> queue) in defsToCaptureQueues)
                 {
                     while (queue.Any() && queue.First().Index < endIndex)
                     {
-                        var capture = queue.Dequeue();
-                        var input = def.Parse(capture.Value);
+                        Capture capture = queue.Dequeue();
+                        Input? input = def.Parse(capture.Value);
                         if (!input.HasValue)
                         {
                             return null;

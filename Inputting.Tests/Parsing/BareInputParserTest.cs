@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Inputting.InputDefinitions;
 using Inputting.Parsing;
@@ -45,7 +45,7 @@ namespace Inputting.Tests.Parsing
         [Test]
         public void TestHold()
         {
-            var builder = InputParserBuilder.FromBare()
+            InputParserBuilder builder = InputParserBuilder.FromBare()
                 .Buttons("a")
                 .LengthRestrictions(maxSetLength: 2, maxSequenceLength: 1);
 
@@ -71,7 +71,7 @@ namespace Inputting.Tests.Parsing
                 .LengthRestrictions(maxSetLength: 2, maxSequenceLength: 4)
                 .Build();
 
-            var result = _inputParser.Parse("honky");
+            InputSequence? result = _inputParser.Parse("honky");
             Assert.AreEqual(Seq(
                 new InputSet(new List<Input> {new Input("honk", "y", "honk", true)}),
                 new InputSet(new List<Input> {new Input("y", "y", "y", true)})
@@ -87,7 +87,7 @@ namespace Inputting.Tests.Parsing
                 .LengthRestrictions(maxSetLength: 2, maxSequenceLength: 4)
                 .Build();
 
-            var result = _inputParser.Parse("honky");
+            InputSequence? result = _inputParser.Parse("honky");
             Assert.AreEqual(Seq(
                 new InputSet(new List<Input> {new Input("y", "y", "honk", true)}),
                 new InputSet(new List<Input> {new Input("y", "y", "y", true)})

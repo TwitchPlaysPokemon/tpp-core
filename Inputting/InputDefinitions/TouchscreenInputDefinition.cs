@@ -1,4 +1,4 @@
-namespace Inputting.InputDefinitions
+﻿namespace Inputting.InputDefinitions
 {
     /// <summary>
     /// A touchscreen input is an input in the form of <c>x,y</c>, e.g. <c>120,215</c>,
@@ -24,7 +24,7 @@ namespace Inputting.InputDefinitions
 
         public Input? Parse(string str)
         {
-            var split = str.Split(',', count: 2);
+            string[] split = str.Split(',', count: 2);
             (int x, int y) = (int.Parse(split[0]), int.Parse(split[1]));
             if (x >= _width || y >= _height)
             {
