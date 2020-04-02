@@ -74,7 +74,7 @@ namespace Inputting
         public void Enqueue(T value)
         {
             _queue.Enqueue(value);
-            if (_awaitedDequeueings.TryDequeue(out TaskCompletionSource<(T, float)> task))
+            if (_awaitedDequeueings.TryDequeue(out TaskCompletionSource<(T, float)>? task))
             {
                 task.SetResult(Dequeue());
             }
