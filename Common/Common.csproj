@@ -6,8 +6,4 @@
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\Common\Common.csproj"/>
-    </ItemGroup>
-
 </Project>
