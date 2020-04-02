@@ -9,6 +9,7 @@ using Persistence.MongoDB.Repos;
 
 namespace Persistence.MongoDB.Tests.Repos
 {
+    [Category("IntegrationTest")]
     public class BadgeRepoTest : MongoTestBase
     {
         private IMongoDatabase _database = null!;
