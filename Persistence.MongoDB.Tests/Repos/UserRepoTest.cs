@@ -9,6 +9,7 @@ using Persistence.Repos;
 
 namespace Persistence.MongoDB.Tests.Repos
 {
+    [Category("IntegrationTest")]
     public class UserRepoTest : MongoTestBase
     {
         private UserRepo _userRepo = null!;
