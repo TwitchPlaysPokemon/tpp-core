@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 
-namespace Models
+namespace Persistence.Models
 {
     // properties need setters for deserialization
-    [SuppressMessage("ReSharper", "AutoPropertyCanBeMadeGetOnly.Local")]
+    // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
     public class User : IEquatable<User>
     {
         /// <summary>
