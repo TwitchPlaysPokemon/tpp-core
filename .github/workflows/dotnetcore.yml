@@ -19,3 +19,17 @@ jobs:
         dotnet-version: 3.1.100
     - name: Test with dotnet
       run: dotnet test
+    - name: Regenerate core config json schema
+      run: |
+        cd Core
+        dotnet run -- regenjsonschema
+        git add config.schema.json
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git commit -m "update core config json schema"
+        cd ..
+    - name: Push changed core config json schema
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ${{ github.ref }}
