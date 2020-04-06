@@ -1,0 +1,70 @@
+﻿{
+  "definitions": {
+    "IrcConfig": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "Channel": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "Username": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "Password": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "Suppressions": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string",
+            "enum": [
+              "Whisper",
+              "Message",
+              "Command"
+            ]
+          }
+        },
+        "SuppressionOverrides": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Irc": {
+      "$ref": "#/definitions/IrcConfig"
+    }
+  }
+}
