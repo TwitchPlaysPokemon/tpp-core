@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Persistence.MongoDB.Tests",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Persistence.MongoDB", "Persistence.MongoDB\Persistence.MongoDB.csproj", "{E7FC8D3A-4B64-4C41-9DD0-1DA1F08A3866}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{49841A70-3AC3-438E-BB8D-71F0BE5BE7C9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{E7FC8D3A-4B64-4C41-9DD0-1DA1F08A3866}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E7FC8D3A-4B64-4C41-9DD0-1DA1F08A3866}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E7FC8D3A-4B64-4C41-9DD0-1DA1F08A3866}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49841A70-3AC3-438E-BB8D-71F0BE5BE7C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49841A70-3AC3-438E-BB8D-71F0BE5BE7C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49841A70-3AC3-438E-BB8D-71F0BE5BE7C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49841A70-3AC3-438E-BB8D-71F0BE5BE7C9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
