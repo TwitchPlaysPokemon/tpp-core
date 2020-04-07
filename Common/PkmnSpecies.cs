@@ -130,9 +130,9 @@ namespace Common
         /// <returns>a number describing which one was greater.
         /// Negative if the other one was greater, positive if this one was greater,
         /// and zero if both were equal.</returns>
-        public int CompareTo(PkmnSpecies other)
+        public int CompareTo(PkmnSpecies? other)
         {
-            return string.Compare(_sortKey, other._sortKey, StringComparison.Ordinal);
+            return string.Compare(_sortKey, other?._sortKey, StringComparison.Ordinal);
         }
 
         /// <summary>
