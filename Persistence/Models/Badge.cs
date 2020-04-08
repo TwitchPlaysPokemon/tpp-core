@@ -1,4 +1,5 @@
 ﻿using System;
+using Common;
 
 namespace Persistence.Models
 {
@@ -19,10 +20,9 @@ namespace Persistence.Models
         public string? UserId { get; private set; }
 
         /// <summary>
-        /// Identifier of the badge's species.
-        /// Might be just <code>"16"</code> for example, but can be more complex for fakemons etc.
+        /// The badge's species.
         /// </summary>
-        public string Species { get; private set; }
+        public PkmnSpecies Species { get; private set; }
 
         public enum BadgeSource
         {
@@ -45,7 +45,7 @@ namespace Persistence.Models
         /// </summary>
         public DateTime CreatedAt { get; private set; }
 
-        public Badge(string id, string? userId, string species, BadgeSource source, DateTime createdAt)
+        public Badge(string id, string? userId, PkmnSpecies species, BadgeSource source, DateTime createdAt)
         {
             Id = id;
             UserId = userId;

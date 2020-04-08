@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using Persistence.Models;
+using Persistence.MongoDB.Serializers;
 using Persistence.Repos;
 
 namespace Persistence.MongoDB.Repos
@@ -32,6 +33,8 @@ namespace Persistence.MongoDB.Repos
                 cm.MapProperty(u => u.Tokens).SetElementName("tokens");
                 cm.MapProperty(u => u.ParticipationEmblems).SetElementName("participation");
                 cm.MapProperty(u => u.SelectedParticipationEmblem).SetElementName("selected_participation_badge");
+                cm.MapProperty(u => u.SelectedBadge).SetElementName("badge")
+                    .SetSerializer(PkmnSpeciesSerializer.Instance);
             });
         }
 

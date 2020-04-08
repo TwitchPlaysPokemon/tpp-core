@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Common;
 
 namespace Persistence.Models
 {
@@ -45,13 +46,14 @@ namespace Persistence.Models
         public SortedSet<int> ParticipationEmblems { get; private set; } = new SortedSet<int>();
         public int? SelectedParticipationEmblem { get; private set; } = null;
 
+        public PkmnSpecies? SelectedBadge { get; private set; } = null;
+
         // public string? SecondaryColor { get; private set; }
         // public bool SecondaryColorUnlocked { get; private set; }
         // public bool Active { get; private set; }
         // public bool Follower { get; private set; }
         // public bool Subscriber { get; private set; }
         // public bool Turbo { get; private set; }
-        // public int? Badge { get; private set; }
         // public List<string> Badges { get; private set; } // twitch badges, e.g. subscriber/24
         // public Dictionary<string, string> Milestones { get; private set; }
 
