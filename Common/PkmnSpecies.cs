@@ -13,6 +13,15 @@ namespace Common
     /// class using <see cref="OfId"/> or <see cref="OfIdWithPokedexData"/> and use that instead.
     /// All equality checks safely forward to the species id.
     /// </para>
+    /// <para>
+    /// This class is deliberately not loading any pokedex data by itself, since that would most
+    /// likely be done by loading a large JSON file.
+    /// Loading such a file imposes additional startup time, could depend on a JSON library
+    /// (e.g. JSON.net) and takes up significant space. Since this class lives in the "Common" project,
+    /// which every other project depends on, that is to be avoided.
+    /// Instead, the project bundling all dependencies together (the main application)
+    /// should register pokedex data using <see cref="RegisterPokedexData"/> at startup.
+    /// </para>
     /// </summary>
     public sealed class PkmnSpecies : IComparable<PkmnSpecies>
     {
