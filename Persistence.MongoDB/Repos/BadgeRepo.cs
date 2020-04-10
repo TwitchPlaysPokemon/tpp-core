@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using Models;
+using Common;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Driver;
+using Persistence.Models;
 using Persistence.MongoDB.Serializers;
 using Persistence.Repos;
 
@@ -25,9 +26,10 @@ namespace Persistence.MongoDB.Repos
                     .SetIdGenerator(StringObjectIdGenerator.Instance)
                     .SetSerializer(ObjectIdAsStringSerializer.Instance);
                 cm.MapProperty(b => b.UserId).SetElementName("user");
-                cm.MapProperty(b => b.Species).SetElementName("species");
+                cm.MapProperty(b => b.Species).SetElementName("species")
+                    .SetSerializer(PkmnSpeciesSerializer.Instance);
                 cm.MapProperty(b => b.Source).SetElementName("source")
-                    .SetSerializer(EnumDataMemberAttributeSerializer<Badge.BadgeSource>.Instance);
+                    .SetSerializer(BadgeSourceSerializer.Instance);
                 cm.MapProperty(b => b.CreatedAt).SetElementName("created_at");
             });
         }
@@ -49,7 +51,7 @@ namespace Persistence.MongoDB.Repos
             });
         }
 
-        public async Task<Badge> AddBadge(string? userId, string species, Badge.BadgeSource source)
+        public async Task<Badge> AddBadge(string? userId, PkmnSpecies species, Badge.BadgeSource source)
         {
             var badge = new Badge(
                 id: string.Empty,

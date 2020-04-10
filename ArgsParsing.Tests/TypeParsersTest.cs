@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Immutable;
-using System.Globalization;
-using System.Threading;
 using System.Threading.Tasks;
 using ArgsParsing.TypeParsers;
 using ArgsParsing.Types;
 using Moq;
 using NUnit.Framework;
-using Models;
+using Persistence.Models;
 using Persistence.Repos;
 
 namespace ArgsParsing.Tests
