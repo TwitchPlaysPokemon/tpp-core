@@ -13,7 +13,7 @@ namespace ArgsParsing.TypeParsers
         private readonly int _minValue;
         private readonly int _maxValue;
 
-        public IntParser(int minValue = 0, int maxValue = int.MaxValue)
+        public IntParser(int minValue = int.MinValue, int maxValue = int.MaxValue)
         {
             _minValue = minValue;
             _maxValue = maxValue;
