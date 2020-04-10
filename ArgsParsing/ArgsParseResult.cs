@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using System;
+using System.Collections.Immutable;
 
 namespace ArgsParsing
 {
@@ -22,7 +23,7 @@ namespace ArgsParsing
         Likely,
     }
 
-    public struct Success<T>
+    public readonly struct Success<T>
     {
         public T Result { get; }
         public IImmutableList<string> RemainingArgs { get; }
@@ -34,7 +35,7 @@ namespace ArgsParsing
         }
     }
 
-    public struct Failure
+    public readonly struct Failure
     {
         public ErrorRelevanceConfidence Relevance { get; }
         public string Error { get; }
@@ -51,16 +52,27 @@ namespace ArgsParsing
     /// and contains an instance of <typeparamref name="T"/> on success.
     /// </summary>
     /// <typeparam name="T">type of the success object that will be contained on success.</typeparam>
-    public struct ArgsParseResult<T>
+    public readonly struct ArgsParseResult<T>
     {
         /// <summary>
         /// Whether this success object resulted from a successful parse operation, and therefore contains a result.
         /// </summary>
         public bool IsSuccess { get; }
+
+        private readonly Success<T> _successResult;
         /// <summary>
         /// The result object, if successful.
         /// </summary>
-        public Success<T> SuccessResult { get; }
+        public Success<T> SuccessResult
+        {
+            get
+            {
+                if (!IsSuccess)
+                    throw new InvalidOperationException(
+                        "Cannot access the success object of an unsuccessful parse result.");
+                return _successResult;
+            }
+        }
         /// <summary>
         /// A failure that occured during parsing.
         /// Note that even successful results may contain failures, which is needed for better error reporting,
@@ -74,7 +86,7 @@ namespace ArgsParsing
             Failure? failureResult)
         {
             IsSuccess = isSuccess;
-            SuccessResult = successResult;
+            _successResult = successResult;
             FailureResult = failureResult;
         }
 
