@@ -60,6 +60,28 @@ namespace ArgsParsing.Tests
         }
 
         [Test]
+        public async Task TestOneOfParser()
+        {
+            var argsParser = new ArgsParser();
+            argsParser.AddArgumentParser(new OneOfParser(argsParser));
+            argsParser.AddArgumentParser(new StringParser());
+            argsParser.AddArgumentParser(new IntParser());
+
+            OneOf<int, string> result1 = await argsParser.Parse<OneOf<int, string>>(ImmutableList.Create("123"));
+            OneOf<int, string> result2 = await argsParser.Parse<OneOf<int, string>>(ImmutableList.Create("foo"));
+            Assert.IsTrue(result1.Item1.IsPresent);
+            Assert.IsFalse(result1.Item2.IsPresent);
+            Assert.AreEqual(123, result1.Item1.Value);
+            Assert.IsFalse(result2.Item1.IsPresent);
+            Assert.IsTrue(result2.Item2.IsPresent);
+            Assert.AreEqual("foo", result2.Item2.Value);
+
+            var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<OneOf<int, int>>(ImmutableList.Create("foo")));
+            Assert.AreEqual("did not recognize 'foo' as a number", ex.Message);
+        }
+
+        [Test]
         public async Task TestOptionalParser()
         {
             var argsParser = new ArgsParser();
