@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using Common;
 
 namespace ArgsParsing
 {
@@ -54,11 +53,6 @@ namespace ArgsParsing
         public void AddArgumentParser<T>(IArgumentParser<T> argumentParser)
         {
             _parsers.Add(typeof(T), argumentParser);
-        }
-
-        static ArgsParser()
-        {
-            CultureFix.UseInvariantCulture();
         }
 
         /// <summary>
