@@ -33,7 +33,7 @@ namespace ArgsParsing.TypeParsers
             for (int i = 0; i < genericTypes.Length; i++)
             {
                 Type nestedType = genericTypes[i];
-                var parseResult = await _argsParser.ParseRaw(args, new[] {nestedType});
+                ArgsParseResult<List<object>> parseResult = await _argsParser.ParseRaw(args, new[] {nestedType});
                 if (!parseResult.IsSuccess)
                 {
                     Debug.Assert(parseResult.FailureResult != null);
@@ -51,7 +51,7 @@ namespace ArgsParsing.TypeParsers
                         "needs to be implemented and wired up where this exception is thrown. " +
                         "But do you _really_ want \"one of\" this many arguments?")
                 };
-                var oneOfConstructor = type
+                ConstructorInfo? oneOfConstructor = type
                     .MakeGenericType(genericTypes)
                     .GetConstructor(genericTypes.Select(t => typeof(Optional<>).MakeGenericType(t)).ToArray());
                 if (oneOfConstructor == null)
@@ -81,7 +81,7 @@ namespace ArgsParsing.TypeParsers
                     parseResult.SuccessResult.RemainingArgs);
             }
             Debug.Assert(failures.Any());
-            var mostRelevantFailure = failures.OrderByDescending(failure => failure.Relevance).First();
+            Failure mostRelevantFailure = failures.OrderByDescending(failure => failure.Relevance).First();
             return ArgsParseResult<OneOf>.Failure(mostRelevantFailure);
         }
     }

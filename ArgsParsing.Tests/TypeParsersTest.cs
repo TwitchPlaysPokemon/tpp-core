@@ -5,9 +5,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using ArgsParsing.TypeParsers;
 using ArgsParsing.Types;
-using Models;
 using Moq;
 using NUnit.Framework;
+using Models;
 using Persistence.Repos;
 
 namespace ArgsParsing.Tests
@@ -46,7 +46,7 @@ namespace ArgsParsing.Tests
                 await argsParser.Parse<DateTime>(args: ImmutableList.Create("2020-03-22", "01:59:20Z"));
             var result2 = await argsParser.Parse<DateTime>(args: ImmutableList.Create("2020-03-22T01:59:20Z"));
 
-            var refDateTime = DateTime.SpecifyKind(DateTime.Parse("2020-03-22 01:59:20+00"), DateTimeKind.Utc);
+            DateTime refDateTime = DateTime.SpecifyKind(DateTime.Parse("2020-03-22 01:59:20+00"), DateTimeKind.Utc);
             Assert.AreEqual(refDateTime, result1);
             Assert.AreEqual(refDateTime, result2);
             Assert.AreEqual(result1, result2);
@@ -91,7 +91,7 @@ namespace ArgsParsing.Tests
 
             var result1 = await argsParser.Parse<Optional<int>>(args: ImmutableList.Create("123"));
             var result2 = await argsParser.Parse<Optional<int>>(args: ImmutableList.Create<string>());
-            (var result3, string _) = await argsParser
+            (Optional<int> result3, string _) = await argsParser
                 .Parse<Optional<int>, string>(args: ImmutableList.Create("foo"));
             Assert.IsTrue(result1.IsPresent);
             Assert.AreEqual(123, result1.Value);

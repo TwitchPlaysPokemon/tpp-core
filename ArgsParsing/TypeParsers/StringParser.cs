@@ -13,7 +13,7 @@ namespace ArgsParsing.TypeParsers
     {
         public override Task<ArgsParseResult<string>> Parse(IImmutableList<string> args, Type[] genericTypes)
         {
-            var result = ArgsParseResult<string>.Success(args[0], args.Skip(1).ToImmutableList());
+            ArgsParseResult<string> result = ArgsParseResult<string>.Success(args[0], args.Skip(1).ToImmutableList());
             return Task.FromResult(result);
         }
     }

@@ -25,13 +25,13 @@ namespace ArgsParsing.TypeParsers
             {
                 // try with 2 arguments first, in case it contains a space instead of 'T'
                 string str = $"{args[0]} {args[1]}";
-                if (TryParse(str, out var dateTimeFromTwoArgs))
+                if (TryParse(str, out DateTime dateTimeFromTwoArgs))
                 {
                     return Task.FromResult(ArgsParseResult<DateTime>.Success(
                         dateTimeFromTwoArgs, args.Skip(2).ToImmutableList()));
                 }
             }
-            return Task.FromResult(TryParse(args[0].Replace("T", " "), out var dateTime)
+            return Task.FromResult(TryParse(args[0].Replace("T", " "), out DateTime dateTime)
                 ? ArgsParseResult<DateTime>.Success(dateTime, args.Skip(1).ToImmutableList())
                 : ArgsParseResult<DateTime>.Failure($"did not recognize '{args[0]}' as a UTC-datetime"));
         }

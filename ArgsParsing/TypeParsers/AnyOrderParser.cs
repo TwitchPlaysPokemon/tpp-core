@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using ArgsParsing.Types;
 
@@ -56,15 +57,16 @@ namespace ArgsParsing.TypeParsers
             var failures = new List<Failure>();
             foreach (var argsPermutation in Permutations(argList))
             {
-                var parseResult = await _argsParser.ParseRaw(argsPermutation.ToImmutableList(), genericTypes);
+                ArgsParseResult<List<object>> parseResult = await _argsParser
+                    .ParseRaw(argsPermutation.ToImmutableList(), genericTypes);
                 if (!parseResult.IsSuccess)
                 {
                     Debug.Assert(parseResult.FailureResult != null);
                     failures.Add(parseResult.FailureResult.Value);
                     continue;
                 }
-                var items = parseResult.SuccessResult.Result;
-                var type = items.Count switch
+                List<object> items = parseResult.SuccessResult.Result;
+                Type type = items.Count switch
                 {
                     2 => typeof(AnyOrder<,>),
                     3 => typeof(AnyOrder<,,>),
@@ -74,7 +76,7 @@ namespace ArgsParsing.TypeParsers
                         "needs to be implemented and wired up where this exception is thrown. " +
                         "But do you _really_ want this many arguments in any order?")
                 };
-                var constructor = type.MakeGenericType(genericTypes).GetConstructor(genericTypes);
+                ConstructorInfo? constructor = type.MakeGenericType(genericTypes).GetConstructor(genericTypes);
                 if (constructor == null)
                 {
                     throw new InvalidOperationException($"{type} needs a constructor with {items.Count} parameters.");
@@ -85,7 +87,7 @@ namespace ArgsParsing.TypeParsers
                     parseResult.SuccessResult.RemainingArgs);
             }
             Debug.Assert(failures.Any());
-            var mostRelevantFailure = failures.OrderByDescending(failure => failure.Relevance).First();
+            Failure mostRelevantFailure = failures.OrderByDescending(failure => failure.Relevance).First();
             return ArgsParseResult<AnyOrder>.Failure(mostRelevantFailure);
         }
     }

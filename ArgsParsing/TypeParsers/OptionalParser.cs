@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using ArgsParsing.Types;
 
@@ -30,7 +32,7 @@ namespace ArgsParsing.TypeParsers
                                             $"but got {genericTypes.Length}");
             }
             var type = typeof(Optional<>).MakeGenericType(genericTypes[0]);
-            var constructor = type.GetConstructor(new[] {typeof(bool), genericTypes[0]});
+            ConstructorInfo? constructor = type.GetConstructor(new[] {typeof(bool), genericTypes[0]});
             if (constructor == null)
             {
                 throw new InvalidOperationException($"{type} needs a constructor (bool present, T value).");
@@ -41,8 +43,8 @@ namespace ArgsParsing.TypeParsers
                 var optional = (Optional) constructor.Invoke(new object?[] {false, null});
                 return ArgsParseResult<Optional>.Success(optional, args);
             }
-            var parseResult = await _argsParser.ParseRaw(args, genericTypes);
-            if (parseResult.TryUnwrap(out var result, out var remainingArgs))
+            ArgsParseResult<List<object>> parseResult = await _argsParser.ParseRaw(args, genericTypes);
+            if (parseResult.TryUnwrap(out List<object> result, out IImmutableList<string> remainingArgs))
             {
                 var optional = (Optional) constructor.Invoke(new[] {true, result[0]});
                 return ArgsParseResult<Optional>.Success(parseResult.FailureResult, optional, remainingArgs);

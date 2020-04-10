@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -78,16 +79,17 @@ namespace ArgsParsing
             var failures = new List<Failure>();
             foreach (var type in types)
             {
-                var queryType = type.IsGenericType ? type.BaseType : type;
+                Type? queryType = type.IsGenericType ? type.BaseType : type;
                 if (queryType == null || queryType.IsGenericType)
                 {
                     throw new InvalidOperationException($"generic type {type} need a non-generic base type");
                 }
-                if (!_parsers.TryGetValue(queryType, out var parser))
+                if (!_parsers.TryGetValue(queryType, out IArgumentParser? parser))
                 {
                     throw new MissingParserException(typeWithoutParser: type);
                 }
-                var genericTypes = type.IsGenericType ? type.GenericTypeArguments : new Type[] { };
+                Debug.Assert(parser != null, "try-get succeeded and the dictionary does not contain null values");
+                Type[] genericTypes = type.IsGenericType ? type.GenericTypeArguments : new Type[] { };
                 ArgsParseResult<object> parseResult;
                 try
                 {
@@ -103,7 +105,7 @@ namespace ArgsParsing
                 {
                     failures.Add(parseResult.FailureResult.Value);
                 }
-                if (parseResult.TryUnwrap(out var result, out var remainingArgs))
+                if (parseResult.TryUnwrap(out object result, out IImmutableList<string> remainingArgs))
                 {
                     allRemainingArgs = remainingArgs;
                     results.Add(result);
@@ -125,7 +127,7 @@ namespace ArgsParsing
             }
             else
             {
-                var mostRelevantFailure = failures.OrderByDescending(failure => failure.Relevance).First();
+                Failure mostRelevantFailure = failures.OrderByDescending(failure => failure.Relevance).First();
                 return ArgsParseResult<List<object>>.Failure(mostRelevantFailure);
             }
         }
@@ -144,8 +146,8 @@ namespace ArgsParsing
         public async Task<ArgsParseResult<T1>> TryParse<T1>(IImmutableList<string> args)
         {
             IEnumerable<Type> types = new[] {typeof(T1)};
-            var parseResult = await ParseRaw(args, types, errorOnRemainingArgs: true);
-            return parseResult.TryUnwrap(out var result, out var remainingArgs)
+            ArgsParseResult<List<object>> parseResult = await ParseRaw(args, types, errorOnRemainingArgs: true);
+            return parseResult.TryUnwrap(out List<object> result, out IImmutableList<string> remainingArgs)
                 ? ArgsParseResult<T1>.Success(parseResult.FailureResult, (T1) result[0], remainingArgs)
                 : ArgsParseResult<T1>.Failure(parseResult.FailureResult);
         }
@@ -164,8 +166,8 @@ namespace ArgsParsing
         public async Task<ArgsParseResult<(T1, T2)>> TryParse<T1, T2>(IImmutableList<string> args)
         {
             IEnumerable<Type> types = new[] {typeof(T1), typeof(T2)};
-            var parseResult = await ParseRaw(args, types, errorOnRemainingArgs: true);
-            return parseResult.TryUnwrap(out var result, out var remainingArgs)
+            ArgsParseResult<List<object>> parseResult = await ParseRaw(args, types, errorOnRemainingArgs: true);
+            return parseResult.TryUnwrap(out List<object> result, out IImmutableList<string> remainingArgs)
                 ? ArgsParseResult<(T1, T2)>.Success(parseResult.FailureResult,
                     ((T1) result[0], (T2) result[1]), remainingArgs)
                 : ArgsParseResult<(T1, T2)>.Failure(parseResult.FailureResult);
@@ -186,8 +188,8 @@ namespace ArgsParsing
         public async Task<ArgsParseResult<(T1, T2, T3)>> TryParse<T1, T2, T3>(IImmutableList<string> args)
         {
             IEnumerable<Type> types = new[] {typeof(T1), typeof(T2), typeof(T3)};
-            var parseResult = await ParseRaw(args, types, errorOnRemainingArgs: true);
-            return parseResult.TryUnwrap(out var result, out var remainingArgs)
+            ArgsParseResult<List<object>> parseResult = await ParseRaw(args, types, errorOnRemainingArgs: true);
+            return parseResult.TryUnwrap(out List<object> result, out IImmutableList<string> remainingArgs)
                 ? ArgsParseResult<(T1, T2, T3)>.Success(parseResult.FailureResult,
                     ((T1) result[0], (T2) result[1], (T3) result[2]), remainingArgs)
                 : ArgsParseResult<(T1, T2, T3)>.Failure(parseResult.FailureResult);
@@ -209,8 +211,8 @@ namespace ArgsParsing
         public async Task<ArgsParseResult<(T1, T2, T3, T4)>> TryParse<T1, T2, T3, T4>(IImmutableList<string> args)
         {
             IEnumerable<Type> types = new[] {typeof(T1), typeof(T2), typeof(T3), typeof(T4)};
-            var parseResult = await ParseRaw(args, types, errorOnRemainingArgs: true);
-            return parseResult.TryUnwrap(out var result, out var remainingArgs)
+            ArgsParseResult<List<object>> parseResult = await ParseRaw(args, types, errorOnRemainingArgs: true);
+            return parseResult.TryUnwrap(out List<object> result, out IImmutableList<string> remainingArgs)
                 ? ArgsParseResult<(T1, T2, T3, T4)>.Success(parseResult.FailureResult,
                     ((T1) result[0], (T2) result[1], (T3) result[2], (T4) result[3]), remainingArgs)
                 : ArgsParseResult<(T1, T2, T3, T4)>.Failure(parseResult.FailureResult);
@@ -226,8 +228,8 @@ namespace ArgsParsing
         /// <exception cref="ArgsParseFailure">If parsing failed</exception>
         public async Task<T1> Parse<T1>(IImmutableList<string> args)
         {
-            var parseResult = await TryParse<T1>(args);
-            if (parseResult.TryUnwrap(out var result))
+            ArgsParseResult<T1> parseResult = await TryParse<T1>(args);
+            if (parseResult.TryUnwrap(out T1 result))
             {
                 return result;
             }
@@ -245,8 +247,8 @@ namespace ArgsParsing
         /// <exception cref="ArgsParseFailure">If parsing failed</exception>
         public async Task<(T1, T2)> Parse<T1, T2>(IImmutableList<string> args)
         {
-            var parseResult = await TryParse<T1, T2>(args);
-            if (parseResult.TryUnwrap(out var result))
+            ArgsParseResult<(T1, T2)> parseResult = await TryParse<T1, T2>(args);
+            if (parseResult.TryUnwrap(out (T1, T2) result))
             {
                 return result;
             }
@@ -265,9 +267,9 @@ namespace ArgsParsing
         /// <exception cref="ArgsParseFailure">If parsing failed</exception>
         public async Task<(T1, T2, T3)> Parse<T1, T2, T3>(IImmutableList<string> args)
         {
-            var parseResult = await TryParse<T1, T2, T3>(args);
-            parseResult.TryUnwrap(out var x);
-            if (parseResult.TryUnwrap(out var result))
+            ArgsParseResult<(T1, T2, T3)> parseResult = await TryParse<T1, T2, T3>(args);
+            parseResult.TryUnwrap(out (T1, T2, T3) x);
+            if (parseResult.TryUnwrap(out (T1, T2, T3) result))
             {
                 return result;
             }
@@ -287,8 +289,8 @@ namespace ArgsParsing
         /// <exception cref="ArgsParseFailure">If parsing failed</exception>
         public async Task<(T1, T2, T3, T4)> Parse<T1, T2, T3, T4>(IImmutableList<string> args)
         {
-            var parseResult = await TryParse<T1, T2, T3, T4>(args);
-            if (parseResult.TryUnwrap(out var result))
+            ArgsParseResult<(T1, T2, T3, T4)> parseResult = await TryParse<T1, T2, T3, T4>(args);
+            if (parseResult.TryUnwrap(out (T1, T2, T3, T4) result))
             {
                 return result;
             }

@@ -35,7 +35,7 @@ namespace ArgsParsing.TypeParsers
                     return Task.FromResult(ArgsParseResult<int>.Failure(
                         $"'{str}' cannot be above {_maxValue}", ErrorRelevanceConfidence.Likely));
                 }
-                var result = ArgsParseResult<int>.Success(number, args.Skip(1).ToImmutableList());
+                ArgsParseResult<int> result = ArgsParseResult<int>.Success(number, args.Skip(1).ToImmutableList());
                 return Task.FromResult(result);
             }
             catch (FormatException)

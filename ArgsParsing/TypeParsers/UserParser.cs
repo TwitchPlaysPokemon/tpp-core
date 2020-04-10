@@ -26,7 +26,7 @@ namespace ArgsParsing.TypeParsers
         public override async Task<ArgsParseResult<User>> Parse(IImmutableList<string> args, Type[] genericTypes)
         {
             string simpleName = args[0].ToLower();
-            var user = await _userRepo.FindBySimpleName(simpleName);
+            User? user = await _userRepo.FindBySimpleName(simpleName);
             return user == null
                 ? ArgsParseResult<User>.Failure($"did not recognize a user with the name '{simpleName}'")
                 : ArgsParseResult<User>.Success(user, args.Skip(1).ToImmutableList());
