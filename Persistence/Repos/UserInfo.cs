@@ -2,7 +2,7 @@
 
 namespace Persistence.Repos
 {
-    public struct UserInfo
+    public readonly struct UserInfo
     {
         public string Id { get; }
         public string TwitchDisplayName { get; }
