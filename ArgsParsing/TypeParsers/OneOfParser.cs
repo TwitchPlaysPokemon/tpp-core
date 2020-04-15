@@ -34,13 +34,13 @@ namespace ArgsParsing.TypeParsers
             {
                 Type nestedType = genericTypes[i];
                 ArgsParseResult<List<object>> parseResult = await _argsParser.ParseRaw(args, new[] {nestedType});
-                if (!parseResult.IsSuccess)
+                if (parseResult.SuccessResult == null)
                 {
                     Debug.Assert(parseResult.FailureResult != null);
                     failures.Add(parseResult.FailureResult.Value);
                     continue;
                 }
-                object result = parseResult.SuccessResult.Result.First();
+                object result = parseResult.SuccessResult.Value.Result.First();
                 Type type = genericTypes.Length switch
                 {
                     2 => typeof(OneOf<,>),
@@ -78,7 +78,7 @@ namespace ArgsParsing.TypeParsers
                 return ArgsParseResult<OneOf>.Success(
                     parseResult.FailureResult,
                     (OneOf) oneOfConstructor.Invoke(invokeArgs),
-                    parseResult.SuccessResult.RemainingArgs);
+                    parseResult.SuccessResult.Value.RemainingArgs);
             }
             Debug.Assert(failures.Any());
             Failure mostRelevantFailure = failures.OrderByDescending(failure => failure.Relevance).First();

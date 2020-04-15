@@ -44,10 +44,11 @@ namespace ArgsParsing.TypeParsers
                 return ArgsParseResult<Optional>.Success(optional, args);
             }
             ArgsParseResult<List<object>> parseResult = await _argsParser.ParseRaw(args, genericTypes);
-            if (parseResult.TryUnwrap(out List<object> result, out IImmutableList<string> remainingArgs))
+            if (parseResult.SuccessResult != null)
             {
-                var optional = (Optional) constructor.Invoke(new[] {true, result[0]});
-                return ArgsParseResult<Optional>.Success(parseResult.FailureResult, optional, remainingArgs);
+                Success<List<object>> success = parseResult.SuccessResult.Value;
+                var optional = (Optional) constructor.Invoke(new[] {true, success.Result[0]});
+                return ArgsParseResult<Optional>.Success(parseResult.FailureResult, optional, success.RemainingArgs);
             }
             else
             {

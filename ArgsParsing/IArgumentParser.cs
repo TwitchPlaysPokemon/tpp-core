@@ -51,9 +51,9 @@ namespace ArgsParsing
         async Task<ArgsParseResult<object>> IArgumentParser.Parse(IImmutableList<string> args, Type[] genericTypes)
         {
             ArgsParseResult<T> parseResult = await Parse(args, genericTypes);
-            return parseResult.IsSuccess
+            return parseResult.SuccessResult != null
                 ? ArgsParseResult<object>.Success(parseResult.FailureResult,
-                    parseResult.SuccessResult.Result!, parseResult.SuccessResult.RemainingArgs)
+                    parseResult.SuccessResult.Value.Result!, parseResult.SuccessResult.Value.RemainingArgs)
                 : ArgsParseResult<object>.Failure(parseResult.FailureResult);
         }
     }

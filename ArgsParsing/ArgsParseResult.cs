@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 
 namespace ArgsParsing
 {
@@ -55,24 +54,9 @@ namespace ArgsParsing
     public readonly struct ArgsParseResult<T>
     {
         /// <summary>
-        /// Whether this success object resulted from a successful parse operation, and therefore contains a result.
-        /// </summary>
-        public bool IsSuccess { get; }
-
-        private readonly Success<T> _successResult;
-        /// <summary>
         /// The result object, if successful.
         /// </summary>
-        public Success<T> SuccessResult
-        {
-            get
-            {
-                if (!IsSuccess)
-                    throw new InvalidOperationException(
-                        "Cannot access the success object of an unsuccessful parse result.");
-                return _successResult;
-            }
-        }
+        public Success<T>? SuccessResult { get; }
         /// <summary>
         /// A failure that occured during parsing.
         /// Note that even successful results may contain failures, which is needed for better error reporting,
@@ -81,12 +65,10 @@ namespace ArgsParsing
         public Failure? FailureResult { get; }
 
         private ArgsParseResult(
-            bool isSuccess,
-            Success<T> successResult,
+            Success<T>? successResult,
             Failure? failureResult)
         {
-            IsSuccess = isSuccess;
-            _successResult = successResult;
+            SuccessResult = successResult;
             FailureResult = failureResult;
         }
 
@@ -102,7 +84,7 @@ namespace ArgsParsing
             T result,
             IImmutableList<string> remainingArgs)
         {
-            return new ArgsParseResult<T>(true, new Success<T>(result, remainingArgs), nestedFailure);
+            return new ArgsParseResult<T>(new Success<T>(result, remainingArgs), nestedFailure);
         }
 
         /// <summary>
@@ -115,7 +97,7 @@ namespace ArgsParsing
             T result,
             IImmutableList<string> remainingArgs)
         {
-            return new ArgsParseResult<T>(true, new Success<T>(result, remainingArgs), null);
+            return new ArgsParseResult<T>(new Success<T>(result, remainingArgs), null);
         }
 
         /// <summary>
@@ -129,7 +111,7 @@ namespace ArgsParsing
             string message,
             ErrorRelevanceConfidence relevance = ErrorRelevanceConfidence.Default)
         {
-            return new ArgsParseResult<T>(false, default!, new Failure(relevance, message));
+            return new ArgsParseResult<T>(null, new Failure(relevance, message));
         }
 
         /// <summary>
@@ -139,40 +121,7 @@ namespace ArgsParsing
         /// <returns>An respective instance of <see cref="ArgsParseResult{T}"/></returns>
         public static ArgsParseResult<T> Failure(Failure? failure)
         {
-            return new ArgsParseResult<T>(false, default!, failure);
-        }
-
-        /// <summary>
-        /// Accesses the parsing result, if <see cref="IsSuccess"/> is true.
-        /// </summary>
-        /// <param name="result">The contained parsing result.</param>
-        /// <param name="remainingArgs">The remaining, unconsumed arguments.</param>
-        /// <returns>Whether the result is successful and the out variable therefore set.</returns>
-        public bool TryUnwrap(out T result, out IImmutableList<string> remainingArgs)
-        {
-            if (IsSuccess)
-            {
-                result = SuccessResult.Result;
-                remainingArgs = SuccessResult.RemainingArgs;
-                return true;
-            }
-            else
-            {
-                result = default!;
-                remainingArgs = default!;
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Overload of <see cref="TryUnwrap(out T,out System.Collections.Immutable.IImmutableList{string})"/>
-        /// that ignores any remaining arguments.
-        /// </summary>
-        /// <param name="result">The contained parsing result.</param>
-        /// <returns>Whether the result is successful and the out variable therefore set.</returns>
-        public bool TryUnwrap(out T result)
-        {
-            return TryUnwrap(out result, out _);
+            return new ArgsParseResult<T>(null, failure);
         }
     }
 }

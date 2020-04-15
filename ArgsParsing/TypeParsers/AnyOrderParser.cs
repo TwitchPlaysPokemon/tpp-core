@@ -59,13 +59,13 @@ namespace ArgsParsing.TypeParsers
             {
                 ArgsParseResult<List<object>> parseResult = await _argsParser
                     .ParseRaw(argsPermutation.ToImmutableList(), genericTypes);
-                if (!parseResult.IsSuccess)
+                if (parseResult.SuccessResult == null)
                 {
                     Debug.Assert(parseResult.FailureResult != null);
                     failures.Add(parseResult.FailureResult.Value);
                     continue;
                 }
-                List<object> items = parseResult.SuccessResult.Result;
+                List<object> items = parseResult.SuccessResult.Value.Result;
                 Type type = items.Count switch
                 {
                     2 => typeof(AnyOrder<,>),
@@ -84,7 +84,7 @@ namespace ArgsParsing.TypeParsers
                 return ArgsParseResult<AnyOrder>.Success(
                     parseResult.FailureResult,
                     (AnyOrder) constructor.Invoke(items.ToArray()),
-                    parseResult.SuccessResult.RemainingArgs);
+                    parseResult.SuccessResult.Value.RemainingArgs);
             }
             Debug.Assert(failures.Any());
             Failure mostRelevantFailure = failures.OrderByDescending(failure => failure.Relevance).First();
