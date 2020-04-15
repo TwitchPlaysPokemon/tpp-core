@@ -49,7 +49,7 @@ namespace Persistence.Models
 
         public DateTime CreatedAt { get; private set; }
 
-        public TransactionType Type { get; private set; } // TODO felk enum
+        public TransactionType Type { get; private set; }
 
         public IDictionary<string, object?> AdditionalData { get; private set; }
 

@@ -15,7 +15,7 @@ namespace Persistence.Repos
     {
         public T User { get; }
 
-        public UserNotFoundException(T user)
+        public UserNotFoundException(T user) : base($"User '{user}' was not found")
         {
             User = user;
         }

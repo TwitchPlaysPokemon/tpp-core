@@ -31,11 +31,11 @@ namespace Persistence.MongoDB.Tests.Repos
         {
             _database = CreateTemporaryDatabase();
             _bank = new Bank<TestUser>(
-                _database,
-                "users",
-                "transactionLog",
-                user => user.Money,
-                user => user.Id
+                database: _database,
+                currencyCollectionName: "users",
+                transactionLogCollectionName: "transactionLog",
+                currencyField: user => user.Money,
+                idField: user => user.Id
             );
             _usersCollection = _database.GetCollection<TestUser>("users");
         }
