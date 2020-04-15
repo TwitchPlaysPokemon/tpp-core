@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.Threading.Tasks;
 using ArgsParsing.TypeParsers;
 using ArgsParsing.Types;
+using Common;
 using Moq;
 using NUnit.Framework;
 using Persistence.Models;
@@ -98,6 +99,34 @@ namespace ArgsParsing.Tests
             Assert.AreEqual(123, result1.Value);
             Assert.IsFalse(result2.IsPresent);
             Assert.IsFalse(result3.IsPresent);
+        }
+
+        [Test]
+        public async Task TestPkmnSpeciesParser()
+        {
+            const string speciesId = "79317";
+            const string speciesName = "Uniquamon";
+            var argsParser = new ArgsParser();
+            // register pokedex names before instantiating the args parser!
+            PkmnSpecies.RegisterPokedexData(speciesId, speciesName, ImmutableDictionary<string, string>.Empty);
+            argsParser.AddArgumentParser(new PkmnSpeciesParser());
+
+            PkmnSpecies resultById = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create("#" + speciesId));
+            PkmnSpecies resultByName1 = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create(speciesName));
+            PkmnSpecies resultByName2 = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create("uNiQuAmOn"));
+
+            Assert.AreEqual(PkmnSpecies.OfId(speciesId), resultById);
+            Assert.AreEqual(PkmnSpecies.OfId(speciesId), resultByName1);
+            Assert.AreEqual(PkmnSpecies.OfId(speciesId), resultByName2);
+
+            ArgsParseFailure exNotPrefixed = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<PkmnSpecies>(args: ImmutableList.Create(speciesId)));
+            Assert.AreEqual("Please prefix with '#' to supply and pokedex number", exNotPrefixed.Message);
+            ArgsParseFailure exUnknown = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<PkmnSpecies>(args: ImmutableList.Create("unknown")));
+            Assert.AreEqual(
+                "No pokemon with the name 'unknown' was recognized. Please supply a valid name, " +
+                "or prefix with '#' to supply and pokedex number instead", exUnknown.Message);
         }
 
         [Test]
