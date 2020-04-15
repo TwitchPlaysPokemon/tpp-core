@@ -74,9 +74,12 @@ namespace ArgsParsing.Tests
             Assert.IsTrue(result2.Item2.IsPresent);
             Assert.AreEqual("foo", result2.Item2.Value);
 
-            var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+            var exUnrecognized = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
                 .Parse<OneOf<int, int>>(ImmutableList.Create("foo")));
-            Assert.AreEqual("did not recognize 'foo' as a number", ex.Message);
+            Assert.AreEqual("did not recognize 'foo' as a number", exUnrecognized.Message);
+            var exTooManyArgs = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<OneOf<int, int>>(ImmutableList.Create("123", "234")));
+            Assert.AreEqual("too many arguments", exTooManyArgs.Message);
         }
 
         [Test]
