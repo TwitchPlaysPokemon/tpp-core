@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Common;
 using Persistence.Repos;
 
 namespace Persistence.Models
@@ -36,10 +37,10 @@ namespace Persistence.Models
     /// </summary>
     // properties need setters for deserialization
     // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
-    public class TransactionLog : IEquatable<TransactionLog>
+    public class TransactionLog : PropertyEquatable<TransactionLog>
     {
         public string Id { get; private set; }
-        public bool Equals(TransactionLog? other) => Id == other?.Id;
+        protected override object EqualityId => Id;
 
         public string UserId { get; private set; }
         public int OldBalance { get; private set; }
