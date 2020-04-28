@@ -65,6 +65,16 @@ namespace Persistence.MongoDB.Repos
                     Expression.Assign(_currencyField.Body, balanceParameter),
                     _currencyField.Parameters.First(), balanceParameter)
                 .Compile();
+
+            InitIndexes();
+        }
+
+        private void InitIndexes()
+        {
+            _transactionLogCollection.Indexes.CreateMany(new[]
+            {
+                new CreateIndexModel<TransactionLog>(Builders<TransactionLog>.IndexKeys.Ascending(u => u.UserId)),
+            });
         }
 
         private Expression<Func<T, bool>> GetUserIdFilter(string val)
