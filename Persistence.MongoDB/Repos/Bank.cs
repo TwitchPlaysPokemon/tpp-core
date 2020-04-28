@@ -37,8 +37,7 @@ namespace Persistence.MongoDB.Repos
                 cm.MapProperty(t => t.NewBalance).SetElementName("new_balance");
                 cm.MapProperty(t => t.Change).SetElementName("change");
                 cm.MapProperty(t => t.CreatedAt).SetElementName("timestamp");
-                cm.MapProperty(t => t.Type).SetElementName("type")
-                    .SetSerializer(TransactionTypeSerializer.Instance);
+                cm.MapProperty(t => t.Type).SetElementName("type");
                 cm.MapExtraElementsProperty(t => t.AdditionalData);
             });
         }

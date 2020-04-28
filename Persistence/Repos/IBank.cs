@@ -38,7 +38,7 @@ namespace Persistence.Repos
         /// <summary>
         /// What type of transaction this is.
         /// </summary>
-        public TransactionType Type { get; }
+        public string Type { get; }
         /// <summary>
         /// Any additional data that should be stored with the transaction.
         /// </summary>
@@ -47,7 +47,7 @@ namespace Persistence.Repos
         public Transaction(
             T user,
             int change,
-            TransactionType type,
+            string type,
             IDictionary<string, object?>? additionalData = default)
         {
             User = user;

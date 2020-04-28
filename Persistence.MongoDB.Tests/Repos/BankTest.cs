@@ -46,13 +46,13 @@ namespace Persistence.MongoDB.Tests.Repos
             var user = new TestUser {Money = 10};
             await _usersCollection.InsertOneAsync(user);
 
-            var transaction = new Transaction<TestUser>(user, 1, TransactionType.Test);
+            var transaction = new Transaction<TestUser>(user, 1, "test");
             TransactionLog log = await _bank.PerformTransaction(transaction);
 
             Assert.AreEqual(10, log.OldBalance);
             Assert.AreEqual(11, log.NewBalance);
             Assert.AreEqual(1, log.Change);
-            Assert.AreEqual(TransactionType.Test, log.Type);
+            Assert.AreEqual("test", log.Type);
             TestUser userAfter = await _usersCollection.Find(u => u.Id == user.Id).FirstAsync();
             Assert.AreEqual(11, userAfter.Money);
             Assert.AreEqual(11, user.Money); // new balance value was injected into existing object as well
@@ -65,7 +65,7 @@ namespace Persistence.MongoDB.Tests.Repos
             await _usersCollection.InsertOneAsync(user);
             user.Money = 5; // object is stale, amount does not match database
 
-            var transaction = new Transaction<TestUser>(user, 1, TransactionType.Test);
+            var transaction = new Transaction<TestUser>(user, 1, "test");
             InvalidOperationException failure = Assert.ThrowsAsync<InvalidOperationException>(
                 () => _bank.PerformTransaction(transaction));
 
@@ -81,7 +81,7 @@ namespace Persistence.MongoDB.Tests.Repos
         {
             var user = new TestUser {Money = 10}; // user not persisted
 
-            var transaction = new Transaction<TestUser>(user, 1, TransactionType.Test);
+            var transaction = new Transaction<TestUser>(user, 1, "test");
             UserNotFoundException<TestUser> userNotFound = Assert.ThrowsAsync<UserNotFoundException<TestUser>>(
                 () => _bank.PerformTransaction(transaction));
             Assert.AreEqual(user, userNotFound.User);
@@ -97,8 +97,8 @@ namespace Persistence.MongoDB.Tests.Repos
             UserNotFoundException<TestUser> userNotFound = Assert.ThrowsAsync<UserNotFoundException<TestUser>>(() =>
                 _bank.PerformTransactions(new[]
                 {
-                    new Transaction<TestUser>(knownUser, 3, TransactionType.Test),
-                    new Transaction<TestUser>(unknownUser, -3, TransactionType.Test)
+                    new Transaction<TestUser>(knownUser, 3, "test"),
+                    new Transaction<TestUser>(unknownUser, -3, "test")
                 })
             );
 
@@ -144,7 +144,7 @@ namespace Persistence.MongoDB.Tests.Repos
             await _usersCollection.InsertOneAsync(user);
             List<int> list = new List<int> {1, 2, 3};
             Dictionary<string, bool> dictionary = new Dictionary<string, bool> {["yes"] = true, ["no"] = false};
-            await _bank.PerformTransaction(new Transaction<TestUser>(user, 1, TransactionType.Test,
+            await _bank.PerformTransaction(new Transaction<TestUser>(user, 1, "test",
                 new Dictionary<string, object?>
                 {
                     ["null_field"] = null,
@@ -202,7 +202,7 @@ namespace Persistence.MongoDB.Tests.Repos
             Assert.AreEqual(25, log.OldBalance);
             Assert.AreEqual(16, log.NewBalance);
             Assert.AreEqual(dateTime, log.CreatedAt);
-            Assert.AreEqual(TransactionType.Unknown, log.Type);
+            Assert.IsNull(log.Type);
             Assert.AreEqual(new Dictionary<string, object?> {["match"] = 35510}, log.AdditionalData);
         }
     }
