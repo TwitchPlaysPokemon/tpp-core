@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace Common
 {
@@ -32,6 +33,8 @@ namespace Common
         /// by providing a lookup from species ids to species instances containing said pokedex data.
         /// </summary>
         private static readonly Dictionary<string, PkmnSpecies> Pokedex = new Dictionary<string, PkmnSpecies>();
+
+        public static IImmutableList<PkmnSpecies> AllCurrentlyKnownSpecies => Pokedex.Values.ToImmutableList();
 
         /// <summary>
         /// The species' unique identifier.

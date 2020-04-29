@@ -95,5 +95,10 @@ namespace Persistence.MongoDB.Repos
             await Collection.InsertOneAsync(document: user);
             return user;
         }
+
+        public async Task<User?> FindBySimpleName(string simpleName)
+        {
+            return await Collection.Find(u => u.SimpleName == simpleName).FirstOrDefaultAsync();
+        }
     }
 }

@@ -10,6 +10,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.Tests", "Common.Tests\Common.Tests.csproj", "{CC5EF486-C1CE-4FAA-BDD6-DD90943CD5B8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArgsParsing", "ArgsParsing\ArgsParsing.csproj", "{D4FEF9A5-327E-4305-9790-FA0B0ABCAA37}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArgsParsing.Tests", "ArgsParsing.Tests\ArgsParsing.Tests.csproj", "{7ECD9706-01AD-4CD1-895B-A2BBD192AEE4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +40,13 @@ Global
 		{CC5EF486-C1CE-4FAA-BDD6-DD90943CD5B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CC5EF486-C1CE-4FAA-BDD6-DD90943CD5B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CC5EF486-C1CE-4FAA-BDD6-DD90943CD5B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4FEF9A5-327E-4305-9790-FA0B0ABCAA37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4FEF9A5-327E-4305-9790-FA0B0ABCAA37}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4FEF9A5-327E-4305-9790-FA0B0ABCAA37}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4FEF9A5-327E-4305-9790-FA0B0ABCAA37}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7ECD9706-01AD-4CD1-895B-A2BBD192AEE4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7ECD9706-01AD-4CD1-895B-A2BBD192AEE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7ECD9706-01AD-4CD1-895B-A2BBD192AEE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7ECD9706-01AD-4CD1-895B-A2BBD192AEE4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
