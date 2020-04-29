@@ -36,6 +36,7 @@ namespace Persistence.MongoDB.Repos
 
         public BadgeRepo(IMongoDatabase database)
         {
+            database.CreateCollection(CollectionName);
             Collection = database.GetCollection<Badge>(CollectionName);
             InitIndexes();
         }

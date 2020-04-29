@@ -6,13 +6,13 @@ namespace Persistence.Models
 {
     // properties need setters for deserialization
     // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
-    public class User : IEquatable<User>
+    public class User : PropertyEquatable<User>
     {
         /// <summary>
         /// A user's ID, as delivered by Twitch. This is a user's identity (names can change!).
         /// </summary>
         public string Id { get; private set; }
-        public bool Equals(User? other) => Id == other?.Id;
+        protected override object EqualityId => Id;
 
         /// <summary>
         /// Display name as advertised as by Twitch. Usually this just varies to the simple name in capitalization,

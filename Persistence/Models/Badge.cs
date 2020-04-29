@@ -5,13 +5,13 @@ namespace Persistence.Models
 {
     // properties need setters for deserialization
     // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
-    public class Badge : IEquatable<Badge>
+    public class Badge : PropertyEquatable<Badge>
     {
         /// <summary>
         /// A badge's unique ID.
         /// </summary>
         public string Id { get; private set; }
-        public bool Equals(Badge? other) => Id == other?.Id;
+        protected override object EqualityId => Id;
 
         /// <summary>
         /// The user-ID this badge belongs to.

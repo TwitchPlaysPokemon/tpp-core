@@ -40,6 +40,7 @@ namespace Persistence.MongoDB.Repos
 
         public UserRepo(IMongoDatabase database, int startingPokeyen, int startingTokens)
         {
+            database.CreateCollection(CollectionName);
             Collection = database.GetCollection<User>(CollectionName);
             _startingPokeyen = startingPokeyen;
             _startingTokens = startingTokens;
@@ -51,6 +52,8 @@ namespace Persistence.MongoDB.Repos
             Collection.Indexes.CreateMany(new[]
             {
                 new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.SimpleName)),
+                new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.Pokeyen)),
+                new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.Tokens)),
             });
         }
 

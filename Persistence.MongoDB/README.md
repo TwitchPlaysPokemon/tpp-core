@@ -1,0 +1,17 @@
+﻿This project implements the [Persistence interface](../Persistence) using a MongoDB database.
+It is designed to seamlessly function with the same database the old core uses.
+
+## run MongoDB
+
+- Install MongoDB 4.2 or higher. Get it [here](https://www.mongodb.com/download-center/community).
+- The server must be in [replica set mode](https://docs.mongodb.com/manual/tutorial/convert-standalone-to-replica-set/).
+  For a single instance, this can be achieved by adding this to the `mongod.cfg` file:
+  ```
+  replication:
+    replSetName: rs0
+  ```
+  Restart MongoDB, and then run `rs.initiate()` from a mongo shell to initialize the replication set.
+- The recommended replica set name is `rs0`, as that's a sensible default
+  and you will then be able to execute the mongodb integration tests,
+  if the server is running on localhost with the default port `27017`.
+  If you already chose a different name, you can rename the replica set [like this](https://stackoverflow.com/a/33400608/3688648).

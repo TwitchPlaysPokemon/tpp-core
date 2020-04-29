@@ -14,6 +14,7 @@ namespace Persistence.MongoDB.Tests.Repos
     /// </summary>
     public abstract class MongoTestBase
     {
+        private const string ReplicaSetName = "rs0";
         private static readonly Random Random = new Random();
 
         private MongoClient _client = null!;
@@ -23,13 +24,15 @@ namespace Persistence.MongoDB.Tests.Repos
         public void SetUpMongoClient()
         {
             // try to connect to a mongodb running on the default port
-            _client = new MongoClient("mongodb://localhost");
+            _client = new MongoClient($"mongodb://localhost/?replicaSet={ReplicaSetName}");
             bool success = _client.ListDatabaseNamesAsync(CancellationToken.None).Wait(TimeSpan.FromSeconds(5));
             if (!success)
             {
                 throw new AssertionException(
                     "Failed to connect to a local MongoDB instance running on the default port. " +
-                    "Please start a local MongoDB instance on the default port (27017).");
+                    "Please start a local MongoDB instance on the default port (27017), " +
+                    $"and make sure it is in replica set mode with a replica set named '{ReplicaSetName}'. " +
+                    "Alternatively, skip these tests using 'dotnet test --filter TestCategory!=IntegrationTest'");
             }
         }
 
