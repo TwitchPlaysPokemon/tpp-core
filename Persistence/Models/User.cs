@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using Common;
 
 namespace Persistence.Models
 {
     // properties need setters for deserialization
     // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
-    public class User : IEquatable<User>
+    public class User : PropertyEquatable<User>
     {
         /// <summary>
         /// A user's ID, as delivered by Twitch. This is a user's identity (names can change!).
         /// </summary>
         public string Id { get; private set; }
-        public bool Equals(User? other) => Id == other?.Id;
+        protected override object EqualityId => Id;
 
         /// <summary>
         /// Display name as advertised as by Twitch. Usually this just varies to the simple name in capitalization,
@@ -45,13 +46,14 @@ namespace Persistence.Models
         public SortedSet<int> ParticipationEmblems { get; private set; } = new SortedSet<int>();
         public int? SelectedParticipationEmblem { get; private set; } = null;
 
+        public PkmnSpecies? SelectedBadge { get; private set; } = null;
+
         // public string? SecondaryColor { get; private set; }
         // public bool SecondaryColorUnlocked { get; private set; }
         // public bool Active { get; private set; }
         // public bool Follower { get; private set; }
         // public bool Subscriber { get; private set; }
         // public bool Turbo { get; private set; }
-        // public int? Badge { get; private set; }
         // public List<string> Badges { get; private set; } // twitch badges, e.g. subscriber/24
         // public Dictionary<string, string> Milestones { get; private set; }
 

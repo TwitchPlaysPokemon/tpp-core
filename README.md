@@ -1,0 +1,9 @@
+﻿
+## requirements
+- dotnet core SDK 3.1+, you can get one from [dotnet.microsoft.com](https://dotnet.microsoft.com/download)
+- If you use or run any components with persistence, MongoDB.
+  See [Persistence.MongoDB](Persistence.MongoDB) for details.
+
+## run tests
+- `dotnet test` runs all tests
+- `dotnet test --filter TestCategory!=IntegrationTest` skips tests that have preconditions or are slow

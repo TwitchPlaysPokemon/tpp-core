@@ -1,17 +1,17 @@
 ﻿using System;
-using System.Runtime.Serialization;
+using Common;
 
 namespace Persistence.Models
 {
     // properties need setters for deserialization
     // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
-    public class Badge : IEquatable<Badge>
+    public class Badge : PropertyEquatable<Badge>
     {
         /// <summary>
         /// A badge's unique ID.
         /// </summary>
         public string Id { get; private set; }
-        public bool Equals(Badge? other) => Id == other?.Id;
+        protected override object EqualityId => Id;
 
         /// <summary>
         /// The user-ID this badge belongs to.
@@ -20,20 +20,19 @@ namespace Persistence.Models
         public string? UserId { get; private set; }
 
         /// <summary>
-        /// Identifier of the badge's species.
-        /// Might be just <code>"16"</code> for example, but can be more complex for fakemons etc.
+        /// The badge's species.
         /// </summary>
-        public string Species { get; private set; }
+        public PkmnSpecies Species { get; private set; }
 
         public enum BadgeSource
         {
-            [DataMember(Name = "pinball")]             Pinball,
-            [DataMember(Name = "run_caught")]          RunCaught,
-            [DataMember(Name = "crate")]               Crate,
-            [DataMember(Name = "manual_creation")]     ManualCreation,
-            [DataMember(Name = "manual_distribution")] ManualDistribution,
-            [DataMember(Name = "breaking")]            Breaking,
-            [DataMember(Name = "transmutation")]       Transmutation,
+            Pinball,
+            RunCaught,
+            Crate,
+            ManualCreation,
+            ManualDistribution,
+            Breaking,
+            Transmutation,
         }
 
         /// <summary>
@@ -46,7 +45,7 @@ namespace Persistence.Models
         /// </summary>
         public DateTime CreatedAt { get; private set; }
 
-        public Badge(string id, string? userId, string species, BadgeSource source, DateTime createdAt)
+        public Badge(string id, string? userId, PkmnSpecies species, BadgeSource source, DateTime createdAt)
         {
             Id = id;
             UserId = userId;
