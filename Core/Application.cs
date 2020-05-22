@@ -30,13 +30,9 @@ Options:
 
         private static void Main(string[] args)
         {
-            using var loggerFactory = LoggerFactory.Create(builder => builder
-                .AddFile("logs/tpp-{Date}.log")
-                .AddConsole());
-            ILogger logger = loggerFactory.CreateLogger("main");
             IDictionary<string, ValueObject> arguments = new Docopt().Apply(Usage, args, exit: true);
-            if (arguments["run"].IsTrue) Run(loggerFactory, logger, arguments["--config"].ToString());
-            else if (arguments["testconfig"].IsTrue) TestConfig(logger, arguments["--config"].ToString());
+            if (arguments["run"].IsTrue) Run(arguments["--config"].ToString());
+            else if (arguments["testconfig"].IsTrue) TestConfig(arguments["--config"].ToString());
             else if (arguments["gendefaultconfig"].IsTrue) OutputDefaultConfig(arguments["--outfile"]);
             else if (arguments["regenjsonschema"].IsTrue) RegenerateJsonSchema();
         }
@@ -51,18 +47,28 @@ Options:
             ObjectCreationHandling = ObjectCreationHandling.Replace,
         };
 
-        private static RootConfig ReadConfig(ILogger logger, string filename)
+        private static RootConfig ReadConfig(string filename)
         {
             string json = File.ReadAllText(filename);
             var config = JsonConvert.DeserializeObject<RootConfig>(json, ConfigSerializerSettings);
             if (config == null) throw new ArgumentException("config must not be null");
-            ConfigUtils.LogUnrecognizedConfigs(logger, config);
+            ConfigUtils.WriteUnrecognizedConfigsToStderr(config);
+            if (config.LogPath == null)
+            {
+                Console.Error.WriteLine("no logging path is configured, logs will only be printed to console");
+            }
             return config;
         }
 
-        private static void Run(ILoggerFactory loggerFactory, ILogger logger, string configFilename)
+        private static void Run(string configFilename)
         {
-            RootConfig config = ReadConfig(logger, configFilename);
+            RootConfig config = ReadConfig(configFilename);
+            using var loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder.AddConsole();
+                if (config.LogPath != null) builder.AddFile(Path.Combine(config.LogPath, "tpp-{Date}.log"));
+            });
+            ILogger logger = loggerFactory.CreateLogger("main");
             var tpp = new Tpp(loggerFactory, config);
             try
             {
@@ -74,10 +80,10 @@ Options:
             }
         }
 
-        private static void TestConfig(ILogger logger, string configFilename)
+        private static void TestConfig(string configFilename)
         {
             // just try to read the config, don't do anything with it
-            ReadConfig(logger, configFilename);
+            ReadConfig(configFilename);
         }
 
         private static void OutputDefaultConfig(ValueObject? outfileArgument)
