@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Inputting.Inputs;
 
 namespace Inputting.Parsing
 {
@@ -12,7 +13,7 @@ namespace Inputting.Parsing
     /// </summary>
     public class BareInputParser : IInputParser
     {
-        public static readonly Input InputHold = new Input("hold", "hold", "-", true);
+        public static readonly Input InputHold = new Input("hold", "hold", "-");
 
         private readonly List<IInputDefinition> _inputDefinitions;
         private readonly int _maxSequenceLength;
@@ -85,11 +86,11 @@ namespace Inputting.Parsing
                     {
                         Capture capture = queue.Dequeue();
                         Input? input = def.Parse(capture.Value);
-                        if (!input.HasValue)
+                        if (input == null)
                         {
                             return null;
                         }
-                        inputWithIndexes.Add((capture.Index, input.Value));
+                        inputWithIndexes.Add((capture.Index, input));
                     }
                 }
                 // preserve order

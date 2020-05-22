@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using Inputting.Inputs;
 
 namespace Inputting
 {
@@ -9,7 +10,7 @@ namespace Inputting
     /// An input set is a set of inputs being inputted simultaneously.
     /// These include buttons, touch screen coordinates, waits etc.
     /// </summary>
-    public struct InputSet : IEquatable<InputSet>
+    public readonly struct InputSet : IEquatable<InputSet>
     {
         public ImmutableList<Input> Inputs { get; }
         public bool Equals(InputSet other) => Inputs.SequenceEqual(other.Inputs);
@@ -41,7 +42,9 @@ namespace Inputting
     internal class EffectiveInputEqualityComparer : IEqualityComparer<Input>
     {
         public static readonly EffectiveInputEqualityComparer Instance = new EffectiveInputEqualityComparer();
-        public bool Equals(Input x, Input y) => x.EqualsEffectively(y);
+        public bool Equals(Input? x, Input? y) =>
+            (x == null && y == null)
+            || (x != null && y != null && x.EqualsEffectively(y));
         public int GetHashCode(Input obj) => obj.GetEffectiveHashCode();
     }
 }

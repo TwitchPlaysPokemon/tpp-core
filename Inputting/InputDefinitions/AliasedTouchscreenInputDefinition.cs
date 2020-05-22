@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using Inputting.Inputs;
 
 namespace Inputting.InputDefinitions
 {
@@ -6,10 +7,9 @@ namespace Inputting.InputDefinitions
     /// An aliased touchscreen input is basically a named touchscreen coordinate.
     /// It gets parsed like a regular <see cref="ButtonInputDefinition"/>,
     /// but gets executed like an input parsed by a <see cref="TouchscreenInputDefinition"/>.
-    /// The resulting input's effective text will be "touch", with the configured touch coordinates
-    /// being passed via additional data in the form of a 2-tuple <c>(x, y)</c>.
+    /// This input definition creates inputs of type <see cref="TouchscreenInput"/>.
     /// </summary>
-    public struct AliasedTouchscreenInputDefinition : IInputDefinition
+    public readonly struct AliasedTouchscreenInputDefinition : IInputDefinition
     {
         private const string EffectiveText = TouchscreenInputDefinition.EffectiveText;
 
@@ -26,7 +26,6 @@ namespace Inputting.InputDefinitions
 
         public string InputRegex => Regex.Escape(_name);
 
-        public Input? Parse(string str)
-            => new Input(_name, EffectiveText, str, additionalData: new TouchCoords(_x, _y));
+        public Input? Parse(string str) => new TouchscreenInput(_name, EffectiveText, str, _x, _y);
     }
 }

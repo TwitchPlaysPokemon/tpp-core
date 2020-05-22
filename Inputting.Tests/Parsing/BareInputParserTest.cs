@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Inputting.InputDefinitions;
+using Inputting.Inputs;
 using Inputting.Parsing;
 using NUnit.Framework;
 
@@ -9,7 +9,7 @@ namespace Inputting.Tests.Parsing
     public class BareInputParserTest
     {
         private static InputSet Set(params string[] inputs) =>
-            new InputSet(inputs.Select(s => new Input(s, s, s, true)));
+            new InputSet(inputs.Select(s => new Input(s, s, s)));
 
         private static InputSequence Seq(params InputSet[] inputSets) => new InputSequence(inputSets);
 
@@ -53,7 +53,7 @@ namespace Inputting.Tests.Parsing
             _inputParser = builder.HoldEnabled(true).Build();
             AssertInput("a", Seq(Set("a")));
             Assert.AreEqual(Seq(new InputSet(new List<Input>
-                {new Input("a", "a", "a", true), new Input("hold", "hold", "-", true)})
+                {new Input("a", "a", "a"), new Input("hold", "hold", "-")})
             ), _inputParser.Parse("a-"));
 
             // hold disabled
@@ -73,8 +73,8 @@ namespace Inputting.Tests.Parsing
 
             InputSequence? result = _inputParser.Parse("honky");
             Assert.AreEqual(Seq(
-                new InputSet(new List<Input> {new Input("honk", "y", "honk", true)}),
-                new InputSet(new List<Input> {new Input("y", "y", "y", true)})
+                new InputSet(new List<Input> {new Input("honk", "y", "honk")}),
+                new InputSet(new List<Input> {new Input("y", "y", "y")})
             ), result);
         }
 
@@ -89,8 +89,8 @@ namespace Inputting.Tests.Parsing
 
             InputSequence? result = _inputParser.Parse("honky");
             Assert.AreEqual(Seq(
-                new InputSet(new List<Input> {new Input("y", "y", "honk", true)}),
-                new InputSet(new List<Input> {new Input("y", "y", "y", true)})
+                new InputSet(new List<Input> {new Input("y", "y", "honk")}),
+                new InputSet(new List<Input> {new Input("y", "y", "y")})
             ), result);
         }
 
@@ -104,23 +104,23 @@ namespace Inputting.Tests.Parsing
                 .Build();
 
             Assert.AreEqual(Seq(
-                new InputSet(new List<Input> {new Input("a", "a", "a", true)}),
+                new InputSet(new List<Input> {new Input("a", "a", "a")}),
                 new InputSet(new List<Input>
                 {
-                    new Input("234,123", "touch", "234,123", additionalData: new TouchCoords(234, 123))
+                    new TouchscreenInput("234,123", "touch", "234,123", 234, 123)
                 }),
-                new InputSet(new List<Input> {new Input("a", "a", "a", true)})
+                new InputSet(new List<Input> {new Input("a", "a", "a")})
             ), _inputParser.Parse("a234,123a"));
             Assert.AreEqual(Seq(
                 new InputSet(new List<Input>
                 {
-                    new Input("239,159", "touch", "239,159", additionalData: new TouchCoords(239, 159))
+                    new TouchscreenInput("239,159", "touch", "239,159", 239, 159)
                 })
             ), _inputParser.Parse("239,159"));
             Assert.AreEqual(Seq(
                 new InputSet(new List<Input>
                 {
-                    new Input("0,0", "touch", "0,0", additionalData: new TouchCoords(0, 0))
+                    new TouchscreenInput("0,0", "touch", "0,0", 0, 0)
                 })
             ), _inputParser.Parse("0,0"));
             Assert.IsNull(_inputParser.Parse("240,159"));
@@ -141,19 +141,17 @@ namespace Inputting.Tests.Parsing
                 .Build();
 
             Assert.AreEqual(Seq(
-                new InputSet(new List<Input> {new Input("a", "a", "a", true)}),
+                new InputSet(new List<Input> {new Input("a", "a", "a")}),
                 new InputSet(new List<Input>
                 {
-                    new Input("234,123>222,111", "drag", "234,123>222,111",
-                        additionalData: new TouchDragCoords(234, 123, 222, 111))
+                    new TouchscreenDragInput("234,123>222,111", "drag", "234,123>222,111", 234, 123, 222, 111)
                 }),
-                new InputSet(new List<Input> {new Input("a", "a", "a", true)})
+                new InputSet(new List<Input> {new Input("a", "a", "a")})
             ), _inputParser.Parse("a234,123>222,111a"));
             Assert.AreEqual(Seq(
                 new InputSet(new List<Input>
                 {
-                    new Input("239,159>0,0", "drag", "239,159>0,0",
-                        additionalData: new TouchDragCoords(239, 159, 0, 0))
+                    new TouchscreenDragInput("239,159>0,0", "drag", "239,159>0,0", 239, 159, 0, 0)
                 })
             ), _inputParser.Parse("239,159>0,0"));
             Assert.IsNull(_inputParser.Parse("240,159>0,0"));
@@ -186,14 +184,14 @@ namespace Inputting.Tests.Parsing
                 .Build();
 
             Assert.AreEqual(Seq(
-                new InputSet(new List<Input> {new Input("a", "a", "a", true)}),
-                new InputSet(new List<Input> {new Input("move1", "touch", "move1", new TouchCoords(42, 69))}),
-                new InputSet(new List<Input> {new Input("move1", "touch", "move1", new TouchCoords(42, 69))}),
-                new InputSet(new List<Input> {new Input("a", "a", "a", true)})
+                new InputSet(new List<Input> {new Input("a", "a", "a")}),
+                new InputSet(new List<Input> {new TouchscreenInput("move1", "touch", "move1", 42, 69)}),
+                new InputSet(new List<Input> {new TouchscreenInput("move1", "touch", "move1", 42, 69)}),
+                new InputSet(new List<Input> {new Input("a", "a", "a")})
             ), _inputParser.Parse("amove12a"));
             Assert.AreEqual(Seq(
-                new InputSet(new List<Input> {new Input("234,123", "touch", "234,123", new TouchCoords(234, 123))}),
-                new InputSet(new List<Input> {new Input("move1", "touch", "move1", new TouchCoords(42, 69))})
+                new InputSet(new List<Input> {new TouchscreenInput("234,123", "touch", "234,123", 234, 123)}),
+                new InputSet(new List<Input> {new TouchscreenInput("move1", "touch", "move1", 42, 69)})
             ), _inputParser.Parse("234,123move1"));
             Assert.IsNull(_inputParser.Parse("234,123+move1"));
         }
@@ -208,16 +206,16 @@ namespace Inputting.Tests.Parsing
                 .Build();
 
             Assert.AreEqual(Seq(
-                new InputSet(new List<Input> {new Input("a", "a", "a", true)}),
-                new InputSet(new List<Input> {new Input("up", "up", "up.2", 0.2f)}),
-                new InputSet(new List<Input> {new Input("up", "up", "up.2", 0.2f)}),
-                new InputSet(new List<Input> {new Input("a", "a", "a", true)})
+                new InputSet(new List<Input> {new Input("a", "a", "a")}),
+                new InputSet(new List<Input> {new AnalogInput("up", "up", "up.2", 0.2f)}),
+                new InputSet(new List<Input> {new AnalogInput("up", "up", "up.2", 0.2f)}),
+                new InputSet(new List<Input> {new Input("a", "a", "a")})
             ), _inputParser.Parse("aup.22a"));
             Assert.AreEqual(Seq(
-                new InputSet(new List<Input> {new Input("up", "up", "UP", 1.0f)})
+                new InputSet(new List<Input> {new AnalogInput("up", "up", "UP", 1.0f)})
             ), _inputParser.Parse("UP"));
             Assert.AreEqual(Seq(
-                new InputSet(new List<Input> {new Input("up", "up", "up.9", 0.9f)})
+                new InputSet(new List<Input> {new AnalogInput("up", "up", "up.9", 0.9f)})
             ), _inputParser.Parse("up.9"));
             Assert.IsNull(_inputParser.Parse("up."));
             Assert.IsNull(_inputParser.Parse("up.0"));
@@ -237,19 +235,19 @@ namespace Inputting.Tests.Parsing
                 .Build();
 
             Assert.AreEqual(
-                Seq(new InputSet(new[] {new Input("A", "A", "a", true)})),
+                Seq(new InputSet(new[] {new Input("A", "A", "a")})),
                 _inputParser.Parse("a"));
             Assert.AreEqual(
-                Seq(new InputSet(new[] {new Input("B", "X", "b", true)})),
+                Seq(new InputSet(new[] {new Input("B", "X", "b")})),
                 _inputParser.Parse("b"));
             Assert.AreEqual(
-                Seq(new InputSet(new[] {new Input("Y", "Y", "c", true)})),
+                Seq(new InputSet(new[] {new Input("Y", "Y", "c")})),
                 _inputParser.Parse("c"));
             Assert.AreEqual(
-                Seq(new InputSet(new[] {new Input("UP", "UP", "up.2", 0.2f)})),
+                Seq(new InputSet(new[] {new AnalogInput("UP", "UP", "up.2", 0.2f)})),
                 _inputParser.Parse("up.2"));
             Assert.AreEqual(
-                Seq(new InputSet(new[] {new Input("MOVE1", "touch", "move1", new TouchCoords(10, 20))})),
+                Seq(new InputSet(new[] {new TouchscreenInput("MOVE1", "touch", "move1", 10, 20)})),
                 _inputParser.Parse("move1"));
         }
     }

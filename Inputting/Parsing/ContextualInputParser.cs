@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
-using Inputting.InputDefinitions;
+using Inputting.Inputs;
 
 namespace Inputting.Parsing
 {
@@ -37,75 +38,55 @@ namespace Inputting.Parsing
         public InputSequence? Parse(string text)
         {
             InputSequence? baseInputSequenceNullable = _baseInputParser.Parse(text);
-            if (baseInputSequenceNullable == null)
-            {
-                return null;
-            }
+            if (baseInputSequenceNullable == null) return null;
+
             InputSequence baseInputSequence = baseInputSequenceNullable.Value;
 
-            // check that "wait" is used without any other buttons per button set.
-            if (baseInputSequence.InputSets.Any(
-                inputSet => inputSet.Inputs.Count > 1 && inputSet.Inputs.Exists(i => i.EffectiveText == "wait")))
-            {
-                return null;
-            }
-
-            // check for duplicates
-            foreach (InputSet inputSet in baseInputSequence.InputSets)
-            {
-                // all effective inputs must be unique, independently from any eventual additional data.
-                // touchscreen inputs are an exception. those get checked separately below.
-                var seen = new HashSet<string>();
-                IEnumerable<string> effectiveInputs =
-                    from input in inputSet.Inputs
-                    where input.EffectiveText != TouchscreenInputDefinition.EffectiveText
-                    where input.EffectiveText != TouchscreenDragInputDefinition.EffectiveText
-                    select input.EffectiveText;
-                if (effectiveInputs.Any(input => !seen.Add(input)))
-                {
-                    return null;
-                }
-            }
-
-            // check for duplicate touch screen inputs
-            if (_multitouch)
-            {
-                // only check for touches with the exact same coordinates
-                if (baseInputSequence.InputSets
-                    .Any(inputSet => inputSet.Inputs
-                        .Where(i =>
-                            i.EffectiveText == TouchscreenInputDefinition.EffectiveText ||
-                            i.EffectiveText == TouchscreenDragInputDefinition.EffectiveText)
-                        .GroupBy(i => i.AdditionalData)
-                        .Any(g => g.Count() > 1)))
-                {
-                    return null;
-                }
-            }
-            else
-            {
-                if (baseInputSequence.InputSets
-                    .Any(inputSet => inputSet.Inputs.Count(i =>
-                        i.EffectiveText == TouchscreenInputDefinition.EffectiveText ||
-                        i.EffectiveText == TouchscreenDragInputDefinition.EffectiveText) > 1))
-                {
-                    return null;
-                }
-            }
-
-            // get all possible 2-item-combinations from each button set to check for conflicts
-            IEnumerable<(string, string)> combinations =
-                from inputSet in baseInputSequence.InputSets
-                from s1 in inputSet.Inputs
-                from s2 in inputSet.Inputs
-                where s1.EffectiveText != s2.EffectiveText
-                select (s1.EffectiveText, s2.EffectiveText);
-            if (_conflictingInputs.Overlaps(combinations))
+            IImmutableList<InputSet> inputSets = baseInputSequence.InputSets;
+            bool hasWaitConflict = inputSets.Any(HasNonLoneWait);
+            bool hasButtonDuplication = inputSets.Any(HasDuplicationExceptTouchscreen); // e.g. "L" and "L.3"
+            bool hasEffectiveDuplication = inputSets.Any(HasEffectivelyDuplicateInputs);
+            bool hasIllegalMultitouch = !_multitouch && inputSets.Any(HasMultipleTouchscreenInputs);
+            bool hasConflicts = _conflictingInputs.Overlaps(GetAllCombinations(inputSets));
+            if (hasWaitConflict || hasButtonDuplication || hasEffectiveDuplication || hasIllegalMultitouch || hasConflicts)
             {
                 return null;
             }
 
             return baseInputSequence;
         }
+
+        private static bool HasNonLoneWait(InputSet inputSet) =>
+            inputSet.Inputs.Count > 1 && inputSet.Inputs.Exists(i => i.EffectiveText == "wait");
+
+        private static bool HasDuplicationExceptTouchscreen(InputSet inputSet)
+        {
+            var seen = new HashSet<string>();
+            return inputSet.Inputs.Where(i => !(i is TouchscreenInput)).Any(input =>
+            {
+                bool alreadyExisted = !seen.Add(input.EffectiveText);
+                return alreadyExisted;
+            });
+        }
+
+        private static bool HasEffectivelyDuplicateInputs(InputSet inputSet)
+        {
+            var seen = new HashSet<Input>(EffectiveInputEqualityComparer.Instance);
+            return inputSet.Inputs.Any(input =>
+            {
+                bool alreadyExisted = !seen.Add(input);
+                return alreadyExisted;
+            });
+        }
+
+        private static bool HasMultipleTouchscreenInputs(InputSet inputSet) =>
+            inputSet.Inputs.OfType<TouchscreenInput>().Count() > 1;
+
+        private static IEnumerable<(string, string)> GetAllCombinations(IEnumerable<InputSet> inputSets) =>
+            from inputSet in inputSets
+            from s1 in inputSet.Inputs
+            from s2 in inputSet.Inputs
+            where s1.EffectiveText != s2.EffectiveText
+            select (s1.EffectiveText, s2.EffectiveText);
     }
 }

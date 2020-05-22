@@ -1,4 +1,6 @@
-﻿namespace Inputting
+﻿using Inputting.Inputs;
+
+namespace Inputting
 {
     /// <summary>
     /// An input definition contains information on how to extract a specific input from a raw input message

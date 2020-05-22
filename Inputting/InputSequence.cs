@@ -9,9 +9,9 @@ namespace Inputting
     /// An input sequence is a sequence of <see cref="InputSet"/> that are inputted in sequence.
     /// This is used e.g. in democracy mode.
     /// </summary>
-    public struct InputSequence : IEquatable<InputSequence>
+    public readonly struct InputSequence : IEquatable<InputSequence>
     {
-        public ImmutableList<InputSet> InputSets { get; }
+        public IImmutableList<InputSet> InputSets { get; }
         public bool Equals(InputSequence other) => InputSets.SequenceEqual(other.InputSets);
 
         /// <summary>

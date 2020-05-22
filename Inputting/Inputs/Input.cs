@@ -1,13 +1,13 @@
 ﻿using System;
 
-namespace Inputting
+namespace Inputting.Inputs
 {
     /// <summary>
     /// An input is the smallest amount of input that can be expressed.
     /// Multiple inputs may be bundled together in a <see cref="InputSet"/>.
     /// Inputs get defined and parsed by <see cref="IInputDefinition"/>s.
     /// </summary>
-    public struct Input : IEquatable<Input>
+    public class Input
     {
         /// <summary>
         /// The input's representational display text.
@@ -21,26 +21,32 @@ namespace Inputting
         /// The original text this input was parsed from.
         /// </summary>
         public string OriginalText { get; }
-        /// <summary>
-        /// Any additional data this input might have,
-        /// e.g. coords for touchscreen inputs or input intensity for analog sticks.
-        /// </summary>
-        public object AdditionalData { get; }
 
-        public Input(string displayedText, string effectiveText, string originalText, object additionalData)
+        public Input(string displayedText, string effectiveText, string originalText)
         {
             DisplayedText = displayedText;
             EffectiveText = effectiveText;
             OriginalText = originalText;
-            AdditionalData = additionalData;
         }
 
-        public bool Equals(Input other)
+        public override string ToString() => $"{DisplayedText}({EffectiveText})";
+
+        #region polymorphic equals boilerplate
+
+        public override bool Equals(object? obj)
         {
-            return DisplayedText.Equals(other.DisplayedText)
-                   && EffectiveText.Equals(other.EffectiveText)
-                   && OriginalText.Equals(other.OriginalText)
-                   && AdditionalData.Equals(other.AdditionalData);
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj.GetType() == GetType() && Equals((Input) obj);
+        }
+
+        public override int GetHashCode() => HashCode.Combine(DisplayedText, EffectiveText, OriginalText);
+
+        private bool Equals(Input other)
+        {
+            return DisplayedText == other.DisplayedText
+                   && EffectiveText == other.EffectiveText
+                   && OriginalText == other.OriginalText;
         }
 
         /// <summary>
@@ -48,22 +54,21 @@ namespace Inputting
         /// meaning if the inputs would cause the same action.
         /// This is done by only comparing the functional parts of this input.
         /// </summary>
-        /// <param name="other">input to check for effective equality</param>
+        /// <param name="obj">input to check for effective equality</param>
         /// <returns>whether the supplied input is effectively equal</returns>
-        public bool EqualsEffectively(Input other)
+        public virtual bool EqualsEffectively(Input? obj)
         {
-            return EffectiveText.Equals(other.EffectiveText) && AdditionalData.Equals(other.AdditionalData);
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj.GetType() == GetType() && EffectiveText == obj.EffectiveText;
         }
 
         /// <summary>
         /// HashCode-implementation for <see cref="EqualsEffectively"/>.
         /// </summary>
         /// <returns>hashcode for the effective parts of this input</returns>
-        public int GetEffectiveHashCode()
-        {
-            return EffectiveText.GetHashCode() | AdditionalData.GetHashCode();
-        }
+        public virtual int GetEffectiveHashCode() => HashCode.Combine(EffectiveText);
 
-        public override string ToString() => $"{DisplayedText}({EffectiveText}:{AdditionalData})";
+        #endregion
     }
 }

@@ -1,12 +1,12 @@
 ﻿using System.Text.RegularExpressions;
+using Inputting.Inputs;
 
 namespace Inputting.InputDefinitions
 {
     /// <summary>
     /// A button input is an simple input that can either be pressed or not.
-    /// Its input's data will always just be <c>true</c>.
     /// </summary>
-    public struct ButtonInputDefinition : IInputDefinition
+    public readonly struct ButtonInputDefinition : IInputDefinition
     {
         private readonly string _name;
         private readonly string _mapsTo;
@@ -20,6 +20,6 @@ namespace Inputting.InputDefinitions
         }
 
         public string InputRegex => Regex.Escape(_name);
-        public Input? Parse(string str) => new Input(_keepsName ? _name : _mapsTo, _mapsTo, str, true);
+        public Input? Parse(string str) => new Input(_keepsName ? _name : _mapsTo, _mapsTo, str);
     }
 }

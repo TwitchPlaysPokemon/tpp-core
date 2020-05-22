@@ -1,12 +1,12 @@
-﻿namespace Inputting.InputDefinitions
+﻿using Inputting.Inputs;
+
+namespace Inputting.InputDefinitions
 {
     /// <summary>
-    /// A touchscreen input is an input in the form of <c>x,y</c>, e.g. <c>120,215</c>,
-    /// with <c>x</c> and <c>y</c> being within 0 (inclusive) and the specified max width/height (exclusive).
+    /// This input definition creates inputs of type <see cref="TouchscreenInput"/>.
     /// The resulting input's effective text will be "touch".
-    /// The touched coordinates will be passed via additional data in the form of a 2-tuple <c>(x, y)</c>.
     /// </summary>
-    public struct TouchscreenInputDefinition : IInputDefinition
+    public readonly struct TouchscreenInputDefinition : IInputDefinition
     {
         public const string EffectiveText = "touch";
 
@@ -30,21 +30,7 @@
             {
                 return null;
             }
-            return new Input(str, EffectiveText, str, additionalData: new TouchCoords(x, y));
+            return new TouchscreenInput(str, EffectiveText, str, x, y);
         }
-    }
-
-    public struct TouchCoords
-    {
-        public int X { get; }
-        public int Y { get; }
-
-        public TouchCoords(int x, int y)
-        {
-            X = x;
-            Y = y;
-        }
-
-        public override string ToString() => $"({X},{Y})";
     }
 }

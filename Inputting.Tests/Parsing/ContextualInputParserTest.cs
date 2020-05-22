@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Inputting.InputDefinitions;
+using Inputting.Inputs;
 using Inputting.Parsing;
 using NUnit.Framework;
 
@@ -11,7 +11,7 @@ namespace Inputting.Tests.Parsing
     public class ContextualInputParserTest
     {
         private static InputSet Set(params string[] inputs) =>
-            new InputSet(inputs.Select(s => new Input(s, s, s, true)));
+            new InputSet(inputs.Select(s => new Input(s, s, s)));
 
         private static InputSequence Seq(params InputSet[] inputSets) => new InputSequence(inputSets);
 
@@ -49,14 +49,14 @@ namespace Inputting.Tests.Parsing
 
             Assert.AreEqual(Seq(new InputSet(new List<Input>
                 {
-                    new Input("234,123", "touch", "234,123", new TouchCoords(234, 123)),
-                    new Input("11,22", "touch", "11,22", new TouchCoords(11, 22)),
+                    new TouchscreenInput("234,123", "touch", "234,123", 234, 123),
+                    new TouchscreenInput("11,22", "touch", "11,22", 11, 22),
                 })
             ), _inputParser.Parse("234,123+11,22"));
             Assert.AreEqual(Seq(new InputSet(new List<Input>
                 {
-                    new Input("234,123", "touch", "234,123", new TouchCoords(234, 123)),
-                    new Input("11,22>33,44", "drag", "11,22>33,44", new TouchDragCoords(11, 22, 33, 44)),
+                    new TouchscreenInput("234,123", "touch", "234,123", 234, 123),
+                    new TouchscreenDragInput("11,22>33,44", "drag", "11,22>33,44", 11, 22, 33, 44),
                 })
             ), _inputParser.Parse("234,123+11,22>33,44"));
 
