@@ -1,6 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Common;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using NUnit.Framework;
@@ -26,7 +26,7 @@ namespace Persistence.MongoDB.Tests.Repos
         public async Task TestInsert()
         {
             // when
-            Badge badge = await _badgeRepo.AddBadge(null, "16", Badge.BadgeSource.ManualCreation);
+            Badge badge = await _badgeRepo.AddBadge(null, PkmnSpecies.OfId("16"), Badge.BadgeSource.ManualCreation);
 
             // then
             Assert.AreNotEqual(string.Empty, badge.Id);
@@ -44,7 +44,7 @@ namespace Persistence.MongoDB.Tests.Repos
         public async Task TestDatabaseSerialization()
         {
             // when
-            string randomSpecies = Guid.NewGuid().ToString();
+            PkmnSpecies randomSpecies = PkmnSpecies.OfId("9001");
             Badge badge = await _badgeRepo.AddBadge(null, randomSpecies, Badge.BadgeSource.RunCaught);
 
             // then
@@ -52,7 +52,7 @@ namespace Persistence.MongoDB.Tests.Repos
             BsonDocument badgeBson = await badgesCollectionBson.Find(FilterDefinition<BsonDocument>.Empty).FirstAsync();
             Assert.AreEqual(BsonObjectId.Create(ObjectId.Parse(badge.Id)), badgeBson["_id"]);
             Assert.AreEqual(BsonNull.Value, badgeBson["user"]);
-            Assert.AreEqual(BsonString.Create(randomSpecies), badgeBson["species"]);
+            Assert.AreEqual(BsonString.Create(randomSpecies.Id), badgeBson["species"]);
             Assert.AreEqual(BsonString.Create("run_caught"), badgeBson["source"]);
         }
 
@@ -60,10 +60,10 @@ namespace Persistence.MongoDB.Tests.Repos
         public async Task TestFindByUser()
         {
             // given
-            Badge badgeUserA1 = await _badgeRepo.AddBadge("userA", "1", Badge.BadgeSource.Pinball);
-            Badge badgeUserA2 = await _badgeRepo.AddBadge("userA", "2", Badge.BadgeSource.Pinball);
-            Badge badgeUserB = await _badgeRepo.AddBadge("userB", "3", Badge.BadgeSource.Pinball);
-            Badge badgeNobody = await _badgeRepo.AddBadge(null, "4", Badge.BadgeSource.Pinball);
+            Badge badgeUserA1 = await _badgeRepo.AddBadge("userA", PkmnSpecies.OfId("1"), Badge.BadgeSource.Pinball);
+            Badge badgeUserA2 = await _badgeRepo.AddBadge("userA", PkmnSpecies.OfId("2"), Badge.BadgeSource.Pinball);
+            Badge badgeUserB = await _badgeRepo.AddBadge("userB", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball);
+            Badge badgeNobody = await _badgeRepo.AddBadge(null, PkmnSpecies.OfId("4"), Badge.BadgeSource.Pinball);
 
             // when
             List<Badge> resultUserA = await _badgeRepo.FindByUser("userA");

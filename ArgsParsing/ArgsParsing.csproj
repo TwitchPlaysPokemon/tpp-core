@@ -4,10 +4,12 @@
         <TargetFramework>netcoreapp3.1</TargetFramework>
         <Nullable>enable</Nullable>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <InvariantGlobalization>true</InvariantGlobalization><!-- .net 5+ -->
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Common\Common.csproj"/>
+        <ProjectReference Include="..\Persistence\Persistence.csproj"/>
+        <RuntimeHostConfigurationOption Include="System.Globalization.Invariant" Value="true"/><!-- .net 3.1 -->
     </ItemGroup>
 
 </Project>

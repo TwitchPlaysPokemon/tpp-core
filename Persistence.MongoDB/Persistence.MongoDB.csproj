@@ -2,16 +2,16 @@
 
     <PropertyGroup>
         <TargetFramework>netcoreapp3.1</TargetFramework>
-		<Nullable>enable</Nullable>
-		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <Nullable>enable</Nullable>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="MongoDB.Driver" Version="2.10.2" />
+        <PackageReference Include="MongoDB.Driver" Version="2.10.2"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Persistence\Persistence.csproj" />
+        <ProjectReference Include="..\Persistence\Persistence.csproj"/>
     </ItemGroup>
 
 </Project>

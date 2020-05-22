@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using Persistence.Models;
+using Persistence.MongoDB.Serializers;
 using Persistence.Repos;
 
 namespace Persistence.MongoDB.Repos
@@ -32,11 +33,14 @@ namespace Persistence.MongoDB.Repos
                 cm.MapProperty(u => u.Tokens).SetElementName("tokens");
                 cm.MapProperty(u => u.ParticipationEmblems).SetElementName("participation");
                 cm.MapProperty(u => u.SelectedParticipationEmblem).SetElementName("selected_participation_badge");
+                cm.MapProperty(u => u.SelectedBadge).SetElementName("badge")
+                    .SetSerializer(PkmnSpeciesSerializer.Instance);
             });
         }
 
         public UserRepo(IMongoDatabase database, int startingPokeyen, int startingTokens)
         {
+            database.CreateCollection(CollectionName);
             Collection = database.GetCollection<User>(CollectionName);
             _startingPokeyen = startingPokeyen;
             _startingTokens = startingTokens;
@@ -48,6 +52,8 @@ namespace Persistence.MongoDB.Repos
             Collection.Indexes.CreateMany(new[]
             {
                 new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.SimpleName)),
+                new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.Pokeyen)),
+                new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.Tokens)),
             });
         }
 
@@ -88,6 +94,11 @@ namespace Persistence.MongoDB.Repos
             );
             await Collection.InsertOneAsync(document: user);
             return user;
+        }
+
+        public async Task<User?> FindBySimpleName(string simpleName)
+        {
+            return await Collection.Find(u => u.SimpleName == simpleName).FirstOrDefaultAsync();
         }
     }
 }
