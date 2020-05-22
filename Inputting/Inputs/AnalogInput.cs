@@ -16,9 +16,9 @@ namespace Inputting.Inputs
 
         public AnalogInput(
             string displayedText,
-            string effectiveText,
+            string buttonName,
             string originalText,
-            float strength) : base(displayedText, effectiveText, originalText)
+            float strength) : base(displayedText, buttonName, originalText)
         {
             if (strength < 0f || strength > 1f)
             {
@@ -27,7 +27,7 @@ namespace Inputting.Inputs
             Strength = strength;
         }
 
-        public override string ToString() => $"{DisplayedText}({EffectiveText}={Strength})";
+        public override string ToString() => $"{DisplayedText}({ButtonName}={Strength})";
 
         #region polymorphic equals boilerplate
 

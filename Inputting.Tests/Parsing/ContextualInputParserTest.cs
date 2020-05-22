@@ -49,18 +49,18 @@ namespace Inputting.Tests.Parsing
 
             Assert.AreEqual(Seq(new InputSet(new List<Input>
                 {
-                    new TouchscreenInput("234,123", "touch", "234,123", 234, 123),
-                    new TouchscreenInput("11,22", "touch", "11,22", 11, 22),
+                    new TouchscreenInput("234,123", "touchscreen", "234,123", 234, 123),
+                    new TouchscreenInput("11,22", "touchscreen", "11,22", 11, 22),
                 })
             ), _inputParser.Parse("234,123+11,22"));
             Assert.AreEqual(Seq(new InputSet(new List<Input>
                 {
-                    new TouchscreenInput("234,123", "touch", "234,123", 234, 123),
-                    new TouchscreenDragInput("11,22>33,44", "drag", "11,22>33,44", 11, 22, 33, 44),
+                    new TouchscreenInput("234,123", "touchscreen", "234,123", 234, 123),
+                    new TouchscreenDragInput("11,22>33,44", "touchscreen", "11,22>33,44", 11, 22, 33, 44),
                 })
             ), _inputParser.Parse("234,123+11,22>33,44"));
 
-            // multitouch enabled
+            // multitouch disabled
             _inputParser = InputParserBuilder.FromBare()
                 .LengthRestrictions(maxSetLength: 2, maxSequenceLength: 4)
                 .Touchscreen(width: 240, height: 160, multitouch: false, allowDrag: true)
@@ -79,6 +79,7 @@ namespace Inputting.Tests.Parsing
                 .AliasedButtons(("n", "up"))
                 .AnalogInputs("up")
                 .Touchscreen(width: 240, height: 160, multitouch: true, allowDrag: true)
+                .AliasedTouchscreenInput("move1", 11, 22)
                 .LengthRestrictions(maxSetLength: 2, maxSequenceLength: 4)
                 .Build();
 
@@ -87,6 +88,7 @@ namespace Inputting.Tests.Parsing
             Assert.IsNull(_inputParser.Parse("n+up"));
             Assert.IsNull(_inputParser.Parse("11,22+11,22"));
             Assert.IsNull(_inputParser.Parse("11,22>50,60+11,22>50,60"));
+            Assert.IsNull(_inputParser.Parse("11,22+move1"));
         }
 
         [Test]

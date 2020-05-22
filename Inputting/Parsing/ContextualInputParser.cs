@@ -57,14 +57,14 @@ namespace Inputting.Parsing
         }
 
         private static bool HasNonLoneWait(InputSet inputSet) =>
-            inputSet.Inputs.Count > 1 && inputSet.Inputs.Exists(i => i.EffectiveText == "wait");
+            inputSet.Inputs.Count > 1 && inputSet.Inputs.Exists(i => i.ButtonName == "wait");
 
         private static bool HasDuplicationExceptTouchscreen(InputSet inputSet)
         {
             var seen = new HashSet<string>();
             return inputSet.Inputs.Where(i => !(i is TouchscreenInput)).Any(input =>
             {
-                bool alreadyExisted = !seen.Add(input.EffectiveText);
+                bool alreadyExisted = !seen.Add(input.ButtonName);
                 return alreadyExisted;
             });
         }
@@ -86,7 +86,7 @@ namespace Inputting.Parsing
             from inputSet in inputSets
             from s1 in inputSet.Inputs
             from s2 in inputSet.Inputs
-            where s1.EffectiveText != s2.EffectiveText
-            select (s1.EffectiveText, s2.EffectiveText);
+            where s1.ButtonName != s2.ButtonName
+            select (s1.ButtonName, s2.ButtonName);
     }
 }

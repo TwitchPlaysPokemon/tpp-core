@@ -4,17 +4,16 @@ namespace Inputting.InputDefinitions
 {
     /// <summary>
     /// This input definition creates inputs of type <see cref="TouchscreenInput"/>.
-    /// The resulting input's effective text will be "touch".
     /// </summary>
     public readonly struct TouchscreenInputDefinition : IInputDefinition
     {
-        public const string EffectiveText = "touch";
-
+        private readonly string _touchscreenName;
         private readonly int _width;
         private readonly int _height;
 
-        public TouchscreenInputDefinition(int width, int height)
+        public TouchscreenInputDefinition(string touchscreenName, int width, int height)
         {
+            _touchscreenName = touchscreenName;
             _width = width;
             _height = height;
         }
@@ -30,7 +29,7 @@ namespace Inputting.InputDefinitions
             {
                 return null;
             }
-            return new TouchscreenInput(str, EffectiveText, str, x, y);
+            return new TouchscreenInput(str, _touchscreenName, str, x, y);
         }
     }
 }

@@ -10,6 +10,10 @@ namespace Inputting
     /// </summary>
     public class InputParserBuilder
     {
+        // there is no support for multiple touchscreens at the moment,
+        // so it doesn't make sense to give the touchscreen any custom name.
+        private const string TouchscreenName = "touchscreen";
+
         private readonly List<IInputDefinition> _inputDefinitions = new List<IInputDefinition>();
         private readonly HashSet<(string, string)> _conflicts = new HashSet<(string, string)>();
         private bool _multitouch = false;
@@ -116,10 +120,11 @@ namespace Inputting
         /// <param name="allowDrag">if performing drags (e.g. <c>80,120>160,50</c>) is allowed.</param>
         public InputParserBuilder Touchscreen(int width, int height, bool multitouch, bool allowDrag)
         {
-            _inputDefinitions.Add(new TouchscreenInputDefinition(width: width, height: height));
+            _inputDefinitions.Add(new TouchscreenInputDefinition(TouchscreenName, width: width, height: height));
             if (allowDrag)
             {
-                _inputDefinitions.Add(new TouchscreenDragInputDefinition(width: width, height: height));
+                _inputDefinitions.Add(new TouchscreenDragInputDefinition(
+                    touchscreenName: TouchscreenName, width: width, height: height));
             }
             _multitouch = multitouch;
             return this;
@@ -135,7 +140,8 @@ namespace Inputting
         {
             var buttonDefinition = new ButtonInputDefinition(name: name, mapsTo: name, keepsName: true);
             _inputDefinitions.Add(new AnyAsTouchscreenInputDefinition(
-                baseInputDefinition: buttonDefinition, targetX: x, targetY: y, keepsName: true));
+                baseInputDefinition: buttonDefinition,
+                touchscreenName: TouchscreenName, targetX: x, targetY: y, keepsName: true));
             return this;
         }
 

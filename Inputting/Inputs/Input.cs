@@ -14,22 +14,23 @@ namespace Inputting.Inputs
         /// </summary>
         public string DisplayedText { get; }
         /// <summary>
-        /// The text describing the actual input instruction that should be executed.
+        /// The name of the input/button being triggered.
+        /// Conceptually, a touchscreen is also one big button.
         /// </summary>
-        public string EffectiveText { get; }
+        public string ButtonName { get; }
         /// <summary>
         /// The original text this input was parsed from.
         /// </summary>
         public string OriginalText { get; }
 
-        public Input(string displayedText, string effectiveText, string originalText)
+        public Input(string displayedText, string buttonName, string originalText)
         {
             DisplayedText = displayedText;
-            EffectiveText = effectiveText;
+            ButtonName = buttonName;
             OriginalText = originalText;
         }
 
-        public override string ToString() => $"{DisplayedText}({EffectiveText})";
+        public override string ToString() => $"{DisplayedText}({ButtonName})";
 
         #region polymorphic equals boilerplate
 
@@ -40,12 +41,12 @@ namespace Inputting.Inputs
             return obj.GetType() == GetType() && Equals((Input) obj);
         }
 
-        public override int GetHashCode() => HashCode.Combine(DisplayedText, EffectiveText, OriginalText);
+        public override int GetHashCode() => HashCode.Combine(DisplayedText, ButtonName, OriginalText);
 
         private bool Equals(Input other)
         {
             return DisplayedText == other.DisplayedText
-                   && EffectiveText == other.EffectiveText
+                   && ButtonName == other.ButtonName
                    && OriginalText == other.OriginalText;
         }
 
@@ -60,14 +61,14 @@ namespace Inputting.Inputs
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj.GetType() == GetType() && EffectiveText == obj.EffectiveText;
+            return obj.GetType() == GetType() && ButtonName == obj.ButtonName;
         }
 
         /// <summary>
         /// HashCode-implementation for <see cref="EqualsEffectively"/>.
         /// </summary>
         /// <returns>hashcode for the effective parts of this input</returns>
-        public virtual int GetEffectiveHashCode() => HashCode.Combine(EffectiveText);
+        public virtual int GetEffectiveHashCode() => HashCode.Combine(ButtonName);
 
         #endregion
     }

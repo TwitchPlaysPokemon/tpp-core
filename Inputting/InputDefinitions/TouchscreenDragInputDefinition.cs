@@ -6,17 +6,16 @@ namespace Inputting.InputDefinitions
     /// A touchscreen drag input is an input in the form of <c>x1,y1>x2,y2</c>, e.g. <c>120,215>80,170</c>,
     /// with <c>x</c> and <c>y</c> being within 0 (inclusive) and the specified max width/height (exclusive).
     /// This input definition creates inputs of type <see cref="TouchscreenDragInput"/>.
-    /// The resulting input's effective text will be "drag".
     /// </summary>
     public readonly struct TouchscreenDragInputDefinition : IInputDefinition
     {
-        public const string EffectiveText = "drag";
-
+        private readonly string _touchscreenName;
         private readonly int _width;
         private readonly int _height;
 
-        public TouchscreenDragInputDefinition(int width, int height)
+        public TouchscreenDragInputDefinition(string touchscreenName, int width, int height)
         {
+            _touchscreenName = touchscreenName;
             _width = width;
             _height = height;
         }
@@ -35,7 +34,7 @@ namespace Inputting.InputDefinitions
             {
                 return null;
             }
-            return new TouchscreenDragInput(str, EffectiveText, str, x1, y1, x2, y2);
+            return new TouchscreenDragInput(str, _touchscreenName, str, x1, y1, x2, y2);
         }
     }
 }

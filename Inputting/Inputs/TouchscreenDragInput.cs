@@ -11,10 +11,10 @@
 
         public TouchscreenDragInput(
             string displayedText,
-            string effectiveText,
+            string buttonName,
             string originalText,
             int x, int y,
-            int x2, int y2) : base(displayedText, effectiveText, originalText, x, y)
+            int x2, int y2) : base(displayedText, buttonName, originalText, x, y)
         {
             X2 = x2;
             Y2 = y2;

@@ -11,9 +11,9 @@
 
         public TouchscreenInput(
             string displayedText,
-            string effectiveText,
+            string buttonName,
             string originalText,
-            int x, int y) : base(displayedText, effectiveText, originalText)
+            int x, int y) : base(displayedText, buttonName, originalText)
         {
             X = x;
             Y = y;

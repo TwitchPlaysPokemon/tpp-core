@@ -10,16 +10,18 @@ namespace Inputting.InputDefinitions
     /// </summary>
     public readonly struct AnyAsTouchscreenInputDefinition : IInputDefinition
     {
-        private const string EffectiveText = TouchscreenInputDefinition.EffectiveText;
-
         private readonly IInputDefinition _baseInputDefinition;
+        private readonly string _touchscreenName;
         private readonly int _targetX;
         private readonly int _targetY;
         private readonly bool _keepsName;
 
-        public AnyAsTouchscreenInputDefinition(IInputDefinition baseInputDefinition, int targetX, int targetY, bool keepsName)
+        public AnyAsTouchscreenInputDefinition(
+            IInputDefinition baseInputDefinition,
+            string touchscreenName, int targetX, int targetY, bool keepsName)
         {
             _baseInputDefinition = baseInputDefinition;
+            _touchscreenName = touchscreenName;
             _targetX = targetX;
             _targetY = targetY;
             _keepsName = keepsName;
@@ -32,7 +34,7 @@ namespace Inputting.InputDefinitions
             Input? input = _baseInputDefinition.Parse(str);
             if (input == null) return null;
             string displayedText = _keepsName ? input.DisplayedText : $"{_targetX},{_targetY}";
-            return new TouchscreenInput(displayedText, EffectiveText, str, _targetX, _targetY);
+            return new TouchscreenInput(displayedText, _touchscreenName, str, _targetX, _targetY);
         }
     }
 }
