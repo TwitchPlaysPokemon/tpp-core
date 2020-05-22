@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Inputting.InputDefinitions;
 using Inputting.Parsing;
 
@@ -314,7 +314,7 @@ namespace Inputting
         /// plus configuring respective conflicts, like inputting opposing directions.
         /// </summary>
         /// <param name="prefix">prefix for the D-pad, which will get prepended to "up"/"down"/"left"/"right"</param>
-        public InputParserBuilder DPad(string prefix)
+        public InputParserBuilder DPad(string prefix = "")
         {
             string up = prefix + "up";
             string down = prefix + "down";

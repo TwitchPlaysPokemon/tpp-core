@@ -27,7 +27,7 @@ namespace Inputting.Tests.Parsing
         {
             _inputParser = InputParserBuilder.FromBare()
                 .Buttons("a")
-                .DPad(prefix: "")
+                .DPad()
                 .LengthRestrictions(maxSetLength: 2, maxSequenceLength: 4)
                 .Build();
 
@@ -94,7 +94,7 @@ namespace Inputting.Tests.Parsing
         {
             _inputParser = InputParserBuilder.FromBare()
                 .Buttons("a", "b", "start", "select", "wait")
-                .DPad(prefix: "")
+                .DPad()
                 .RemappedDPad(up: "n", down: "s", left: "w", right: "e", mapsToPrefix: "")
                 .AnalogStick(prefix: "c", allowSpin: true)
                 .RemappedButtons(("p", "wait"), ("xp", "wait"), ("exp", "wait"))
