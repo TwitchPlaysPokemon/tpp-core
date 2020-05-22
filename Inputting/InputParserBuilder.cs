@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Inputting.InputDefinitions;
 using Inputting.Parsing;
 
@@ -133,7 +133,9 @@ namespace Inputting
         /// <param name="y">y-coordinate to map to</param>
         public InputParserBuilder AliasedTouchscreenInput(string name, int x, int y)
         {
-            _inputDefinitions.Add(new AliasedTouchscreenInputDefinition(name, x, y));
+            var buttonDefinition = new ButtonInputDefinition(name: name, mapsTo: name, keepsName: true);
+            _inputDefinitions.Add(new AnyAsTouchscreenInputDefinition(
+                baseInputDefinition: buttonDefinition, targetX: x, targetY: y, keepsName: true));
             return this;
         }
 
