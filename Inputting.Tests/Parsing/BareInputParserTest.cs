@@ -123,11 +123,22 @@ namespace Inputting.Tests.Parsing
                     new TouchscreenInput("0,0", "touch", "0,0", 0, 0)
                 })
             ), _inputParser.Parse("0,0"));
+            // allow leading zeroes
+            Assert.AreEqual(Seq(
+                new InputSet(new List<Input>
+                {
+                    new TouchscreenInput("0000,0000", "touch", "0000,0000", 0, 0)
+                })
+            ), _inputParser.Parse("0000,0000"));
+            Assert.AreEqual(Seq(
+                new InputSet(new List<Input>
+                {
+                    new TouchscreenInput("012,023", "touch", "012,023", 12, 23)
+                })
+            ), _inputParser.Parse("012,023"));
+            // out of bounds
             Assert.IsNull(_inputParser.Parse("240,159"));
             Assert.IsNull(_inputParser.Parse("239,160"));
-            // disallow leading zeroes
-            Assert.IsNull(_inputParser.Parse("0000,0000"));
-            Assert.IsNull(_inputParser.Parse("012,023"));
         }
 
         [Test]
@@ -154,13 +165,24 @@ namespace Inputting.Tests.Parsing
                     new TouchscreenDragInput("239,159>0,0", "drag", "239,159>0,0", 239, 159, 0, 0)
                 })
             ), _inputParser.Parse("239,159>0,0"));
+            // allow leading zeroes
+            Assert.AreEqual(Seq(
+                new InputSet(new List<Input>
+                {
+                    new TouchscreenDragInput("0000,0000>0000,0000", "drag", "0000,0000>0000,0000", 0, 0, 0, 0)
+                })
+            ), _inputParser.Parse("0000,0000>0000,0000"));
+            Assert.AreEqual(Seq(
+                new InputSet(new List<Input>
+                {
+                    new TouchscreenDragInput("012,023>0,0", "drag", "012,023>0,0", 12, 23, 0, 0)
+                })
+            ), _inputParser.Parse("012,023>0,0"));
+            // out of bounds
             Assert.IsNull(_inputParser.Parse("240,159>0,0"));
             Assert.IsNull(_inputParser.Parse("239,160>0,0"));
             Assert.IsNull(_inputParser.Parse("0,0>239,160"));
             Assert.IsNull(_inputParser.Parse("0,0>239,160"));
-            // disallow leading zeroes
-            Assert.IsNull(_inputParser.Parse("0000,0000>0000,0000"));
-            Assert.IsNull(_inputParser.Parse("012,023>0,0"));
 
             // drag disabled
             _inputParser = InputParserBuilder.FromBare()

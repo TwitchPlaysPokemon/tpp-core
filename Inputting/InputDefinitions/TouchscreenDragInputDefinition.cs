@@ -21,7 +21,7 @@ namespace Inputting.InputDefinitions
             _height = height;
         }
 
-        private const string Number = @"(?:0|[1-9]\d{0,3})";
+        private const string Number = @"(?:\d{1,4})";
         public string InputRegex => $@"{Number},{Number}>{Number},{Number}";
 
         public Input? Parse(string str)
