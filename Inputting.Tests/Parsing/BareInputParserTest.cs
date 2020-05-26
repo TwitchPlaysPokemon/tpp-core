@@ -139,6 +139,8 @@ namespace Inputting.Tests.Parsing
             // out of bounds
             Assert.IsNull(_inputParser.Parse("240,159"));
             Assert.IsNull(_inputParser.Parse("239,160"));
+            // reject non-ascii decimal number symbols
+            Assert.IsNull(_inputParser.Parse("১২৩,꧑꧒꧓"));
         }
 
         [Test]
@@ -183,6 +185,8 @@ namespace Inputting.Tests.Parsing
             Assert.IsNull(_inputParser.Parse("239,160>0,0"));
             Assert.IsNull(_inputParser.Parse("0,0>239,160"));
             Assert.IsNull(_inputParser.Parse("0,0>239,160"));
+            // reject non-ascii decimal number symbols
+            Assert.IsNull(_inputParser.Parse("১২৩,꧑꧒꧓>৪৫,꧔꧕"));
 
             // drag disabled
             _inputParser = InputParserBuilder.FromBare()
