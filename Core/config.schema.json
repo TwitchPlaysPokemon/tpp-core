@@ -63,6 +63,12 @@
         "null"
       ]
     },
+    "LogPath": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "Irc": {
       "$ref": "#/definitions/IrcConfig"
     }
