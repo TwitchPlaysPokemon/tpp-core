@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArgsParsing", "ArgsParsing\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArgsParsing.Tests", "ArgsParsing.Tests\ArgsParsing.Tests.csproj", "{7ECD9706-01AD-4CD1-895B-A2BBD192AEE4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{49841A70-3AC3-438E-BB8D-71F0BE5BE7C9}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inputting", "Inputting\Inputting.csproj", "{CA690D5F-430D-435A-9773-5149B2495321}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inputting.Tests", "Inputting.Tests\Inputting.Tests.csproj", "{21D41DA5-4DBF-47C6-B1B0-DD326B8974B9}"
@@ -52,6 +54,10 @@ Global
 		{7ECD9706-01AD-4CD1-895B-A2BBD192AEE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7ECD9706-01AD-4CD1-895B-A2BBD192AEE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7ECD9706-01AD-4CD1-895B-A2BBD192AEE4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49841A70-3AC3-438E-BB8D-71F0BE5BE7C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49841A70-3AC3-438E-BB8D-71F0BE5BE7C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49841A70-3AC3-438E-BB8D-71F0BE5BE7C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49841A70-3AC3-438E-BB8D-71F0BE5BE7C9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CA690D5F-430D-435A-9773-5149B2495321}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CA690D5F-430D-435A-9773-5149B2495321}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CA690D5F-430D-435A-9773-5149B2495321}.Release|Any CPU.ActiveCfg = Release|Any CPU
