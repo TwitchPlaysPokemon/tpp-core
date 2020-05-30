@@ -11,7 +11,7 @@ nor about where and how the inputs will be executed.
 
 - An [input sequence](InputSequence.cs) is a chronological sequence of input sets.
 - An [input set](InputSet.cs) is a set of simultaneous inputs.
-- An [Input](Input.cs) is an atomic action, e.g. pressing a button.
+- An [Input](Inputs/Input.cs) is an atomic action, e.g. pressing a button.
 
 Raw input texts may be as trivial as `a`, but can get arbitrarily complex.
 For example, the input text `up120,50>160,20L+R-a4` represents the following sequence:
@@ -50,7 +50,10 @@ foreach (InputSet inputSet in inputSequence.InputSets)
 {
     foreach (Input input in inputSet.Inputs)
     {
-        Console.Write($"{input.EffectiveText}={input.AdditionalData} ");
+        if (input is TouchscreenDragInput ti)
+            Console.Write($"{ti.X},{ti.Y}>{ti.X2},{ti.Y2} ");
+        else
+            Console.Write($"{input.ButtonName} ");
     }
     Console.Write("\n");
 }
@@ -59,13 +62,13 @@ foreach (InputSet inputSet in inputSequence.InputSets)
 which will print:
 
 ```text
-up=True
-drag=(120,50>160,20)
-L=True R=True hold=True
-A=True
-A=True
-A=True
-A=True
+up
+120,50>160,20
+L R hold
+A
+A
+A
+A
 ```
 
 For more examples, check out the [tests](../Inputting.Tests).
