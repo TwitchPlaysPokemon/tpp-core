@@ -27,7 +27,7 @@ jobs:
         git add config.schema.json
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git commit -m "update core config json schema"
+        git diff-index --quiet HEAD || git commit -m "update core config json schema"
         cd ..
     - name: Push changed core config json schema
       uses: ad-m/github-push-action@master
