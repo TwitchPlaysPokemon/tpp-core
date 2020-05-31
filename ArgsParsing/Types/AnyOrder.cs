@@ -22,7 +22,8 @@
             Item2 = item2;
         }
 
-        public (T1, T2) AsTuple() => (Item1, Item2);
+        public void Deconstruct(out T1 item1, out T2 item2) =>
+            (item1, item2) = (Item1, Item2);
     }
 
     /// <summary>
@@ -41,7 +42,8 @@
             Item3 = item3;
         }
 
-        public (T1, T2, T3) AsTuple() => (Item1, Item2, Item3);
+        public void Deconstruct(out T1 item1, out T2 item2, out T3 item3) =>
+            (item1, item2, item3) = (Item1, Item2, Item3);
     }
 
     /// <summary>
@@ -62,6 +64,7 @@
             Item4 = item4;
         }
 
-        public (T1, T2, T3, T4) AsTuple() => (Item1, Item2, Item3, Item4);
+        public void Deconstruct(out T1 item1, out T2 item2, out T3 item3, out T4 item4) =>
+            (item1, item2, item3, item4) = (Item1, Item2, Item3, Item4);
     }
 }

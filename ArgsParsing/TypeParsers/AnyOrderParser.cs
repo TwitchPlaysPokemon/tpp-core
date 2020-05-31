@@ -28,7 +28,7 @@ namespace ArgsParsing.TypeParsers
         // https://stackoverflow.com/a/13022090
         private static IEnumerable<IList<T>> Permutations<T>(IList<T> values, int fromInd = 0)
         {
-            if (fromInd + 1 == values.Count)
+            if (fromInd + 1 >= values.Count)
             {
                 yield return values;
             }

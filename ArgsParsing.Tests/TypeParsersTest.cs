@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using ArgsParsing.TypeParsers;
@@ -23,8 +23,8 @@ namespace ArgsParsing.Tests
 
             var args1 = ImmutableList.Create("123", "foo");
             var args2 = ImmutableList.Create("foo", "123");
-            (int int1, string string1) = (await argsParser.Parse<AnyOrder<int, string>>(args1)).AsTuple();
-            (int int2, string string2) = (await argsParser.Parse<AnyOrder<int, string>>(args2)).AsTuple();
+            (int int1, string string1) = await argsParser.Parse<AnyOrder<int, string>>(args1);
+            (int int2, string string2) = await argsParser.Parse<AnyOrder<int, string>>(args2);
             Assert.AreEqual(123, int1);
             Assert.AreEqual(123, int2);
             Assert.AreEqual("foo", string1);
@@ -33,6 +33,22 @@ namespace ArgsParsing.Tests
             var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
                 .Parse<AnyOrder<int, string>>(ImmutableList.Create("foo", "bar")));
             Assert.AreEqual("did not recognize 'foo' as a number", ex.Message);
+        }
+
+        [Test]
+        public async Task TestAnyOrderOptional()
+        {
+            var argsParser = new ArgsParser();
+            argsParser.AddArgumentParser(new AnyOrderParser(argsParser));
+            argsParser.AddArgumentParser(new OptionalParser(argsParser));
+            argsParser.AddArgumentParser(new IntParser());
+            argsParser.AddArgumentParser(new StringParser());
+
+            // this used to cause a stack overflow in the any order parser
+            (Optional<int> optionalInt, Optional<string> optionalString) = await argsParser
+                .Parse<AnyOrder<Optional<int>, Optional<string>>>(ImmutableList<string>.Empty);
+            Assert.False(optionalInt.IsPresent);
+            Assert.False(optionalString.IsPresent);
         }
 
         [Test]
