@@ -9,7 +9,7 @@ namespace ArgsParsing.TypeParsers
 {
     /// <summary>
     /// Parser capable of parsing colors represented as a 6-digit hexadecimal string prefixed with '#',
-    /// for example <c>#ff0000</c> for pure red, which will result in a <see cref="HexColor"/> of <c>FF0000</c>.
+    /// for example <c>#ff0000</c> for pure red, which will result in a <see cref="HexColor"/> of <c>#FF0000</c>.
     /// </summary>
     public class HexColorParser : BaseArgumentParser<HexColor>
     {
@@ -21,7 +21,7 @@ namespace ArgsParsing.TypeParsers
             Match colorMatch = _regex.Match(args[0]);
             if (colorMatch.Success)
             {
-                var color = new HexColor(colorMatch.Value.Substring(1).ToUpper());
+                var color = new HexColor(colorMatch.Value.ToUpper());
                 return Task.FromResult(ArgsParseResult<HexColor>.Success(color, args.Skip(1).ToImmutableList()));
             }
             else

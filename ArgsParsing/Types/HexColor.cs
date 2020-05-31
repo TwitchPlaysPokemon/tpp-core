@@ -1,8 +1,10 @@
-﻿namespace ArgsParsing.Types
+﻿using System;
+
+namespace ArgsParsing.Types
 {
     /// <summary>
-    /// Wrapper around a color in hexadecimal string notation, e.g. <c>FF0000</c> for pure red.
-    /// The string is _not_ prefixed with a hash symbol.
+    /// Wrapper around a color in hexadecimal string notation, prefixed with a hash symbol,
+    /// e.g. <c>#FF0000</c> for pure red.
     /// </summary>
     public class HexColor
     {
@@ -10,6 +12,7 @@
 
         public HexColor(string hexColorString)
         {
+            if (!hexColorString.StartsWith('#')) throw new ArgumentException($"hex color string must start with '#'");
             HexColorString = hexColorString;
         }
 
