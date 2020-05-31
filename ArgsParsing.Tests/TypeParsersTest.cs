@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using ArgsParsing.TypeParsers;
@@ -23,8 +23,8 @@ namespace ArgsParsing.Tests
 
             var args1 = ImmutableList.Create("123", "foo");
             var args2 = ImmutableList.Create("foo", "123");
-            (int int1, string string1) = (await argsParser.Parse<AnyOrder<int, string>>(args1)).AsTuple();
-            (int int2, string string2) = (await argsParser.Parse<AnyOrder<int, string>>(args2)).AsTuple();
+            (int int1, string string1) = await argsParser.Parse<AnyOrder<int, string>>(args1);
+            (int int2, string string2) = await argsParser.Parse<AnyOrder<int, string>>(args2);
             Assert.AreEqual(123, int1);
             Assert.AreEqual(123, int2);
             Assert.AreEqual("foo", string1);
