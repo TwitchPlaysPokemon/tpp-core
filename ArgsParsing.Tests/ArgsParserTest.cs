@@ -45,5 +45,23 @@ namespace ArgsParsing.Tests
             Assert.AreNotEqual("too many arguments", ex.Message);
             Assert.AreEqual("did not recognize 'abc' as a number", ex.Message);
         }
+
+        /// <summary>
+        /// Tests that a relevant error message that was wrapped inside a successful result (an Optional), but is then
+        /// wrapped again in a failure (an AnyOrder), the nested error message should be displayed and not be lost.
+        /// </summary>
+        [Test]
+        public void TestErrorMessageFromDeeplyNestedFailure()
+        {
+            var argsParser = new ArgsParser();
+            argsParser.AddArgumentParser(new IntParser());
+            argsParser.AddArgumentParser(new AnyOrderParser(argsParser));
+            argsParser.AddArgumentParser(new OptionalParser(argsParser));
+
+            var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<AnyOrder<Optional<int>, Optional<int>>>(args: ImmutableList.Create("abc", "123")));
+            Assert.AreNotEqual("too many arguments", ex.Message);
+            Assert.AreEqual("did not recognize 'abc' as a number", ex.Message);
+        }
     }
 }
