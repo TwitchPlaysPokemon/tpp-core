@@ -36,6 +36,22 @@ namespace ArgsParsing.Tests
         }
 
         [Test]
+        public async Task TestAnyOrderOptional()
+        {
+            var argsParser = new ArgsParser();
+            argsParser.AddArgumentParser(new AnyOrderParser(argsParser));
+            argsParser.AddArgumentParser(new OptionalParser(argsParser));
+            argsParser.AddArgumentParser(new IntParser());
+            argsParser.AddArgumentParser(new StringParser());
+
+            // this used to cause a stack overflow in the any order parser
+            (Optional<int> optionalInt, Optional<string> optionalString) = await argsParser
+                .Parse<AnyOrder<Optional<int>, Optional<string>>>(ImmutableList<string>.Empty);
+            Assert.False(optionalInt.IsPresent);
+            Assert.False(optionalString.IsPresent);
+        }
+
+        [Test]
         public async Task TestDateTimeParser()
         {
             var argsParser = new ArgsParser();
