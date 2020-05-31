@@ -122,15 +122,12 @@ namespace ArgsParsing
                 success = false;
                 failures.Add(new Failure(ErrorRelevanceConfidence.Unlikely, "too many arguments"));
             }
-            if (success)
-            {
-                return ArgsParseResult<List<object>>.Success(null, results, allRemainingArgs);
-            }
-            else
-            {
-                Failure mostRelevantFailure = failures.OrderByDescending(failure => failure.Relevance).First();
-                return ArgsParseResult<List<object>>.Failure(mostRelevantFailure);
-            }
+            Failure? mostRelevantFailure = failures
+                .OrderByDescending(failure => failure.Relevance)
+                .Cast<Failure?>().FirstOrDefault();
+            return success
+                ? ArgsParseResult<List<object>>.Success(mostRelevantFailure, results, allRemainingArgs)
+                : ArgsParseResult<List<object>>.Failure(mostRelevantFailure);
         }
 
         #region type-safe convenience methods
