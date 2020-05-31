@@ -46,7 +46,7 @@ namespace ArgsParsing.TypeParsers
                 }
             }
             string speciesId = args[0].Substring(startIndex: 1);
-            PkmnSpecies? species = PkmnSpecies.OfIdWithPokedexData(speciesId);
+            PkmnSpecies? species = PkmnSpecies.OfIdWithPokedexData(speciesId.TrimStart('0'));
             return Task.FromResult(species == null
                 ? ArgsParseResult<PkmnSpecies>.Failure($"did not recognize species '{args[0]}'",
                     ErrorRelevanceConfidence.Likely)
