@@ -26,7 +26,7 @@ namespace Common
     /// </summary>
     public sealed class PkmnSpecies : IComparable<PkmnSpecies>
     {
-        private static readonly Dictionary<string, string> NoFlavors = new Dictionary<string, string>();
+        private static readonly IDictionary<string, string> NoFlavors = ImmutableDictionary<string, string>.Empty;
 
         /// <summary>
         /// Internal dictionary that keeps track of any registered pokedex data
@@ -90,9 +90,9 @@ namespace Common
         /// <param name="id">The species' id to add the data for.</param>
         /// <param name="name">The species' displayed name to register.</param>
         /// <param name="flavors">A mapping from game titles to flavor texts to register for the species.</param>
-        public static void RegisterPokedexData(string id, string name, IDictionary<string, string> flavors)
+        public static void RegisterPokedexData(string id, string name, IDictionary<string, string>? flavors = null)
         {
-            Pokedex[id] = new PkmnSpecies(id, name, flavors);
+            Pokedex[id] = new PkmnSpecies(id, name, flavors ?? NoFlavors);
         }
 
         /// <summary>

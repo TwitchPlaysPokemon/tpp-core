@@ -112,10 +112,12 @@ namespace ArgsParsing.Tests
             argsParser.AddArgumentParser(new PkmnSpeciesParser());
 
             PkmnSpecies resultById = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create("#" + speciesId));
+            PkmnSpecies resultByPaddedId = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create("#0" + speciesId));
             PkmnSpecies resultByName1 = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create(speciesName));
             PkmnSpecies resultByName2 = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create("uNiQuAmOn"));
 
             Assert.AreEqual(PkmnSpecies.OfId(speciesId), resultById);
+            Assert.AreEqual(PkmnSpecies.OfId(speciesId), resultByPaddedId);
             Assert.AreEqual(PkmnSpecies.OfId(speciesId), resultByName1);
             Assert.AreEqual(PkmnSpecies.OfId(speciesId), resultByName2);
 
