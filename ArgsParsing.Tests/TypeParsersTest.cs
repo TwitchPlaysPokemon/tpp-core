@@ -75,6 +75,30 @@ namespace ArgsParsing.Tests
         }
 
         [Test]
+        public async Task TestHexColorParser()
+        {
+            var argsParser = new ArgsParser();
+            argsParser.AddArgumentParser(new HexColorParser());
+
+            Assert.AreEqual("#ABCDEF", (string) await argsParser
+                .Parse<HexColor>(args: ImmutableList.Create("#abcdef")));
+            Assert.AreEqual("#0F9D5A", (string) await argsParser
+                .Parse<HexColor>(args: ImmutableList.Create("#0f9D5a")));
+
+            var ex1 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<HexColor>(ImmutableList.Create("abcdef")));
+            var ex2 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<HexColor>(ImmutableList.Create("#abc")));
+            var ex3 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<HexColor>(ImmutableList.Create("#bcdefg")));
+            Assert.AreEqual("'abcdef' is not a valid hex color", ex1.Message);
+            Assert.AreEqual("'#abc' must be a 6-character hex code consisting of 0-9 and A-F, " +
+                            "for example '#FF0000' for pure red.", ex2.Message);
+            Assert.AreEqual("'#bcdefg' must be a 6-character hex code consisting of 0-9 and A-F, " +
+                            "for example '#FF0000' for pure red.", ex3.Message);
+        }
+
+        [Test]
         public async Task TestOneOfParser()
         {
             var argsParser = new ArgsParser();
