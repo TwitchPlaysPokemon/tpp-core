@@ -33,9 +33,9 @@
 
         public override int GetHashCode() => base.GetHashCode() | X2 | Y2;
 
-        public override bool EqualsEffectively(Input? obj)
+        public override bool HasSameOutcomeAs(Input? obj)
         {
-            if (!base.EqualsEffectively(obj)) return false;
+            if (!base.HasSameOutcomeAs(obj)) return false;
             var touchscreenDragInput = (TouchscreenDragInput) obj!;
             return X2 == touchscreenDragInput.X2 && Y2 == touchscreenDragInput.Y2;
         }

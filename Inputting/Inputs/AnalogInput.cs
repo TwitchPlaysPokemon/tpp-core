@@ -40,9 +40,9 @@ namespace Inputting.Inputs
 
         public override int GetHashCode() => base.GetHashCode() | Strength.GetHashCode();
 
-        public override bool EqualsEffectively(Input? obj)
+        public override bool HasSameOutcomeAs(Input? obj)
         {
-            if (!base.EqualsEffectively(obj)) return false;
+            if (!base.HasSameOutcomeAs(obj)) return false;
             var analogInput = (AnalogInput) obj!;
             return Math.Abs(Strength - analogInput.Strength) < float.Epsilon;
         }

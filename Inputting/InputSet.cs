@@ -19,13 +19,13 @@ namespace Inputting
         /// Determines whether this input set is effectively equal to another input set,
         /// meaning they would cause the same action.
         /// This is done by order-agnostic comparison between all inputs,
-        /// using the <see cref="Input.EqualsEffectively"/> method.
+        /// using the <see cref="Input.HasSameOutcomeAs"/> method.
         /// </summary>
         /// <param name="other">input set to check for effective equality</param>
-        /// <returns>whether the other input set is effectively equal</returns>
-        public bool EqualsEffectively(InputSet other)
+        /// <returns>whether the other input set has the same outcome as the supplied one</returns>
+        public bool HasSameOutcomeAs(InputSet other)
         {
-            return new HashSet<Input>(Inputs, EffectiveInputEqualityComparer.Instance).SetEquals(other.Inputs);
+            return new HashSet<Input>(Inputs, SameOutcomeComparer.Instance).SetEquals(other.Inputs);
         }
 
         public InputSet(IEnumerable<Input> inputs)
@@ -39,12 +39,12 @@ namespace Inputting
     /// <summary>
     /// Equality comparer for effective equality (whether two inputs would cause the same action).
     /// </summary>
-    internal class EffectiveInputEqualityComparer : IEqualityComparer<Input>
+    internal class SameOutcomeComparer : IEqualityComparer<Input>
     {
-        public static readonly EffectiveInputEqualityComparer Instance = new EffectiveInputEqualityComparer();
+        public static readonly SameOutcomeComparer Instance = new SameOutcomeComparer();
         public bool Equals(Input? x, Input? y) =>
             (x == null && y == null)
-            || (x != null && y != null && x.EqualsEffectively(y));
+            || (x != null && y != null && x.HasSameOutcomeAs(y));
         public int GetHashCode(Input obj) => obj.GetEffectiveHashCode();
     }
 }

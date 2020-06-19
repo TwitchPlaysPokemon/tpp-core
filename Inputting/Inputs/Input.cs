@@ -56,8 +56,8 @@ namespace Inputting.Inputs
         /// This is done by only comparing the functional parts of this input.
         /// </summary>
         /// <param name="obj">input to check for effective equality</param>
-        /// <returns>whether the supplied input is effectively equal</returns>
-        public virtual bool EqualsEffectively(Input? obj)
+        /// <returns>whether the supplied input has the same outcome as the supplied one</returns>
+        public virtual bool HasSameOutcomeAs(Input? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
@@ -65,7 +65,7 @@ namespace Inputting.Inputs
         }
 
         /// <summary>
-        /// HashCode-implementation for <see cref="EqualsEffectively"/>.
+        /// HashCode-implementation for <see cref="HasSameOutcomeAs"/>.
         /// </summary>
         /// <returns>hashcode for the effective parts of this input</returns>
         public virtual int GetEffectiveHashCode() => HashCode.Combine(ButtonName);

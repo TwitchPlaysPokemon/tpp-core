@@ -13,7 +13,7 @@ namespace Inputting.Tests
         private static InputSequence Seq(params InputSet[] inputSets) => new InputSequence(inputSets);
 
         [Test]
-        public void TestEffectivelyEqualsRegularInput()
+        public void TestSameOutcomeRegularInput()
         {
             var inputBase = new Input("foo", "a", "bar");
             var inputOtherDisplayText = new Input("X", "a", "bar");
@@ -25,14 +25,14 @@ namespace Inputting.Tests
             Assert.AreNotEqual(inputBase, inputOtherOriginalText);
             Assert.AreNotEqual(inputBase, inputOtherEffectiveText);
 
-            Assert.IsTrue(inputBase.EqualsEffectively(inputBase));
-            Assert.IsTrue(inputBase.EqualsEffectively(inputOtherDisplayText));
-            Assert.IsTrue(inputBase.EqualsEffectively(inputOtherOriginalText));
-            Assert.IsFalse(inputBase.EqualsEffectively(inputOtherEffectiveText));
+            Assert.IsTrue(inputBase.HasSameOutcomeAs(inputBase));
+            Assert.IsTrue(inputBase.HasSameOutcomeAs(inputOtherDisplayText));
+            Assert.IsTrue(inputBase.HasSameOutcomeAs(inputOtherOriginalText));
+            Assert.IsFalse(inputBase.HasSameOutcomeAs(inputOtherEffectiveText));
         }
 
         [Test]
-        public void TestEffectivelyEqualsTouchscreenInput()
+        public void TestSameOutcomeTouchscreenInput()
         {
             var inputBase = new TouchscreenInput("foo", "a", "bar", 11, 12);
             var inputOtherDisplayText = new TouchscreenInput("X", "a", "bar", 11, 12);
@@ -48,16 +48,16 @@ namespace Inputting.Tests
             Assert.AreNotEqual(inputBase, inputOtherCoordinateX);
             Assert.AreNotEqual(inputBase, inputOtherCoordinateY);
 
-            Assert.IsTrue(inputBase.EqualsEffectively(inputBase));
-            Assert.IsTrue(inputBase.EqualsEffectively(inputOtherDisplayText));
-            Assert.IsTrue(inputBase.EqualsEffectively(inputOtherOriginalText));
-            Assert.IsFalse(inputBase.EqualsEffectively(inputOtherEffectiveText));
-            Assert.IsFalse(inputBase.EqualsEffectively(inputOtherCoordinateX));
-            Assert.IsFalse(inputBase.EqualsEffectively(inputOtherCoordinateY));
+            Assert.IsTrue(inputBase.HasSameOutcomeAs(inputBase));
+            Assert.IsTrue(inputBase.HasSameOutcomeAs(inputOtherDisplayText));
+            Assert.IsTrue(inputBase.HasSameOutcomeAs(inputOtherOriginalText));
+            Assert.IsFalse(inputBase.HasSameOutcomeAs(inputOtherEffectiveText));
+            Assert.IsFalse(inputBase.HasSameOutcomeAs(inputOtherCoordinateX));
+            Assert.IsFalse(inputBase.HasSameOutcomeAs(inputOtherCoordinateY));
         }
 
         [Test]
-        public void TestEffectivelyEqualsTouchscreenDragInput()
+        public void TestSameOutcomeTouchscreenDragInput()
         {
             var inputBase = new TouchscreenDragInput("foo", "a", "bar", 11, 12, 13, 14);
             var inputOtherDisplayText = new TouchscreenDragInput("X", "a", "bar", 11, 12, 13, 14);
@@ -77,18 +77,18 @@ namespace Inputting.Tests
             Assert.AreNotEqual(inputBase, inputOtherCoordinateX2);
             Assert.AreNotEqual(inputBase, inputOtherCoordinateY2);
 
-            Assert.IsTrue(inputBase.EqualsEffectively(inputBase));
-            Assert.IsTrue(inputBase.EqualsEffectively(inputOtherDisplayText));
-            Assert.IsTrue(inputBase.EqualsEffectively(inputOtherOriginalText));
-            Assert.IsFalse(inputBase.EqualsEffectively(inputOtherEffectiveText));
-            Assert.IsFalse(inputBase.EqualsEffectively(inputOtherCoordinateX1));
-            Assert.IsFalse(inputBase.EqualsEffectively(inputOtherCoordinateY1));
-            Assert.IsFalse(inputBase.EqualsEffectively(inputOtherCoordinateX2));
-            Assert.IsFalse(inputBase.EqualsEffectively(inputOtherCoordinateY2));
+            Assert.IsTrue(inputBase.HasSameOutcomeAs(inputBase));
+            Assert.IsTrue(inputBase.HasSameOutcomeAs(inputOtherDisplayText));
+            Assert.IsTrue(inputBase.HasSameOutcomeAs(inputOtherOriginalText));
+            Assert.IsFalse(inputBase.HasSameOutcomeAs(inputOtherEffectiveText));
+            Assert.IsFalse(inputBase.HasSameOutcomeAs(inputOtherCoordinateX1));
+            Assert.IsFalse(inputBase.HasSameOutcomeAs(inputOtherCoordinateY1));
+            Assert.IsFalse(inputBase.HasSameOutcomeAs(inputOtherCoordinateX2));
+            Assert.IsFalse(inputBase.HasSameOutcomeAs(inputOtherCoordinateY2));
         }
 
         [Test]
-        public void TestEffectivelyEqualsAnalogInput()
+        public void TestSameOutcomeAnalogInput()
         {
             var inputBase = new AnalogInput("foo", "a", "bar", 0.1f);
             var inputOtherDisplayText = new AnalogInput("X", "a", "bar", 0.1f);
@@ -102,31 +102,31 @@ namespace Inputting.Tests
             Assert.AreNotEqual(inputBase, inputOtherEffectiveText);
             Assert.AreNotEqual(inputBase, inputOtherStrength);
 
-            Assert.IsTrue(inputBase.EqualsEffectively(inputBase));
-            Assert.IsTrue(inputBase.EqualsEffectively(inputOtherDisplayText));
-            Assert.IsTrue(inputBase.EqualsEffectively(inputOtherOriginalText));
-            Assert.IsFalse(inputBase.EqualsEffectively(inputOtherEffectiveText));
-            Assert.IsFalse(inputBase.EqualsEffectively(inputOtherStrength));
+            Assert.IsTrue(inputBase.HasSameOutcomeAs(inputBase));
+            Assert.IsTrue(inputBase.HasSameOutcomeAs(inputOtherDisplayText));
+            Assert.IsTrue(inputBase.HasSameOutcomeAs(inputOtherOriginalText));
+            Assert.IsFalse(inputBase.HasSameOutcomeAs(inputOtherEffectiveText));
+            Assert.IsFalse(inputBase.HasSameOutcomeAs(inputOtherStrength));
         }
 
         [Test]
-        public void TestEffectivelyEqualsAnyOrder()
+        public void TestSameOutcomeAnyOrder()
         {
             Assert.AreEqual(Set("a", "b"), Set("a", "b"));
-            Assert.IsTrue(Set("a", "b").EqualsEffectively(Set("b", "a")));
+            Assert.IsTrue(Set("a", "b").HasSameOutcomeAs(Set("b", "a")));
 
             Assert.AreNotEqual(Set("a", "b"), Set("b", "a"));
-            Assert.IsFalse(Set("a", "b").EqualsEffectively(Set("a", "x")));
+            Assert.IsFalse(Set("a", "b").HasSameOutcomeAs(Set("a", "x")));
 
             Assert.AreEqual(Seq(Set("a", "b"), Set("c", "d")), Seq(Set("a", "b"), Set("c", "d")));
-            Assert.IsTrue(Seq(Set("a", "b"), Set("c", "d")).EqualsEffectively(Seq(Set("b", "a"), Set("d", "c"))));
+            Assert.IsTrue(Seq(Set("a", "b"), Set("c", "d")).HasSameOutcomeAs(Seq(Set("b", "a"), Set("d", "c"))));
 
             Assert.AreNotEqual(Seq(Set("a", "b"), Set("c", "d")), Seq(Set("b", "a"), Set("d", "c")));
-            Assert.IsFalse(Seq(Set("a", "b"), Set("c", "d")).EqualsEffectively(Seq(Set("a", "b"), Set("c", "x"))));
+            Assert.IsFalse(Seq(Set("a", "b"), Set("c", "d")).HasSameOutcomeAs(Seq(Set("a", "b"), Set("c", "x"))));
         }
 
         [Test]
-        public void TestEffectivelyEqualsInputSet()
+        public void TestSameOutcomeInputSet()
         {
             var inputRefA = new Input("Foo", "a", "foo");
             var inputRefB = new Input("Bar", "b", "bar");
@@ -142,9 +142,9 @@ namespace Inputting.Tests
             var setDifferentEffectiveInput = new InputSet(new List<Input> {input4A, input4B});
 
             Assert.AreNotEqual(setRef, setDifferentOrder);
-            Assert.IsTrue(setRef.EqualsEffectively(setDifferentOrder));
-            Assert.IsFalse(setRef.EqualsEffectively(setDifferentLength));
-            Assert.IsFalse(setRef.EqualsEffectively(setDifferentEffectiveInput));
+            Assert.IsTrue(setRef.HasSameOutcomeAs(setDifferentOrder));
+            Assert.IsFalse(setRef.HasSameOutcomeAs(setDifferentLength));
+            Assert.IsFalse(setRef.HasSameOutcomeAs(setDifferentEffectiveInput));
         }
     }
 }

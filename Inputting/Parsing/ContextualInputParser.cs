@@ -45,7 +45,7 @@ namespace Inputting.Parsing
             IImmutableList<InputSet> inputSets = baseInputSequence.InputSets;
             bool hasWaitConflict = inputSets.Any(HasNonLoneWait);
             bool hasButtonDuplication = inputSets.Any(HasDuplicationExceptTouchscreen); // e.g. "L" and "L.3"
-            bool hasEffectiveDuplication = inputSets.Any(HasEffectivelyDuplicateInputs);
+            bool hasEffectiveDuplication = inputSets.Any(HasInputsWithSameOutcome);
             bool hasIllegalMultitouch = !_multitouch && inputSets.Any(HasMultipleTouchscreenInputs);
             bool hasConflicts = _conflictingInputs.Overlaps(GetAllCombinations(inputSets));
             if (hasWaitConflict || hasButtonDuplication || hasEffectiveDuplication || hasIllegalMultitouch || hasConflicts)
@@ -69,9 +69,9 @@ namespace Inputting.Parsing
             });
         }
 
-        private static bool HasEffectivelyDuplicateInputs(InputSet inputSet)
+        private static bool HasInputsWithSameOutcome(InputSet inputSet)
         {
-            var seen = new HashSet<Input>(EffectiveInputEqualityComparer.Instance);
+            var seen = new HashSet<Input>(SameOutcomeComparer.Instance);
             return inputSet.Inputs.Any(input =>
             {
                 bool alreadyExisted = !seen.Add(input);

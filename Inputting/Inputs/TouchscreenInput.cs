@@ -32,9 +32,9 @@
 
         public override int GetHashCode() => base.GetHashCode() | X | Y;
 
-        public override bool EqualsEffectively(Input? obj)
+        public override bool HasSameOutcomeAs(Input? obj)
         {
-            if (!base.EqualsEffectively(obj)) return false;
+            if (!base.HasSameOutcomeAs(obj)) return false;
             var touchscreenInput = (TouchscreenInput) obj!;
             return X == touchscreenInput.X && Y == touchscreenInput.Y;
         }

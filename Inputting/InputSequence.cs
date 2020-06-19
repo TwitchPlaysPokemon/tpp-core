@@ -18,16 +18,16 @@ namespace Inputting
         /// Determines whether this input sequence is effectively equal to another input sequence,
         /// meaning they would cause the same action.
         /// This is done by comparing all input sets,
-        /// using the <see cref="InputSet.EqualsEffectively"/> method.
+        /// using the <see cref="InputSet.HasSameOutcomeAs"/> method.
         /// </summary>
         /// <param name="other">input sequence to check for effective equality</param>
-        /// <returns>whether the other input sequence is effectively equal</returns>
-        public bool EqualsEffectively(InputSequence other)
+        /// <returns>whether the other input sequence has the same outcome as the supplied one</returns>
+        public bool HasSameOutcomeAs(InputSequence other)
         {
             if (InputSets.Count != other.InputSets.Count) return false;
             for (int i = 0; i < InputSets.Count; i++)
             {
-                if (!InputSets[i].EqualsEffectively(other.InputSets[i])) return false;
+                if (!InputSets[i].HasSameOutcomeAs(other.InputSets[i])) return false;
             }
             return true;
         }
