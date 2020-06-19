@@ -6,14 +6,14 @@
     /// </summary>
     public class TouchscreenInput : Input
     {
-        public int X { get; }
-        public int Y { get; }
+        public uint X { get; }
+        public uint Y { get; }
 
         public TouchscreenInput(
             string displayedText,
             string buttonName,
             string originalText,
-            int x, int y) : base(displayedText, buttonName, originalText)
+            uint x, uint y) : base(displayedText, buttonName, originalText)
         {
             X = x;
             Y = y;
@@ -30,7 +30,7 @@
             return X == touchscreenInput.X && Y == touchscreenInput.Y;
         }
 
-        public override int GetHashCode() => base.GetHashCode() | X | Y;
+        public override int GetHashCode() => base.GetHashCode() | (int) X | (int) Y;
 
         public override bool HasSameOutcomeAs(Input? obj)
         {
@@ -39,7 +39,7 @@
             return X == touchscreenInput.X && Y == touchscreenInput.Y;
         }
 
-        public override int GetEffectiveHashCode() => base.GetEffectiveHashCode() | X | Y;
+        public override int GetEffectiveHashCode() => base.GetEffectiveHashCode() | (int) X | (int) Y;
 
         #endregion
     }

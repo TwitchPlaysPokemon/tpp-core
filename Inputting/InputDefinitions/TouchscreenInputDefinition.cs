@@ -1,4 +1,4 @@
-﻿using Inputting.Inputs;
+using Inputting.Inputs;
 
 namespace Inputting.InputDefinitions
 {
@@ -8,10 +8,10 @@ namespace Inputting.InputDefinitions
     public readonly struct TouchscreenInputDefinition : IInputDefinition
     {
         private readonly string _touchscreenName;
-        private readonly int _width;
-        private readonly int _height;
+        private readonly uint _width;
+        private readonly uint _height;
 
-        public TouchscreenInputDefinition(string touchscreenName, int width, int height)
+        public TouchscreenInputDefinition(string touchscreenName, uint width, uint height)
         {
             _touchscreenName = touchscreenName;
             _width = width;
@@ -24,7 +24,7 @@ namespace Inputting.InputDefinitions
         public Input? Parse(string str)
         {
             string[] split = str.Split(',', count: 2);
-            (int x, int y) = (int.Parse(split[0]), int.Parse(split[1]));
+            (uint x, uint y) = (uint.Parse(split[0]), uint.Parse(split[1]));
             if (x >= _width || y >= _height)
             {
                 return null;

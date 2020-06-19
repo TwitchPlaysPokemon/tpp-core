@@ -6,15 +6,15 @@
     /// </summary>
     public class TouchscreenDragInput : TouchscreenInput
     {
-        public int X2 { get; }
-        public int Y2 { get; }
+        public uint X2 { get; }
+        public uint Y2 { get; }
 
         public TouchscreenDragInput(
             string displayedText,
             string buttonName,
             string originalText,
-            int x, int y,
-            int x2, int y2) : base(displayedText, buttonName, originalText, x, y)
+            uint x, uint y,
+            uint x2, uint y2) : base(displayedText, buttonName, originalText, x, y)
         {
             X2 = x2;
             Y2 = y2;
@@ -31,7 +31,7 @@
             return X2 == touchscreenDragInput.X2 && Y2 == touchscreenDragInput.Y2;
         }
 
-        public override int GetHashCode() => base.GetHashCode() | X2 | Y2;
+        public override int GetHashCode() => base.GetHashCode() | (int) X2 | (int) Y2;
 
         public override bool HasSameOutcomeAs(Input? obj)
         {
@@ -40,7 +40,7 @@
             return X2 == touchscreenDragInput.X2 && Y2 == touchscreenDragInput.Y2;
         }
 
-        public override int GetEffectiveHashCode() => base.GetEffectiveHashCode() | X2 | Y2;
+        public override int GetEffectiveHashCode() => base.GetEffectiveHashCode() | (int) X2 | (int) Y2;
 
         #endregion
     }

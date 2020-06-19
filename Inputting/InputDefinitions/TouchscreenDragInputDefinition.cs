@@ -1,4 +1,4 @@
-﻿using Inputting.Inputs;
+using Inputting.Inputs;
 
 namespace Inputting.InputDefinitions
 {
@@ -10,10 +10,10 @@ namespace Inputting.InputDefinitions
     public readonly struct TouchscreenDragInputDefinition : IInputDefinition
     {
         private readonly string _touchscreenName;
-        private readonly int _width;
-        private readonly int _height;
+        private readonly uint _width;
+        private readonly uint _height;
 
-        public TouchscreenDragInputDefinition(string touchscreenName, int width, int height)
+        public TouchscreenDragInputDefinition(string touchscreenName, uint width, uint height)
         {
             _touchscreenName = touchscreenName;
             _width = width;
@@ -28,8 +28,8 @@ namespace Inputting.InputDefinitions
             string[] positions = str.Split(">", count: 2);
             string[] posFromSplit = positions[0].Split(",", count: 2);
             string[] posToSplit = positions[1].Split(",", count: 2);
-            (int x1, int y1) = (int.Parse(posFromSplit[0]), int.Parse(posFromSplit[1]));
-            (int x2, int y2) = (int.Parse(posToSplit[0]), int.Parse(posToSplit[1]));
+            (uint x1, uint y1) = (uint.Parse(posFromSplit[0]), uint.Parse(posFromSplit[1]));
+            (uint x2, uint y2) = (uint.Parse(posToSplit[0]), uint.Parse(posToSplit[1]));
             if (x1 >= _width || x2 >= _width || y1 >= _height || y2 >= _height)
             {
                 return null;

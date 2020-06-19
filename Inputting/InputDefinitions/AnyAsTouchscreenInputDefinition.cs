@@ -12,13 +12,13 @@ namespace Inputting.InputDefinitions
     {
         private readonly IInputDefinition _baseInputDefinition;
         private readonly string _touchscreenName;
-        private readonly int _targetX;
-        private readonly int _targetY;
+        private readonly uint _targetX;
+        private readonly uint _targetY;
         private readonly bool _keepsName;
 
         public AnyAsTouchscreenInputDefinition(
             IInputDefinition baseInputDefinition,
-            string touchscreenName, int targetX, int targetY, bool keepsName)
+            string touchscreenName, uint targetX, uint targetY, bool keepsName)
         {
             _baseInputDefinition = baseInputDefinition;
             _touchscreenName = touchscreenName;

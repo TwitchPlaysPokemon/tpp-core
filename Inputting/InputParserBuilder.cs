@@ -118,7 +118,7 @@ namespace Inputting
         /// <param name="height">screen height. Only coordinates 0 &le; y &lt; <c>height</c> will be allowed.</param>
         /// <param name="multitouch">if multiple simultaneous touchscreen inputs at the same time are allowed.</param>
         /// <param name="allowDrag">if performing drags (e.g. <c>80,120>160,50</c>) is allowed.</param>
-        public InputParserBuilder Touchscreen(int width, int height, bool multitouch, bool allowDrag)
+        public InputParserBuilder Touchscreen(uint width, uint height, bool multitouch, bool allowDrag)
         {
             _inputDefinitions.Add(new TouchscreenInputDefinition(TouchscreenName, width: width, height: height));
             if (allowDrag)
@@ -136,7 +136,7 @@ namespace Inputting
         /// <param name="name">alias name</param>
         /// <param name="x">x-coordinate to map to</param>
         /// <param name="y">y-coordinate to map to</param>
-        public InputParserBuilder AliasedTouchscreenInput(string name, int x, int y)
+        public InputParserBuilder AliasedTouchscreenInput(string name, uint x, uint y)
         {
             var buttonDefinition = new ButtonInputDefinition(name: name, mapsTo: name, keepsName: true);
             _inputDefinitions.Add(new AnyAsTouchscreenInputDefinition(
@@ -151,9 +151,9 @@ namespace Inputting
         /// but for multiple aliases at once.
         /// </summary>
         /// <param name="aliases">3-tuples of name, x-coordinate and y-coordinate</param>
-        public InputParserBuilder AliasedTouchscreenInputs(params (string name, int x, int y)[] aliases)
+        public InputParserBuilder AliasedTouchscreenInputs(params (string name, uint x, uint y)[] aliases)
         {
-            foreach ((string name, int x, int y) in aliases)
+            foreach ((string name, uint x, uint y) in aliases)
             {
                 AliasedTouchscreenInput(name, x, y);
             }
