@@ -127,9 +127,9 @@ namespace Inputting.Tests.Parsing
             Assert.AreEqual(Seq(
                 new InputSet(new List<Input>
                 {
-                    new TouchscreenInput("0000,0000", "touchscreen", "0000,0000", 0, 0)
+                    new TouchscreenInput("000,000", "touchscreen", "000,000", 0, 0)
                 })
-            ), _inputParser.Parse("0000,0000"));
+            ), _inputParser.Parse("000,000"));
             Assert.AreEqual(Seq(
                 new InputSet(new List<Input>
                 {
@@ -171,9 +171,9 @@ namespace Inputting.Tests.Parsing
             Assert.AreEqual(Seq(
                 new InputSet(new List<Input>
                 {
-                    new TouchscreenDragInput("0000,0000>0000,0000", "touchscreen", "0000,0000>0000,0000", 0, 0, 0, 0)
+                    new TouchscreenDragInput("000,000>000,000", "touchscreen", "000,000>000,000", 0, 0, 0, 0)
                 })
-            ), _inputParser.Parse("0000,0000>0000,0000"));
+            ), _inputParser.Parse("000,000>000,000"));
             Assert.AreEqual(Seq(
                 new InputSet(new List<Input>
                 {

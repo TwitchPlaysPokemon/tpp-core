@@ -1,4 +1,4 @@
-using Inputting.Inputs;
+﻿using Inputting.Inputs;
 
 namespace Inputting.InputDefinitions
 {
@@ -16,10 +16,11 @@ namespace Inputting.InputDefinitions
             _touchscreenName = touchscreenName;
             _width = width;
             _height = height;
+            static string DigitsForDimension(uint dim) => $@"(?:[0-9]{{1,{dim.ToString().Length}}})";
+            InputRegex = $@"{DigitsForDimension(_width)},{DigitsForDimension(_height)}";
         }
 
-        private const string Number = @"(?:[0-9]{1,4})";
-        public string InputRegex => $@"{Number},{Number}";
+        public string InputRegex { get; }
 
         public Input? Parse(string str)
         {
