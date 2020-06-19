@@ -15,11 +15,11 @@ namespace ArgsParsing.TypeParsers
     {
         private static readonly Regex Regex = new Regex(
             @"^
-            (?:(?<weeks>\d+)w)?
-            (?:(?<days>\d+)d)?
-            (?:(?<hours>\d+)h)?
-            (?:(?<minutes>\d+)m)?
-            (?:(?<seconds>\d+)s)?
+            (?:(?<weeks>[0-9]+)w)?
+            (?:(?<days>[0-9]+)d)?
+            (?:(?<hours>[0-9]+)h)?
+            (?:(?<minutes>[0-9]+)m)?
+            (?:(?<seconds>[0-9]+)s)?
             $",
             RegexOptions.Compiled | RegexOptions.IgnorePatternWhitespace | RegexOptions.IgnoreCase);
 

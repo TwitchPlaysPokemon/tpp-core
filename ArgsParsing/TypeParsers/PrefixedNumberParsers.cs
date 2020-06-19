@@ -42,7 +42,7 @@ namespace ArgsParsing.TypeParsers
             _maxValue = maxValue;
             var options = RegexOptions.Compiled;
             if (!caseSensitive) options |= RegexOptions.IgnoreCase;
-            _regex = new Regex(@$"^{Regex.Escape(prefix)}(?<number>-?\d+)$", options);
+            _regex = new Regex(@$"^{Regex.Escape(prefix)}(?<number>-?[0-9]+)$", options);
         }
 
         public override Task<ArgsParseResult<T>> Parse(IImmutableList<string> args, Type[] genericTypes)
