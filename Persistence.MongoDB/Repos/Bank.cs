@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -14,7 +14,7 @@ using Persistence.Repos;
 
 namespace Persistence.MongoDB.Repos
 {
-    public class Bank<T> : BaseBank<T>
+    public class Bank<T> : ReserveCheckersBank<T>
     {
         private readonly IMongoCollection<TransactionLog> _transactionLogCollection;
         private readonly IMongoCollection<T> _currencyCollection;
