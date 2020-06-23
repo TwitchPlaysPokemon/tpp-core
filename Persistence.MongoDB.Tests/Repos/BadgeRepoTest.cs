@@ -6,6 +6,7 @@ using MongoDB.Driver;
 using NUnit.Framework;
 using Persistence.Models;
 using Persistence.MongoDB.Repos;
+using Persistence.MongoDB.Serializers;
 
 namespace Persistence.MongoDB.Tests.Repos
 {
@@ -14,6 +15,9 @@ namespace Persistence.MongoDB.Tests.Repos
     {
         private IMongoDatabase _database = null!;
         private BadgeRepo _badgeRepo = null!;
+
+        [OneTimeSetUp]
+        public void SetUpSerializers() => CustomSerializers.RegisterAll();
 
         [SetUp]
         public void SetUp()

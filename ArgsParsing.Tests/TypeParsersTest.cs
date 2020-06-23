@@ -5,6 +5,7 @@ using ArgsParsing.TypeParsers;
 using ArgsParsing.Types;
 using Common;
 using Moq;
+using NodaTime;
 using NUnit.Framework;
 using Persistence.Models;
 using Persistence.Repos;
@@ -219,7 +220,7 @@ namespace ArgsParsing.Tests
             const string username = "some_name";
             var origUser = new User(
                 id: "1234567890", name: username, twitchDisplayName: username.ToUpper(), simpleName: username,
-                color: null, firstActiveAt: DateTime.UnixEpoch, lastActiveAt: DateTime.UnixEpoch,
+                color: null, firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
                 lastMessageAt: null, pokeyen: 0, tokens: 0);
             var userRepoMock = new Mock<IUserRepo>();
             userRepoMock

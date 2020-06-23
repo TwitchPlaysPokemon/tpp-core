@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Driver;
+using NodaTime;
 using Persistence.Models;
 using Persistence.MongoDB.Serializers;
 using Persistence.Repos;
@@ -24,6 +25,7 @@ namespace Persistence.MongoDB.Repos
         private readonly Expression<Func<T, string>> _idField;
         private readonly Func<T, string> _idFieldAccessor;
         private readonly Action<T, int> _currencyFieldSetter;
+        private readonly IClock _clock;
 
         static Bank()
         {
@@ -47,7 +49,8 @@ namespace Persistence.MongoDB.Repos
             string currencyCollectionName,
             string transactionLogCollectionName,
             Expression<Func<T, int>> currencyField,
-            Expression<Func<T, string>> idField)
+            Expression<Func<T, string>> idField,
+            IClock clock)
         {
             database.CreateCollection(transactionLogCollectionName);
             database.CreateCollection(currencyCollectionName);
@@ -58,6 +61,7 @@ namespace Persistence.MongoDB.Repos
             _currencyFieldAccessor = _currencyField.Compile();
             _idField = idField;
             _idFieldAccessor = _idField.Compile();
+            _clock = clock;
 
             // create a setter action that lets us modify the balance value after a successful transaction
             var balanceParameter = Expression.Parameter(typeof(int));
@@ -117,7 +121,7 @@ namespace Persistence.MongoDB.Repos
                 oldBalance: oldBalance,
                 newBalance: newBalance,
                 change: transaction.Change,
-                createdAt: DateTime.UtcNow,
+                createdAt: _clock.GetCurrentInstant(),
                 type: transaction.Type,
                 additionalData: transaction.AdditionalData
             );
