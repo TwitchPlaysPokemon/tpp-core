@@ -8,8 +8,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Persistence\Persistence.csproj"/>
-        <RuntimeHostConfigurationOption Include="System.Globalization.Invariant" Value="true"/><!-- .net 3.1 -->
+        <ProjectReference Include="..\Persistence\Persistence.csproj" />
+        <RuntimeHostConfigurationOption Include="System.Globalization.Invariant" Value="true" /><!-- .net 3.1 -->
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="NodaTime" Version="3.0.0" />
     </ItemGroup>
 
 </Project>
