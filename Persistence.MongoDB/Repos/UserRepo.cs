@@ -40,7 +40,7 @@ namespace Persistence.MongoDB.Repos
 
         public UserRepo(IMongoDatabase database, int startingPokeyen, int startingTokens)
         {
-            database.CreateCollection(CollectionName);
+            database.CreateCollectionIfNotExists(CollectionName).Wait();
             Collection = database.GetCollection<User>(CollectionName);
             _startingPokeyen = startingPokeyen;
             _startingTokens = startingTokens;
