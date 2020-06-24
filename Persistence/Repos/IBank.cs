@@ -127,7 +127,8 @@ namespace Persistence.Repos
         /// The returned list will have the same size and order as the supplied transactions.</returns>
         /// <exception cref="UserNotFoundException{T}">Thrown if a user does not exist.</exception>
         Task<IList<TransactionLog>> PerformTransactions(
-            IEnumerable<Transaction<T>> transactions, CancellationToken token = default);
+            IEnumerable<Transaction<T>> transactions,
+            CancellationToken token = default);
 
         /// <summary>
         /// Perform a single monetary transaction atomically.
@@ -137,7 +138,9 @@ namespace Persistence.Repos
         /// <param name="token">cancellation token</param>
         /// <returns>Created transaction log entry.</returns>
         /// <exception cref="UserNotFoundException{T}">Thrown if the user does not exist.</exception>
-        public Task<TransactionLog> PerformTransaction(Transaction<T> transaction, CancellationToken token = default);
+        public Task<TransactionLog> PerformTransaction(
+            Transaction<T> transaction,
+            CancellationToken token = default);
     }
 
     /// <summary>
@@ -163,10 +166,12 @@ namespace Persistence.Repos
             await GetTotalMoney(user) - await GetReservedMoney(user);
 
         public abstract Task<IList<TransactionLog>> PerformTransactions(
-            IEnumerable<Transaction<T>> transactions, CancellationToken token = default);
+            IEnumerable<Transaction<T>> transactions,
+            CancellationToken token = default);
 
         public async Task<TransactionLog> PerformTransaction(
-            Transaction<T> transaction, CancellationToken token = default) =>
+            Transaction<T> transaction,
+            CancellationToken token = default) =>
             (await PerformTransactions(new[] {transaction}, token)).First();
     }
 }
