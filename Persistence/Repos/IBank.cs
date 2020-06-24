@@ -127,7 +127,8 @@ namespace Persistence.Repos
         /// The returned list will have the same size and order as the supplied transactions.</returns>
         /// <exception cref="UserNotFoundException{T}">Thrown if a user does not exist.</exception>
         Task<IList<TransactionLog>> PerformTransactions(
-            IEnumerable<Transaction<T>> transactions, CancellationToken token = default);
+            IEnumerable<Transaction<T>> transactions,
+            CancellationToken token = default);
 
         /// <summary>
         /// Perform a single monetary transaction atomically.
@@ -137,14 +138,16 @@ namespace Persistence.Repos
         /// <param name="token">cancellation token</param>
         /// <returns>Created transaction log entry.</returns>
         /// <exception cref="UserNotFoundException{T}">Thrown if the user does not exist.</exception>
-        public Task<TransactionLog> PerformTransaction(Transaction<T> transaction, CancellationToken token = default);
+        public Task<TransactionLog> PerformTransaction(
+            Transaction<T> transaction,
+            CancellationToken token = default);
     }
 
     /// <summary>
-    /// Base class implementing some basic things the <see cref="IBank{T}"/> interface mandates.
+    /// Abstract bank implementing money reserving using externally passed-in reserved money checker functions.
     /// </summary>
     /// <typeparam name="T">User object type this bank operates on, typically <see cref="User"/></typeparam>
-    public abstract class BaseBank<T> : IBank<T>
+    public abstract class ReserveCheckersBank<T> : IBank<T>
     {
         private readonly IList<IBank<T>.ReservedMoneyChecker> _checkers = new List<IBank<T>.ReservedMoneyChecker>();
 
@@ -159,19 +162,16 @@ namespace Persistence.Repos
 
         public abstract Task<int> GetTotalMoney(T user);
 
-        public async Task<int> GetAvailableMoney(T user)
-        {
-            return await GetTotalMoney(user) - await GetReservedMoney(user);
-        }
+        public async Task<int> GetAvailableMoney(T user) =>
+            await GetTotalMoney(user) - await GetReservedMoney(user);
 
         public abstract Task<IList<TransactionLog>> PerformTransactions(
             IEnumerable<Transaction<T>> transactions,
             CancellationToken token = default);
 
-        public async Task<TransactionLog> PerformTransaction(Transaction<T> transaction,
-            CancellationToken token = default)
-        {
-            return (await PerformTransactions(new[] {transaction}, token)).First();
-        }
+        public async Task<TransactionLog> PerformTransaction(
+            Transaction<T> transaction,
+            CancellationToken token = default) =>
+            (await PerformTransactions(new[] {transaction}, token)).First();
     }
 }
