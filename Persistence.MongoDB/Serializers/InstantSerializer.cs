@@ -1,5 +1,4 @@
-﻿using System;
-using MongoDB.Bson;
+﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using NodaTime;
@@ -21,7 +20,7 @@ namespace Persistence.MongoDB.Serializers
             {
                 BsonType.Null => default,
                 BsonType.DateTime => Instant.FromUnixTimeMilliseconds(context.Reader.ReadDateTime()),
-                _ => throw new NotSupportedException($"Cannot convert type '{type}' to Instant.")
+                _ => throw CreateCannotBeDeserializedException()
             };
         }
 
