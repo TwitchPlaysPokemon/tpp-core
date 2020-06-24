@@ -1,6 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Common;
+using NodaTime;
 using Persistence.Repos;
 
 namespace Persistence.Models
@@ -21,7 +21,7 @@ namespace Persistence.Models
         public int NewBalance { get; private set; }
         public int Change { get; private set; }
 
-        public DateTime CreatedAt { get; private set; }
+        public Instant CreatedAt { get; private set; }
 
         public string? Type { get; private set; }
 
@@ -33,7 +33,7 @@ namespace Persistence.Models
             int oldBalance,
             int newBalance,
             int change,
-            DateTime createdAt,
+            Instant createdAt,
             string type,
             IDictionary<string, object?> additionalData)
         {

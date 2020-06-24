@@ -1,5 +1,5 @@
-﻿using System;
-using Common;
+﻿using Common;
+using NodaTime;
 
 namespace Persistence.Models
 {
@@ -41,11 +41,11 @@ namespace Persistence.Models
         public BadgeSource Source { get; private set; }
 
         /// <summary>
-        /// Datetime this badge was created at.
+        /// Instant this badge was created at.
         /// </summary>
-        public DateTime CreatedAt { get; private set; }
+        public Instant CreatedAt { get; private set; }
 
-        public Badge(string id, string? userId, PkmnSpecies species, BadgeSource source, DateTime createdAt)
+        public Badge(string id, string? userId, PkmnSpecies species, BadgeSource source, Instant createdAt)
         {
             Id = id;
             UserId = userId;

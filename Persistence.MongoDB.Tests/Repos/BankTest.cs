@@ -4,9 +4,13 @@ using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
+using NodaTime;
+using NodaTime.Extensions;
+using NodaTime.Text;
 using NUnit.Framework;
 using Persistence.Models;
 using Persistence.MongoDB.Repos;
+using Persistence.MongoDB.Serializers;
 using Persistence.Repos;
 
 namespace Persistence.MongoDB.Tests.Repos
@@ -18,13 +22,24 @@ namespace Persistence.MongoDB.Tests.Repos
         public override string ToString() => Id;
     }
 
+    internal class MockClock : IClock
+    {
+        public Instant FixedCurrentInstant = Instant.FromUnixTimeSeconds(1234567890);
+        public Instant GetCurrentInstant() => FixedCurrentInstant;
+    }
+
     [Category("IntegrationTest")]
     public class BankTest : MongoTestBase
     {
         private IMongoDatabase _database = null!;
         private IMongoCollection<TestUser> _usersCollection = null!;
 
+        private readonly MockClock _clockMock = new MockClock();
+
         private IBank<TestUser> _bank = null!;
+
+        [OneTimeSetUp]
+        public void SetUpSerializers() => CustomSerializers.RegisterAll();
 
         [SetUp]
         public void SetUp()
@@ -35,7 +50,8 @@ namespace Persistence.MongoDB.Tests.Repos
                 currencyCollectionName: "users",
                 transactionLogCollectionName: "transactionLog",
                 currencyField: user => user.Money,
-                idField: user => user.Id
+                idField: user => user.Id,
+                clock: _clockMock
             );
             _usersCollection = _database.GetCollection<TestUser>("users");
         }
@@ -162,8 +178,7 @@ namespace Persistence.MongoDB.Tests.Repos
             Assert.AreEqual(BsonInt32.Create(1), log["change"]);
             Assert.AreEqual(BsonInt32.Create(10), log["old_balance"]);
             Assert.AreEqual(BsonInt32.Create(11), log["new_balance"]);
-            Assert.GreaterOrEqual(DateTime.UtcNow, log["timestamp"].ToUniversalTime());
-            Assert.LessOrEqual(DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(1)), log["timestamp"].ToUniversalTime());
+            Assert.AreEqual(_clockMock.FixedCurrentInstant, log["timestamp"].ToUniversalTime().ToInstant());
             Assert.AreEqual(BsonString.Create("test"), log["type"]);
             Assert.AreEqual(BsonNull.Value, log["null_field"]);
             Assert.AreEqual(BsonInt32.Create(42), log["int_field"]);
@@ -178,15 +193,15 @@ namespace Persistence.MongoDB.Tests.Repos
             // for some reason the "type" field is sometimes missing in the existing database.
             // that should just get mapped to "Unknown".
             const string id = "590df61373b975210006fcdf";
-            DateTime dateTime = DateTime.SpecifyKind(DateTime.Parse("2017-05-06T16:13:07.314Z"), DateTimeKind.Utc);
+            Instant instant = InstantPattern.ExtendedIso.Parse("2017-05-06T16:13:07.314Z").Value;
             IMongoCollection<BsonDocument> bsonTransactionLogCollection =
                 _database.GetCollection<BsonDocument>("transactionLog");
-            await bsonTransactionLogCollection.InsertOneAsync(BsonDocument.Create(new Dictionary<string, object?>()
+            await bsonTransactionLogCollection.InsertOneAsync(BsonDocument.Create(new Dictionary<string, object?>
             {
                 ["_id"] = ObjectId.Parse(id),
                 ["user"] = "137272735",
                 ["change"] = -9,
-                ["timestamp"] = dateTime,
+                ["timestamp"] = instant.ToDateTimeUtc(),
                 ["old_balance"] = 25,
                 ["new_balance"] = 16,
                 ["match"] = 35510,
@@ -201,7 +216,7 @@ namespace Persistence.MongoDB.Tests.Repos
             Assert.AreEqual(-9, log.Change);
             Assert.AreEqual(25, log.OldBalance);
             Assert.AreEqual(16, log.NewBalance);
-            Assert.AreEqual(dateTime, log.CreatedAt);
+            Assert.AreEqual(instant, log.CreatedAt);
             Assert.IsNull(log.Type);
             Assert.AreEqual(new Dictionary<string, object?> {["match"] = 35510}, log.AdditionalData);
         }

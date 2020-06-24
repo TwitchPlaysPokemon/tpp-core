@@ -1,6 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Common;
+using NodaTime;
 
 namespace Persistence.Models
 {
@@ -33,12 +33,12 @@ namespace Persistence.Models
 
         public string? Color { get; private set; }
 
-        public DateTime FirstActiveAt { get; private set; }
-        public DateTime LastActiveAt { get; private set; }
-        // public DateTime? FollowedAt { get; private set; }
-        // public DateTime? SubscriptionUpdatedAt { get; private set; }
-        // public DateTime? LastBetAt { get; private set; }
-        public DateTime? LastMessageAt { get; private set; }
+        public Instant FirstActiveAt { get; private set; }
+        public Instant LastActiveAt { get; private set; }
+        // public Instant? FollowedAt { get; private set; }
+        // public Instant? SubscriptionUpdatedAt { get; private set; }
+        // public Instant? LastBetAt { get; private set; }
+        public Instant? LastMessageAt { get; private set; }
 
         public int Pokeyen { get; private set; }
         public int Tokens { get; private set; }
@@ -73,9 +73,9 @@ namespace Persistence.Models
             string twitchDisplayName,
             string simpleName,
             string? color,
-            DateTime firstActiveAt,
-            DateTime lastActiveAt,
-            DateTime? lastMessageAt,
+            Instant firstActiveAt,
+            Instant lastActiveAt,
+            Instant? lastMessageAt,
             int pokeyen,
             int tokens)
         {
