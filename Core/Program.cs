@@ -12,7 +12,7 @@ using Newtonsoft.Json.Schema.Generation;
 
 namespace Core
 {
-    internal static class Application
+    internal static class Program
     {
         private const string Usage = @"
 Usage:
