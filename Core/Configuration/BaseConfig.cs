@@ -4,11 +4,11 @@ namespace Core.Configuration
 {
     /// <summary>
     /// The root of TPP-Core-Configuration.
-    /// Contains all other configuration nodes.
+    /// Contains all configurations shared between all modes.
     /// </summary>
     // properties need setters for deserialization
     // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
-    public sealed class RootConfig : ConfigBase
+    public sealed class BaseConfig : ConfigBase
     {
         [JsonProperty("$schema")] public static string Schema { get; private set; } = "./config.schema.json";
 

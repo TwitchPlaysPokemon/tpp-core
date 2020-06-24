@@ -85,15 +85,15 @@ namespace Core
             }
         }
 
-        public static Databases SetUpRepositories(RootConfig rootConfig)
+        public static Databases SetUpRepositories(BaseConfig baseConfig)
         {
             CustomSerializers.RegisterAll();
-            IMongoClient mongoClient = new MongoClient(rootConfig.MongoDbConnectionUri);
-            IMongoDatabase mongoDatabase = mongoClient.GetDatabase(rootConfig.MongoDbDatabaseName);
+            IMongoClient mongoClient = new MongoClient(baseConfig.MongoDbConnectionUri);
+            IMongoDatabase mongoDatabase = mongoClient.GetDatabase(baseConfig.MongoDbDatabaseName);
             IUserRepo userRepo = new UserRepo(
                 database: mongoDatabase,
-                startingPokeyen: rootConfig.StartingPokeyen,
-                startingTokens: rootConfig.StartingTokens);
+                startingPokeyen: baseConfig.StartingPokeyen,
+                startingTokens: baseConfig.StartingTokens);
             IBadgeRepo badgeRepo = new BadgeRepo(
                 database: mongoDatabase);
             IBank<User> pokeyenBank = new Bank<User>(
