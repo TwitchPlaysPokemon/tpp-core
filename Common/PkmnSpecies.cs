@@ -6,35 +6,32 @@ namespace Common
 {
     /// <summary>
     /// A <see cref="PkmnSpecies"/> uniquely identifies and describes a species of pokemon.
-    /// Each species has an <see cref="Id"/>, and additional pokedex information
-    /// like the <see cref="Name">name</see> or pokedex <see cref="Flavors">flavor texts</see>.
+    /// Each species has an <see cref="Id"/>, and additional a  <see cref="Name">name</see>.
     /// <para>
     /// Application code should never pass around raw species id strings.
     /// Instead, it is recommended to immediately turn every raw input into an instance of this
-    /// class using <see cref="OfId"/> or <see cref="OfIdWithPokedexData"/> and use that instead.
+    /// class using <see cref="OfId"/> or <see cref="OfIdWithKnownName"/> and use that instead.
     /// All equality checks safely forward to the species id.
     /// </para>
     /// <para>
-    /// This class is deliberately not loading any pokedex data by itself, since that would most
-    /// likely be done by loading a large JSON file.
+    /// This class is deliberately not loading any pokemon name data by itself,
+    /// since that would most likely be done by loading a large JSON file in application code.
     /// Loading such a file imposes additional startup time, could depend on a JSON library
     /// (e.g. JSON.net) and takes up significant space. Since this class lives in the "Common" project,
     /// which every other project depends on, that is to be avoided.
     /// Instead, the project bundling all dependencies together (the main application)
-    /// should register pokedex data using <see cref="RegisterPokedexData"/> at startup.
+    /// should register names for known pokemon using <see cref="RegisterName"/> at startup.
     /// </para>
     /// </summary>
     public sealed class PkmnSpecies : IComparable<PkmnSpecies>
     {
-        private static readonly IDictionary<string, string> NoFlavors = ImmutableDictionary<string, string>.Empty;
-
         /// <summary>
-        /// Internal dictionary that keeps track of any registered pokedex data
-        /// by providing a lookup from species ids to species instances containing said pokedex data.
+        /// Internal dictionary that keeps track of any existing instances
+        /// to ensure only one instance may ever exist per species.
         /// </summary>
-        private static readonly Dictionary<string, PkmnSpecies> Pokedex = new Dictionary<string, PkmnSpecies>();
+        private static readonly Dictionary<string, PkmnSpecies> Instances = new Dictionary<string, PkmnSpecies>();
 
-        public static IImmutableList<PkmnSpecies> AllCurrentlyKnownSpecies => Pokedex.Values.ToImmutableList();
+        public static IImmutableList<PkmnSpecies> AllCurrentlyKnownSpecies => Instances.Values.ToImmutableList();
 
         /// <summary>
         /// The species' unique identifier.
@@ -48,19 +45,13 @@ namespace Common
         /// </summary>
         public readonly string Name;
 
-        /// <summary>
-        /// A mapping from game titles to pokedex flavor texts.
-        /// </summary>
-        public readonly IDictionary<string, string> Flavors;
-
         private readonly string _sortKey;
         private readonly string _displayText;
 
-        private PkmnSpecies(string id, string name, IDictionary<string, string> flavors)
+        private PkmnSpecies(string id, string name)
         {
             Id = id;
             Name = name;
-            Flavors = flavors;
 
             string[] parts = id.Split("-", count: 2);
             int intPart;
@@ -84,35 +75,34 @@ namespace Common
         }
 
         /// <summary>
-        /// Registers pokedex data for a species, identified by a species id.
-        /// Any already registered data for that species gets overwritten.
+        /// Registers a name for a species, identified by a species id.
+        /// Any already registered name for that species gets overwritten.
         /// </summary>
         /// <param name="id">The species' id to add the data for.</param>
         /// <param name="name">The species' displayed name to register.</param>
-        /// <param name="flavors">A mapping from game titles to flavor texts to register for the species.</param>
-        public static void RegisterPokedexData(string id, string name, IDictionary<string, string>? flavors = null)
+        public static void RegisterName(string id, string name)
         {
-            Pokedex[id] = new PkmnSpecies(id, name, flavors ?? NoFlavors);
+            Instances[id] = new PkmnSpecies(id, name);
         }
 
         /// <summary>
-        /// Clears all currently registered pokedex data.
+        /// Clears all currently registered pokemon names.
         /// </summary>
-        public static void ClearPokedexData()
+        public static void ClearNames()
         {
-            Pokedex.Clear();
+            Instances.Clear();
         }
 
         /// <summary>
         /// Gets a species instance for the specified species id,
-        /// but only if there was pokedex data supplied for that id.
+        /// but only if there was name registered for that id.
         /// If there wasn't, null is returned.
         /// </summary>
         /// <param name="id">species id to search for.</param>
-        /// <returns>species instance, or null if there isn't any pokedex data.</returns>
-        public static PkmnSpecies? OfIdWithPokedexData(string id)
+        /// <returns>species instance, or null if no name was registered for the species.</returns>
+        public static PkmnSpecies? OfIdWithKnownName(string id)
         {
-            return Pokedex.TryGetValue(id, out PkmnSpecies? species)
+            return Instances.TryGetValue(id, out PkmnSpecies? species)
                 ? species
                 : null;
         }
@@ -121,15 +111,17 @@ namespace Common
         /// Gets a species instance for the specified species id.
         /// This assumes a species with the supplied id should exist
         /// and always returns a valid pokemon species instance.
-        /// If no pokedex data was registered for that id, some dummy defaults are used.
+        /// If no pokemon name was registered for that id, some dummy value is used,
+        /// though the returned instance can automatically obtain a proper name afterwards
+        /// if one gets supplied for the species with <see cref="RegisterName"/>.
         /// </summary>
         /// <param name="id">species id to search for.</param>
         /// <returns>species instance.</returns>
         public static PkmnSpecies OfId(string id)
         {
-            return Pokedex.TryGetValue(id, out PkmnSpecies? species)
+            return Instances.TryGetValue(id, out PkmnSpecies? species)
                 ? species
-                : new PkmnSpecies(id, "???", NoFlavors);
+                : new PkmnSpecies(id, "???");
         }
 
         /// <summary>
