@@ -1,4 +1,4 @@
-﻿using System;
+﻿using NodaTime;
 
 namespace Persistence.Repos
 {
@@ -9,7 +9,7 @@ namespace Persistence.Repos
         public string SimpleName { get; }
         public string? Color { get; }
         public bool FromMessage { get; }
-        public DateTime UpdatedAt { get; }
+        public Instant UpdatedAt { get; }
 
         public UserInfo(
             string id,
@@ -17,14 +17,14 @@ namespace Persistence.Repos
             string simpleName,
             string? color,
             bool fromMessage = false,
-            DateTime? updatedAt = null)
+            Instant? updatedAt = null)
         {
             Id = id;
             TwitchDisplayName = twitchDisplayName;
             SimpleName = simpleName;
             Color = color;
             FromMessage = fromMessage;
-            UpdatedAt = updatedAt ?? DateTime.UtcNow;
+            UpdatedAt = updatedAt ?? SystemClock.Instance.GetCurrentInstant();
         }
     }
 }

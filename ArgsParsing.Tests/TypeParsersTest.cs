@@ -5,6 +5,8 @@ using ArgsParsing.TypeParsers;
 using ArgsParsing.Types;
 using Common;
 using Moq;
+using NodaTime;
+using NodaTime.Text;
 using NUnit.Framework;
 using Persistence.Models;
 using Persistence.Repos;
@@ -52,26 +54,25 @@ namespace ArgsParsing.Tests
         }
 
         [Test]
-        public async Task TestDateTimeParser()
+        public async Task TestInstantParser()
         {
             var argsParser = new ArgsParser();
-            argsParser.AddArgumentParser(new DateTimeUtcParser());
+            argsParser.AddArgumentParser(new InstantParser());
 
-            var result1 =
-                await argsParser.Parse<DateTime>(args: ImmutableList.Create("2020-03-22", "01:59:20Z"));
-            var result2 = await argsParser.Parse<DateTime>(args: ImmutableList.Create("2020-03-22T01:59:20Z"));
+            var result1 = await argsParser.Parse<Instant>(args: ImmutableList.Create("2020-03-22", "01:59:20Z"));
+            var result2 = await argsParser.Parse<Instant>(args: ImmutableList.Create("2020-03-22T01:59:20Z"));
 
-            DateTime refDateTime = DateTime.SpecifyKind(DateTime.Parse("2020-03-22 01:59:20+00"), DateTimeKind.Utc);
-            Assert.AreEqual(refDateTime, result1);
-            Assert.AreEqual(refDateTime, result2);
+            Instant refInstant = InstantPattern.General.Parse("2020-03-22T01:59:20Z").Value;
+            Assert.AreEqual(refInstant, result1);
+            Assert.AreEqual(refInstant, result2);
             Assert.AreEqual(result1, result2);
 
             var ex1 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<DateTime>(ImmutableList.Create("2020-03-22T01:59:20+02")));
+                .Parse<Instant>(ImmutableList.Create("2020-03-22T01:59:20+02")));
             var ex2 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<DateTime>(ImmutableList.Create("asdasdasd")));
-            Assert.AreEqual("did not recognize '2020-03-22T01:59:20+02' as a UTC-datetime", ex1.Message);
-            Assert.AreEqual("did not recognize 'asdasdasd' as a UTC-datetime", ex2.Message);
+                .Parse<Instant>(ImmutableList.Create("asdasdasd")));
+            Assert.AreEqual("did not recognize '2020-03-22T01:59:20+02' as a UTC-instant", ex1.Message);
+            Assert.AreEqual("did not recognize 'asdasdasd' as a UTC-instant", ex2.Message);
         }
 
         [Test]
@@ -219,7 +220,7 @@ namespace ArgsParsing.Tests
             const string username = "some_name";
             var origUser = new User(
                 id: "1234567890", name: username, twitchDisplayName: username.ToUpper(), simpleName: username,
-                color: null, firstActiveAt: DateTime.UnixEpoch, lastActiveAt: DateTime.UnixEpoch,
+                color: null, firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
                 lastMessageAt: null, pokeyen: 0, tokens: 0);
             var userRepoMock = new Mock<IUserRepo>();
             userRepoMock

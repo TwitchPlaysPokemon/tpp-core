@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Common;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Driver;
+using NodaTime;
 using Persistence.Models;
 using Persistence.MongoDB.Serializers;
 using Persistence.Repos;
@@ -26,17 +26,15 @@ namespace Persistence.MongoDB.Repos
                     .SetIdGenerator(StringObjectIdGenerator.Instance)
                     .SetSerializer(ObjectIdAsStringSerializer.Instance);
                 cm.MapProperty(b => b.UserId).SetElementName("user");
-                cm.MapProperty(b => b.Species).SetElementName("species")
-                    .SetSerializer(PkmnSpeciesSerializer.Instance);
-                cm.MapProperty(b => b.Source).SetElementName("source")
-                    .SetSerializer(BadgeSourceSerializer.Instance);
+                cm.MapProperty(b => b.Species).SetElementName("species");
+                cm.MapProperty(b => b.Source).SetElementName("source");
                 cm.MapProperty(b => b.CreatedAt).SetElementName("created_at");
             });
         }
 
         public BadgeRepo(IMongoDatabase database)
         {
-            database.CreateCollection(CollectionName);
+            database.CreateCollectionIfNotExists(CollectionName).Wait();
             Collection = database.GetCollection<Badge>(CollectionName);
             InitIndexes();
         }
@@ -59,7 +57,7 @@ namespace Persistence.MongoDB.Repos
                 userId: userId,
                 species: species,
                 source: source,
-                DateTime.UtcNow
+                Instant.FromUnixTimeSeconds(0)
             );
             await Collection.InsertOneAsync(badge);
             Debug.Assert(badge.Id.Length > 0, "The MongoDB driver injected a generated ID");

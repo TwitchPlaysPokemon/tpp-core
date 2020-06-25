@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using MongoDB.Driver;
+using NodaTime;
 using NUnit.Framework;
 using Persistence.Models;
 using Persistence.MongoDB.Repos;
+using Persistence.MongoDB.Serializers;
 using Persistence.Repos;
 
 namespace Persistence.MongoDB.Tests.Repos
@@ -13,6 +14,9 @@ namespace Persistence.MongoDB.Tests.Repos
     public class UserRepoTest : MongoTestBase
     {
         private UserRepo _userRepo = null!;
+
+        [OneTimeSetUp]
+        public void SetUpSerializers() => CustomSerializers.RegisterAll();
 
         [SetUp]
         public void SetUp()
@@ -83,8 +87,8 @@ namespace Persistence.MongoDB.Tests.Repos
         public async Task TestUpdateLastActiveAt()
         {
             // given
-            DateTime t1 = DateTime.UnixEpoch;
-            DateTime t2 = DateTime.UnixEpoch.Add(TimeSpan.FromSeconds(1));
+            Instant t1 = Instant.FromUnixTimeSeconds(0);
+            Instant t2 = Instant.FromUnixTimeSeconds(1);
             var userInfoT1 = new UserInfo("123", "X", "x", null, updatedAt: t1);
             var userInfoT2 = new UserInfo("123", "X", "x", null, updatedAt: t2);
 
@@ -103,9 +107,9 @@ namespace Persistence.MongoDB.Tests.Repos
         public async Task TestUpdateLastMessageAt()
         {
             // given
-            DateTime t1 = DateTime.UnixEpoch;
-            DateTime t2 = DateTime.UnixEpoch.Add(TimeSpan.FromSeconds(1));
-            DateTime t3 = DateTime.UnixEpoch.Add(TimeSpan.FromSeconds(2));
+            Instant t1 = Instant.FromUnixTimeSeconds(0);
+            Instant t2 = Instant.FromUnixTimeSeconds(1);
+            Instant t3 = Instant.FromUnixTimeSeconds(2);
             var userInfoT1 = new UserInfo("123", "X", "x", null, updatedAt: t1);
             var userInfoT2 = new UserInfo("123", "X", "x", null, updatedAt: t2, fromMessage: true);
             var userInfoT3 = new UserInfo("123", "X", "x", null, updatedAt: t3);
