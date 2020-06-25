@@ -46,7 +46,7 @@ namespace Core.Tests.Commands
             loggerMock.Verify(l => l.Log(
                     level,
                     It.IsAny<EventId>(),
-                    It.Is<object>(o => messageRegex.Match(o.ToString()).Success),
+                    It.Is<object>(o => o != null && messageRegex.Match(o.ToString()!).Success),
                     It.Is<Exception>(e => exception == null
                                           || e.GetType() == exception.GetType() && e.Message == exception.Message),
                     (Func<object, Exception, string>)It.IsAny<object>()
