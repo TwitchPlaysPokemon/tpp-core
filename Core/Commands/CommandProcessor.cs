@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 namespace Core.Commands
 {
     /// <summary>
-    /// The command processor can be configured using <see cref="CommandInfo"/> instances to have commands,
+    /// The command processor can be configured using <see cref="Command"/> instances to have commands,
     /// which then get executed using the <see cref="CommandProcessor.Process"/> method.
     /// </summary>
     public class CommandProcessor
@@ -22,7 +22,7 @@ namespace Core.Commands
 
         private readonly ILogger<CommandProcessor> _logger;
         private readonly ArgsParser _argsParser;
-        private readonly Dictionary<string, CommandInfo> _commands = new Dictionary<string, CommandInfo>();
+        private readonly Dictionary<string, Command> _commands = new Dictionary<string, Command>();
 
         public CommandProcessor(ILogger<CommandProcessor> logger, ArgsParser argsParser)
         {
@@ -30,31 +30,32 @@ namespace Core.Commands
             _argsParser = argsParser;
         }
 
-        public void InstallCommand(CommandInfo commandInfo)
+        public void InstallCommand(Command command)
         {
-            string command = commandInfo.Command.ToLower();
-            if (_commands.ContainsKey(command))
+            string commandName = command.Name.ToLower();
+            if (_commands.ContainsKey(commandName))
             {
-                throw new ArgumentException($"The command name '{command}' conflicts with: {_commands[command]}");
+                throw new ArgumentException(
+                    $"The command name '{commandName}' conflicts with: {_commands[commandName]}");
             }
-            foreach (string alias in commandInfo.Aliases.Select(a => a.ToLower()))
+            foreach (string alias in command.Aliases.Select(a => a.ToLower()))
             {
                 if (_commands.ContainsKey(alias))
                 {
                     throw new ArgumentException($"The alias '{alias}' conflicts with: {_commands[alias]}");
                 }
             }
-            _commands[command] = commandInfo;
-            foreach (string alias in commandInfo.Aliases.Select(a => a.ToLower()))
+            _commands[commandName] = command;
+            foreach (string alias in command.Aliases.Select(a => a.ToLower()))
             {
-                _commands[alias] = commandInfo;
+                _commands[alias] = command;
             }
         }
 
-        public void UninstallCommand(CommandInfo commandInfo)
+        public void UninstallCommand(Command command)
         {
-            _commands.Remove(commandInfo.Command.ToLower());
-            foreach (string alias in commandInfo.Aliases.Select(a => a.ToLower()))
+            _commands.Remove(command.Name.ToLower());
+            foreach (string alias in command.Aliases.Select(a => a.ToLower()))
             {
                 _commands.Remove(alias);
             }
@@ -62,7 +63,7 @@ namespace Core.Commands
 
         public async Task<CommandResult> Process(string commandName, IImmutableList<string> args, Message message)
         {
-            if (!_commands.TryGetValue(commandName.ToLower(), out CommandInfo command))
+            if (!_commands.TryGetValue(commandName.ToLower(), out Command command))
             {
                 return new CommandResult {Response = $"unknown command '{commandName}'"};
             }
@@ -80,7 +81,7 @@ namespace Core.Commands
             catch (Exception ex)
             {
                 _logger.LogError(ex,
-                    $"An exception occured while executing command '{command.Command}'. " +
+                    $"An exception occured while executing command '{command.Name}'. " +
                     $"User: {message.User}, Original text: {message.MessageText}");
                 result = new CommandResult {Response = "An error occurred."};
             }
@@ -88,7 +89,7 @@ namespace Core.Commands
             if (stopwatch.Elapsed >= CommandWarnTimeLimit)
             {
                 _logger.LogWarning(
-                    $"Command '{command.Command}' took {stopwatch.ElapsedMilliseconds}ms to finish! " +
+                    $"Command '{command.Name}' took {stopwatch.ElapsedMilliseconds}ms to finish! " +
                     $"User: {message.User}, Original text: {message.MessageText}");
             }
             return result;

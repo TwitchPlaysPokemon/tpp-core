@@ -37,7 +37,7 @@ namespace Core.Tests.Commands
         {
             var loggerMock = new Mock<ILogger<CommandProcessor>>();
             var commandProcessor = new CommandProcessor(loggerMock.Object, new ArgsParser());
-            commandProcessor.InstallCommand(new CommandInfo("slow", async context =>
+            commandProcessor.InstallCommand(new Command("slow", async context =>
             {
                 await Task.Delay(TimeSpan.FromMilliseconds(50));
                 return new CommandResult();
@@ -55,7 +55,7 @@ namespace Core.Tests.Commands
         {
             var loggerMock = new Mock<ILogger<CommandProcessor>>();
             var commandProcessor = new CommandProcessor(loggerMock.Object, new ArgsParser());
-            commandProcessor.InstallCommand(new CommandInfo("broken",
+            commandProcessor.InstallCommand(new Command("broken",
                 context => throw new InvalidOperationException("this command is busted!")));
 
             CommandResult result = await commandProcessor.Process("broken", _noArgs, MockMessage("bla"));
@@ -71,7 +71,7 @@ namespace Core.Tests.Commands
         public async Task TestCaseInsensitive()
         {
             var commandProcessor = new CommandProcessor(_nullLogger, new ArgsParser());
-            commandProcessor.InstallCommand(new CommandInfo("MiXeD", CommandUtils.StaticResponse("Hi!")));
+            commandProcessor.InstallCommand(new Command("MiXeD", CommandUtils.StaticResponse("Hi!")));
 
             foreach (string command in ImmutableList.Create("MiXeD", "mixed", "MIXED"))
             {
@@ -84,7 +84,7 @@ namespace Core.Tests.Commands
         public async Task TestAliases()
         {
             var commandProcessor = new CommandProcessor(_nullLogger, new ArgsParser());
-            commandProcessor.InstallCommand(new CommandInfo("main", CommandUtils.StaticResponse("Hi!"))
+            commandProcessor.InstallCommand(new Command("main", CommandUtils.StaticResponse("Hi!"))
                 {Aliases = new[] {"alias1", "alias2"}});
 
             foreach (string command in ImmutableList.Create("main", "alias1", "ALIAS2"))
@@ -99,9 +99,9 @@ namespace Core.Tests.Commands
         {
             var commandProcessor = new CommandProcessor(_nullLogger, new ArgsParser());
 
-            commandProcessor.InstallCommand(new CommandInfo("a", CommandUtils.StaticResponse("Hi!")));
+            commandProcessor.InstallCommand(new Command("a", CommandUtils.StaticResponse("Hi!")));
             var ex = Assert.Throws<ArgumentException>(() => commandProcessor
-                .InstallCommand(new CommandInfo("A", CommandUtils.StaticResponse("Hi!"))));
+                .InstallCommand(new Command("A", CommandUtils.StaticResponse("Hi!"))));
             Assert.AreEqual("The command name 'a' conflicts with: a: <no description>", ex.Message);
         }
 
@@ -110,10 +110,10 @@ namespace Core.Tests.Commands
         {
             var commandProcessor = new CommandProcessor(_nullLogger, new ArgsParser());
 
-            commandProcessor.InstallCommand(new CommandInfo("a", CommandUtils.StaticResponse("Hi!"))
+            commandProcessor.InstallCommand(new Command("a", CommandUtils.StaticResponse("Hi!"))
                 {Aliases = new[] {"x"}});
             var ex = Assert.Throws<ArgumentException>(() => commandProcessor
-                .InstallCommand(new CommandInfo("b", CommandUtils.StaticResponse("Hi!")) {Aliases = new[] {"X"}}));
+                .InstallCommand(new Command("b", CommandUtils.StaticResponse("Hi!")) {Aliases = new[] {"X"}}));
             Assert.AreEqual("The alias 'x' conflicts with: a(x): <no description>", ex.Message);
         }
 
@@ -122,10 +122,10 @@ namespace Core.Tests.Commands
         {
             var commandProcessor = new CommandProcessor(_nullLogger, new ArgsParser());
 
-            commandProcessor.InstallCommand(new CommandInfo("a", CommandUtils.StaticResponse("Hi!"))
+            commandProcessor.InstallCommand(new Command("a", CommandUtils.StaticResponse("Hi!"))
                 {Aliases = new[] {"b"}});
             var ex = Assert.Throws<ArgumentException>(() => commandProcessor
-                .InstallCommand(new CommandInfo("b", CommandUtils.StaticResponse("Hi!")) {Aliases = new[] {"x"}}));
+                .InstallCommand(new Command("b", CommandUtils.StaticResponse("Hi!")) {Aliases = new[] {"x"}}));
             Assert.AreEqual("The command name 'b' conflicts with: a(b): <no description>", ex.Message);
         }
     }

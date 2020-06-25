@@ -4,25 +4,25 @@ using System.Threading.Tasks;
 
 namespace Core.Commands
 {
-    public struct CommandInfo
+    public struct Command
     {
-        public string Command { get; }
+        public string Name { get; }
         public string[] Aliases { get; set; }
         public Func<CommandContext, Task<CommandResult>> Execution { get; }
         public string? Description { get; set; }
 
-        public CommandInfo(
-            string command,
+        public Command(
+            string name,
             Func<CommandContext, Task<CommandResult>> execution)
         {
-            Command = command;
+            Name = name;
             Execution = execution;
             Aliases = new string[] { };
             Description = null;
         }
 
         public override string ToString() => Aliases.Any()
-            ? $"{Command}({string.Join('/', Aliases)}): {Description ?? "<no description>"}"
-            : $"{Command}: {Description ?? "<no description>"}";
+            ? $"{Name}({string.Join('/', Aliases)}): {Description ?? "<no description>"}"
+            : $"{Name}: {Description ?? "<no description>"}";
     }
 }
