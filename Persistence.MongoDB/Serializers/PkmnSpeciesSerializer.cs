@@ -1,4 +1,4 @@
-﻿using Common;
+using Common;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
