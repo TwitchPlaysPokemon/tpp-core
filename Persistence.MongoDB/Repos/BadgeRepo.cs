@@ -57,7 +57,7 @@ namespace Persistence.MongoDB.Repos
                 userId: userId,
                 species: species,
                 source: source,
-                Instant.FromUnixTimeSeconds(0)
+                createdAt: Instant.FromUnixTimeSeconds(0)
             );
             await Collection.InsertOneAsync(badge);
             Debug.Assert(badge.Id.Length > 0, "The MongoDB driver injected a generated ID");

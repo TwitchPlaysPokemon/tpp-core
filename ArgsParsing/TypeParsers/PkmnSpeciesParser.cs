@@ -28,10 +28,10 @@ namespace ArgsParsing.TypeParsers
                 // TODO Add some kind of name normalization to the lookup.
                 // TODO That's currently done by pokecat in the old core, so it will likely be some library.
                 string normalizedName = args[0].ToLower();
-                if (_lookup.TryGetValue(normalizedName, out PkmnSpecies speciesFromName))
+                if (_lookup.TryGetValue(normalizedName, out PkmnSpecies? speciesFromName))
                 {
                     return Task.FromResult(ArgsParseResult<PkmnSpecies>.Success(
-                        speciesFromName, args.Skip(1).ToImmutableList()));
+                        speciesFromName!, args.Skip(1).ToImmutableList()));
                 }
                 if (int.TryParse(normalizedName, out _))
                 {

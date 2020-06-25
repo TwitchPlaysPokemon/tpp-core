@@ -220,7 +220,8 @@ namespace ArgsParsing.Tests
             const string username = "some_name";
             var origUser = new User(
                 id: "1234567890", name: username, twitchDisplayName: username.ToUpper(), simpleName: username,
-                color: null, firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
+                color: null,
+                firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
                 lastMessageAt: null, pokeyen: 0, tokens: 0);
             var userRepoMock = new Mock<IUserRepo>();
             userRepoMock

@@ -3,26 +3,24 @@ using NodaTime;
 
 namespace Persistence.Models
 {
-    // properties need setters for deserialization
-    // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
     public class Badge : PropertyEquatable<Badge>
     {
         /// <summary>
         /// A badge's unique ID.
         /// </summary>
-        public string Id { get; private set; }
+        public string Id { get; init; }
         protected override object EqualityId => Id;
 
         /// <summary>
         /// The user-ID this badge belongs to.
         /// If null, this badge belongs to nobody, e.g. if it was consumed in transmutation.
         /// </summary>
-        public string? UserId { get; private set; }
+        public string? UserId { get; init; }
 
         /// <summary>
         /// The badge's species.
         /// </summary>
-        public PkmnSpecies Species { get; private set; }
+        public PkmnSpecies Species { get; init; }
 
         public enum BadgeSource
         {
@@ -38,14 +36,19 @@ namespace Persistence.Models
         /// <summary>
         /// <see cref="BadgeSource"/> describing what event caused this badge to be created.
         /// </summary>
-        public BadgeSource Source { get; private set; }
+        public BadgeSource Source { get; init; }
 
         /// <summary>
         /// Instant this badge was created at.
         /// </summary>
-        public Instant CreatedAt { get; private set; }
+        public Instant CreatedAt { get; init; }
 
-        public Badge(string id, string? userId, PkmnSpecies species, BadgeSource source, Instant createdAt)
+        public Badge(
+            string id,
+            string? userId,
+            PkmnSpecies species,
+            BadgeSource source,
+            Instant createdAt)
         {
             Id = id;
             UserId = userId;
