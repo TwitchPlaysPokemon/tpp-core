@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Immutable;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -19,7 +19,7 @@ namespace Core.Tests.Commands
         private readonly ImmutableList<string> _noArgs = ImmutableList<string>.Empty;
         private readonly User _mockUser = MockUser("MockUser");
 
-        private Message MockMessage(string text = "") => new Message(_mockUser, text);
+        private Message MockMessage(string text = "") => new Message(_mockUser, text, MessageSource.Chat);
 
         [Test]
         public async Task TestUnknownCommand()

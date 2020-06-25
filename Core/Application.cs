@@ -65,7 +65,7 @@ Options:
             RootConfig config = ReadConfig(configFilename);
             using var loggerFactory = LoggerFactory.Create(builder =>
             {
-                builder.AddConsole();
+                builder.AddConsole().SetMinimumLevel(LogLevel.Debug);
                 if (config.LogPath != null) builder.AddFile(Path.Combine(config.LogPath, "tpp-{Date}.log"));
             });
             ILogger logger = loggerFactory.CreateLogger("main");
