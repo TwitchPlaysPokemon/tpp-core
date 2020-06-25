@@ -116,5 +116,17 @@ namespace Core.Tests.Commands
                 .InstallCommand(new CommandInfo("b", CommandUtils.StaticResponse("Hi!")) {Aliases = new[] {"X"}}));
             Assert.AreEqual("The alias 'x' conflicts with: a(x): <no description>", ex.Message);
         }
+
+        [Test]
+        public void InstallConflictNameVsAlias()
+        {
+            var commandProcessor = new CommandProcessor(_nullLogger, new ArgsParser());
+
+            commandProcessor.InstallCommand(new CommandInfo("a", CommandUtils.StaticResponse("Hi!"))
+                {Aliases = new[] {"b"}});
+            var ex = Assert.Throws<ArgumentException>(() => commandProcessor
+                .InstallCommand(new CommandInfo("b", CommandUtils.StaticResponse("Hi!")) {Aliases = new[] {"x"}}));
+            Assert.AreEqual("The command name 'b' conflicts with: a(b): <no description>", ex.Message);
+        }
     }
 }
