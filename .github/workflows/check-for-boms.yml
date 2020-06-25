@@ -1,0 +1,23 @@
+name: check-for-boms
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Check for any UTF-8 BOMs
+        run: |
+          find . -name *.cs -exec sed '1s/^\xEF\xBB\xBF//' -i {} \;
+          git add *.cs
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git diff-index --quiet HEAD || git commit -m "remove UTF-8 BOMs"
+      - name: Push removed BOMs
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
