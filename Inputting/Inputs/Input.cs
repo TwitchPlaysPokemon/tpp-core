@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Inputting.Inputs
 {
@@ -38,7 +38,7 @@ namespace Inputting.Inputs
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj.GetType() == GetType() && Equals((Input) obj);
+            return obj.GetType() == GetType() && Equals((Input)obj);
         }
 
         public override int GetHashCode() => HashCode.Combine(DisplayedText, ButtonName, OriginalText);

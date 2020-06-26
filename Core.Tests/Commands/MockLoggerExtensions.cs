@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -35,7 +35,7 @@ namespace Core.Tests.Commands
                     exception == null
                         ? null
                         : It.Is<Exception>(e => e.GetType() == exception.GetType() && e.Message == exception.Message),
-                    (Func<object, Exception, string>) It.IsAny<object>()
+                    (Func<object, Exception, string>)It.IsAny<object>()
                 ), times, failMessage
             );
         }
@@ -49,7 +49,7 @@ namespace Core.Tests.Commands
                     It.Is<object>(o => messageRegex.Match(o.ToString()).Success),
                     It.Is<Exception>(e => exception == null
                                           || e.GetType() == exception.GetType() && e.Message == exception.Message),
-                    (Func<object, Exception, string>) It.IsAny<object>()
+                    (Func<object, Exception, string>)It.IsAny<object>()
                 ), times, failMessage
             );
         }

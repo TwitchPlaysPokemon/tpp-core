@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
@@ -146,7 +146,7 @@ namespace Common
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj.GetType() == GetType() && Id == ((PkmnSpecies) obj).Id;
+            return obj.GetType() == GetType() && Id == ((PkmnSpecies)obj).Id;
         }
 
         public override int GetHashCode() => Id.GetHashCode();

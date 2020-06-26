@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using ArgsParsing.TypeParsers;
 using ArgsParsing.Types;
 using NUnit.Framework;

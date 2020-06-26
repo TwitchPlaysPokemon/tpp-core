@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -67,7 +67,7 @@ namespace ArgsParsing.TypeParsers
                     return Task.FromResult(ArgsParseResult<T>.Failure(
                         $"'{str}' cannot be more than {_prefix}{_maxValue}", ErrorRelevanceConfidence.Likely));
                 }
-                var value = new T {Number = number};
+                var value = new T { Number = number };
                 return Task.FromResult(ArgsParseResult<T>.Success(value, args.Skip(1).ToImmutableList()));
             }
             catch (OverflowException)

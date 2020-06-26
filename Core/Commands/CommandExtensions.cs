@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using NodaTime;
 
 namespace Core.Commands
@@ -27,7 +27,7 @@ namespace Core.Commands
                     ctx => cooldown.CheckLapsedThenReset()
                         ? command.Execution(ctx)
                         : Task.FromResult(new CommandResult()))
-                {Aliases = command.Aliases, Description = command.Description};
+            { Aliases = command.Aliases, Description = command.Description };
         }
 
         /// Replace the command execution with one that does nothing
@@ -40,7 +40,7 @@ namespace Core.Commands
                     ctx => cooldown.CheckLapsedThenReset(ctx.Message.User)
                         ? command.Execution(ctx)
                         : Task.FromResult(new CommandResult()))
-                {Aliases = command.Aliases, Description = command.Description};
+            { Aliases = command.Aliases, Description = command.Description };
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -172,6 +172,6 @@ namespace Persistence.Repos
         public async Task<TransactionLog> PerformTransaction(
             Transaction<T> transaction,
             CancellationToken token = default) =>
-            (await PerformTransactions(new[] {transaction}, token)).First();
+            (await PerformTransactions(new[] { transaction }, token)).First();
     }
 }
