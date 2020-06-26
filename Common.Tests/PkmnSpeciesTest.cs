@@ -18,23 +18,23 @@ namespace Common.Tests
         }
 
         [Test]
-        public void TestPokedexData()
+        public void TestPokemonNames()
         {
-            PkmnSpecies.RegisterPokedexData("1", "Bulbasaur", new Dictionary<string, string>());
-            PkmnSpecies.RegisterPokedexData("16", "Pidgey", new Dictionary<string, string>());
+            PkmnSpecies.RegisterName("1", "Bulbasaur");
+            PkmnSpecies.RegisterName("16", "Pidgey");
 
             Assert.AreEqual("Bulbasaur", PkmnSpecies.OfId("1").Name);
             Assert.AreEqual("Pidgey", PkmnSpecies.OfId("16").Name);
             Assert.AreEqual("???", PkmnSpecies.OfId("123").Name);
-            Assert.IsNotNull(PkmnSpecies.OfIdWithPokedexData("1"));
-            Assert.IsNotNull(PkmnSpecies.OfIdWithPokedexData("16"));
-            Assert.IsNull(PkmnSpecies.OfIdWithPokedexData("123"));
+            Assert.IsNotNull(PkmnSpecies.OfIdWithKnownName("1"));
+            Assert.IsNotNull(PkmnSpecies.OfIdWithKnownName("16"));
+            Assert.IsNull(PkmnSpecies.OfIdWithKnownName("123"));
 
-            PkmnSpecies.ClearPokedexData();
+            PkmnSpecies.ClearNames();
 
-            Assert.IsNull(PkmnSpecies.OfIdWithPokedexData("1"));
-            Assert.IsNull(PkmnSpecies.OfIdWithPokedexData("16"));
-            Assert.IsNull(PkmnSpecies.OfIdWithPokedexData("123"));
+            Assert.IsNull(PkmnSpecies.OfIdWithKnownName("1"));
+            Assert.IsNull(PkmnSpecies.OfIdWithKnownName("16"));
+            Assert.IsNull(PkmnSpecies.OfIdWithKnownName("123"));
         }
 
         [Test]
@@ -57,7 +57,7 @@ namespace Common.Tests
         {
             PkmnSpecies instance1 = PkmnSpecies.OfId("16");
             string name1 = instance1.Name;
-            PkmnSpecies.RegisterPokedexData("16", "Pidgey", new Dictionary<string, string>());
+            PkmnSpecies.RegisterName("16", "Pidgey");
             PkmnSpecies instance2 = PkmnSpecies.OfId("16");
             string name2 = instance2.Name;
 
