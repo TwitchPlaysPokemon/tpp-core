@@ -1,4 +1,4 @@
-﻿namespace Inputting.Parsing
+namespace Inputting.Parsing
 {
     /// <summary>
     /// An input parser is capable of parsing a raw input message into an <see cref="InputSequence"/>.

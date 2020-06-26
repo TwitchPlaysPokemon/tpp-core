@@ -1,0 +1,25 @@
+name: format
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: install dotnet-format
+        run: dotnet tool install -g dotnet-format
+      - name: Format code
+        run: |
+          dotnet format
+          git add .
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git diff-index --quiet HEAD || git commit -m "format code"
+      - name: Push formatted code
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}

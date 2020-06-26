@@ -1,4 +1,4 @@
-﻿using Persistence.Models;
+using Persistence.Models;
 
 namespace Core
 {

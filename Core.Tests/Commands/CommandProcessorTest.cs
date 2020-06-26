@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Immutable;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -85,7 +85,7 @@ namespace Core.Tests.Commands
         {
             var commandProcessor = new CommandProcessor(_nullLogger, new ArgsParser());
             commandProcessor.InstallCommand(new Command("main", CommandUtils.StaticResponse("Hi!"))
-                {Aliases = new[] {"alias1", "alias2"}});
+            { Aliases = new[] { "alias1", "alias2" } });
 
             foreach (string command in ImmutableList.Create("main", "alias1", "ALIAS2"))
             {
@@ -111,9 +111,9 @@ namespace Core.Tests.Commands
             var commandProcessor = new CommandProcessor(_nullLogger, new ArgsParser());
 
             commandProcessor.InstallCommand(new Command("a", CommandUtils.StaticResponse("Hi!"))
-                {Aliases = new[] {"x"}});
+            { Aliases = new[] { "x" } });
             var ex = Assert.Throws<ArgumentException>(() => commandProcessor
-                .InstallCommand(new Command("b", CommandUtils.StaticResponse("Hi!")) {Aliases = new[] {"X"}}));
+                .InstallCommand(new Command("b", CommandUtils.StaticResponse("Hi!")) { Aliases = new[] { "X" } }));
             Assert.AreEqual("The alias 'x' conflicts with: a(x): <no description>", ex.Message);
         }
 
@@ -123,9 +123,9 @@ namespace Core.Tests.Commands
             var commandProcessor = new CommandProcessor(_nullLogger, new ArgsParser());
 
             commandProcessor.InstallCommand(new Command("a", CommandUtils.StaticResponse("Hi!"))
-                {Aliases = new[] {"b"}});
+            { Aliases = new[] { "b" } });
             var ex = Assert.Throws<ArgumentException>(() => commandProcessor
-                .InstallCommand(new Command("b", CommandUtils.StaticResponse("Hi!")) {Aliases = new[] {"x"}}));
+                .InstallCommand(new Command("b", CommandUtils.StaticResponse("Hi!")) { Aliases = new[] { "x" } }));
             Assert.AreEqual("The command name 'b' conflicts with: a(b): <no description>", ex.Message);
         }
     }

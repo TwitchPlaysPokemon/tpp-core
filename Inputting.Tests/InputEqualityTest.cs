@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using Inputting.Inputs;
 using NUnit.Framework;
@@ -136,10 +136,10 @@ namespace Inputting.Tests
             var input4A = new Input("Foo", "a", "foo");
             var input4B = new Input("Bar", "a", "bar");
 
-            var setRef = new InputSet(new List<Input> {inputRefA, inputRefB});
-            var setDifferentOrder = new InputSet(new List<Input> {input1A, input1B});
-            var setDifferentLength = new InputSet(new List<Input> {input2});
-            var setDifferentEffectiveInput = new InputSet(new List<Input> {input4A, input4B});
+            var setRef = new InputSet(new List<Input> { inputRefA, inputRefB });
+            var setDifferentOrder = new InputSet(new List<Input> { input1A, input1B });
+            var setDifferentLength = new InputSet(new List<Input> { input2 });
+            var setDifferentEffectiveInput = new InputSet(new List<Input> { input4A, input4B });
 
             Assert.AreNotEqual(setRef, setDifferentOrder);
             Assert.IsTrue(setRef.HasSameOutcomeAs(setDifferentOrder));

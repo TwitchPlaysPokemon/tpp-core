@@ -1,4 +1,4 @@
-﻿namespace ArgsParsing.Types
+namespace ArgsParsing.Types
 {
     /// <summary>
     /// Non-generic base class used by all of the derived classes.

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -18,7 +18,7 @@ namespace Core.Configuration
         {
             foreach (string configKey in config.UnrecognizedConfigs.Keys)
             {
-                string fullyQualifiedConfigKey = string.Join(".", parentConfigKeys.Concat(new[] {configKey}));
+                string fullyQualifiedConfigKey = string.Join(".", parentConfigKeys.Concat(new[] { configKey }));
                 Console.Error.WriteLine($"unrecognized config key '{fullyQualifiedConfigKey}'");
             }
             // recursively check all nested configs
@@ -26,8 +26,8 @@ namespace Core.Configuration
             {
                 if (property.PropertyType.IsSubclassOf(typeof(ConfigBase)))
                 {
-                    var value = (ConfigBase) property.GetValue(config)!;
-                    WriteUnrecognizedConfigsToStderr(value, parentConfigKeys.Concat(new[] {property.Name}).ToList());
+                    var value = (ConfigBase)property.GetValue(config)!;
+                    WriteUnrecognizedConfigsToStderr(value, parentConfigKeys.Concat(new[] { property.Name }).ToList());
                 }
             }
         }

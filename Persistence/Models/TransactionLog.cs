@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Common;
 using NodaTime;
 using Persistence.Repos;

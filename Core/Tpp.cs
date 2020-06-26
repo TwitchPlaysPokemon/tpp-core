@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Core.Configuration;
 using Microsoft.Extensions.Logging;

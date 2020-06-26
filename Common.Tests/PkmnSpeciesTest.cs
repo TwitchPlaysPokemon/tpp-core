@@ -49,7 +49,7 @@ namespace Common.Tests
             };
 
             List<string> sorted = species.OrderBy(p => p).Select(p => p.Id).ToList();
-            Assert.AreEqual(new List<string> {"5", "22", "2-customdex", "11-customdex"}, sorted);
+            Assert.AreEqual(new List<string> { "5", "22", "2-customdex", "11-customdex" }, sorted);
         }
 
         [Test]

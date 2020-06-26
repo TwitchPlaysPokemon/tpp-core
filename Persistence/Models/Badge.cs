@@ -1,4 +1,4 @@
-﻿using Common;
+using Common;
 using NodaTime;
 
 namespace Persistence.Models

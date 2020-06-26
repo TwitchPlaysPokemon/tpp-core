@@ -1,4 +1,4 @@
-﻿using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization;
 
 namespace Persistence.MongoDB.Serializers
 {

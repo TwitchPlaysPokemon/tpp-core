@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using MongoDB.Bson;
@@ -59,7 +59,7 @@ namespace Persistence.MongoDB.Tests.Repos
         [Test]
         public async Task TestUpdate()
         {
-            var user = new TestUser {Money = 10};
+            var user = new TestUser { Money = 10 };
             await _usersCollection.InsertOneAsync(user);
 
             var transaction = new Transaction<TestUser>(user, 1, "test");
@@ -77,7 +77,7 @@ namespace Persistence.MongoDB.Tests.Repos
         [Test]
         public async Task TestAbortStaleUpdate()
         {
-            var user = new TestUser {Money = 10};
+            var user = new TestUser { Money = 10 };
             await _usersCollection.InsertOneAsync(user);
             user.Money = 5; // object is stale, amount does not match database
 
@@ -95,7 +95,7 @@ namespace Persistence.MongoDB.Tests.Repos
         [Test]
         public void TestUserNotFound()
         {
-            var user = new TestUser {Money = 10}; // user not persisted
+            var user = new TestUser { Money = 10 }; // user not persisted
 
             var transaction = new Transaction<TestUser>(user, 1, "test");
             UserNotFoundException<TestUser> userNotFound = Assert.ThrowsAsync<UserNotFoundException<TestUser>>(
@@ -106,8 +106,8 @@ namespace Persistence.MongoDB.Tests.Repos
         [Test]
         public async Task TestMultipleTransactionsTransactional()
         {
-            TestUser knownUser = new TestUser {Money = 10};
-            TestUser unknownUser = new TestUser {Money = 20};
+            TestUser knownUser = new TestUser { Money = 10 };
+            TestUser unknownUser = new TestUser { Money = 20 };
             await _usersCollection.InsertOneAsync(knownUser);
 
             UserNotFoundException<TestUser> userNotFound = Assert.ThrowsAsync<UserNotFoundException<TestUser>>(() =>
@@ -129,9 +129,9 @@ namespace Persistence.MongoDB.Tests.Repos
         [Test]
         public async Task TestReserveMoney()
         {
-            TestUser user = new TestUser {Money = 10};
-            TestUser otherUser = new TestUser {Money = 20};
-            await _usersCollection.InsertManyAsync(new[] {user, otherUser});
+            TestUser user = new TestUser { Money = 10 };
+            TestUser otherUser = new TestUser { Money = 20 };
+            await _usersCollection.InsertManyAsync(new[] { user, otherUser });
             Task<int> Checker(TestUser u) => Task.FromResult(u == user ? 1 : 0);
 
             Assert.AreEqual(10, await _bank.GetAvailableMoney(user));
@@ -147,7 +147,7 @@ namespace Persistence.MongoDB.Tests.Repos
         [Test]
         public void TestGetMoneyUnknownUser()
         {
-            TestUser unknownUser = new TestUser {Money = 0}; // not persisted
+            TestUser unknownUser = new TestUser { Money = 0 }; // not persisted
             UserNotFoundException<TestUser> userNotFound = Assert.ThrowsAsync<UserNotFoundException<TestUser>>(
                 () => _bank.GetAvailableMoney(unknownUser));
             Assert.AreEqual(unknownUser, userNotFound.User);
@@ -156,10 +156,10 @@ namespace Persistence.MongoDB.Tests.Repos
         [Test]
         public async Task TestDatabaseSerialization()
         {
-            TestUser user = new TestUser {Money = 10};
+            TestUser user = new TestUser { Money = 10 };
             await _usersCollection.InsertOneAsync(user);
-            List<int> list = new List<int> {1, 2, 3};
-            Dictionary<string, bool> dictionary = new Dictionary<string, bool> {["yes"] = true, ["no"] = false};
+            List<int> list = new List<int> { 1, 2, 3 };
+            Dictionary<string, bool> dictionary = new Dictionary<string, bool> { ["yes"] = true, ["no"] = false };
             await _bank.PerformTransaction(new Transaction<TestUser>(user, 1, "test",
                 new Dictionary<string, object?>
                 {
@@ -218,7 +218,7 @@ namespace Persistence.MongoDB.Tests.Repos
             Assert.AreEqual(16, log.NewBalance);
             Assert.AreEqual(instant, log.CreatedAt);
             Assert.IsNull(log.Type);
-            Assert.AreEqual(new Dictionary<string, object?> {["match"] = 35510}, log.AdditionalData);
+            Assert.AreEqual(new Dictionary<string, object?> { ["match"] = 35510 }, log.AdditionalData);
         }
     }
 }

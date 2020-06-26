@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Common;
 using MongoDB.Bson;
@@ -75,9 +75,9 @@ namespace Persistence.MongoDB.Tests.Repos
             List<Badge> resultNobody = await _badgeRepo.FindByUser(null);
 
             // then
-            Assert.AreEqual(new List<Badge> {badgeUserA1, badgeUserA2}, resultUserA);
-            Assert.AreEqual(new List<Badge> {badgeUserB}, resultUserB);
-            Assert.AreEqual(new List<Badge> {badgeNobody}, resultNobody);
+            Assert.AreEqual(new List<Badge> { badgeUserA1, badgeUserA2 }, resultUserA);
+            Assert.AreEqual(new List<Badge> { badgeUserB }, resultUserB);
+            Assert.AreEqual(new List<Badge> { badgeNobody }, resultNobody);
         }
     }
 }

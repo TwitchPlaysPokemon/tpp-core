@@ -1,4 +1,4 @@
-﻿namespace Core.Commands
+namespace Core.Commands
 {
     public struct CommandResult
     {
