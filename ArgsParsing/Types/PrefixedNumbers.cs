@@ -1,4 +1,4 @@
-﻿namespace ArgsParsing.Types
+namespace ArgsParsing.Types
 {
     public class ImplicitNumber
     {

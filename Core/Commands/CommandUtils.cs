@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 
 namespace Core.Commands
@@ -7,7 +7,7 @@ namespace Core.Commands
     {
         public static Func<CommandContext, Task<CommandResult>> StaticResponse(string response)
         {
-            return ctx => Task.FromResult(new CommandResult {Response = response});
+            return ctx => Task.FromResult(new CommandResult { Response = response });
         }
     }
 }

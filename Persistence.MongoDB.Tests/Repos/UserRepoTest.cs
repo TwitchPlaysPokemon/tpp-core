@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using MongoDB.Driver;
 using NodaTime;
@@ -140,11 +140,11 @@ namespace Persistence.MongoDB.Tests.Repos
             Assert.AreEqual(new SortedSet<int>(), userNew.ParticipationEmblems);
 
             await _userRepo.Collection.UpdateOneAsync(u => u.Id == userInfo.Id, Builders<User>.Update
-                .Set(u => u.ParticipationEmblems, new SortedSet<int> {42}));
+                .Set(u => u.ParticipationEmblems, new SortedSet<int> { 42 }));
             // when, then
             User userExisting = await _userRepo.RecordUser(userInfo);
             Assert.NotNull(userExisting.ParticipationEmblems);
-            Assert.AreEqual(new SortedSet<int> {42}, userExisting.ParticipationEmblems);
+            Assert.AreEqual(new SortedSet<int> { 42 }, userExisting.ParticipationEmblems);
         }
     }
 }

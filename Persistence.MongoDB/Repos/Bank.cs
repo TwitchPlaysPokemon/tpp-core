@@ -106,7 +106,7 @@ namespace Persistence.MongoDB.Repos
             string userId = _idFieldAccessor(transaction.User);
             FilterDefinition<T> filter = new ExpressionFilterDefinition<T>(GetUserIdFilter(userId));
             UpdateDefinition<T> update = Builders<T>.Update.Inc(_currencyField, transaction.Change);
-            var options = new FindOneAndUpdateOptions<T> {IsUpsert = false, ReturnDocument = ReturnDocument.After};
+            var options = new FindOneAndUpdateOptions<T> { IsUpsert = false, ReturnDocument = ReturnDocument.After };
             T entityAfter = await _currencyCollection.FindOneAndUpdateAsync(session, filter, update, options, token)
                             ?? throw new UserNotFoundException<T>(transaction.User);
             int oldBalance = _currencyFieldAccessor(transaction.User);

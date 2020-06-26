@@ -1,4 +1,4 @@
-﻿namespace Inputting.Inputs
+namespace Inputting.Inputs
 {
     /// <summary>
     /// A touchscreen input is an input in the form of <c>x,y</c>, e.g. <c>120,215</c>,
@@ -26,20 +26,20 @@
         public override bool Equals(object? obj)
         {
             if (!base.Equals(obj)) return false;
-            var touchscreenInput = (TouchscreenInput) obj!;
+            var touchscreenInput = (TouchscreenInput)obj!;
             return X == touchscreenInput.X && Y == touchscreenInput.Y;
         }
 
-        public override int GetHashCode() => base.GetHashCode() | (int) X | (int) Y;
+        public override int GetHashCode() => base.GetHashCode() | (int)X | (int)Y;
 
         public override bool HasSameOutcomeAs(Input? obj)
         {
             if (!base.HasSameOutcomeAs(obj)) return false;
-            var touchscreenInput = (TouchscreenInput) obj!;
+            var touchscreenInput = (TouchscreenInput)obj!;
             return X == touchscreenInput.X && Y == touchscreenInput.Y;
         }
 
-        public override int GetEffectiveHashCode() => base.GetEffectiveHashCode() | (int) X | (int) Y;
+        public override int GetEffectiveHashCode() => base.GetEffectiveHashCode() | (int)X | (int)Y;
 
         #endregion
     }

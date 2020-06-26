@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -83,7 +83,7 @@ namespace ArgsParsing.TypeParsers
                 }
                 return ArgsParseResult<AnyOrder>.Success(
                     parseResult.FailureResult,
-                    (AnyOrder) constructor.Invoke(items.ToArray()),
+                    (AnyOrder)constructor.Invoke(items.ToArray()),
                     parseResult.SuccessResult.Value.RemainingArgs);
             }
             Debug.Assert(failures.Any());

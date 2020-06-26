@@ -69,7 +69,7 @@ namespace Persistence.MongoDB.Repos
             var user = await Collection.FindOneAndUpdateAsync<User>(
                 filter: u => u.Id == userInfo.Id,
                 update: update,
-                options: new FindOneAndUpdateOptions<User> {ReturnDocument = ReturnDocument.After, IsUpsert = false}
+                options: new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After, IsUpsert = false }
             );
             if (user != null)
             {
@@ -86,7 +86,7 @@ namespace Persistence.MongoDB.Repos
                 color: userInfo.Color,
                 firstActiveAt: userInfo.UpdatedAt,
                 lastActiveAt: userInfo.UpdatedAt,
-                lastMessageAt: userInfo.FromMessage ? userInfo.UpdatedAt : (Instant?) null,
+                lastMessageAt: userInfo.FromMessage ? userInfo.UpdatedAt : (Instant?)null,
                 pokeyen: _startingPokeyen,
                 tokens: _startingTokens
             );

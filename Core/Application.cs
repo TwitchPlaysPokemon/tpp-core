@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -40,7 +40,7 @@ Options:
         private static readonly JsonSerializerSettings ConfigSerializerSettings = new JsonSerializerSettings
         {
             ContractResolver = new PrivateSetterContractResolver(),
-            Converters = {new StringEnumConverter()},
+            Converters = { new StringEnumConverter() },
             Formatting = Formatting.Indented,
             // if we don't force objects to be fully replaced, it might e.g. append to default collections,
             // making it impossible to remove elements from said collections via configuration.

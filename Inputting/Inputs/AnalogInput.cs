@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Inputting.Inputs
 {
@@ -34,7 +34,7 @@ namespace Inputting.Inputs
         public override bool Equals(object? obj)
         {
             if (!base.Equals(obj)) return false;
-            var analogInput = (AnalogInput) obj!;
+            var analogInput = (AnalogInput)obj!;
             return Math.Abs(Math.Abs(Strength - analogInput.Strength)) < float.Epsilon;
         }
 
@@ -43,7 +43,7 @@ namespace Inputting.Inputs
         public override bool HasSameOutcomeAs(Input? obj)
         {
             if (!base.HasSameOutcomeAs(obj)) return false;
-            var analogInput = (AnalogInput) obj!;
+            var analogInput = (AnalogInput)obj!;
             return Math.Abs(Strength - analogInput.Strength) < float.Epsilon;
         }
 

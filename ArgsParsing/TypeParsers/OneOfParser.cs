@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -33,7 +33,7 @@ namespace ArgsParsing.TypeParsers
             for (int i = 0; i < genericTypes.Length; i++)
             {
                 Type nestedType = genericTypes[i];
-                ArgsParseResult<List<object>> parseResult = await _argsParser.ParseRaw(args, new[] {nestedType});
+                ArgsParseResult<List<object>> parseResult = await _argsParser.ParseRaw(args, new[] { nestedType });
                 if (parseResult.SuccessResult == null)
                 {
                     Debug.Assert(parseResult.FailureResult != null);
@@ -66,18 +66,18 @@ namespace ArgsParsing.TypeParsers
                     Type genericType = genericTypes[j];
                     ConstructorInfo? optionalConstructor = typeof(Optional<>)
                         .MakeGenericType(genericType)
-                        .GetConstructor(new[] {typeof(bool), genericType});
+                        .GetConstructor(new[] { typeof(bool), genericType });
                     if (optionalConstructor == null)
                     {
                         throw new InvalidOperationException($"{typeof(Optional<>)} needs a constructor (bool, object)");
                     }
                     invokeArgs[j] = i == j // for the successful one, fill the optional with the result
-                        ? optionalConstructor.Invoke(new[] {true, result})
-                        : optionalConstructor.Invoke(new object[] {false, null!});
+                        ? optionalConstructor.Invoke(new[] { true, result })
+                        : optionalConstructor.Invoke(new object[] { false, null! });
                 }
                 return ArgsParseResult<OneOf>.Success(
                     parseResult.FailureResult,
-                    (OneOf) oneOfConstructor.Invoke(invokeArgs),
+                    (OneOf)oneOfConstructor.Invoke(invokeArgs),
                     parseResult.SuccessResult.Value.RemainingArgs);
             }
             Debug.Assert(failures.Any());

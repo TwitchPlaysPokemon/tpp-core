@@ -1,4 +1,4 @@
-﻿using Inputting.Inputs;
+using Inputting.Inputs;
 
 namespace Inputting.InputDefinitions
 {

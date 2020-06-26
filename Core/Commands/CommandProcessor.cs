@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -65,7 +65,7 @@ namespace Core.Commands
         {
             if (!_commands.TryGetValue(commandName.ToLower(), out Command command))
             {
-                return new CommandResult {Response = $"unknown command '{commandName}'"};
+                return new CommandResult { Response = $"unknown command '{commandName}'" };
             }
             var stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -76,14 +76,14 @@ namespace Core.Commands
             }
             catch (ArgsParseFailure ex)
             {
-                result = new CommandResult {Response = ex.Message};
+                result = new CommandResult { Response = ex.Message };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex,
                     $"An exception occured while executing command '{command.Name}'. " +
                     $"User: {message.User}, Original text: {message.MessageText}");
-                result = new CommandResult {Response = "An error occurred."};
+                result = new CommandResult { Response = "An error occurred." };
             }
             stopwatch.Stop();
             if (stopwatch.Elapsed >= CommandWarnTimeLimit)

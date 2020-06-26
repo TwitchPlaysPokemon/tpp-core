@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -32,7 +32,7 @@ namespace ArgsParsing.TypeParsers
                                             $"but got {genericTypes.Length}");
             }
             var type = typeof(Optional<>).MakeGenericType(genericTypes[0]);
-            ConstructorInfo? constructor = type.GetConstructor(new[] {typeof(bool), genericTypes[0]});
+            ConstructorInfo? constructor = type.GetConstructor(new[] { typeof(bool), genericTypes[0] });
             if (constructor == null)
             {
                 throw new InvalidOperationException($"{type} needs a constructor (bool present, T value).");
@@ -40,19 +40,19 @@ namespace ArgsParsing.TypeParsers
 
             if (!args.Any())
             {
-                var optional = (Optional) constructor.Invoke(new object?[] {false, null});
+                var optional = (Optional)constructor.Invoke(new object?[] { false, null });
                 return ArgsParseResult<Optional>.Success(optional, args);
             }
             ArgsParseResult<List<object>> parseResult = await _argsParser.ParseRaw(args, genericTypes);
             if (parseResult.SuccessResult != null)
             {
                 Success<List<object>> success = parseResult.SuccessResult.Value;
-                var optional = (Optional) constructor.Invoke(new[] {true, success.Result[0]});
+                var optional = (Optional)constructor.Invoke(new[] { true, success.Result[0] });
                 return ArgsParseResult<Optional>.Success(parseResult.FailureResult, optional, success.RemainingArgs);
             }
             else
             {
-                var optional = (Optional) constructor.Invoke(new object?[] {false, null});
+                var optional = (Optional)constructor.Invoke(new object?[] { false, null });
                 return ArgsParseResult<Optional>.Success(parseResult.FailureResult, optional, args);
             }
         }
