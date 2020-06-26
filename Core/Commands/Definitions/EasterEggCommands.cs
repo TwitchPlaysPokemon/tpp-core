@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -33,7 +33,7 @@ namespace Core.Commands.Definitions
         {
             // TODO implement cooldown
             string response = Random.Next(8192) == 0 ? "tppShiny" : "RaccAttack";
-            return Task.FromResult(new CommandResult {Response = response});
+            return Task.FromResult(new CommandResult { Response = response });
         }
     }
 }
