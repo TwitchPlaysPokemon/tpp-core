@@ -29,10 +29,6 @@ namespace Core.Commands.Definitions
                 Description = "Respond with the link to the season rewards webpage."
             },
 
-            new Command("gauntlet", StaticResponse(
-                    "Read the concept for our sixth anniversary \"The Gauntlet\" here: https://redd.it/cjyuh4"))
-                {Description = "Respond with the reddit post about the gauntlet."},
-
             new Command("leaderboard", StaticResponse("https://twitchplayspokemon.tv/leaderboard"))
                 {Description = "Provide a link to the leaderboard website."},
 
