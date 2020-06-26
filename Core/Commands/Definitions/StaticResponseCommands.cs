@@ -7,8 +7,6 @@ namespace Core.Commands.Definitions
 {
     public class StaticResponseCommands : ICommandCollection
     {
-        // TODO moderators, operators
-
         public IEnumerable<Command> Commands => new[]
         {
             new Command("discord", StaticResponse("https://discord.gg/twitchplayspokemon"))

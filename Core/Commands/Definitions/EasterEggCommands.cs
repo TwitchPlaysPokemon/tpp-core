@@ -31,7 +31,6 @@ namespace Core.Commands.Definitions
 
         public Task<CommandResult> RaccAttack(CommandContext context)
         {
-            // TODO implement cooldown
             string response = Random.Next(8192) == 0 ? "tppShiny" : "RaccAttack";
             return Task.FromResult(new CommandResult { Response = response });
         }
