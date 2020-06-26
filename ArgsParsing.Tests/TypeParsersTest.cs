@@ -148,8 +148,8 @@ namespace ArgsParsing.Tests
             const string speciesId = "79317";
             const string speciesName = "Uniquamon";
             var argsParser = new ArgsParser();
-            // register pokedex names before instantiating the args parser!
-            PkmnSpecies.RegisterPokedexData(speciesId, speciesName, ImmutableDictionary<string, string>.Empty);
+            // register pokemon names before instantiating the args parser!
+            PkmnSpecies.RegisterName(speciesId, speciesName);
             argsParser.AddArgumentParser(new PkmnSpeciesParser());
 
             PkmnSpecies resultById = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create("#" + speciesId));

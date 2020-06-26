@@ -10,7 +10,7 @@ namespace ArgsParsing.TypeParsers
     /// A parser that recognizes a pokemon species, either by name or by a #-prefixed species id.
     /// Note that this class builds a name lookup at construction,
     /// so make sure all pokemon species names are set up before instantiating this parser.
-    /// For details on that, see <see cref="PkmnSpecies.RegisterPokedexData"/>.
+    /// For details on that, see <see cref="PkmnSpecies.RegisterName"/>.
     /// </summary>
     public class PkmnSpeciesParser : BaseArgumentParser<PkmnSpecies>
     {
@@ -46,7 +46,7 @@ namespace ArgsParsing.TypeParsers
                 }
             }
             string speciesId = args[0].Substring(startIndex: 1);
-            PkmnSpecies? species = PkmnSpecies.OfIdWithPokedexData(speciesId.TrimStart('0'));
+            PkmnSpecies? species = PkmnSpecies.OfIdWithKnownName(speciesId.TrimStart('0'));
             return Task.FromResult(species == null
                 ? ArgsParseResult<PkmnSpecies>.Failure($"did not recognize species '{args[0]}'",
                     ErrorRelevanceConfidence.Likely)
