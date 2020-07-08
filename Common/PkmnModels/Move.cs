@@ -28,7 +28,7 @@ namespace Common.PkmnModels
         [DataMember(Name = "name_id")] public string NameId { get; set; }
         [DataMember(Name = "name")] public string Name { get; set; }
         [DataMember(Name = "category")] public Category Category { get; set; }
-        [DataMember(Name = "type")] public ElementalType ElementalType { get; set; }
+        [DataMember(Name = "type")] public PokemonType Type { get; set; }
         [DataMember(Name = "accuracy")] public int Accuracy { get; set; }
         [DataMember(Name = "power")] public int Power { get; set; }
         [DataMember(Name = "pp")] public int Pp { get; set; }

@@ -18,7 +18,7 @@ namespace Common.PkmnModels
         [DataMember(Name = "ball")] public Item? Ball { get; set; }
         [DataMember(Name = "form")] public int Form { get; set; }
         [DataMember(Name = "moves")] public IImmutableList<Move> Moves { get; set; }
-        [DataMember(Name = "hp_type")] public ElementalType? HpType { get; set; }
+        [DataMember(Name = "hp_type")] public PokemonType? HpType { get; set; }
         [DataMember(Name = "evs")] public Stats Evs { get; set; }
         [DataMember(Name = "ivs")] public Stats Ivs { get; set; }
         [DataMember(Name = "stats")] public Stats Stats { get; set; }

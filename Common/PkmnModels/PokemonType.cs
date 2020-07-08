@@ -4,7 +4,7 @@ namespace Common.PkmnModels
 {
     /// Purposely not just named "Type" to avoid confusion with System.Type
     [DataContract]
-    public enum ElementalType
+    public enum PokemonType
     {
         [EnumMember(Value = "Normal")] Normal,
         [EnumMember(Value = "Fire")] Fire,
@@ -27,8 +27,8 @@ namespace Common.PkmnModels
         [EnumMember(Value = "???")] QuestionMarks,
     }
 
-    public static class ElementalTypeExtensions
+    public static class PokemonTypeExtensions
     {
-        public static string? GetTypeName(this ElementalType elementalType) => elementalType.GetEnumMemberValue();
+        public static string? GetTypeName(this PokemonType type) => type.GetEnumMemberValue();
     }
 }
