@@ -18,6 +18,9 @@ You need to customize a few configurations:
 
 All unchanged entries can be deleted. Missing configurations revert to their default value.
 
+Ensure that you have a properly configured MongoDB server running.
+See the [Persistence.MongoDB](../Persistence.MongoDB) project for instructions.
+
 Finally, you run the project with
 ```
 dotnet run -- run

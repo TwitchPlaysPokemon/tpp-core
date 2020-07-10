@@ -24,7 +24,8 @@ namespace Core
         {
             _logger = loggerFactory.CreateLogger<Tpp>();
             _rootConfig = rootConfig;
-            ArgsParser argsParser = Setups.SetUpArgsParser();
+            Setups.Databases repos = Setups.SetUpRepositories(rootConfig);
+            ArgsParser argsParser = Setups.SetUpArgsParser(repos.UserRepo);
             _commandProcessor = Setups.SetUpCommandProcessor(loggerFactory, argsParser);
         }
 

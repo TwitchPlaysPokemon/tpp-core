@@ -85,7 +85,10 @@ namespace Persistence.MongoDB.Tests.Repos
             InvalidOperationException failure = Assert.ThrowsAsync<InvalidOperationException>(
                 () => _bank.PerformTransaction(transaction));
 
-            Assert.AreEqual("tried to perform transaction with stale user data", failure.Message);
+            Assert.AreEqual(
+                "Tried to perform transaction with stale user data: " +
+                $"old balance 5 plus change 1 does not equal new balance 11 for user {user}",
+                failure.Message);
 
             TestUser userAfter = await _usersCollection.Find(u => u.Id == user.Id).FirstAsync();
             Assert.AreEqual(10, userAfter.Money);
