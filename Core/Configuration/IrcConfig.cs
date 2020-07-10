@@ -18,6 +18,9 @@ namespace Core.Configuration
         public string Username { get; private set; } = "justinfan27365461784";
         public string Password { get; private set; } = "oauth:mysecret";
 
+        // TODO this configurations should probably be in the database instead
+        public IImmutableList<string> OperatorNames { get; private set; } = ImmutableList<string>.Empty;
+
         /* communication settings */
         public enum SuppressionType
         {

@@ -69,7 +69,7 @@ Options:
                 if (config.LogPath != null) builder.AddFile(Path.Combine(config.LogPath, "tpp-{Date}.log"));
             });
             ILogger logger = loggerFactory.CreateLogger("main");
-            var tpp = new Tpp(loggerFactory, config);
+            using var tpp = new Tpp(loggerFactory, config);
             try
             {
                 tpp.Run().Wait();

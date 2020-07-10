@@ -1,5 +1,7 @@
+using System;
 using System.Threading.Tasks;
 using NodaTime;
+using Persistence.Models;
 
 namespace Core.Commands
 {
@@ -42,5 +44,15 @@ namespace Core.Commands
                         : Task.FromResult(new CommandResult()))
             { Aliases = command.Aliases, Description = command.Description };
         }
+
+        public static Command WithRestrictedByUser(this Command command, Func<User, bool> canExecute)
+        {
+            return new Command(command.Name,
+                ctx => canExecute(ctx.Message.User)
+                    ? command.Execution(ctx)
+                    : Task.FromResult(new CommandResult { Response = "You are not allowed to execute this command." }))
+            { Aliases = command.Aliases, Description = command.Description };
+        }
+
     }
 }
