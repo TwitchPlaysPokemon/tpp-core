@@ -1,6 +1,8 @@
 ﻿This is the core executable project that ties all components together.
-You can set yourself up and run it,
-but running the core does nothing yet and is under active development.
+
+You can set yourself up and run it to connect to twitch chat
+and execute a bunch of basic commands, like `!reddit` or `!stop`.
+More elaborate features are still under active development.
 
 ## run
 First, ensure the project builds and runs on your system by executing it once.
@@ -15,6 +17,12 @@ dotnet run -- gendefaultconfig --outfile=config.json
 You need to customize a few configurations:
 - `Irc.Username` and `Irc.Password` contain the credentials of some Twitch account that will be the chat bot.
    You can obtain an oauth token from [here](https://twitchapps.com/tmi/)
+- Add your name to `Irc.OperatorNames` to be able to do stuff requiring elevated privileges,
+  for example issuing the !stop command.
+- No chat messages are actually being sent by default.
+  To change this, set `Irc.Channel` to some unpopulated twitch channel, preferably the bot's
+  own channel, and add the channel name to `Irc.SuppressionOverrides`.
+  You may also add your own name to `Irc.SuppressionOverrides` to be able to receive whispers.
 
 All unchanged entries can be deleted. Missing configurations revert to their default value.
 
