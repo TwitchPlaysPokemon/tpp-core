@@ -14,20 +14,9 @@ namespace Common.PkmnModels
     }
 
     [DataContract]
-    public struct VolatileStatus
-    {
-        [DataMember(Name = "cnf")] public int Cnf { get; set; }
-        [DataMember(Name = "cur")] public bool Cur { get; set; }
-        [DataMember(Name = "foc")] public bool Foc { get; set; }
-        [DataMember(Name = "inf")] public bool Inf { get; set; }
-        [DataMember(Name = "tau")] public bool Tau { get; set; }
-        [DataMember(Name = "tor")] public bool Tor { get; set; }
-    }
-
-    [DataContract]
     public struct Status
     {
         [DataMember(Name = "nonvolatile")] public NonvolatileStatus Nonvolatile { get; set; }
-        [DataMember(Name = "volatile")] public VolatileStatus Volatile { get; set; }
+        // volatile may get added in the future if the need arises
     }
 }
