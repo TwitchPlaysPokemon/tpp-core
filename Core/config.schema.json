@@ -69,8 +69,26 @@
         "null"
       ]
     },
+    "MongoDbConnectionUri": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "MongoDbDatabaseName": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "Irc": {
       "$ref": "#/definitions/IrcConfig"
+    },
+    "StartingPokeyen": {
+      "type": "integer"
+    },
+    "StartingTokens": {
+      "type": "integer"
     }
   }
 }

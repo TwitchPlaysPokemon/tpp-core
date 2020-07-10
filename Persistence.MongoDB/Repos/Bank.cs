@@ -52,8 +52,8 @@ namespace Persistence.MongoDB.Repos
             Expression<Func<T, string>> idField,
             IClock clock)
         {
-            database.CreateCollection(transactionLogCollectionName);
-            database.CreateCollection(currencyCollectionName);
+            database.CreateCollectionIfNotExists(transactionLogCollectionName).Wait();
+            database.CreateCollectionIfNotExists(currencyCollectionName).Wait();
             _transactionLogCollection = database.GetCollection<TransactionLog>(transactionLogCollectionName);
             _currencyCollection = database.GetCollection<T>(currencyCollectionName);
             _mongoClient = _currencyCollection.Database.Client;
@@ -113,7 +113,10 @@ namespace Persistence.MongoDB.Repos
             int newBalance = _currencyFieldAccessor(entityAfter);
             if (oldBalance + transaction.Change != newBalance)
             {
-                throw new InvalidOperationException("tried to perform transaction with stale user data");
+                throw new InvalidOperationException(
+                    "Tried to perform transaction with stale user data: " +
+                    $"old balance {oldBalance} plus change {transaction.Change} " +
+                    $"does not equal new balance {newBalance} for user {transaction.User}");
             }
             var transactionLog = new TransactionLog(
                 id: string.Empty,

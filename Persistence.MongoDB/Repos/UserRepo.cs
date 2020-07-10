@@ -9,7 +9,7 @@ namespace Persistence.MongoDB.Repos
 {
     public class UserRepo : IUserRepo
     {
-        private const string CollectionName = "users";
+        public const string CollectionName = "users";
 
         public readonly IMongoCollection<User> Collection;
 
@@ -43,6 +43,15 @@ namespace Persistence.MongoDB.Repos
             _startingPokeyen = startingPokeyen;
             _startingTokens = startingTokens;
             InitIndexes();
+            // TODO currently pokeyen are not nullable in the user object, but in the current database some are.
+            // There has been an unfinished discussion on whether nullable pokeyen are desired, e.g. to better represent
+            // a balance reset, where each user with "null" would get the default amount on first load for example.
+            // Until then, if the db runs into deserialization issues due to "null" pokeyen,
+            // the following code can be used to automatically replace all nulls with zeroes at startup.
+            // database.GetCollection<BsonDocument>(CollectionName).UpdateMany(
+            // Builders<BsonDocument>.Filter.Eq("pokeyen", BsonNull.Value),
+            // Builders<BsonDocument>.Update.Set("pokeyen", 0)
+            // );
         }
 
         private void InitIndexes()
