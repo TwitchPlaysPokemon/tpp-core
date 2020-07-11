@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using ArgsParsing.Types;
 using Persistence.Models;
 
 namespace Core.Commands.Definitions
@@ -31,10 +32,25 @@ namespace Core.Commands.Definitions
 
         private bool IsOperator(User user) => _operatorNamesLower.Contains(user.SimpleName.ToLowerInvariant());
 
-        public Task<CommandResult> Stop(CommandContext context)
+        private async Task<CommandResult> Stop(CommandContext context)
         {
-            _stopToken.ShouldStop = true;
-            return Task.FromResult(new CommandResult { Response = "stopping main loop" });
+            Optional<string> argument = await context.ParseArgs<Optional<string>>();
+            bool cancel = false;
+            if (argument.IsPresent)
+            {
+                bool isCancelArg = argument.Value.ToLowerInvariant() == "cancel";
+                if (isCancelArg) cancel = true;
+                else return new CommandResult { Response = $"unknown argument '{argument.Value}'" };
+            }
+            string message = cancel
+                ? _stopToken.ShouldStop
+                    ? "cancelled a prior stop command"
+                    : "main loop already not stopping"
+                : _stopToken.ShouldStop
+                    ? "main loop already stopping"
+                    : "stopping main loop";
+            _stopToken.ShouldStop = !cancel;
+            return new CommandResult { Response = message };
         }
     }
 }
