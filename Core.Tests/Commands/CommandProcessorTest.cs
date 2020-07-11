@@ -39,7 +39,7 @@ namespace Core.Tests.Commands
             var commandProcessor = new CommandProcessor(loggerMock.Object, new ArgsParser());
             commandProcessor.InstallCommand(new Command("slow", async context =>
             {
-                await Task.Delay(TimeSpan.FromMilliseconds(50));
+                await Task.Delay(TimeSpan.FromMilliseconds(300));
                 return new CommandResult();
             }));
 
