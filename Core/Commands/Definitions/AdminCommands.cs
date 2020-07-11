@@ -30,7 +30,7 @@ namespace Core.Commands.Definitions
             new Command("stop", Stop),
         }.Select(cmd => cmd.WithRestrictedByUser(IsOperator));
 
-        private bool IsOperator(User user) => _operatorNamesLower.Contains(user.SimpleName.ToLowerInvariant());
+        private bool IsOperator(User user) => _operatorNamesLower.Contains(user.SimpleName);
 
         private async Task<CommandResult> Stop(CommandContext context)
         {
