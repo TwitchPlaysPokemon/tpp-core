@@ -8,7 +8,7 @@ namespace Core.Configuration
     /// </summary>
     public sealed class RootConfig : ConfigBase
     {
-        [JsonProperty("$schema")] public static string Schema { get; } = "./config.schema.json";
+        [JsonProperty("$schema")] public static readonly string Schema = "./config.schema.json";
 
         /* directory under which log files will be created. null for no log files. */
         public string? LogPath { get; init; } = null;
