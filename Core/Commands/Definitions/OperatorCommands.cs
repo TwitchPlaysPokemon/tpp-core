@@ -28,7 +28,9 @@ namespace Core.Commands.Definitions
         public IEnumerable<Command> Commands => new[]
         {
             new Command("stop", Stop),
-        }.Select(cmd => cmd.WithRestrictedByUser(IsOperator));
+        }.Select(cmd => cmd.WithCondition(
+            canExecute: ctx => IsOperator(ctx.Message.User),
+            ersatzResult: new CommandResult { Response = "Only operators can use that command" }));
 
         private bool IsOperator(User user) => _operatorNamesLower.Contains(user.SimpleName);
 
