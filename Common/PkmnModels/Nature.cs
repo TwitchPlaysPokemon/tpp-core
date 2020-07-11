@@ -5,11 +5,11 @@ namespace Common.PkmnModels
     [DataContract]
     public struct Nature
     {
-        [DataMember(Name = "id")] public int Id { get; set; }
-        [DataMember(Name = "name")] public string Name { get; set; }
-        [DataMember(Name = "increased")] public Stat? Inc { get; set; }
-        [DataMember(Name = "decreased")] public Stat? Dec { get; set; }
-        [DataMember(Name = "description")] public string Description { get; set; }
+        [DataMember(Name = "id")] public int Id { get; init; }
+        [DataMember(Name = "name")] public string Name { get; init; }
+        [DataMember(Name = "increased")] public Stat? Inc { get; init; }
+        [DataMember(Name = "decreased")] public Stat? Dec { get; init; }
+        [DataMember(Name = "description")] public string Description { get; init; }
 
         public static Nature Hardy = new Nature { Id = 0, Name = "Hardy" };
         public static Nature Lonely = new Nature { Id = 1, Name = "Lonely", Inc = Stat.Atk, Dec = Stat.Def };
