@@ -59,36 +59,40 @@ namespace Core.Chat
                 whisperCommandIdentifier: '\0');
         }
 
-        public Task SendMessage(string message)
+        public async Task SendMessage(string message)
         {
             if (_suppressions.Contains(IrcConfig.SuppressionType.Message) &&
                 !_suppressionOverrides.Contains(_ircChannel))
             {
                 _logger.LogDebug($"(suppressed) >#{_ircChannel}: {message}");
-                return Task.CompletedTask;
+                return;
             }
             _logger.LogDebug($">#{_ircChannel}: {message}");
-            foreach (string part in MessageSplitter.FitToMaxLength(message))
+            await Task.Run(() =>
             {
-                _twitchClient.SendMessage(_ircChannel, part);
-            }
-            return Task.CompletedTask;
+                foreach (string part in MessageSplitter.FitToMaxLength(message))
+                {
+                    _twitchClient.SendMessage(_ircChannel, part);
+                }
+            });
         }
 
-        public Task SendWhisper(User target, string message)
+        public async Task SendWhisper(User target, string message)
         {
             if (_suppressions.Contains(IrcConfig.SuppressionType.Whisper) &&
                 !_suppressionOverrides.Contains(target.SimpleName))
             {
                 _logger.LogDebug($"(suppressed) >@{target.SimpleName}: {message}");
-                return Task.CompletedTask;
+                return;
             }
             _logger.LogDebug($">@{target.SimpleName}: {message}");
-            foreach (string part in MessageSplitter.FitToMaxLength(message))
+            await Task.Run(() =>
             {
-                _twitchClient.SendWhisper(target.SimpleName, part);
-            }
-            return Task.CompletedTask;
+                foreach (string part in MessageSplitter.FitToMaxLength(message))
+                {
+                    _twitchClient.SendWhisper(target.SimpleName, part);
+                }
+            });
         }
 
         private sealed class DelegateDisposer : IDisposable
