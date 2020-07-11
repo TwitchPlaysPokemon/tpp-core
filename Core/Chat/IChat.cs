@@ -10,7 +10,13 @@ namespace Core.Chat
         public MessageEventArgs(Message message) => Message = message;
     }
 
-    public interface IChat
+    public interface IMessageSender
+    {
+        Task SendMessage(string message);
+        Task SendWhisper(User target, string message);
+    }
+
+    public interface IChat : IMessageSender
     {
         event EventHandler<MessageEventArgs> IncomingMessage;
 
@@ -20,8 +26,5 @@ namespace Core.Chat
         /// </summary>
         /// <returns>A disposable that properly disconnects and cleans up the connection when disposed.</returns>
         IDisposable EstablishConnection();
-
-        Task SendMessage(string message);
-        Task SendWhisper(User target, string message);
     }
 }
