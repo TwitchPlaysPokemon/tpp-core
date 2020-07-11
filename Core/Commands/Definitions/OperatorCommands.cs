@@ -12,12 +12,12 @@ namespace Core.Commands.Definitions
         public bool ShouldStop { get; set; }
     }
 
-    public class AdminCommands : ICommandCollection
+    public class OperatorCommands : ICommandCollection
     {
         private readonly StopToken _stopToken;
         private readonly ImmutableHashSet<string> _operatorNamesLower;
 
-        public AdminCommands(
+        public OperatorCommands(
             StopToken stopToken,
             IEnumerable<string> operatorNames)
         {

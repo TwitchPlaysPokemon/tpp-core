@@ -51,7 +51,7 @@ namespace Core
             IEnumerable<Command> commands = new[]{
                 new EasterEggCommands().Commands,
                 new StaticResponseCommands().Commands,
-                new AdminCommands(stopToken, operatorNames).Commands
+                new OperatorCommands(stopToken, operatorNames).Commands
             }.SelectMany(cmds => cmds);
             foreach (Command command in commands)
             {
