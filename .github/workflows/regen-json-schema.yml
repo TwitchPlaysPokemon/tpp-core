@@ -21,6 +21,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git diff-index --quiet HEAD || git commit -m "update core config json schema"
+          git pull --rebase
           cd ..
       - name: Push changed core config json schema
         uses: ad-m/github-push-action@master
