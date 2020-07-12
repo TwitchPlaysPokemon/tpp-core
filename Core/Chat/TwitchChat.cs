@@ -30,6 +30,7 @@ namespace Core.Chat
         private readonly TwitchClient _twitchClient;
 
         private bool _connected = false;
+        private Action? _connectivityWorkerCleanup;
 
         public TwitchChat(
             ILoggerFactory loggerFactory,
@@ -95,15 +96,7 @@ namespace Core.Chat
             });
         }
 
-        private sealed class DelegateDisposer : IDisposable
-        {
-            private readonly Action _delegate;
-            public DelegateDisposer(Action @delegate) => _delegate = @delegate;
-            public void Dispose() => _delegate();
-        }
-
-
-        public IDisposable EstablishConnection()
+        public void Connect()
         {
             if (_connected)
             {
@@ -115,15 +108,11 @@ namespace Core.Chat
             _twitchClient.Connect();
             var tokenSource = new CancellationTokenSource();
             Task checkConnectivityWorker = CheckConnectivityWorker(tokenSource.Token);
-            return new DelegateDisposer(() =>
+            _connectivityWorkerCleanup = () =>
             {
                 tokenSource.Cancel();
                 if (!checkConnectivityWorker.IsCanceled) checkConnectivityWorker.Wait();
-                _twitchClient.Disconnect();
-                _twitchClient.OnMessageReceived -= MessageReceived;
-                _twitchClient.OnWhisperReceived -= WhisperReceived;
-                _logger.LogDebug("twitch chat is now fully shut down.");
-            });
+            };
         }
 
         /// TwitchClient's disconnect event appears to fire unreliably,
@@ -183,6 +172,18 @@ namespace Core.Chat
             ));
             var message = new Message(user, messageText, source);
             IncomingMessage?.Invoke(this, new MessageEventArgs(message));
+        }
+
+        public void Dispose()
+        {
+            if (_connected)
+            {
+                _connectivityWorkerCleanup?.Invoke();
+                _twitchClient.Disconnect();
+            }
+            _twitchClient.OnMessageReceived -= MessageReceived;
+            _twitchClient.OnWhisperReceived -= WhisperReceived;
+            _logger.LogDebug("twitch chat is now fully shut down.");
         }
     }
 }

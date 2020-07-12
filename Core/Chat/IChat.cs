@@ -16,15 +16,13 @@ namespace Core.Chat
         Task SendWhisper(User target, string message);
     }
 
-    public interface IChat : IMessageSender
+    public interface IChat : IMessageSender, IDisposable
     {
         event EventHandler<MessageEventArgs> IncomingMessage;
 
-        /// <summary>
-        /// Establishes the connection and keeps it alive until the returned disposable is disposed.
-        /// This method may only ever be called once per instance of this class.
-        /// </summary>
-        /// <returns>A disposable that properly disconnects and cleans up the connection when disposed.</returns>
-        IDisposable EstablishConnection();
+        /// Establishes the connection.
+        /// All subsequent repeated invocations on this instance will fail.
+        /// The connection gets closed by disposing this instance.
+        void Connect();
     }
 }

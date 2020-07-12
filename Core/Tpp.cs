@@ -73,18 +73,19 @@ namespace Core
             _logger.LogInformation("Hi!");
             await Task.Delay(TimeSpan.FromMilliseconds(100));
 
-            using IDisposable chatConnection = _chat.EstablishConnection();
+            _chat.Connect();
             while (!_stopToken.ShouldStop)
             {
+                // TODO main loop goes here
                 await Task.Delay(TimeSpan.FromMilliseconds(100));
             }
 
-            // TODO do all the things
             _logger.LogInformation("Bye!");
         }
 
         public void Dispose()
         {
+            _chat.Dispose();
             _chat.IncomingMessage -= MessageReceived;
         }
     }
