@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Driver;
 using NodaTime;
@@ -145,6 +146,18 @@ namespace Persistence.MongoDB.Tests.Repos
             User userExisting = await _userRepo.RecordUser(userInfo);
             Assert.NotNull(userExisting.ParticipationEmblems);
             Assert.AreEqual(new SortedSet<int> { 42 }, userExisting.ParticipationEmblems);
+        }
+
+        /// <summary>
+        /// Tests that concurrent user recordings work reliably and do not cause
+        /// "E11000 duplicate key error collection" errors or similar.
+        /// </summary>
+        [Test]
+        public async Task TestRecordUserConcurrently()
+        {
+            var userInfo = new UserInfo("123", "X", "x", null);
+            await Task.WhenAll(Enumerable.Range(0, 100)
+                .Select(i => _userRepo.RecordUser(userInfo)));
         }
     }
 }

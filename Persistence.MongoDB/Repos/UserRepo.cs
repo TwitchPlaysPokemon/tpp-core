@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
@@ -75,11 +76,12 @@ namespace Persistence.MongoDB.Repos
             {
                 update = update.Set(u => u.LastMessageAt, userInfo.UpdatedAt);
             }
-            var user = await Collection.FindOneAndUpdateAsync<User>(
+            async Task<User?> UpdateExistingUser() => await Collection.FindOneAndUpdateAsync<User>(
                 filter: u => u.Id == userInfo.Id,
                 update: update,
                 options: new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After, IsUpsert = false }
             );
+            User? user = await UpdateExistingUser();
             if (user != null)
             {
                 return user;
@@ -99,7 +101,18 @@ namespace Persistence.MongoDB.Repos
                 pokeyen: _startingPokeyen,
                 tokens: _startingTokens
             );
-            await Collection.InsertOneAsync(document: user);
+            try
+            {
+                await Collection.InsertOneAsync(document: user);
+            }
+            catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
+            {
+                // oops, race condition!
+                // Someone inserted the user after our check but before our insertion call just now.
+                // Since it exists now, just re-attempt updating the existing entry.
+                user = await UpdateExistingUser()
+                       ?? throw new InvalidOperationException($"user {userInfo.SimpleName} must exist now!");
+            }
             return user;
         }
 
