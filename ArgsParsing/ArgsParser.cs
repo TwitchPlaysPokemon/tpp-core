@@ -56,6 +56,11 @@ namespace ArgsParsing
             _parsers.Add(typeof(T), argumentParser);
         }
 
+        public bool RemoveArgumentParser<T>()
+        {
+            return _parsers.Remove(typeof(T));
+        }
+
         /// <summary>
         /// For a list of strings, tries to parse those strings into instance of the supplied types.
         /// </summary>

@@ -1,10 +1,13 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 using NodaTime;
 using Persistence.Models;
 using Persistence.MongoDB.Serializers;
@@ -64,9 +67,28 @@ namespace Persistence.MongoDB.Repos
             return badge;
         }
 
-        public async Task<List<Badge>> FindByUser(string? userId)
+        public async Task<List<Badge>> FindByUser(string? userId) =>
+            await Collection.Find(b => b.UserId == userId).ToListAsync();
+
+        public async Task<long> CountByUserAndSpecies(string? userId, PkmnSpecies species) =>
+            await Collection.CountDocumentsAsync(b => b.UserId == userId && b.Species == species);
+
+        public async Task<ImmutableSortedDictionary<PkmnSpecies, int>> CountByUserPerSpecies(string? userId)
         {
-            return await Collection.Find(b => b.UserId == userId).ToListAsync();
+            var query =
+                from badge in Collection.AsQueryable()
+                where badge.UserId == userId
+                group badge by badge.Species
+                into gr
+                orderby gr.Key
+                select new { Id = gr.Key, Count = gr.Count() };
+            var numBadgesPerSpecies = await query.ToListAsync();
+            return numBadgesPerSpecies.ToImmutableSortedDictionary(kvp => kvp.Id, kvp => kvp.Count);
         }
+
+        public async Task<bool> HasUserBadge(string? userId, PkmnSpecies species) =>
+            await Collection
+                .Find(b => b.Species == species && b.UserId == userId)
+                .AnyAsync();
     }
 }

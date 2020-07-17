@@ -116,9 +116,17 @@ namespace Persistence.MongoDB.Repos
             return user;
         }
 
-        public async Task<User?> FindBySimpleName(string simpleName)
-        {
-            return await Collection.Find(u => u.SimpleName == simpleName).FirstOrDefaultAsync();
-        }
+        public async Task<User?> FindBySimpleName(string simpleName) =>
+            await Collection.Find(u => u.SimpleName == simpleName).FirstOrDefaultAsync();
+
+        private async Task<User> UpdateField<T>(User user, Expression<Func<User, T>> field, T value) =>
+            await Collection.FindOneAndUpdateAsync<User>(
+                filter: u => u.Id == user.Id,
+                update: Builders<User>.Update.Set(field, value),
+                options: new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After, IsUpsert = false })
+            ?? throw new ArgumentException($"user {user} does not exist");
+
+        public Task<User> SetSelectedBadge(User user, PkmnSpecies? badge) =>
+            UpdateField(user, u => u.SelectedBadge, badge);
     }
 }

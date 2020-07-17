@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Common;
 using MongoDB.Bson;
@@ -78,6 +79,77 @@ namespace Persistence.MongoDB.Tests.Repos
             Assert.AreEqual(new List<Badge> { badgeUserA1, badgeUserA2 }, resultUserA);
             Assert.AreEqual(new List<Badge> { badgeUserB }, resultUserB);
             Assert.AreEqual(new List<Badge> { badgeNobody }, resultNobody);
+        }
+
+        [Test]
+        public async Task TestCountByUserAndSpecies()
+        {
+            // given
+            await _badgeRepo.AddBadge("user", PkmnSpecies.OfId("2"), Badge.BadgeSource.Pinball);
+            await _badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball);
+            await _badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball);
+            await _badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball);
+            await _badgeRepo.AddBadge("userOther", PkmnSpecies.OfId("1"), Badge.BadgeSource.Pinball);
+            await _badgeRepo.AddBadge("userOther", PkmnSpecies.OfId("2"), Badge.BadgeSource.Pinball);
+            await _badgeRepo.AddBadge("userOther", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball);
+
+            // when
+            long countHasNone = await _badgeRepo.CountByUserAndSpecies("user", PkmnSpecies.OfId("1"));
+            long countHasOne = await _badgeRepo.CountByUserAndSpecies("user", PkmnSpecies.OfId("2"));
+            long countHasThree = await _badgeRepo.CountByUserAndSpecies("user", PkmnSpecies.OfId("3"));
+
+            // then
+            Assert.AreEqual(0, countHasNone);
+            Assert.AreEqual(1, countHasOne);
+            Assert.AreEqual(3, countHasThree);
+        }
+
+        [Test]
+        public async Task TestCountByUserPerSpecies()
+        {
+            // given
+            await _badgeRepo.AddBadge("user", PkmnSpecies.OfId("2"), Badge.BadgeSource.Pinball);
+            await _badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball);
+            await _badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball);
+            await _badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball);
+            await _badgeRepo.AddBadge("userOther", PkmnSpecies.OfId("1"), Badge.BadgeSource.Pinball);
+            await _badgeRepo.AddBadge("userOther", PkmnSpecies.OfId("2"), Badge.BadgeSource.Pinball);
+            await _badgeRepo.AddBadge("userOther", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball);
+
+            // when
+            ImmutableSortedDictionary<PkmnSpecies, int> result = await _badgeRepo.CountByUserPerSpecies("user");
+
+            // then
+            var expected = new[]
+            {
+                (PkmnSpecies.OfId("2"), 1),
+                (PkmnSpecies.OfId("3"), 3),
+            }.ToImmutableSortedDictionary(tuple => tuple.Item1, tuple => tuple.Item2);
+            Assert.AreEqual(expected, result);
+        }
+
+        [Test]
+        public async Task TestHasUserBadge()
+        {
+            // given
+            await _badgeRepo.AddBadge("user", PkmnSpecies.OfId("2"), Badge.BadgeSource.Pinball);
+            await _badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball);
+            await _badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball);
+            await _badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball);
+            await _badgeRepo.AddBadge("userOther", PkmnSpecies.OfId("1"), Badge.BadgeSource.Pinball);
+            await _badgeRepo.AddBadge("userOther", PkmnSpecies.OfId("2"), Badge.BadgeSource.Pinball);
+
+            // when
+            bool hasUserSpecies1 = await _badgeRepo.HasUserBadge("user", PkmnSpecies.OfId("1"));
+            bool hasUserSpecies2 = await _badgeRepo.HasUserBadge("user", PkmnSpecies.OfId("2"));
+            bool hasUserSpecies3 = await _badgeRepo.HasUserBadge("user", PkmnSpecies.OfId("3"));
+            bool hasUserSpecies4 = await _badgeRepo.HasUserBadge("user", PkmnSpecies.OfId("4"));
+
+            // then
+            Assert.IsFalse(hasUserSpecies1);
+            Assert.IsTrue(hasUserSpecies2);
+            Assert.IsTrue(hasUserSpecies3);
+            Assert.IsFalse(hasUserSpecies4);
         }
     }
 }
