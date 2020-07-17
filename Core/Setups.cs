@@ -43,6 +43,7 @@ namespace Core
         public static CommandProcessor SetUpCommandProcessor(
             ILoggerFactory loggerFactory,
             ArgsParser argsParser,
+            Databases databases,
             StopToken stopToken,
             IEnumerable<string> operatorNames)
         {
@@ -51,6 +52,9 @@ namespace Core
             IEnumerable<Command> commands = new[]{
                 new EasterEggCommands().Commands,
                 new StaticResponseCommands().Commands,
+                new UserCommands(
+                    databases.UserRepo, pokeyenBank: databases.PokeyenBank, tokenBank: databases.TokensBank).Commands,
+                new BadgeCommands(databases.BadgeRepo, databases.UserRepo).Commands,
                 new OperatorCommands(stopToken, operatorNames).Commands
             }.SelectMany(cmds => cmds);
             foreach (Command command in commands)

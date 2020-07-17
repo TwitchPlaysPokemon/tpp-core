@@ -1,7 +1,17 @@
 namespace Core.Commands
 {
-    public struct CommandResult
+    public enum ResponseTarget
     {
-        public string? Response { get; set; }
+        Source,
+        Chat,
+        Whisper,
+        WhisperIfLong,
+        NoneIfChat,
+    }
+
+    public class CommandResult
+    {
+        public string? Response { get; set; } = null;
+        public ResponseTarget ResponseTarget { get; set; } = ResponseTarget.Source;
     }
 }

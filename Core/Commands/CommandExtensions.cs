@@ -30,9 +30,11 @@ namespace Core.Commands
         public static Command WithCondition(
             this Command command,
             Func<CommandContext, bool> canExecute,
-            CommandResult ersatzResult = new CommandResult())
+            CommandResult? ersatzResult = null)
         {
-            return command.WithExecution(async ctx => canExecute(ctx) ? await command.Execution(ctx) : ersatzResult);
+            return command.WithExecution(async ctx => canExecute(ctx)
+                ? await command.Execution(ctx)
+                : ersatzResult ?? new CommandResult());
         }
 
         /// Replace the command execution with one that does nothing

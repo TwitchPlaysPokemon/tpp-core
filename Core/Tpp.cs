@@ -21,6 +21,7 @@ namespace Core
         private readonly RootConfig _rootConfig;
         private readonly CommandProcessor _commandProcessor;
         private readonly IChat _chat;
+        private readonly ICommandResponder _commandResponder;
         private readonly StopToken _stopToken;
 
         public Tpp(ILoggerFactory loggerFactory, RootConfig rootConfig)
@@ -32,10 +33,11 @@ namespace Core
 
             _stopToken = new StopToken();
             _commandProcessor = Setups.SetUpCommandProcessor(
-                loggerFactory, argsParser, _stopToken, rootConfig.Irc.OperatorNames);
+                loggerFactory, argsParser, repos, _stopToken, rootConfig.Irc.OperatorNames);
 
             _chat = new TwitchChat(loggerFactory, SystemClock.Instance, rootConfig.Irc, repos.UserRepo);
             _chat.IncomingMessage += MessageReceived;
+            _commandResponder = new CommandResponder(_chat);
         }
 
         private async void MessageReceived(object? sender, MessageEventArgs e) =>
@@ -56,15 +58,7 @@ namespace Core
             {
                 CommandResult result = await _commandProcessor
                     .Process(commandName, parts.Skip(1).ToImmutableList(), message);
-                if (result.Response != null)
-                {
-                    if (message.MessageSource == MessageSource.Chat)
-                        await _chat.SendMessage($"@{message.User.TwitchDisplayName} {result.Response}");
-                    else if (message.MessageSource == MessageSource.Whisper)
-                        await _chat.SendWhisper(message.User, result.Response);
-                    else
-                        throw new ArgumentOutOfRangeException(nameof(message));
-                }
+                await _commandResponder.ProcessResponse(message, result);
             }
         }
 

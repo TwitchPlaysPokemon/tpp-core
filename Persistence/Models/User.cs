@@ -43,13 +43,16 @@ namespace Persistence.Models
         public int Pokeyen { get; private set; }
         public int Tokens { get; private set; }
 
-        public SortedSet<int> ParticipationEmblems { get; private set; } = new SortedSet<int>();
-        public int? SelectedParticipationEmblem { get; private set; } = null;
+        public SortedSet<int> ParticipationEmblems { get; private set; }
+        public int? SelectedParticipationEmblem { get; private set; }
 
-        public PkmnSpecies? SelectedBadge { get; private set; } = null;
+        public PkmnSpecies? SelectedBadge { get; private set; }
 
-        // public string? SecondaryColor { get; private set; }
-        // public bool SecondaryColorUnlocked { get; private set; }
+        public string? GlowColor { get; private set; }
+        public bool GlowColorUnlocked { get; private set; }
+
+        public int? PokeyenBetRank { get; private set; }
+
         // public bool Active { get; private set; }
         // public bool Follower { get; private set; }
         // public bool Subscriber { get; private set; }
@@ -77,7 +80,13 @@ namespace Persistence.Models
             Instant lastActiveAt,
             Instant? lastMessageAt,
             int pokeyen,
-            int tokens)
+            int tokens,
+            SortedSet<int>? participationEmblems = null,
+            int? selectedParticipationEmblem = null,
+            PkmnSpecies? selectedBadge = null,
+            string? glowColor = null,
+            bool glowColorUnlocked = false,
+            int? pokeyenBetRank = null)
         {
             Id = id;
             Name = name;
@@ -89,6 +98,12 @@ namespace Persistence.Models
             LastMessageAt = lastMessageAt;
             Pokeyen = pokeyen;
             Tokens = tokens;
+            ParticipationEmblems = participationEmblems ?? new SortedSet<int>();
+            SelectedParticipationEmblem = selectedParticipationEmblem;
+            SelectedBadge = selectedBadge;
+            GlowColor = glowColor;
+            GlowColorUnlocked = glowColorUnlocked;
+            PokeyenBetRank = pokeyenBetRank;
         }
 
         public override string ToString() => $"User({Id}/{SimpleName})";
