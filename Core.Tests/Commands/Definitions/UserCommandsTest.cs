@@ -72,7 +72,7 @@ namespace Core.Tests.Commands.Definitions
             _tokenBankMock.Setup(b => b.GetReservedMoney(user)).ReturnsAsync(1);
 
             CommandResult result = await _userCommands.CheckBalance(new CommandContext(MockMessage(user),
-                ImmutableList.Create<string>(), _argsParser));
+                ImmutableList<string>.Empty, _argsParser));
 
             Assert.AreEqual("You have P900 pokeyen (P100 reserved) and T9 tokens (T1 reserved).", result.Response);
         }
@@ -87,7 +87,7 @@ namespace Core.Tests.Commands.Definitions
             _tokenBankMock.Setup(b => b.GetReservedMoney(user)).ReturnsAsync(0);
 
             CommandResult result = await _userCommands.CheckBalance(new CommandContext(MockMessage(user),
-                ImmutableList.Create<string>(), _argsParser));
+                ImmutableList<string>.Empty, _argsParser));
 
             Assert.AreEqual(
                 "You have P1000 pokeyen and T10 tokens. " +
@@ -146,7 +146,7 @@ namespace Core.Tests.Commands.Definitions
             var user = MockUser();
 
             CommandResult result = await _userCommands.RemoveGlow(new CommandContext(MockMessage(user),
-                ImmutableList.Create<string>(), _argsParser));
+                ImmutableList<string>.Empty, _argsParser));
 
             Assert.AreEqual("your glow color was removed", result.Response);
             _userRepoMock.Verify(u => u.SetGlowColor(user, null), Times.Once);
@@ -158,7 +158,7 @@ namespace Core.Tests.Commands.Definitions
             var user = MockUser(glowColorUnlocked: true);
 
             CommandResult result = await _userCommands.UnlockGlow(new CommandContext(MockMessage(user),
-                ImmutableList.Create<string>(), _argsParser));
+                ImmutableList<string>.Empty, _argsParser));
 
             Assert.AreEqual("glow color is already unlocked", result.Response);
             _userRepoMock.VerifyNoOtherCalls();
@@ -171,7 +171,7 @@ namespace Core.Tests.Commands.Definitions
             _tokenBankMock.Setup(b => b.GetAvailableMoney(user)).ReturnsAsync(0);
 
             CommandResult result = await _userCommands.UnlockGlow(new CommandContext(MockMessage(user),
-                ImmutableList.Create<string>(), _argsParser));
+                ImmutableList<string>.Empty, _argsParser));
 
             Assert.AreEqual("you don't have T1 to unlock the glow color", result.Response);
             _userRepoMock.VerifyNoOtherCalls();
@@ -184,7 +184,7 @@ namespace Core.Tests.Commands.Definitions
             _tokenBankMock.Setup(b => b.GetAvailableMoney(user)).ReturnsAsync(1);
 
             CommandResult result = await _userCommands.UnlockGlow(new CommandContext(MockMessage(user),
-                ImmutableList.Create<string>(), _argsParser));
+                ImmutableList<string>.Empty, _argsParser));
 
             Assert.AreEqual("your glow color was unlocked", result.Response);
             _userRepoMock.Verify(u => u.SetGlowColorUnlocked(user, true), Times.Once);
@@ -229,7 +229,7 @@ namespace Core.Tests.Commands.Definitions
             var user = MockUser(emblems: new SortedSet<int>(new[] { 1, 2, 47 }));
 
             CommandResult result = await _userCommands.CheckEmblems(new CommandContext(MockMessage(user),
-                ImmutableList.Create<string>(), _argsParser));
+                ImmutableList<string>.Empty, _argsParser));
 
             Assert.AreEqual(
                 "you have participated in the following runs: #1 (Red), #2 (Crystal), #47 (Sirius)",

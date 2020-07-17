@@ -133,7 +133,7 @@ namespace ArgsParsing.Tests
             argsParser.AddArgumentParser(new IntParser());
 
             var result1 = await argsParser.Parse<Optional<int>>(args: ImmutableList.Create("123"));
-            var result2 = await argsParser.Parse<Optional<int>>(args: ImmutableList.Create<string>());
+            var result2 = await argsParser.Parse<Optional<int>>(args: ImmutableList<string>.Empty);
             (Optional<int> result3, string _) = await argsParser
                 .Parse<Optional<int>, string>(args: ImmutableList.Create("foo"));
             Assert.IsTrue(result1.IsPresent);

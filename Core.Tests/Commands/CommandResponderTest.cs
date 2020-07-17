@@ -1,20 +1,28 @@
+using System;
 using Core.Chat;
 using Core.Commands;
 using Moq;
+using NodaTime;
 using NUnit.Framework;
-using static Core.Tests.TestUtils;
+using Persistence.Models;
 
 namespace Core.Tests.Commands
 {
     public class CommandResponderTest
     {
+        private static User MockUser() => new User(
+            id: Guid.NewGuid().ToString(),
+            name: "user", twitchDisplayName: "user", simpleName: "user", color: null,
+            firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
+            lastMessageAt: null, pokeyen: 0, tokens: 0);
+
         [Test]
         public void TestRespondToSource()
         {
             // given
             var messageSenderMock = new Mock<IMessageSender>();
             var commandResponder = new CommandResponder(messageSenderMock.Object);
-            var user = MockUser("user");
+            var user = MockUser();
             var chatMessage = new Message(user, "message text", MessageSource.Chat);
             var whisperMessage = new Message(user, "message text", MessageSource.Whisper);
 
@@ -35,7 +43,7 @@ namespace Core.Tests.Commands
             // given
             var messageSenderMock = new Mock<IMessageSender>();
             var commandResponder = new CommandResponder(messageSenderMock.Object);
-            var user = MockUser("user");
+            var user = MockUser();
             var chatMessage = new Message(user, "message text", MessageSource.Chat);
             var whisperMessage = new Message(user, "message text", MessageSource.Whisper);
 
@@ -62,7 +70,7 @@ namespace Core.Tests.Commands
             // given
             var messageSenderMock = new Mock<IMessageSender>();
             var commandResponder = new CommandResponder(messageSenderMock.Object, whisperIfLongThreshold: 20);
-            var user = MockUser("user");
+            var user = MockUser();
             var chatMessageShort = new Message(user, "short", MessageSource.Chat);
             var chatMessageLong = new Message(user, "longer than 20 characters", MessageSource.Chat);
             var whisperMessageShort = new Message(user, "short", MessageSource.Whisper);
@@ -91,7 +99,7 @@ namespace Core.Tests.Commands
             // given
             var messageSenderMock = new Mock<IMessageSender>();
             var commandResponder = new CommandResponder(messageSenderMock.Object);
-            var user = MockUser("user");
+            var user = MockUser();
             var chatMessage = new Message(user, "message text", MessageSource.Chat);
             var whisperMessage = new Message(user, "message text", MessageSource.Whisper);
 

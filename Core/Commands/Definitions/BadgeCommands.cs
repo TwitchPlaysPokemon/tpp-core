@@ -20,6 +20,12 @@ namespace Core.Commands.Definitions
                 Description = "Show a user's badges. Argument: <Pokemon> (optional) <Username> (optional)"
             },
 
+            new Command("unselectbadge", UnselectBadge)
+            {
+                Aliases = new[] {"unchoosebadge", "unequipbadge"},
+                Description = "Unequip your displayed badge."
+            },
+
             new Command("selectbadge", SelectBadge)
             {
                 Aliases = new[] {"choosebadge", "equipbadge"},
@@ -81,6 +87,17 @@ namespace Core.Commands.Definitions
                     ResponseTarget = ResponseTarget.WhisperIfLong
                 };
             }
+        }
+
+        public async Task<CommandResult> UnselectBadge(CommandContext context)
+        {
+            if (context.Message.User.SelectedBadge == null)
+            {
+                return new CommandResult { Response = "You don't have a badge equipped." };
+            }
+            PkmnSpecies? badge = context.Message.User.SelectedBadge;
+            await _userRepo.SetSelectedBadge(context.Message.User, null);
+            return new CommandResult { Response = $"{badge} badge unequipped." };
         }
 
         public async Task<CommandResult> SelectBadge(CommandContext context)
