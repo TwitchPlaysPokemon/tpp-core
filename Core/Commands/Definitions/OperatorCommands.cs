@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using ArgsParsing.Types;
 using Persistence.Models;
 
 namespace Core.Commands.Definitions
@@ -34,25 +33,26 @@ namespace Core.Commands.Definitions
 
         private bool IsOperator(User user) => _operatorNamesLower.Contains(user.SimpleName);
 
-        private async Task<CommandResult> Stop(CommandContext context)
+        private Task<CommandResult> Stop(CommandContext context)
         {
-            Optional<string> argument = await context.ParseArgs<Optional<string>>();
-            bool cancel = false;
-            if (argument.IsPresent)
+            var argSet = context.Args.Select(arg => arg.ToLowerInvariant()).ToHashSet();
+            bool cancel = argSet.Remove("cancel");
+            if (argSet.Count > 1) return Task.FromResult(new CommandResult { Response = "too many arguments" });
+            if (argSet.Any())
             {
-                bool isCancelArg = argument.Value.ToLowerInvariant() == "cancel";
-                if (isCancelArg) cancel = true;
-                else return new CommandResult { Response = $"unknown argument '{argument.Value}'" };
+                if (argSet.First() == "old") return Task.FromResult(new CommandResult()); // do nothing silently
+                else if (argSet.First() != "new") return Task.FromResult(new CommandResult
+                { Response = $"unknown argument '{argSet.First()}'" });
             }
             string message = cancel
                 ? _stopToken.ShouldStop
-                    ? "cancelled a prior stop command"
-                    : "main loop already not stopping"
+                    ? "cancelled a prior stop command (new core)"
+                    : "main loop already not stopping (new core)"
                 : _stopToken.ShouldStop
-                    ? "main loop already stopping"
-                    : "stopping main loop";
+                    ? "main loop already stopping (new core)"
+                    : "stopping main loop (new core)";
             _stopToken.ShouldStop = !cancel;
-            return new CommandResult { Response = message };
+            return Task.FromResult(new CommandResult { Response = message });
         }
     }
 }
