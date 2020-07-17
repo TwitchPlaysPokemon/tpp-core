@@ -25,6 +25,18 @@
             "null"
           ]
         },
+        "OperatorNames": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
         "Suppressions": {
           "type": [
             "array",

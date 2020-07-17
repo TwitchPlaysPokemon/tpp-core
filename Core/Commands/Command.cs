@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -6,14 +5,16 @@ namespace Core.Commands
 {
     public struct Command
     {
+        public delegate Task<CommandResult> Execute(CommandContext context);
+
         public string Name { get; }
         public string[] Aliases { get; set; }
-        public Func<CommandContext, Task<CommandResult>> Execution { get; }
+        public Execute Execution { get; }
         public string? Description { get; set; }
 
         public Command(
             string name,
-            Func<CommandContext, Task<CommandResult>> execution)
+            Execute execution)
         {
             Name = name;
             Execution = execution;

@@ -40,14 +40,19 @@ namespace Core
             return argsParser;
         }
 
-        public static CommandProcessor SetUpCommandProcessor(ILoggerFactory loggerFactory, ArgsParser argsParser)
+        public static CommandProcessor SetUpCommandProcessor(
+            ILoggerFactory loggerFactory,
+            ArgsParser argsParser,
+            StopToken stopToken,
+            IEnumerable<string> operatorNames)
         {
             var commandProcessor = new CommandProcessor(loggerFactory.CreateLogger<CommandProcessor>(), argsParser);
 
-            IEnumerable<Command> commands = Enumerable.Concat(
+            IEnumerable<Command> commands = new[]{
                 new EasterEggCommands().Commands,
-                new StaticResponseCommands().Commands
-            );
+                new StaticResponseCommands().Commands,
+                new OperatorCommands(stopToken, operatorNames).Commands
+            }.SelectMany(cmds => cmds);
             foreach (Command command in commands)
             {
                 commandProcessor.InstallCommand(command);
