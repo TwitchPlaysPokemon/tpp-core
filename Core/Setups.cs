@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using NodaTime;
 using Persistence.Models;
+using Persistence.MongoDB;
 using Persistence.MongoDB.Repos;
 using Persistence.MongoDB.Serializers;
 using Persistence.Repos;
@@ -48,7 +49,8 @@ namespace Core
         {
             var commandProcessor = new CommandProcessor(loggerFactory.CreateLogger<CommandProcessor>(), argsParser);
 
-            IEnumerable<Command> commands = new[]{
+            IEnumerable<Command> commands = new[]
+            {
                 new EasterEggCommands().Commands,
                 new StaticResponseCommands().Commands,
                 new OperatorCommands(stopToken, operatorNames).Commands
@@ -101,6 +103,8 @@ namespace Core
                 u => u.Tokens,
                 u => u.Id,
                 clock: SystemClock.Instance);
+            tokenBank.AddReservedMoneyChecker(
+                new PersistedReservedMoneyCheckers(mongoDatabase).AllDatabaseReservedTokens);
             return new Databases(
                 userRepo: userRepo,
                 badgeRepo: badgeRepo,
