@@ -19,9 +19,7 @@ namespace Core.Chat
     public sealed class TwitchChat : IChat
     {
         public event EventHandler<MessageEventArgs> IncomingMessage = null!;
-        private static readonly MessageSplitter MessageSplitterRegular = new MessageSplitter(maxMessageLength: 500);
-        private static readonly MessageSplitter MessageSplitterWhisper = new MessageSplitter(
-            maxMessageLength: 500 - "/w ,,,,,''''',,,,,''''',,,,, ".Length);
+        private static readonly MessageSplitter MessageSplitter = new MessageSplitter(maxMessageLength: 500);
 
         private readonly ILogger<TwitchChat> _logger;
         private readonly IClock _clock;
@@ -73,7 +71,7 @@ namespace Core.Chat
             _logger.LogDebug($">#{_ircChannel}: {message}");
             await Task.Run(() =>
             {
-                foreach (string part in MessageSplitterRegular.FitToMaxLength(message))
+                foreach (string part in MessageSplitter.FitToMaxLength(message))
                 {
                     _twitchClient.SendMessage(_ircChannel, part);
                 }
@@ -91,7 +89,7 @@ namespace Core.Chat
             _logger.LogDebug($">@{target.SimpleName}: {message}");
             await Task.Run(() =>
             {
-                foreach (string part in MessageSplitterWhisper.FitToMaxLength(message))
+                foreach (string part in MessageSplitter.FitToMaxLength(message))
                 {
                     _twitchClient.SendWhisper(target.SimpleName, part);
                 }
