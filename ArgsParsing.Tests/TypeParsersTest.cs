@@ -231,10 +231,15 @@ namespace ArgsParsing.Tests
 
             var resultUser = await argsParser.Parse<User>(args: ImmutableList.Create(username));
             Assert.AreEqual(origUser, resultUser);
+            var resultUserPrefixed = await argsParser.Parse<User>(args: ImmutableList.Create('@' + username));
+            Assert.AreEqual(origUser, resultUserPrefixed);
 
             var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
                 .Parse<User>(args: ImmutableList.Create("some_unknown_name")));
             Assert.AreEqual("did not recognize a user with the name 'some_unknown_name'", ex.Message);
+            var exUserPrefixed = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<User>(args: ImmutableList.Create("@some_unknown_name")));
+            Assert.AreEqual("did not recognize a user with the name 'some_unknown_name'", exUserPrefixed.Message);
         }
     }
 }
