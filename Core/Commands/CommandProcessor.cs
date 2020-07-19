@@ -65,7 +65,11 @@ namespace Core.Commands
         {
             if (!_commands.TryGetValue(commandName.ToLower(), out Command command))
             {
-                return new CommandResult { Response = $"unknown command '{commandName}'" };
+                // return new CommandResult
+                // { Response = $"unknown command '{commandName}'", ResponseTarget = ResponseTarget.Whisper};
+                // Do not respond to unknown commands while the new core runs in cooperation with the old one.
+                _logger.LogDebug($"unknown command '{commandName}'");
+                return new CommandResult();
             }
             var stopwatch = new Stopwatch();
             stopwatch.Start();

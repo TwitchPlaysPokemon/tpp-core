@@ -32,7 +32,9 @@ namespace Core.Tests.Commands
 
             CommandResult result = await commandProcessor.Process("unknown", _noArgs, MockMessage());
 
-            Assert.AreEqual("unknown command 'unknown'", result.Response);
+            // Assert.AreEqual("unknown command 'unknown'", result.Response);
+            // Do not respond to unknown commands while the new core runs in cooperation with the old one
+            Assert.IsNull(result.Response);
         }
 
         [Test]
