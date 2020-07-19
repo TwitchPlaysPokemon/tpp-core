@@ -19,10 +19,14 @@ namespace Core.Chat
     public sealed class TwitchChat : IChat
     {
         public event EventHandler<MessageEventArgs> IncomingMessage = null!;
+        /// Twitch Messaging Interface (TMI, the somewhat IRC-compatible protocol twitch uses) maximum message length.
+        /// This limit is in characters, not bytes. See https://discuss.dev.twitch.tv/t/message-character-limit/7793/6
+        private const int MaxMessageLength = 500;
         private static readonly MessageSplitter MessageSplitterRegular = new MessageSplitter(
-            maxMessageLength: 500 - "/me ".Length);
+            maxMessageLength: MaxMessageLength - "/me ".Length);
         private static readonly MessageSplitter MessageSplitterWhisper = new MessageSplitter(
-            maxMessageLength: 500 - "/w ,,,,,''''',,,,,''''',,,,, ".Length);
+            // visual representation of the longest possible username (25 characters)
+            maxMessageLength: MaxMessageLength - "/w ,,,,,''''',,,,,''''',,,,, ".Length);
 
         private readonly ILogger<TwitchChat> _logger;
         private readonly IClock _clock;
