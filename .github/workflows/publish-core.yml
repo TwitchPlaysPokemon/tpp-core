@@ -1,0 +1,23 @@
+name: publish-core
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 3.1.100
+      - uses: actions/checkout@v2
+      - name: publish Core
+        run: |
+          cd Core/
+          dotnet publish -c Release
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Core
+          path: Core/bin/Release/netcoreapp3.1/publish/
