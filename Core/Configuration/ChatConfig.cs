@@ -5,11 +5,11 @@ using System.Linq;
 namespace Core.Configuration
 {
     /// <summary>
-    /// Configurations related to IRC chat communication.
+    /// Configurations related to chat communication.
     /// </summary>
     // properties need setters for deserialization
     // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
-    public sealed class IrcConfig : ConfigBase
+    public sealed class ChatConfig : ConfigBase
     {
         /* connection information */
         public string Channel { get; private set; } = "twitchplayspokemon";
@@ -32,5 +32,8 @@ namespace Core.Configuration
             = Enum.GetValues(typeof(SuppressionType)).Cast<SuppressionType>().ToImmutableHashSet(); // all by default
         // list of usernames and channels that may receive outbound messages even with suppression enabled
         public ImmutableHashSet<string> SuppressionOverrides { get; private set; } = ImmutableHashSet.Create<string>();
+
+        /* whether unknown commands should not cause an appropriate "unknown command" response */
+        public bool IgnoreUnknownCommands { get; private set; } = true;
     }
 }

@@ -19,7 +19,7 @@ namespace Core.Configuration
         public string MongoDbConnectionUri { get; private set; } = "mongodb://localhost:27017/?replicaSet=rs0";
         public string MongoDbDatabaseName { get; private set; } = "tpp3";
 
-        public IrcConfig Irc { get; private set; } = new IrcConfig();
+        public ChatConfig Chat { get; private set; } = new ChatConfig();
 
         /* currency amounts for brand new users (new entries in the database) */
         public int StartingPokeyen { get; private set; } = 100;

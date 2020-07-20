@@ -46,9 +46,12 @@ namespace Core
             ArgsParser argsParser,
             Databases databases,
             StopToken stopToken,
-            IEnumerable<string> operatorNames)
+            ChatConfig chatConfig)
         {
-            var commandProcessor = new CommandProcessor(loggerFactory.CreateLogger<CommandProcessor>(), argsParser);
+            var commandProcessor = new CommandProcessor(
+                loggerFactory.CreateLogger<CommandProcessor>(),
+                argsParser,
+                chatConfig.IgnoreUnknownCommands);
 
             IEnumerable<Command> commands = new[]
             {
@@ -57,7 +60,7 @@ namespace Core
                 new UserCommands(
                     databases.UserRepo, pokeyenBank: databases.PokeyenBank, tokenBank: databases.TokensBank).Commands,
                 new BadgeCommands(databases.BadgeRepo, databases.UserRepo).Commands,
-                new OperatorCommands(stopToken, operatorNames).Commands
+                new OperatorCommands(stopToken, chatConfig.OperatorNames).Commands
             }.SelectMany(cmds => cmds);
             foreach (Command command in commands)
             {

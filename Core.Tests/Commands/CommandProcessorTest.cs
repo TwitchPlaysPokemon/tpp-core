@@ -28,11 +28,21 @@ namespace Core.Tests.Commands
         [Test]
         public async Task TestUnknownCommand()
         {
-            var commandProcessor = new CommandProcessor(_nullLogger, new ArgsParser());
+            var commandProcessor = new CommandProcessor(_nullLogger, new ArgsParser(), ignoreUnknownCommands: false);
 
             CommandResult result = await commandProcessor.Process("unknown", _noArgs, MockMessage());
 
             Assert.AreEqual("unknown command 'unknown'", result.Response);
+        }
+
+        [Test]
+        public async Task TestUnknownCommandIgnored()
+        {
+            var commandProcessor = new CommandProcessor(_nullLogger, new ArgsParser(), ignoreUnknownCommands: true);
+
+            CommandResult result = await commandProcessor.Process("unknown", _noArgs, MockMessage());
+
+            Assert.IsNull(result.Response);
         }
 
         [Test]

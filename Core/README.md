@@ -15,14 +15,14 @@ Then, generate a config file from default values
 dotnet run -- gendefaultconfig --outfile=config.json
 ```
 You need to customize a few configurations:
-- `Irc.Username` and `Irc.Password` contain the credentials of some Twitch account that will be the chat bot.
+- `Chat.Username` and `Chat.Password` contain the credentials of some Twitch account that will be the chat bot.
    You can obtain an oauth token from [here](https://twitchapps.com/tmi/)
-- Add your name to `Irc.OperatorNames` to be able to do stuff requiring elevated privileges,
+- Add your name to `Chat.OperatorNames` to be able to do stuff requiring elevated privileges,
   for example issuing the !stop command.
 - No chat messages are actually being sent by default.
-  To change this, set `Irc.Channel` to some unpopulated twitch channel, preferably the bot's
-  own channel, and add the channel name to `Irc.SuppressionOverrides`.
-  You may also add your own name to `Irc.SuppressionOverrides` to be able to receive whispers.
+  To change this, set `Chat.Channel` to some unpopulated twitch channel, preferably the bot's
+  own channel, and add the channel name to `Chat.SuppressionOverrides`.
+  You may also add your own name to `Chat.SuppressionOverrides` to be able to receive whispers.
 
 All unchanged entries can be deleted. Missing configurations revert to their default value.
 

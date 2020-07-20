@@ -1,6 +1,6 @@
 ﻿{
   "definitions": {
-    "IrcConfig": {
+    "ChatConfig": {
       "type": [
         "object",
         "null"
@@ -62,6 +62,9 @@
               "null"
             ]
           }
+        },
+        "IgnoreUnknownCommands": {
+          "type": "boolean"
         }
       }
     }
@@ -93,8 +96,8 @@
         "null"
       ]
     },
-    "Irc": {
-      "$ref": "#/definitions/IrcConfig"
+    "Chat": {
+      "$ref": "#/definitions/ChatConfig"
     },
     "StartingPokeyen": {
       "type": "integer"

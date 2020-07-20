@@ -31,7 +31,7 @@ namespace Core.Chat
         private readonly ILogger<TwitchChat> _logger;
         private readonly IClock _clock;
         private readonly string _ircChannel;
-        private readonly ImmutableHashSet<IrcConfig.SuppressionType> _suppressions;
+        private readonly ImmutableHashSet<ChatConfig.SuppressionType> _suppressions;
         private readonly ImmutableHashSet<string> _suppressionOverrides;
         private readonly IUserRepo _userRepo;
         private readonly TwitchClient _twitchClient;
@@ -42,14 +42,14 @@ namespace Core.Chat
         public TwitchChat(
             ILoggerFactory loggerFactory,
             IClock clock,
-            IrcConfig ircConfig,
+            ChatConfig chatConfig,
             IUserRepo userRepo)
         {
             _logger = loggerFactory.CreateLogger<TwitchChat>();
             _clock = clock;
-            _ircChannel = ircConfig.Channel;
-            _suppressions = ircConfig.Suppressions;
-            _suppressionOverrides = ircConfig.SuppressionOverrides
+            _ircChannel = chatConfig.Channel;
+            _suppressions = chatConfig.Suppressions;
+            _suppressionOverrides = chatConfig.SuppressionOverrides
                 .Select(s => s.ToLowerInvariant()).ToImmutableHashSet();
             _userRepo = userRepo;
 
@@ -57,11 +57,11 @@ namespace Core.Chat
                 client: new TcpClient(new ClientOptions()),
                 logger: loggerFactory.CreateLogger<TwitchClient>());
             var credentials = new ConnectionCredentials(
-                twitchUsername: ircConfig.Username,
-                twitchOAuth: ircConfig.Password);
+                twitchUsername: chatConfig.Username,
+                twitchOAuth: chatConfig.Password);
             _twitchClient.Initialize(
                 credentials: credentials,
-                channel: ircConfig.Channel,
+                channel: chatConfig.Channel,
                 // disable TwitchLib's command features, we do that ourselves
                 chatCommandIdentifier: '\0',
                 whisperCommandIdentifier: '\0');
@@ -69,7 +69,7 @@ namespace Core.Chat
 
         public async Task SendMessage(string message)
         {
-            if (_suppressions.Contains(IrcConfig.SuppressionType.Message) &&
+            if (_suppressions.Contains(ChatConfig.SuppressionType.Message) &&
                 !_suppressionOverrides.Contains(_ircChannel))
             {
                 _logger.LogDebug($"(suppressed) >#{_ircChannel}: {message}");
@@ -87,7 +87,7 @@ namespace Core.Chat
 
         public async Task SendWhisper(User target, string message)
         {
-            if (_suppressions.Contains(IrcConfig.SuppressionType.Whisper) &&
+            if (_suppressions.Contains(ChatConfig.SuppressionType.Whisper) &&
                 !_suppressionOverrides.Contains(target.SimpleName))
             {
                 _logger.LogDebug($"(suppressed) >@{target.SimpleName}: {message}");
