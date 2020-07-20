@@ -33,9 +33,9 @@ namespace Core
 
             _stopToken = new StopToken();
             _commandProcessor = Setups.SetUpCommandProcessor(
-                loggerFactory, argsParser, repos, _stopToken, rootConfig.Irc);
+                loggerFactory, argsParser, repos, _stopToken, rootConfig.Chat);
 
-            _chat = new TwitchChat(loggerFactory, SystemClock.Instance, rootConfig.Irc, repos.UserRepo);
+            _chat = new TwitchChat(loggerFactory, SystemClock.Instance, rootConfig.Chat, repos.UserRepo);
             _chat.IncomingMessage += MessageReceived;
             _commandResponder = new CommandResponder(_chat);
         }

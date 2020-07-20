@@ -5,11 +5,11 @@ using System.Linq;
 namespace Core.Configuration
 {
     /// <summary>
-    /// Configurations related to IRC chat communication.
+    /// Configurations related to chat communication.
     /// </summary>
     // properties need setters for deserialization
     // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
-    public sealed class IrcConfig : ConfigBase
+    public sealed class ChatConfig : ConfigBase
     {
         /* connection information */
         public string Channel { get; private set; } = "twitchplayspokemon";
