@@ -23,11 +23,16 @@ namespace Core.Commands
         private readonly ILogger<CommandProcessor> _logger;
         private readonly ArgsParser _argsParser;
         private readonly Dictionary<string, Command> _commands = new Dictionary<string, Command>();
+        private readonly bool _ignoreUnknownCommands;
 
-        public CommandProcessor(ILogger<CommandProcessor> logger, ArgsParser argsParser)
+        public CommandProcessor(
+            ILogger<CommandProcessor> logger,
+            ArgsParser argsParser,
+            bool ignoreUnknownCommands = false)
         {
             _logger = logger;
             _argsParser = argsParser;
+            _ignoreUnknownCommands = ignoreUnknownCommands;
         }
 
         public void InstallCommand(Command command)
@@ -65,11 +70,16 @@ namespace Core.Commands
         {
             if (!_commands.TryGetValue(commandName.ToLower(), out Command command))
             {
-                // return new CommandResult
-                // { Response = $"unknown command '{commandName}'", ResponseTarget = ResponseTarget.Whisper};
-                // Do not respond to unknown commands while the new core runs in cooperation with the old one.
-                _logger.LogDebug($"unknown command '{commandName}'");
-                return new CommandResult();
+                if (_ignoreUnknownCommands)
+                {
+                    _logger.LogDebug($"unknown command '{commandName}'");
+                    return new CommandResult();
+                }
+                else
+                {
+                    return new CommandResult
+                    { Response = $"unknown command '{commandName}'", ResponseTarget = ResponseTarget.Whisper };
+                }
             }
             var stopwatch = new Stopwatch();
             stopwatch.Start();

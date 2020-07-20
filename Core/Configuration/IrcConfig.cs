@@ -32,5 +32,8 @@ namespace Core.Configuration
             = Enum.GetValues(typeof(SuppressionType)).Cast<SuppressionType>().ToImmutableHashSet(); // all by default
         // list of usernames and channels that may receive outbound messages even with suppression enabled
         public ImmutableHashSet<string> SuppressionOverrides { get; private set; } = ImmutableHashSet.Create<string>();
+
+        /* whether unknown commands should not cause an appropriate "unknown command" response */
+        public bool IgnoreUnknownCommands { get; private set; } = true;
     }
 }

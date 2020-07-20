@@ -33,7 +33,7 @@ namespace Core
 
             _stopToken = new StopToken();
             _commandProcessor = Setups.SetUpCommandProcessor(
-                loggerFactory, argsParser, repos, _stopToken, rootConfig.Irc.OperatorNames);
+                loggerFactory, argsParser, repos, _stopToken, rootConfig.Irc);
 
             _chat = new TwitchChat(loggerFactory, SystemClock.Instance, rootConfig.Irc, repos.UserRepo);
             _chat.IncomingMessage += MessageReceived;
