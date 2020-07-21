@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Common;
 
@@ -12,7 +13,8 @@ namespace ArgsParsing.TypeParsers
     /// </summary>
     public class PkmnSpeciesParser : BaseArgumentParser<PkmnSpecies>
     {
-        private readonly ImmutableSortedDictionary<string, PkmnSpecies> _lookup;
+        private readonly ImmutableDictionary<string, PkmnSpecies> _nameLookup;
+        private readonly IImmutableDictionary<string, PkmnSpecies> _idLookup;
 
         /// <summary>
         /// Create a new pkmn species parser for a set of known species.
@@ -20,20 +22,31 @@ namespace ArgsParsing.TypeParsers
         /// <param name="knownSpecies">all species that should be considered "existing" by the parser</param>
         public PkmnSpeciesParser(IEnumerable<PkmnSpecies> knownSpecies)
         {
-            _lookup = knownSpecies.ToImmutableSortedDictionary(s => s.Name.ToLower(), s => s);
+            _nameLookup = knownSpecies.ToImmutableDictionary(s => NormalizeName(s.Name), s => s);
+            _idLookup = _nameLookup.Values.ToImmutableDictionary(s => s.Id, s => s);
         }
+
+        private static readonly Regex CharsToRemove = new Regex("[ '-.:]", RegexOptions.Compiled);
+        private static string NormalizeName(string name) => CharsToRemove.Replace(name.ToLowerInvariant(), "");
 
         public override Task<ArgsParseResult<PkmnSpecies>> Parse(IImmutableList<string> args, Type[] genericTypes)
         {
             if (!args[0].StartsWith("#"))
             {
-                // TODO Add some kind of name normalization to the lookup.
-                // TODO That's currently done by pokecat in the old core, so it will likely be some library.
-                string normalizedName = args[0].ToLower();
-                if (_lookup.TryGetValue(normalizedName, out PkmnSpecies speciesFromName))
+                string normalizedName = NormalizeName(args[0]);
+                if (_nameLookup.TryGetValue(normalizedName, out PkmnSpecies speciesFromName))
                 {
                     return Task.FromResult(ArgsParseResult<PkmnSpecies>.Success(
                         speciesFromName, args.Skip(1).ToImmutableList()));
+                }
+                if (args.Count >= 2)
+                {
+                    string normalizedNameTwoArgs = NormalizeName(args[0] + ' ' + args[1]);
+                    if (_nameLookup.TryGetValue(normalizedNameTwoArgs, out PkmnSpecies speciesFromTwoArgsName))
+                    {
+                        return Task.FromResult(ArgsParseResult<PkmnSpecies>.Success(
+                            speciesFromTwoArgsName, args.Skip(2).ToImmutableList()));
+                    }
                 }
                 if (int.TryParse(normalizedName, out _))
                 {
@@ -48,11 +61,11 @@ namespace ArgsParsing.TypeParsers
                 }
             }
             string speciesId = args[0].Substring(startIndex: 1);
-            PkmnSpecies? species = PkmnSpecies.OfIdWithKnownName(speciesId.TrimStart('0'));
-            return Task.FromResult(species == null
-                ? ArgsParseResult<PkmnSpecies>.Failure($"did not recognize species '{args[0]}'",
+            return Task.FromResult(_idLookup.TryGetValue(speciesId.TrimStart('0'), out var species)
+                ? ArgsParseResult<PkmnSpecies>.Success(species, args.Skip(1).ToImmutableList())
+                : ArgsParseResult<PkmnSpecies>.Failure($"did not recognize species '{args[0]}'",
                     ErrorRelevanceConfidence.Likely)
-                : ArgsParseResult<PkmnSpecies>.Success(species, args.Skip(1).ToImmutableList()));
+            );
         }
     }
 }
