@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,17 +9,18 @@ namespace ArgsParsing.TypeParsers
 {
     /// <summary>
     /// A parser that recognizes a pokemon species, either by name or by a #-prefixed species id.
-    /// Note that this class builds a name lookup at construction,
-    /// so make sure all pokemon species names are set up before instantiating this parser.
-    /// For details on that, see <see cref="PkmnSpecies.RegisterName"/>.
     /// </summary>
     public class PkmnSpeciesParser : BaseArgumentParser<PkmnSpecies>
     {
         private readonly ImmutableSortedDictionary<string, PkmnSpecies> _lookup;
 
-        public PkmnSpeciesParser()
+        /// <summary>
+        /// Create a new pkmn species parser for a set of known species.
+        /// </summary>
+        /// <param name="knownSpecies">all species that should be considered "existing" by the parser</param>
+        public PkmnSpeciesParser(IEnumerable<PkmnSpecies> knownSpecies)
         {
-            _lookup = PkmnSpecies.AllCurrentlyKnownSpecies.ToImmutableSortedDictionary(s => s.Name.ToLower(), s => s);
+            _lookup = knownSpecies.ToImmutableSortedDictionary(s => s.Name.ToLower(), s => s);
         }
 
         public override Task<ArgsParseResult<PkmnSpecies>> Parse(IImmutableList<string> args, Type[] genericTypes)

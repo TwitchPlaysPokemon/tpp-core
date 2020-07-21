@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 
 namespace Common
 {
@@ -30,8 +29,6 @@ namespace Common
         /// to ensure only one instance may ever exist per species.
         /// </summary>
         private static readonly Dictionary<string, PkmnSpecies> Instances = new Dictionary<string, PkmnSpecies>();
-
-        public static IImmutableList<PkmnSpecies> AllCurrentlyKnownSpecies => Instances.Values.ToImmutableList();
 
         /// <summary>
         /// The species' unique identifier.
@@ -80,9 +77,12 @@ namespace Common
         /// </summary>
         /// <param name="id">The species' id to add the data for.</param>
         /// <param name="name">The species' displayed name to register.</param>
-        public static void RegisterName(string id, string name)
+        /// <returns>The pkmn species instance for which the name was registered</returns>
+        public static PkmnSpecies RegisterName(string id, string name)
         {
-            Instances[id] = new PkmnSpecies(id, name);
+            var species = new PkmnSpecies(id, name);
+            Instances[id] = species;
+            return species;
         }
 
         /// <summary>

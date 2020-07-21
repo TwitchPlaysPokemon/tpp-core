@@ -41,16 +41,15 @@ namespace Core.Tests.Commands.Definitions
             _argsParser = new ArgsParser();
             _argsParser.AddArgumentParser(new OptionalParser(_argsParser));
             _argsParser.AddArgumentParser(new UserParser(_userRepoMock.Object));
-            _argsParser.AddArgumentParser(new PkmnSpeciesParser());
         }
 
         [Test]
         public async Task TestBadgesSelf()
         {
             User user = MockUser("MockUser");
-            PkmnSpecies.RegisterName("1", "Einsmon");
-            PkmnSpecies.RegisterName("22", "Zwozwomon");
-            PkmnSpecies.RegisterName("13", "Drölfmon");
+            var species1 = PkmnSpecies.RegisterName("1", "Einsmon");
+            var species2 = PkmnSpecies.RegisterName("22", "Zwozwomon");
+            var species3 = PkmnSpecies.RegisterName("13", "Drölfmon");
             _userRepoMock
                 .Setup(repo => repo.FindBySimpleName(user.SimpleName))
                 .ReturnsAsync(user);
@@ -58,9 +57,9 @@ namespace Core.Tests.Commands.Definitions
                 .Setup(repo => repo.CountByUserPerSpecies(user.Id))
                 .ReturnsAsync(new Dictionary<PkmnSpecies, int>
                 {
-                    [PkmnSpecies.OfId("1")] = 3,
-                    [PkmnSpecies.OfId("22")] = 6,
-                    [PkmnSpecies.OfId("13")] = 9,
+                    [species1] = 3,
+                    [species2] = 6,
+                    [species3] = 9,
                 }.ToImmutableSortedDictionary());
 
             CommandResult result = await _badgeCommands.Badges(new CommandContext(MockMessage(user),
@@ -74,9 +73,10 @@ namespace Core.Tests.Commands.Definitions
         public async Task TestBadgesOther()
         {
             User user = MockUser("MockUser");
-            PkmnSpecies.RegisterName("1", "Einsmon");
-            PkmnSpecies.RegisterName("22", "Zwozwomon");
-            PkmnSpecies.RegisterName("13", "Drölfmon");
+            var species1 = PkmnSpecies.RegisterName("1", "Einsmon");
+            var species2 = PkmnSpecies.RegisterName("22", "Zwozwomon");
+            var species3 = PkmnSpecies.RegisterName("13", "Drölfmon");
+            _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species1, species2, species3 }));
             User otherUser = MockUser("Someone_Else");
             _userRepoMock
                 .Setup(repo => repo.FindBySimpleName(otherUser.SimpleName))
@@ -85,9 +85,9 @@ namespace Core.Tests.Commands.Definitions
                 .Setup(repo => repo.CountByUserPerSpecies(otherUser.Id))
                 .ReturnsAsync(new Dictionary<PkmnSpecies, int>
                 {
-                    [PkmnSpecies.OfId("1")] = 12,
-                    [PkmnSpecies.OfId("22")] = 23,
-                    [PkmnSpecies.OfId("13")] = 34,
+                    [species1] = 12,
+                    [species2] = 23,
+                    [species3] = 34,
                 }.ToImmutableSortedDictionary());
 
             CommandResult result = await _badgeCommands.Badges(new CommandContext(MockMessage(user),
@@ -100,6 +100,7 @@ namespace Core.Tests.Commands.Definitions
         [Test]
         public void TestBadgesUserNotFound()
         {
+            _argsParser.AddArgumentParser(new PkmnSpeciesParser(new PkmnSpecies[0]));
             User user = MockUser("MockUser");
             ArgsParseFailure exception = Assert.ThrowsAsync<ArgsParseFailure>(() => _badgeCommands.Badges(
                 new CommandContext(MockMessage(user), ImmutableList.Create("@someone_unknown"), _argsParser)));
@@ -109,8 +110,7 @@ namespace Core.Tests.Commands.Definitions
         [Test]
         public async Task TestUnselectBadge()
         {
-            PkmnSpecies.RegisterName("1", "Mon");
-            PkmnSpecies species = PkmnSpecies.OfId("1");
+            PkmnSpecies species = PkmnSpecies.RegisterName("1", "Mon");
             User user = MockUser("user", selectedBadge: species);
 
             CommandResult result = await _badgeCommands.UnselectBadge(new CommandContext(MockMessage(user),
@@ -136,8 +136,8 @@ namespace Core.Tests.Commands.Definitions
         public async Task TestSelectBadge()
         {
             User user = MockUser("MockUser");
-            PkmnSpecies.RegisterName("1", "Mon");
-            PkmnSpecies species = PkmnSpecies.OfId("1");
+            PkmnSpecies species = PkmnSpecies.RegisterName("1", "Mon");
+            _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
             _badgeRepoMock.Setup(repo => repo.HasUserBadge(user.Id, species)).ReturnsAsync(true);
 
             CommandResult result = await _badgeCommands.SelectBadge(new CommandContext(MockMessage(user),
@@ -151,8 +151,8 @@ namespace Core.Tests.Commands.Definitions
         public async Task TestSelectBadgeNotOwner()
         {
             User user = MockUser("MockUser");
-            PkmnSpecies.RegisterName("1", "Mon");
-            PkmnSpecies species = PkmnSpecies.OfId("1");
+            PkmnSpecies species = PkmnSpecies.RegisterName("1", "Mon");
+            _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
             _badgeRepoMock.Setup(repo => repo.HasUserBadge(user.Id, species)).ReturnsAsync(false);
 
             CommandResult result = await _badgeCommands.SelectBadge(new CommandContext(MockMessage(user),
@@ -165,6 +165,7 @@ namespace Core.Tests.Commands.Definitions
         [Test]
         public void TestSelectUnknownBadge()
         {
+            _argsParser.AddArgumentParser(new PkmnSpeciesParser(new PkmnSpecies[0]));
             User user = MockUser("MockUser");
             ArgsParseFailure failure = Assert.ThrowsAsync<ArgsParseFailure>(() =>
                 _badgeCommands.SelectBadge(new CommandContext(MockMessage(user),
@@ -176,8 +177,8 @@ namespace Core.Tests.Commands.Definitions
         public async Task TestSpeciesOverNameIfAmbiguous()
         {
             User user = MockUser("MockUser");
-            PkmnSpecies.RegisterName("1", "PersonMon");
-            PkmnSpecies species = PkmnSpecies.OfId("1");
+            PkmnSpecies species = PkmnSpecies.RegisterName("1", "PersonMon");
+            _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
             User otherUser = MockUser("PersonMon");
             _userRepoMock
                 .Setup(repo => repo.FindBySimpleName(otherUser.SimpleName))
@@ -188,9 +189,6 @@ namespace Core.Tests.Commands.Definitions
             _badgeRepoMock
                 .Setup(repo => repo.CountByUserPerSpecies(otherUser.Id))
                 .ReturnsAsync(ImmutableSortedDictionary<PkmnSpecies, int>.Empty);
-            // refresh PkmnSpeciesParser's internal lookup
-            _argsParser.RemoveArgumentParser<PkmnSpecies>();
-            _argsParser.AddArgumentParser(new PkmnSpeciesParser());
 
             CommandResult resultAmbiguous = await _badgeCommands.Badges(new CommandContext(MockMessage(user),
                 ImmutableList.Create("PersonMon"), _argsParser));

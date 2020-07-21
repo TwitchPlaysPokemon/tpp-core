@@ -28,8 +28,9 @@ namespace Core
         {
             _logger = loggerFactory.CreateLogger<Tpp>();
             _rootConfig = rootConfig;
+            PokedexData pokedexData = PokedexData.Load();
             Setups.Databases repos = Setups.SetUpRepositories(rootConfig);
-            ArgsParser argsParser = Setups.SetUpArgsParser(repos.UserRepo);
+            ArgsParser argsParser = Setups.SetUpArgsParser(repos.UserRepo, pokedexData);
 
             _stopToken = new StopToken();
             _commandProcessor = Setups.SetUpCommandProcessor(

@@ -148,9 +148,8 @@ namespace ArgsParsing.Tests
             const string speciesId = "79317";
             const string speciesName = "Uniquamon";
             var argsParser = new ArgsParser();
-            // register pokemon names before instantiating the args parser!
-            PkmnSpecies.RegisterName(speciesId, speciesName);
-            argsParser.AddArgumentParser(new PkmnSpeciesParser());
+            PkmnSpecies species = PkmnSpecies.RegisterName(speciesId, speciesName);
+            argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
 
             PkmnSpecies resultById = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create("#" + speciesId));
             PkmnSpecies resultByPaddedId = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create("#0" + speciesId));
@@ -220,7 +219,8 @@ namespace ArgsParsing.Tests
             const string username = "some_name";
             var origUser = new User(
                 id: "1234567890", name: username, twitchDisplayName: username.ToUpper(), simpleName: username,
-                color: null, firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
+                color: null,
+                firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
                 lastMessageAt: null, pokeyen: 0, tokens: 0);
             var userRepoMock = new Mock<IUserRepo>();
             userRepoMock
