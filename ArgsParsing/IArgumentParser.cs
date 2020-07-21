@@ -52,9 +52,9 @@ namespace ArgsParsing
         {
             ArgsParseResult<T> parseResult = await Parse(args, genericTypes);
             return parseResult.SuccessResult != null
-                ? ArgsParseResult<object>.Success(parseResult.FailureResult,
+                ? ArgsParseResult<object>.Success(parseResult.Failures,
                     parseResult.SuccessResult.Value.Result!, parseResult.SuccessResult.Value.RemainingArgs)
-                : ArgsParseResult<object>.Failure(parseResult.FailureResult);
+                : ArgsParseResult<object>.Failure(parseResult.Failures);
         }
     }
 }

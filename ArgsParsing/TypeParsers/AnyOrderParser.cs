@@ -61,8 +61,8 @@ namespace ArgsParsing.TypeParsers
                     .ParseRaw(argsPermutation.ToImmutableList(), genericTypes);
                 if (parseResult.SuccessResult == null)
                 {
-                    Debug.Assert(parseResult.FailureResult != null);
-                    failures.Add(parseResult.FailureResult.Value);
+                    Debug.Assert(parseResult.Failures.Any());
+                    failures.AddRange(parseResult.Failures);
                     continue;
                 }
                 List<object> items = parseResult.SuccessResult.Value.Result;
@@ -82,13 +82,12 @@ namespace ArgsParsing.TypeParsers
                     throw new InvalidOperationException($"{type} needs a constructor with {items.Count} parameters.");
                 }
                 return ArgsParseResult<AnyOrder>.Success(
-                    parseResult.FailureResult,
+                    parseResult.Failures,
                     (AnyOrder)constructor.Invoke(items.ToArray()),
                     parseResult.SuccessResult.Value.RemainingArgs);
             }
             Debug.Assert(failures.Any());
-            Failure mostRelevantFailure = failures.OrderByDescending(failure => failure.Relevance).First();
-            return ArgsParseResult<AnyOrder>.Failure(mostRelevantFailure);
+            return ArgsParseResult<AnyOrder>.Failure(failures.ToImmutableList());
         }
     }
 }

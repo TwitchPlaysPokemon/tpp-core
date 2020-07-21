@@ -34,7 +34,8 @@ namespace ArgsParsing.Tests
 
             var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
                 .Parse<AnyOrder<int, string>>(ImmutableList.Create("foo", "bar")));
-            Assert.AreEqual("did not recognize 'foo' as a number", ex.Message);
+            Assert.AreEqual(2, ex.Failures.Count);
+            Assert.AreEqual("did not recognize 'foo' as a number, or did not recognize 'bar' as a number", ex.Message);
         }
 
         [Test]
@@ -106,6 +107,7 @@ namespace ArgsParsing.Tests
             argsParser.AddArgumentParser(new OneOfParser(argsParser));
             argsParser.AddArgumentParser(new StringParser());
             argsParser.AddArgumentParser(new IntParser());
+            argsParser.AddArgumentParser(new InstantParser());
 
             OneOf<int, string> result1 = await argsParser.Parse<OneOf<int, string>>(ImmutableList.Create("123"));
             OneOf<int, string> result2 = await argsParser.Parse<OneOf<int, string>>(ImmutableList.Create("foo"));
@@ -117,8 +119,10 @@ namespace ArgsParsing.Tests
             Assert.AreEqual("foo", result2.Item2.Value);
 
             var exUnrecognized = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<OneOf<int, int>>(ImmutableList.Create("foo")));
-            Assert.AreEqual("did not recognize 'foo' as a number", exUnrecognized.Message);
+                .Parse<OneOf<int, Instant>>(ImmutableList.Create("foo")));
+            Assert.AreEqual(2, exUnrecognized.Failures.Count);
+            const string errorText = "did not recognize 'foo' as a number, or did not recognize 'foo' as a UTC-instant";
+            Assert.AreEqual(errorText, exUnrecognized.Message);
             var exTooManyArgs = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
                 .Parse<OneOf<int, int>>(ImmutableList.Create("123", "234")));
             Assert.AreEqual("too many arguments", exTooManyArgs.Message);

@@ -58,37 +58,37 @@ namespace ArgsParsing
         /// </summary>
         public Success<T>? SuccessResult { get; }
         /// <summary>
-        /// A failure that occured during parsing.
+        /// All failures that occured during parsing.
         /// Note that even successful results may contain failures, which is needed for better error reporting,
         /// e.g. to be able to pick the most relevant error message if parsing fails at a later, less relevant point.
         /// </summary>
-        public Failure? FailureResult { get; }
+        public IImmutableList<Failure> Failures { get; }
 
         private ArgsParseResult(
             Success<T>? successResult,
-            Failure? failureResult)
+            IImmutableList<Failure> failures)
         {
             SuccessResult = successResult;
-            FailureResult = failureResult;
+            Failures = failures;
         }
 
         /// <summary>
         /// Create a successful parse result object.
         /// </summary>
-        /// <param name="nestedFailure">The most significant failure encountered during parsing.</param>
+        /// <param name="failures">The failures encountered during parsing.</param>
         /// <param name="result">The successfully parsed object.</param>
         /// <param name="remainingArgs">The remaining arguments that were not consumed.</param>
         /// <returns>An respective instance of <see cref="ArgsParseResult{T}"/></returns>
         public static ArgsParseResult<T> Success(
-            Failure? nestedFailure,
+            IImmutableList<Failure> failures,
             T result,
             IImmutableList<string> remainingArgs)
         {
-            return new ArgsParseResult<T>(new Success<T>(result, remainingArgs), nestedFailure);
+            return new ArgsParseResult<T>(new Success<T>(result, remainingArgs), failures);
         }
 
         /// <summary>
-        /// Create a successful parse result object, without any nested failure.
+        /// Create a successful parse result object, without any failures.
         /// </summary>
         /// <param name="result">The successfully parsed object.</param>
         /// <param name="remainingArgs">The remaining arguments that were not consumed.</param>
@@ -97,7 +97,7 @@ namespace ArgsParsing
             T result,
             IImmutableList<string> remainingArgs)
         {
-            return new ArgsParseResult<T>(new Success<T>(result, remainingArgs), null);
+            return new ArgsParseResult<T>(new Success<T>(result, remainingArgs), ImmutableList<Failure>.Empty);
         }
 
         /// <summary>
@@ -111,17 +111,17 @@ namespace ArgsParsing
             string message,
             ErrorRelevanceConfidence relevance = ErrorRelevanceConfidence.Default)
         {
-            return new ArgsParseResult<T>(null, new Failure(relevance, message));
+            return new ArgsParseResult<T>(null, ImmutableList.Create(new Failure(relevance, message)));
         }
 
         /// <summary>
-        /// Create an unsuccessful parse result object from an existing failure.
+        /// Create an unsuccessful parse result object from existing failures.
         /// </summary>
-        /// <param name="failure">The existing failure to re-use the failure from.</param>
+        /// <param name="failures">The failures that are part of this parse result.</param>
         /// <returns>An respective instance of <see cref="ArgsParseResult{T}"/></returns>
-        public static ArgsParseResult<T> Failure(Failure? failure)
+        public static ArgsParseResult<T> Failure(IImmutableList<Failure> failures)
         {
-            return new ArgsParseResult<T>(null, failure);
+            return new ArgsParseResult<T>(null, failures);
         }
     }
 }
