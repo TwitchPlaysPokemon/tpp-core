@@ -106,10 +106,7 @@ namespace ArgsParsing
                     success = false;
                     break;
                 }
-                if (parseResult.FailureResult != null)
-                {
-                    failures.Add(parseResult.FailureResult.Value);
-                }
+                failures.AddRange(parseResult.Failures);
                 if (parseResult.SuccessResult != null)
                 {
                     Success<object> successResult = parseResult.SuccessResult.Value;
@@ -127,12 +124,9 @@ namespace ArgsParsing
                 success = false;
                 failures.Add(new Failure(ErrorRelevanceConfidence.Unlikely, "too many arguments"));
             }
-            Failure? mostRelevantFailure = failures
-                .OrderByDescending(failure => failure.Relevance)
-                .Cast<Failure?>().FirstOrDefault();
             return success
-                ? ArgsParseResult<List<object>>.Success(mostRelevantFailure, results, allRemainingArgs)
-                : ArgsParseResult<List<object>>.Failure(mostRelevantFailure);
+                ? ArgsParseResult<List<object>>.Success(failures.ToImmutableList(), results, allRemainingArgs)
+                : ArgsParseResult<List<object>>.Failure(failures.ToImmutableList());
         }
 
         #region type-safe convenience methods
@@ -151,9 +145,9 @@ namespace ArgsParsing
             IEnumerable<Type> types = new[] { typeof(T1) };
             ArgsParseResult<List<object>> parseResult = await ParseRaw(args, types, errorOnRemainingArgs: true);
             if (parseResult.SuccessResult == null)
-                return ArgsParseResult<T1>.Failure(parseResult.FailureResult);
+                return ArgsParseResult<T1>.Failure(parseResult.Failures);
             Success<List<object>> success = parseResult.SuccessResult.Value;
-            return ArgsParseResult<T1>.Success(parseResult.FailureResult,
+            return ArgsParseResult<T1>.Success(parseResult.Failures,
                 (T1)success.Result[0],
                 success.RemainingArgs);
         }
@@ -174,9 +168,9 @@ namespace ArgsParsing
             IEnumerable<Type> types = new[] { typeof(T1), typeof(T2) };
             ArgsParseResult<List<object>> parseResult = await ParseRaw(args, types, errorOnRemainingArgs: true);
             if (parseResult.SuccessResult == null)
-                return ArgsParseResult<(T1, T2)>.Failure(parseResult.FailureResult);
+                return ArgsParseResult<(T1, T2)>.Failure(parseResult.Failures);
             Success<List<object>> success = parseResult.SuccessResult.Value;
-            return ArgsParseResult<(T1, T2)>.Success(parseResult.FailureResult,
+            return ArgsParseResult<(T1, T2)>.Success(parseResult.Failures,
                 ((T1)success.Result[0], (T2)success.Result[1]),
                 success.RemainingArgs);
         }
@@ -198,9 +192,9 @@ namespace ArgsParsing
             IEnumerable<Type> types = new[] { typeof(T1), typeof(T2), typeof(T3) };
             ArgsParseResult<List<object>> parseResult = await ParseRaw(args, types, errorOnRemainingArgs: true);
             if (parseResult.SuccessResult == null)
-                return ArgsParseResult<(T1, T2, T3)>.Failure(parseResult.FailureResult);
+                return ArgsParseResult<(T1, T2, T3)>.Failure(parseResult.Failures);
             Success<List<object>> success = parseResult.SuccessResult.Value;
-            return ArgsParseResult<(T1, T2, T3)>.Success(parseResult.FailureResult,
+            return ArgsParseResult<(T1, T2, T3)>.Success(parseResult.Failures,
                 ((T1)success.Result[0], (T2)success.Result[1], (T3)success.Result[2]),
                 success.RemainingArgs);
         }
@@ -223,9 +217,9 @@ namespace ArgsParsing
             IEnumerable<Type> types = new[] { typeof(T1), typeof(T2), typeof(T3), typeof(T4) };
             ArgsParseResult<List<object>> parseResult = await ParseRaw(args, types, errorOnRemainingArgs: true);
             if (parseResult.SuccessResult == null)
-                return ArgsParseResult<(T1, T2, T3, T4)>.Failure(parseResult.FailureResult);
+                return ArgsParseResult<(T1, T2, T3, T4)>.Failure(parseResult.Failures);
             Success<List<object>> success = parseResult.SuccessResult.Value;
-            return ArgsParseResult<(T1, T2, T3, T4)>.Success(parseResult.FailureResult,
+            return ArgsParseResult<(T1, T2, T3, T4)>.Success(parseResult.Failures,
                 ((T1)success.Result[0], (T2)success.Result[1], (T3)success.Result[2], (T4)success.Result[3]),
                 success.RemainingArgs);
         }
@@ -241,7 +235,7 @@ namespace ArgsParsing
         public async Task<T1> Parse<T1>(IImmutableList<string> args)
         {
             ArgsParseResult<T1> parseResult = await TryParse<T1>(args);
-            if (parseResult.SuccessResult == null) throw new ArgsParseFailure(parseResult.FailureResult?.Error);
+            if (parseResult.SuccessResult == null) throw new ArgsParseFailure(parseResult.Failures);
             return parseResult.SuccessResult.Value.Result;
         }
 
@@ -257,7 +251,7 @@ namespace ArgsParsing
         public async Task<(T1, T2)> Parse<T1, T2>(IImmutableList<string> args)
         {
             ArgsParseResult<(T1, T2)> parseResult = await TryParse<T1, T2>(args);
-            if (parseResult.SuccessResult == null) throw new ArgsParseFailure(parseResult.FailureResult?.Error);
+            if (parseResult.SuccessResult == null) throw new ArgsParseFailure(parseResult.Failures);
             return parseResult.SuccessResult.Value.Result;
         }
 
@@ -274,7 +268,7 @@ namespace ArgsParsing
         public async Task<(T1, T2, T3)> Parse<T1, T2, T3>(IImmutableList<string> args)
         {
             ArgsParseResult<(T1, T2, T3)> parseResult = await TryParse<T1, T2, T3>(args);
-            if (parseResult.SuccessResult == null) throw new ArgsParseFailure(parseResult.FailureResult?.Error);
+            if (parseResult.SuccessResult == null) throw new ArgsParseFailure(parseResult.Failures);
             return parseResult.SuccessResult.Value.Result;
         }
 
@@ -292,7 +286,7 @@ namespace ArgsParsing
         public async Task<(T1, T2, T3, T4)> Parse<T1, T2, T3, T4>(IImmutableList<string> args)
         {
             ArgsParseResult<(T1, T2, T3, T4)> parseResult = await TryParse<T1, T2, T3, T4>(args);
-            if (parseResult.SuccessResult == null) throw new ArgsParseFailure(parseResult.FailureResult?.Error);
+            if (parseResult.SuccessResult == null) throw new ArgsParseFailure(parseResult.Failures);
             return parseResult.SuccessResult.Value.Result;
         }
 

@@ -36,8 +36,8 @@ namespace ArgsParsing.TypeParsers
                 ArgsParseResult<List<object>> parseResult = await _argsParser.ParseRaw(args, new[] { nestedType });
                 if (parseResult.SuccessResult == null)
                 {
-                    Debug.Assert(parseResult.FailureResult != null);
-                    failures.Add(parseResult.FailureResult.Value);
+                    Debug.Assert(parseResult.Failures.Any());
+                    failures.AddRange(parseResult.Failures);
                     continue;
                 }
                 object result = parseResult.SuccessResult.Value.Result.First();
@@ -76,13 +76,12 @@ namespace ArgsParsing.TypeParsers
                         : optionalConstructor.Invoke(new object[] { false, null! });
                 }
                 return ArgsParseResult<OneOf>.Success(
-                    parseResult.FailureResult,
+                    parseResult.Failures,
                     (OneOf)oneOfConstructor.Invoke(invokeArgs),
                     parseResult.SuccessResult.Value.RemainingArgs);
             }
             Debug.Assert(failures.Any());
-            Failure mostRelevantFailure = failures.OrderByDescending(failure => failure.Relevance).First();
-            return ArgsParseResult<OneOf>.Failure(mostRelevantFailure);
+            return ArgsParseResult<OneOf>.Failure(failures.ToImmutableList());
         }
     }
 }

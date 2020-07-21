@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using ArgsParsing.TypeParsers;
 using ArgsParsing.Types;
+using NodaTime;
 using NUnit.Framework;
 
 namespace ArgsParsing.Tests
@@ -48,20 +49,29 @@ namespace ArgsParsing.Tests
 
         /// <summary>
         /// Tests that a relevant error message that was wrapped inside a successful result (an Optional), but is then
-        /// wrapped again in a failure (an AnyOrder), the nested error message should be displayed and not be lost.
+        /// wrapped again in a failure (an AnyOrder), all error messages should be preserved
+        /// and the relevant ones properly displayed.
         /// </summary>
         [Test]
         public void TestErrorMessageFromDeeplyNestedFailure()
         {
             var argsParser = new ArgsParser();
             argsParser.AddArgumentParser(new IntParser());
+            argsParser.AddArgumentParser(new InstantParser());
             argsParser.AddArgumentParser(new AnyOrderParser(argsParser));
             argsParser.AddArgumentParser(new OptionalParser(argsParser));
 
             var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<AnyOrder<Optional<int>, Optional<int>>>(args: ImmutableList.Create("abc", "123")));
+                .Parse<AnyOrder<Optional<int>, Optional<Instant>>>(args: ImmutableList.Create("X", "Y")));
             Assert.AreNotEqual("too many arguments", ex.Message);
-            Assert.AreEqual("did not recognize 'abc' as a number", ex.Message);
+            Assert.AreEqual("did not recognize 'X' as a number, or did not recognize 'X' as a UTC-instant", ex.Message);
+            Assert.AreEqual(new[]
+                {
+                    new Failure(ErrorRelevanceConfidence.Default, "did not recognize 'X' as a number"),
+                    new Failure(ErrorRelevanceConfidence.Default, "did not recognize 'X' as a UTC-instant"),
+                    new Failure(ErrorRelevanceConfidence.Unlikely, "too many arguments")
+                },
+                ex.Failures);
         }
     }
 }
