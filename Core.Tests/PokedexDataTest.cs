@@ -38,6 +38,13 @@ namespace Core.Tests
             }
 
             [Test]
+            public void is_case_insensitive()
+            {
+                Assert.AreEqual("Porygon-Z", PokedexData.NormalizeName("porygon-z"));
+                Assert.AreEqual("Ho-Oh", PokedexData.NormalizeName("HO-OH"));
+            }
+
+            [Test]
             public void requires_full_match()
             {
                 Assert.AreEqual("Porygon-Z", PokedexData.NormalizeName("Porygon-Z"));
