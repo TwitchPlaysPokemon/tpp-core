@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Immutable;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ArgsParsing.TypeParsers;
 using ArgsParsing.Types;
@@ -152,19 +153,18 @@ namespace ArgsParsing.Tests
             const string speciesId = "79317";
             const string speciesName = "Uniquamon";
             var argsParser = new ArgsParser();
-            // register pokemon names before instantiating the args parser!
-            PkmnSpecies.RegisterName(speciesId, speciesName);
-            argsParser.AddArgumentParser(new PkmnSpeciesParser());
+            PkmnSpecies species = PkmnSpecies.RegisterName(speciesId, speciesName);
+            argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
 
             PkmnSpecies resultById = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create("#" + speciesId));
             PkmnSpecies resultByPaddedId = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create("#0" + speciesId));
             PkmnSpecies resultByName1 = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create(speciesName));
             PkmnSpecies resultByName2 = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create("uNiQuAmOn"));
 
-            Assert.AreEqual(PkmnSpecies.OfId(speciesId), resultById);
-            Assert.AreEqual(PkmnSpecies.OfId(speciesId), resultByPaddedId);
-            Assert.AreEqual(PkmnSpecies.OfId(speciesId), resultByName1);
-            Assert.AreEqual(PkmnSpecies.OfId(speciesId), resultByName2);
+            Assert.AreEqual(species, resultById);
+            Assert.AreEqual(species, resultByPaddedId);
+            Assert.AreEqual(species, resultByName1);
+            Assert.AreEqual(species, resultByName2);
 
             ArgsParseFailure exNotPrefixed = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
                 .Parse<PkmnSpecies>(args: ImmutableList.Create(speciesId)));
@@ -174,6 +174,39 @@ namespace ArgsParsing.Tests
             Assert.AreEqual(
                 "No pokemon with the name 'unknown' was recognized. Please supply a valid name, " +
                 "or prefix with '#' to supply and pokedex number instead", exUnknown.Message);
+        }
+
+        [Test]
+        public async Task TestPkmnSpeciesParserNameNormalization()
+        {
+            var argsParser = new ArgsParser();
+            PkmnSpecies species = PkmnSpecies.RegisterName("123", "'Mahina: -Pea.");
+            Regex removeCharsRegex = new Regex("[ '-.:]");
+            string NormalizeName(string name) => removeCharsRegex.Replace(name, "");
+            argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }, NormalizeName));
+
+            PkmnSpecies resultById = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create("#123"));
+            PkmnSpecies result1 = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create("mahina", "pea"));
+            PkmnSpecies result2 = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create("mahina:", "-pea"));
+            PkmnSpecies result3 = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create("MAHINA:pea"));
+            PkmnSpecies result4 = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create("mahinaPEA"));
+            PkmnSpecies result5 = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create("'mahina-pea."));
+
+            Assert.AreEqual(species, resultById);
+            Assert.AreEqual(species, result1);
+            Assert.AreEqual(species, result2);
+            Assert.AreEqual(species, result3);
+            Assert.AreEqual(species, result4);
+            Assert.AreEqual(species, result5);
+
+            ArgsParseFailure exNotRecognized = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<PkmnSpecies>(args: ImmutableList.Create("mahina", "aaaaaa")));
+            Assert.AreEqual(
+                "No pokemon with the name 'mahina' was recognized. Please supply a valid name, " +
+                "or prefix with '#' to supply and pokedex number instead", exNotRecognized.Message);
+            ArgsParseFailure exNoAccidentalHashRemoval = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<PkmnSpecies>(args: ImmutableList.Create("#mahinapea")));
+            Assert.AreEqual("did not recognize species '#mahinapea'", exNoAccidentalHashRemoval.Message);
         }
 
         [Test]
@@ -224,7 +257,8 @@ namespace ArgsParsing.Tests
             const string username = "some_name";
             var origUser = new User(
                 id: "1234567890", name: username, twitchDisplayName: username.ToUpper(), simpleName: username,
-                color: null, firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
+                color: null,
+                firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
                 lastMessageAt: null, pokeyen: 0, tokens: 0);
             var userRepoMock = new Mock<IUserRepo>();
             userRepoMock

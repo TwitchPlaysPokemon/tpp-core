@@ -36,3 +36,6 @@ blank_lines_around_property = 0
 blank_lines_around_auto_property = 0
 blank_lines_around_type = 0
 blank_lines_after_block_statements = 0
+
+# use own judgment for what would benefit from manual alignment
+extra_spaces = leave_multiple

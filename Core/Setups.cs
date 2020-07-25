@@ -21,7 +21,7 @@ namespace Core
     /// </summary>
     public static class Setups
     {
-        public static ArgsParser SetUpArgsParser(IUserRepo userRepo)
+        public static ArgsParser SetUpArgsParser(IUserRepo userRepo, PokedexData pokedexData)
         {
             var argsParser = new ArgsParser();
             argsParser.AddArgumentParser(new IntParser());
@@ -31,7 +31,7 @@ namespace Core
             argsParser.AddArgumentParser(new HexColorParser());
             argsParser.AddArgumentParser(new PokeyenParser());
             argsParser.AddArgumentParser(new TokensParser());
-            argsParser.AddArgumentParser(new PkmnSpeciesParser());
+            argsParser.AddArgumentParser(new PkmnSpeciesParser(pokedexData.KnownSpecies, PokedexData.NormalizeName));
 
             argsParser.AddArgumentParser(new AnyOrderParser(argsParser));
             argsParser.AddArgumentParser(new OneOfParser(argsParser));
