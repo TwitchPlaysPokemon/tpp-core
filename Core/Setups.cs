@@ -31,7 +31,7 @@ namespace Core
             argsParser.AddArgumentParser(new HexColorParser());
             argsParser.AddArgumentParser(new PokeyenParser());
             argsParser.AddArgumentParser(new TokensParser());
-            argsParser.AddArgumentParser(new PkmnSpeciesParser(pokedexData.KnownSpecies));
+            argsParser.AddArgumentParser(new PkmnSpeciesParser(pokedexData.KnownSpecies, PokedexData.NormalizeName));
 
             argsParser.AddArgumentParser(new AnyOrderParser(argsParser));
             argsParser.AddArgumentParser(new OneOfParser(argsParser));

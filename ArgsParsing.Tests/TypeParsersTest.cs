@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Immutable;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ArgsParsing.TypeParsers;
 using ArgsParsing.Types;
@@ -176,7 +177,9 @@ namespace ArgsParsing.Tests
         {
             var argsParser = new ArgsParser();
             PkmnSpecies species = PkmnSpecies.RegisterName("123", "'Mahina: -Pea.");
-            argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
+            Regex removeCharsRegex = new Regex("[ '-.:]");
+            string NormalizeName(string name) => removeCharsRegex.Replace(name, "");
+            argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }, NormalizeName));
 
             PkmnSpecies resultById = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create("#123"));
             PkmnSpecies result1 = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create("mahina", "pea"));

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Common;
 
@@ -15,19 +14,23 @@ namespace ArgsParsing.TypeParsers
     {
         private readonly ImmutableDictionary<string, PkmnSpecies> _nameLookup;
         private readonly IImmutableDictionary<string, PkmnSpecies> _idLookup;
+        private readonly Func<string, string> _normalizeName;
 
         /// <summary>
         /// Create a new pkmn species parser for a set of known species.
         /// </summary>
         /// <param name="knownSpecies">all species that should be considered "existing" by the parser</param>
-        public PkmnSpeciesParser(IEnumerable<PkmnSpecies> knownSpecies)
+        /// <param name="normalizeName">a function that performs any name normalization</param>
+        public PkmnSpeciesParser(
+            IEnumerable<PkmnSpecies> knownSpecies,
+            Func<string, string>? normalizeName = null)
         {
+            _normalizeName = normalizeName ?? (name => name);
             _nameLookup = knownSpecies.ToImmutableDictionary(s => NormalizeName(s.Name), s => s);
             _idLookup = _nameLookup.Values.ToImmutableDictionary(s => s.Id, s => s);
         }
 
-        private static readonly Regex CharsToRemove = new Regex("[ '-.:]", RegexOptions.Compiled);
-        private static string NormalizeName(string name) => CharsToRemove.Replace(name.ToLowerInvariant(), "");
+        private string NormalizeName(string name) => _normalizeName(name).ToLowerInvariant();
 
         public override Task<ArgsParseResult<PkmnSpecies>> Parse(IImmutableList<string> args, Type[] genericTypes)
         {
