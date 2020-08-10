@@ -12,31 +12,28 @@ using NodaTime;
 
 namespace Core
 {
-    /// <summary>
-    /// This class orchestrates the entirety of the TPP core.
-    /// </summary>
-    public sealed class Tpp : IDisposable
+    public abstract class ModeBase : IDisposable
     {
         private readonly ILogger _logger;
-        private readonly RootConfig _rootConfig;
+        private readonly BaseConfig _baseConfig;
         private readonly CommandProcessor _commandProcessor;
         private readonly IChat _chat;
         private readonly ICommandResponder _commandResponder;
         private readonly StopToken _stopToken;
 
-        public Tpp(ILoggerFactory loggerFactory, RootConfig rootConfig)
+        protected ModeBase(ILoggerFactory loggerFactory, BaseConfig baseConfig)
         {
-            _logger = loggerFactory.CreateLogger<Tpp>();
-            _rootConfig = rootConfig;
+            _logger = loggerFactory.CreateLogger<ModeBase>();
+            _baseConfig = baseConfig;
             PokedexData pokedexData = PokedexData.Load();
-            Setups.Databases repos = Setups.SetUpRepositories(rootConfig);
+            Setups.Databases repos = Setups.SetUpRepositories(baseConfig);
             ArgsParser argsParser = Setups.SetUpArgsParser(repos.UserRepo, pokedexData);
 
             _stopToken = new StopToken();
             _commandProcessor = Setups.SetUpCommandProcessor(
-                loggerFactory, argsParser, repos, _stopToken, rootConfig.Chat);
+                loggerFactory, argsParser, repos, _stopToken, baseConfig.Chat);
 
-            _chat = new TwitchChat(loggerFactory, SystemClock.Instance, rootConfig.Chat, repos.UserRepo);
+            _chat = new TwitchChat(loggerFactory, SystemClock.Instance, baseConfig.Chat, repos.UserRepo);
             _chat.IncomingMessage += MessageReceived;
             _commandResponder = new CommandResponder(_chat);
         }

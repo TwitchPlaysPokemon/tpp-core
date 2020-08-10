@@ -10,9 +10,10 @@ For example, to see all command line options, do
 ```
 dotnet run -- --help
 ```
-Then, generate a config file from default values
+Then, try to test your yet non-existing config files using `testconfigs`.
+It will tell you what files you need and how to create them.
 ```
-dotnet run -- gendefaultconfig --outfile=config.json
+dotnet run -- testconfigs
 ```
 You need to customize a few configurations:
 - `Chat.Username` and `Chat.Password` contain the credentials of some Twitch account that will be the chat bot.
@@ -29,9 +30,9 @@ All unchanged entries can be deleted. Missing configurations revert to their def
 Ensure that you have a properly configured MongoDB server running.
 See the [Persistence.MongoDB](../Persistence.MongoDB) project for instructions.
 
-Finally, you run the project with
+Finally, you run the project, e.g. in runmode:
 ```
-dotnet run -- run
+dotnet run -- runmode
 ```
 
 ## faster startup time
