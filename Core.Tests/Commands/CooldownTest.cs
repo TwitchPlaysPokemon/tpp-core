@@ -1,13 +1,20 @@
+using System;
 using Core.Commands;
 using Moq;
 using NodaTime;
 using NUnit.Framework;
-using static Core.Tests.TestUtils;
+using Persistence.Models;
 
 namespace Core.Tests.Commands
 {
     public class CooldownTest
     {
+        private static User MockUser(string name) => new User(
+            id: Guid.NewGuid().ToString(),
+            name: name, twitchDisplayName: name, simpleName: name.ToLower(), color: null,
+            firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
+            lastMessageAt: null, pokeyen: 0, tokens: 0);
+
         [Test]
         public void TestGlobalCooldown()
         {

@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using NodaTime;
 using Persistence.Models;
+using Persistence.MongoDB;
 using Persistence.MongoDB.Repos;
 using Persistence.MongoDB.Serializers;
 using Persistence.Repos;
@@ -20,7 +21,7 @@ namespace Core
     /// </summary>
     public static class Setups
     {
-        public static ArgsParser SetUpArgsParser(IUserRepo userRepo)
+        public static ArgsParser SetUpArgsParser(IUserRepo userRepo, PokedexData pokedexData)
         {
             var argsParser = new ArgsParser();
             argsParser.AddArgumentParser(new IntParser());
@@ -30,7 +31,7 @@ namespace Core
             argsParser.AddArgumentParser(new HexColorParser());
             argsParser.AddArgumentParser(new PokeyenParser());
             argsParser.AddArgumentParser(new TokensParser());
-            argsParser.AddArgumentParser(new PkmnSpeciesParser());
+            argsParser.AddArgumentParser(new PkmnSpeciesParser(pokedexData.KnownSpecies, PokedexData.NormalizeName));
 
             argsParser.AddArgumentParser(new AnyOrderParser(argsParser));
             argsParser.AddArgumentParser(new OneOfParser(argsParser));
@@ -40,14 +41,27 @@ namespace Core
             return argsParser;
         }
 
-        public static CommandProcessor SetUpCommandProcessor(ILoggerFactory loggerFactory, ArgsParser argsParser)
+        public static CommandProcessor SetUpCommandProcessor(
+            ILoggerFactory loggerFactory,
+            ArgsParser argsParser,
+            Databases databases,
+            StopToken stopToken,
+            ChatConfig chatConfig)
         {
-            var commandProcessor = new CommandProcessor(loggerFactory.CreateLogger<CommandProcessor>(), argsParser);
+            var commandProcessor = new CommandProcessor(
+                loggerFactory.CreateLogger<CommandProcessor>(),
+                argsParser,
+                chatConfig.IgnoreUnknownCommands);
 
-            IEnumerable<Command> commands = Enumerable.Concat(
+            IEnumerable<Command> commands = new[]
+            {
                 new EasterEggCommands().Commands,
-                new StaticResponseCommands().Commands
-            );
+                new StaticResponseCommands().Commands,
+                new UserCommands(
+                    databases.UserRepo, pokeyenBank: databases.PokeyenBank, tokenBank: databases.TokensBank).Commands,
+                new BadgeCommands(databases.BadgeRepo, databases.UserRepo).Commands,
+                new OperatorCommands(stopToken, chatConfig.OperatorNames).Commands
+            }.SelectMany(cmds => cmds);
             foreach (Command command in commands)
             {
                 commandProcessor.InstallCommand(command);
@@ -71,15 +85,15 @@ namespace Core
             }
         }
 
-        public static Databases SetUpRepositories(RootConfig rootConfig)
+        public static Databases SetUpRepositories(BaseConfig baseConfig)
         {
             CustomSerializers.RegisterAll();
-            IMongoClient mongoClient = new MongoClient(rootConfig.MongoDbConnectionUri);
-            IMongoDatabase mongoDatabase = mongoClient.GetDatabase(rootConfig.MongoDbDatabaseName);
+            IMongoClient mongoClient = new MongoClient(baseConfig.MongoDbConnectionUri);
+            IMongoDatabase mongoDatabase = mongoClient.GetDatabase(baseConfig.MongoDbDatabaseName);
             IUserRepo userRepo = new UserRepo(
                 database: mongoDatabase,
-                startingPokeyen: rootConfig.StartingPokeyen,
-                startingTokens: rootConfig.StartingTokens);
+                startingPokeyen: baseConfig.StartingPokeyen,
+                startingTokens: baseConfig.StartingTokens);
             IBadgeRepo badgeRepo = new BadgeRepo(
                 database: mongoDatabase);
             IBank<User> pokeyenBank = new Bank<User>(
@@ -96,6 +110,8 @@ namespace Core
                 u => u.Tokens,
                 u => u.Id,
                 clock: SystemClock.Instance);
+            tokenBank.AddReservedMoneyChecker(
+                new PersistedReservedMoneyCheckers(mongoDatabase).AllDatabaseReservedTokens);
             return new Databases(
                 userRepo: userRepo,
                 badgeRepo: badgeRepo,

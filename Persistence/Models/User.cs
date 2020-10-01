@@ -41,13 +41,16 @@ namespace Persistence.Models
         public int Pokeyen { get; init; }
         public int Tokens { get; init; }
 
-        public SortedSet<int> ParticipationEmblems { get; init; } = new SortedSet<int>();
-        public int? SelectedParticipationEmblem { get; init; } = null;
+        public SortedSet<int> ParticipationEmblems { get; init; }
+        public int? SelectedParticipationEmblem { get; init; }
 
-        public PkmnSpecies? SelectedBadge { get; init; } = null;
+        public PkmnSpecies? SelectedBadge { get; init; }
 
-        // public string? SecondaryColor { get; init; }
-        // public bool SecondaryColorUnlocked { get; init; }
+        public string? GlowColor { get; init; }
+        public bool GlowColorUnlocked { get; init; }
+
+        public int? PokeyenBetRank { get; init; }
+
         // public bool Active { get; init; }
         // public bool Follower { get; init; }
         // public bool Subscriber { get; init; }
@@ -75,7 +78,13 @@ namespace Persistence.Models
             Instant lastActiveAt,
             Instant? lastMessageAt,
             int pokeyen,
-            int tokens)
+            int tokens,
+            SortedSet<int>? participationEmblems = null,
+            int? selectedParticipationEmblem = null,
+            PkmnSpecies? selectedBadge = null,
+            string? glowColor = null,
+            bool glowColorUnlocked = false,
+            int? pokeyenBetRank = null)
         {
             Id = id;
             TwitchDisplayName = twitchDisplayName;
@@ -87,6 +96,12 @@ namespace Persistence.Models
             LastMessageAt = lastMessageAt;
             Pokeyen = pokeyen;
             Tokens = tokens;
+            ParticipationEmblems = participationEmblems ?? new SortedSet<int>();
+            SelectedParticipationEmblem = selectedParticipationEmblem;
+            SelectedBadge = selectedBadge;
+            GlowColor = glowColor;
+            GlowColorUnlocked = glowColorUnlocked;
+            PokeyenBetRank = pokeyenBetRank;
         }
 
         public override string ToString() => $"User({Id}/{SimpleName})";

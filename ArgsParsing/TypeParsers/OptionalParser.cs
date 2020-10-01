@@ -48,12 +48,12 @@ namespace ArgsParsing.TypeParsers
             {
                 Success<List<object>> success = parseResult.SuccessResult.Value;
                 var optional = (Optional)constructor.Invoke(new[] { true, success.Result[0] });
-                return ArgsParseResult<Optional>.Success(parseResult.FailureResult, optional, success.RemainingArgs);
+                return ArgsParseResult<Optional>.Success(parseResult.Failures, optional, success.RemainingArgs);
             }
             else
             {
                 var optional = (Optional)constructor.Invoke(new object?[] { false, null });
-                return ArgsParseResult<Optional>.Success(parseResult.FailureResult, optional, args);
+                return ArgsParseResult<Optional>.Success(parseResult.Failures, optional, args);
             }
         }
     }

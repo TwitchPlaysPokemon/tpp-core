@@ -7,9 +7,9 @@ using Core.Commands;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using NodaTime;
 using NUnit.Framework;
 using Persistence.Models;
-using static Core.Tests.TestUtils;
 
 namespace Core.Tests.Commands
 {
@@ -17,18 +17,32 @@ namespace Core.Tests.Commands
     {
         private readonly ILogger<CommandProcessor> _nullLogger = new NullLogger<CommandProcessor>();
         private readonly ImmutableList<string> _noArgs = ImmutableList<string>.Empty;
-        private readonly User _mockUser = MockUser("MockUser");
+        private readonly User _mockUser = new User(
+            id: Guid.NewGuid().ToString(),
+            name: "MockUser", twitchDisplayName: "MockUser", simpleName: "mockuser", color: null,
+            firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
+            lastMessageAt: null, pokeyen: 0, tokens: 0);
 
         private Message MockMessage(string text = "") => new Message(_mockUser, text, MessageSource.Chat);
 
         [Test]
         public async Task TestUnknownCommand()
         {
-            var commandProcessor = new CommandProcessor(_nullLogger, new ArgsParser());
+            var commandProcessor = new CommandProcessor(_nullLogger, new ArgsParser(), ignoreUnknownCommands: false);
 
             CommandResult result = await commandProcessor.Process("unknown", _noArgs, MockMessage());
 
             Assert.AreEqual("unknown command 'unknown'", result.Response);
+        }
+
+        [Test]
+        public async Task TestUnknownCommandIgnored()
+        {
+            var commandProcessor = new CommandProcessor(_nullLogger, new ArgsParser(), ignoreUnknownCommands: true);
+
+            CommandResult result = await commandProcessor.Process("unknown", _noArgs, MockMessage());
+
+            Assert.IsNull(result.Response);
         }
 
         [Test]

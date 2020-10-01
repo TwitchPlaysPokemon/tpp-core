@@ -21,6 +21,12 @@ namespace Persistence.Repos
         }
     }
 
+    public static class TransactionType
+    {
+        public const string SecondaryColorUnlock = "secondary_color_unlock";
+        // collect all the types being used here instead of scattering string literals across the codebase
+    }
+
     /// <summary>
     /// A single atomic monetary transaction that can be performed.
     /// </summary>

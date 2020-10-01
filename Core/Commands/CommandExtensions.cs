@@ -1,4 +1,6 @@
+using System;
 using System.Threading.Tasks;
+using ArgsParsing;
 using NodaTime;
 
 namespace Core.Commands
@@ -17,17 +19,32 @@ namespace Core.Commands
         public static Task<(T1, T2, T3, T4)> ParseArgs<T1, T2, T3, T4>(this CommandContext ctx) =>
             ctx.ArgsParser.Parse<T1, T2, T3, T4>(ctx.Args);
 
+        /// Replace the command execution with a different one.
+        public static Command WithExecution(this Command command, Command.Execute newExecution)
+        {
+            return new Command(command.Name, newExecution)
+            { Aliases = command.Aliases, Description = command.Description };
+        }
+
+        /// Replace the command execution with one that only executes the original execution
+        /// if a condition is met, and returns some ersatz result otherwise.
+        public static Command WithCondition(
+            this Command command,
+            Func<CommandContext, bool> canExecute,
+            CommandResult? ersatzResult = null)
+        {
+            return command.WithExecution(async ctx => canExecute(ctx)
+                ? await command.Execution(ctx)
+                : ersatzResult ?? new CommandResult());
+        }
+
         /// Replace the command execution with one that does nothing
         /// if the command was recently executed within a given time span.
-        /// The cooldown is applied globally
+        /// The cooldown is applied globally.
         public static Command WithGlobalCooldown(this Command command, Duration duration)
         {
             var cooldown = new GlobalCooldown(SystemClock.Instance, duration);
-            return new Command(command.Name,
-                    ctx => cooldown.CheckLapsedThenReset()
-                        ? command.Execution(ctx)
-                        : Task.FromResult(new CommandResult()))
-            { Aliases = command.Aliases, Description = command.Description };
+            return command.WithCondition(ctx => cooldown.CheckLapsedThenReset());
         }
 
         /// Replace the command execution with one that does nothing
@@ -36,11 +53,7 @@ namespace Core.Commands
         public static Command WithPerUserCooldown(this Command command, Duration duration)
         {
             var cooldown = new PerUserCooldown(SystemClock.Instance, duration);
-            return new Command(command.Name,
-                    ctx => cooldown.CheckLapsedThenReset(ctx.Message.User)
-                        ? command.Execution(ctx)
-                        : Task.FromResult(new CommandResult()))
-            { Aliases = command.Aliases, Description = command.Description };
+            return command.WithCondition(ctx => cooldown.CheckLapsedThenReset(ctx.Message.User));
         }
     }
 }

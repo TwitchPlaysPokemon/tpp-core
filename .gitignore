@@ -299,4 +299,7 @@ __pycache__/
 
 # End of https://www.gitignore.io/api/visualstudio
 # start of custom .gitignore rules
-config.json
+
+# ignore all configuration files, except their schema files
+config*.json
+!*.schema.json

@@ -4,9 +4,9 @@ namespace Core.Configuration
 {
     /// <summary>
     /// The root of TPP-Core-Configuration.
-    /// Contains all other configuration nodes.
+    /// Contains all configurations shared between all modes.
     /// </summary>
-    public sealed class RootConfig : ConfigBase
+    public sealed class BaseConfig : ConfigBase
     {
         [JsonProperty("$schema")] public static readonly string Schema = "./config.schema.json";
 
@@ -17,7 +17,7 @@ namespace Core.Configuration
         public string MongoDbConnectionUri { get; init; } = "mongodb://localhost:27017/?replicaSet=rs0";
         public string MongoDbDatabaseName { get; init; } = "tpp3";
 
-        public IrcConfig Irc { get; init; } = new IrcConfig();
+        public ChatConfig Chat { get; init; } = new ChatConfig();
 
         /* currency amounts for brand new users (new entries in the database) */
         public int StartingPokeyen { get; init; } = 100;

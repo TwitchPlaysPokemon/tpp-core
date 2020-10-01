@@ -1,6 +1,6 @@
 ﻿{
   "definitions": {
-    "IrcConfig": {
+    "ChatConfig": {
       "type": [
         "object",
         "null"
@@ -24,6 +24,18 @@
             "string",
             "null"
           ]
+        },
+        "OperatorNames": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
         },
         "Suppressions": {
           "type": [
@@ -50,6 +62,9 @@
               "null"
             ]
           }
+        },
+        "IgnoreUnknownCommands": {
+          "type": "boolean"
         }
       }
     }
@@ -81,8 +96,8 @@
         "null"
       ]
     },
-    "Irc": {
-      "$ref": "#/definitions/IrcConfig"
+    "Chat": {
+      "$ref": "#/definitions/ChatConfig"
     },
     "StartingPokeyen": {
       "type": "integer"
