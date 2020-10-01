@@ -59,9 +59,9 @@ namespace Core.Tests.Commands
 
             await commandProcessor.Process("slow", _noArgs, MockMessage("bla"));
 
-            var warningTextRegex = new Regex(
-                $@"^Command 'slow' took \d+ms to finish! User: {Regex.Escape(_mockUser.ToString())}, Original text: bla$");
-            loggerMock.VerifyLog(LogLevel.Warning, warningTextRegex, Times.Once());
+            string warningTextRegex = @"^Command 'slow' took \d+ms to finish! " +
+                                      $@"User: {Regex.Escape(_mockUser.ToString())}, Original text: bla$";
+            loggerMock.VerifyLog(logger => logger.LogWarning(It.IsRegex(warningTextRegex)));
         }
 
         [Test]
@@ -75,10 +75,10 @@ namespace Core.Tests.Commands
             CommandResult result = await commandProcessor.Process("broken", _noArgs, MockMessage("bla"));
 
             Assert.AreEqual("An error occurred.", result.Response);
-            var errorTextRegex = new Regex(
-                $@"^An exception occured while executing command 'broken'\. User: {Regex.Escape(_mockUser.ToString())}, Original text: bla$");
-            loggerMock.VerifyLog(LogLevel.Error, errorTextRegex, Times.Once(),
-                exception: new InvalidOperationException("this command is busted!"));
+            string errorTextRegex = @"^An exception occured while executing command 'broken'\. " +
+                                     $@"User: {Regex.Escape(_mockUser.ToString())}, Original text: bla$";
+            loggerMock.VerifyLog(logger => logger.LogError(
+                new InvalidOperationException("this command is busted!"), It.IsRegex(errorTextRegex)));
         }
 
         [Test]
