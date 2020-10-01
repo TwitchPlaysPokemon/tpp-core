@@ -10,7 +10,7 @@
     <ItemGroup>
         <PackageReference Include="docopt.net" Version="0.6.1.10" />
         <PackageReference Include="JsonNet.ContractResolvers" Version="1.1.0" />
-        <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="3.1.7" />
+        <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="3.1.8" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.7" />
         <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.7" />
         <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
