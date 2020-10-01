@@ -1,15 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>net5.0</TargetFramework>
-        <Nullable>enable</Nullable>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <InvariantGlobalization>true</InvariantGlobalization><!-- .net 5+ -->
-    </PropertyGroup>
-
     <ItemGroup>
         <ProjectReference Include="..\Persistence\Persistence.csproj" />
-        <RuntimeHostConfigurationOption Include="System.Globalization.Invariant" Value="true" /><!-- .net 3.1 -->
     </ItemGroup>
 
     <ItemGroup>
