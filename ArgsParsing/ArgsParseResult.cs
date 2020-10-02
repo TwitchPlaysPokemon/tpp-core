@@ -44,6 +44,8 @@ namespace ArgsParsing
             Relevance = relevance;
             Error = error;
         }
+
+        public override string ToString() => $"{Error} (relevance: {Relevance})";
     }
 
     /// <summary>

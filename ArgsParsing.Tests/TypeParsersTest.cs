@@ -6,6 +6,8 @@ using ArgsParsing.TypeParsers;
 using ArgsParsing.Types;
 using Common;
 using Moq;
+using NFluent;
+using NFluent.ApiChecks;
 using NodaTime;
 using NodaTime.Text;
 using NUnit.Framework;
@@ -33,10 +35,11 @@ namespace ArgsParsing.Tests
             Assert.AreEqual("foo", string1);
             Assert.AreEqual("foo", string2);
 
-            var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<AnyOrder<int, string>>(ImmutableList.Create("foo", "bar")));
-            Assert.AreEqual(2, ex.Failures.Count);
-            Assert.AreEqual("did not recognize 'foo' as a number, or did not recognize 'bar' as a number", ex.Message);
+            Check.ThatCode(
+                    async () => await argsParser.Parse<AnyOrder<int, string>>(ImmutableList.Create("foo", "bar")))
+                .Throws<ArgsParseFailure>()
+                .WithMessage("did not recognize 'foo' as a number, or did not recognize 'bar' as a number")
+                .And.WhichMember(ex => ex.Failures).HasSize(2);
         }
 
         [Test]
@@ -69,12 +72,12 @@ namespace ArgsParsing.Tests
             Assert.AreEqual(refInstant, result2);
             Assert.AreEqual(result1, result2);
 
-            var ex1 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<Instant>(ImmutableList.Create("2020-03-22T01:59:20+02")));
-            var ex2 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<Instant>(ImmutableList.Create("asdasdasd")));
-            Assert.AreEqual("did not recognize '2020-03-22T01:59:20+02' as a UTC-instant", ex1.Message);
-            Assert.AreEqual("did not recognize 'asdasdasd' as a UTC-instant", ex2.Message);
+            Check.ThatCode(async () => await argsParser.Parse<Instant>(ImmutableList.Create("2020-03-22T01:59:20+02")))
+                .Throws<ArgsParseFailure>()
+                .WithMessage("did not recognize '2020-03-22T01:59:20+02' as a UTC-instant");
+            Check.ThatCode(async () => await argsParser.Parse<Instant>(ImmutableList.Create("asdasdasd")))
+                .Throws<ArgsParseFailure>()
+                .WithMessage("did not recognize 'asdasdasd' as a UTC-instant");
         }
 
         [Test]
@@ -88,17 +91,17 @@ namespace ArgsParsing.Tests
             Assert.AreEqual("#0F9D5A", (string)await argsParser
                 .Parse<HexColor>(args: ImmutableList.Create("#0f9D5a")));
 
-            var ex1 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<HexColor>(ImmutableList.Create("abcdef")));
-            var ex2 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<HexColor>(ImmutableList.Create("#abc")));
-            var ex3 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<HexColor>(ImmutableList.Create("#bcdefg")));
-            Assert.AreEqual("'abcdef' is not a valid hex color", ex1.Message);
-            Assert.AreEqual("'#abc' must be a 6-character hex code consisting of 0-9 and A-F, " +
-                            "for example '#FF0000' for pure red.", ex2.Message);
-            Assert.AreEqual("'#bcdefg' must be a 6-character hex code consisting of 0-9 and A-F, " +
-                            "for example '#FF0000' for pure red.", ex3.Message);
+            Check.ThatCode(async () => await argsParser.Parse<HexColor>(ImmutableList.Create("abcdef")))
+                .Throws<ArgsParseFailure>()
+                .WithMessage("'abcdef' is not a valid hex color");
+            Check.ThatCode(async () => await argsParser.Parse<HexColor>(ImmutableList.Create("#abc")))
+                .Throws<ArgsParseFailure>()
+                .WithMessage("'#abc' must be a 6-character hex code consisting of 0-9 and A-F, " +
+                             "for example '#FF0000' for pure red.");
+            Check.ThatCode(async () => await argsParser.Parse<HexColor>(ImmutableList.Create("#bcdefg")))
+                .Throws<ArgsParseFailure>()
+                .WithMessage("'#bcdefg' must be a 6-character hex code consisting of 0-9 and A-F, " +
+                             "for example '#FF0000' for pure red.");
         }
 
         [Test]
@@ -119,14 +122,13 @@ namespace ArgsParsing.Tests
             Assert.IsTrue(result2.Item2.IsPresent);
             Assert.AreEqual("foo", result2.Item2.Value);
 
-            var exUnrecognized = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<OneOf<int, Instant>>(ImmutableList.Create("foo")));
-            Assert.AreEqual(2, exUnrecognized.Failures.Count);
-            const string errorText = "did not recognize 'foo' as a number, or did not recognize 'foo' as a UTC-instant";
-            Assert.AreEqual(errorText, exUnrecognized.Message);
-            var exTooManyArgs = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<OneOf<int, int>>(ImmutableList.Create("123", "234")));
-            Assert.AreEqual("too many arguments", exTooManyArgs.Message);
+            Check.ThatCode(async () => await argsParser.Parse<OneOf<int, Instant>>(ImmutableList.Create("foo")))
+                .Throws<ArgsParseFailure>()
+                .WithMessage("did not recognize 'foo' as a number, or did not recognize 'foo' as a UTC-instant")
+                .And.WhichMember(ex => ex.Failures).HasSize(2);
+            Check.ThatCode(async () => await argsParser.Parse<OneOf<int, int>>(ImmutableList.Create("123", "234")))
+                .Throws<ArgsParseFailure>()
+                .WithMessage("too many arguments");
         }
 
         [Test]
@@ -166,14 +168,13 @@ namespace ArgsParsing.Tests
             Assert.AreEqual(species, resultByName1);
             Assert.AreEqual(species, resultByName2);
 
-            ArgsParseFailure exNotPrefixed = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<PkmnSpecies>(args: ImmutableList.Create(speciesId)));
-            Assert.AreEqual("Please prefix with '#' to supply and pokedex number", exNotPrefixed.Message);
-            ArgsParseFailure exUnknown = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<PkmnSpecies>(args: ImmutableList.Create("unknown")));
-            Assert.AreEqual(
-                "No pokemon with the name 'unknown' was recognized. Please supply a valid name, " +
-                "or prefix with '#' to supply and pokedex number instead", exUnknown.Message);
+            Check.ThatCode(async () => await argsParser.Parse<PkmnSpecies>(ImmutableList.Create(speciesId)))
+                .Throws<ArgsParseFailure>()
+                .WithMessage("Please prefix with '#' to supply and pokedex number");
+            Check.ThatCode(async () => await argsParser.Parse<PkmnSpecies>(ImmutableList.Create("unknown")))
+                .Throws<ArgsParseFailure>()
+                .WithMessage("No pokemon with the name 'unknown' was recognized. Please supply a valid name, " +
+                             "or prefix with '#' to supply and pokedex number instead");
         }
 
         [Test]
@@ -199,14 +200,13 @@ namespace ArgsParsing.Tests
             Assert.AreEqual(species, result4);
             Assert.AreEqual(species, result5);
 
-            ArgsParseFailure exNotRecognized = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<PkmnSpecies>(args: ImmutableList.Create("mahina", "aaaaaa")));
-            Assert.AreEqual(
-                "No pokemon with the name 'mahina' was recognized. Please supply a valid name, " +
-                "or prefix with '#' to supply and pokedex number instead", exNotRecognized.Message);
-            ArgsParseFailure exNoAccidentalHashRemoval = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<PkmnSpecies>(args: ImmutableList.Create("#mahinapea")));
-            Assert.AreEqual("did not recognize species '#mahinapea'", exNoAccidentalHashRemoval.Message);
+            Check.ThatCode(async () => await argsParser.Parse<PkmnSpecies>(ImmutableList.Create("mahina", "aaaaaa")))
+                .Throws<ArgsParseFailure>()
+                .WithMessage("No pokemon with the name 'mahina' was recognized. Please supply a valid name, " +
+                             "or prefix with '#' to supply and pokedex number instead");
+            Check.ThatCode(async () => await argsParser.Parse<PkmnSpecies>(ImmutableList.Create("#mahinapea")))
+                .Throws<ArgsParseFailure>()
+                .WithMessage("did not recognize species '#mahinapea'");
         }
 
         [Test]
@@ -221,9 +221,9 @@ namespace ArgsParsing.Tests
             Assert.AreEqual(11, result1);
             Assert.AreEqual(22, result2);
 
-            var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<Pokeyen>(args: ImmutableList.Create("X33")));
-            Assert.AreEqual("did not recognize 'X33' as a 'P'-prefixed number", ex.Message);
+            Check.ThatCode(async () => await argsParser.Parse<Pokeyen>(ImmutableList.Create("X33")))
+                .Throws<ArgsParseFailure>()
+                .WithMessage("did not recognize 'X33' as a 'P'-prefixed number");
         }
 
         [Test]
@@ -243,12 +243,12 @@ namespace ArgsParsing.Tests
             Assert.AreEqual(expected, result1);
             Assert.AreEqual(TimeSpan.FromDays(90), result2);
 
-            var ex1 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<TimeSpan>(args: ImmutableList.Create("5s3d")));
-            var ex2 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<TimeSpan>(args: ImmutableList.Create("asdasdasd")));
-            Assert.IsTrue(ex1.Message.Contains("did not recognize '5s3d' as a duration"));
-            Assert.IsTrue(ex2.Message.Contains("did not recognize 'asdasdasd' as a duration"));
+            Check.ThatCode(async () => await argsParser.Parse<TimeSpan>(ImmutableList.Create("5s3d")))
+                .Throws<ArgsParseFailure>()
+                .AndWhichMessage().Contains("did not recognize '5s3d' as a duration");
+            Check.ThatCode(async () => await argsParser.Parse<TimeSpan>(ImmutableList.Create("asdasdasd")))
+                .Throws<ArgsParseFailure>()
+                .AndWhichMessage().Contains("did not recognize 'asdasdasd' as a duration");
         }
 
         [Test]
@@ -272,12 +272,12 @@ namespace ArgsParsing.Tests
             var resultUserPrefixed = await argsParser.Parse<User>(args: ImmutableList.Create('@' + username));
             Assert.AreEqual(origUser, resultUserPrefixed);
 
-            var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<User>(args: ImmutableList.Create("some_unknown_name")));
-            Assert.AreEqual("did not recognize a user with the name 'some_unknown_name'", ex.Message);
-            var exUserPrefixed = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<User>(args: ImmutableList.Create("@some_unknown_name")));
-            Assert.AreEqual("did not recognize a user with the name 'some_unknown_name'", exUserPrefixed.Message);
+            Check.ThatCode(async () => await argsParser.Parse<User>(ImmutableList.Create("some_unknown_name")))
+                .Throws<ArgsParseFailure>()
+                .WithMessage("did not recognize a user with the name 'some_unknown_name'");
+            Check.ThatCode(async () => await argsParser.Parse<User>(ImmutableList.Create("@some_unknown_name")))
+                .Throws<ArgsParseFailure>()
+                .WithMessage("did not recognize a user with the name 'some_unknown_name'");
         }
     }
 }

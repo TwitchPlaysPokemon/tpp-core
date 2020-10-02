@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using ArgsParsing.TypeParsers;
 using ArgsParsing.Types;
+using NFluent;
 using NodaTime;
 using NUnit.Framework;
 
@@ -14,9 +15,9 @@ namespace ArgsParsing.Tests
             var argsParser = new ArgsParser();
             argsParser.AddArgumentParser(new IntParser());
 
-            var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<int, int>(args: ImmutableList.Create("123")));
-            Assert.AreEqual("too few arguments", ex.Message);
+            Check.ThatCode(async () => await argsParser.Parse<int, int>(ImmutableList.Create("123")))
+                .Throws<ArgsParseFailure>()
+                .WithMessage("too few arguments");
         }
 
         [Test]
@@ -25,9 +26,9 @@ namespace ArgsParsing.Tests
             var argsParser = new ArgsParser();
             argsParser.AddArgumentParser(new IntParser());
 
-            var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<int>(args: ImmutableList.Create("123", "234")));
-            Assert.AreEqual("too many arguments", ex.Message);
+            Check.ThatCode(async () => await argsParser.Parse<int>(ImmutableList.Create("123", "234")))
+                .Throws<ArgsParseFailure>()
+                .WithMessage("too many arguments");
         }
 
         /// <summary>
@@ -41,10 +42,9 @@ namespace ArgsParsing.Tests
             argsParser.AddArgumentParser(new IntParser());
             argsParser.AddArgumentParser(new OptionalParser(argsParser));
 
-            var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<Optional<int>>(args: ImmutableList.Create("abc")));
-            Assert.AreNotEqual("too many arguments", ex.Message);
-            Assert.AreEqual("did not recognize 'abc' as a number", ex.Message);
+            Check.ThatCode(async () => await argsParser.Parse<Optional<int>>(ImmutableList.Create("abc")))
+                .Throws<ArgsParseFailure>()
+                .WithMessage("did not recognize 'abc' as a number");
         }
 
         /// <summary>
@@ -61,17 +61,16 @@ namespace ArgsParsing.Tests
             argsParser.AddArgumentParser(new AnyOrderParser(argsParser));
             argsParser.AddArgumentParser(new OptionalParser(argsParser));
 
-            var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<AnyOrder<Optional<int>, Optional<Instant>>>(args: ImmutableList.Create("X", "Y")));
-            Assert.AreNotEqual("too many arguments", ex.Message);
-            Assert.AreEqual("did not recognize 'X' as a number, or did not recognize 'X' as a UTC-instant", ex.Message);
-            Assert.AreEqual(new[]
-                {
+            Check.ThatCode(async () =>
+                    await argsParser.Parse<AnyOrder<Optional<int>, Optional<Instant>>>(ImmutableList.Create("X", "Y")))
+                .Throws<ArgsParseFailure>()
+                .WithMessage("did not recognize 'X' as a number, or did not recognize 'X' as a UTC-instant")
+                .And.WhichMember(ex => ex.Failures)
+                .ContainsExactly(
                     new Failure(ErrorRelevanceConfidence.Default, "did not recognize 'X' as a number"),
                     new Failure(ErrorRelevanceConfidence.Default, "did not recognize 'X' as a UTC-instant"),
                     new Failure(ErrorRelevanceConfidence.Unlikely, "too many arguments")
-                },
-                ex.Failures);
+                );
         }
     }
 }
