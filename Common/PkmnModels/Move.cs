@@ -24,15 +24,15 @@ namespace Common.PkmnModels
     [DataContract]
     public struct Move
     {
-        [DataMember(Name = "id")] public int Id { get; set; }
-        [DataMember(Name = "name_id")] public string NameId { get; set; }
-        [DataMember(Name = "displayname")] public string Name { get; set; }
-        [DataMember(Name = "category")] public Category Category { get; set; }
-        [DataMember(Name = "type")] public PokemonType Type { get; set; }
-        [DataMember(Name = "accuracy")] public int Accuracy { get; set; }
-        [DataMember(Name = "power")] public int Power { get; set; }
-        [DataMember(Name = "pp")] public int Pp { get; set; }
-        [DataMember(Name = "pp_ups")] public int PpUps { get; set; }
-        [DataMember(Name = "target")] public MoveTarget Target { get; set; }
+        [DataMember(Name = "id")] public int Id { get; init; }
+        [DataMember(Name = "name_id")] public string NameId { get; init; }
+        [DataMember(Name = "displayname")] public string Name { get; init; }
+        [DataMember(Name = "category")] public Category Category { get; init; }
+        [DataMember(Name = "type")] public PokemonType Type { get; init; }
+        [DataMember(Name = "accuracy")] public int Accuracy { get; init; }
+        [DataMember(Name = "power")] public int Power { get; init; }
+        [DataMember(Name = "pp")] public int Pp { get; init; }
+        [DataMember(Name = "pp_ups")] public int PpUps { get; init; }
+        [DataMember(Name = "target")] public MoveTarget Target { get; init; }
     }
 }

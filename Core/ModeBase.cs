@@ -47,6 +47,7 @@ namespace Core
             string? firstPart = parts.FirstOrDefault();
             string? commandName = firstPart switch
             {
+                null => null,
                 var name when message.MessageSource == MessageSource.Whisper => name,
                 var name when message.MessageSource == MessageSource.Chat
                               && name.StartsWith("!") => name.Substring(startIndex: 1),

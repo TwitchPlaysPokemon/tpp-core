@@ -19,7 +19,7 @@ namespace Persistence.MongoDB.Serializers
         protected EnumToStringUsingTranslationMappingSerializer(Dictionary<T, string> translation)
         {
             _translation = translation.ToImmutableDictionary();
-            foreach (T enumValue in Enum.GetValues(typeof(T)).Cast<T>())
+            foreach (T enumValue in Enum.GetValues(typeof(T)).OfType<T>())
             {
                 if (!_translation.ContainsKey(enumValue))
                 {

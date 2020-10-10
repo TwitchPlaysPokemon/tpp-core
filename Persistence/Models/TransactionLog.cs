@@ -9,23 +9,21 @@ namespace Persistence.Models
     /// Transaction logs are read-only entities that get created by <see cref="IBank{T}"/> implementations.
     /// They are purely for traceability and serve no functional purpose.
     /// </summary>
-    // properties need setters for deserialization
-    // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
     public class TransactionLog : PropertyEquatable<TransactionLog>
     {
-        public string Id { get; private set; }
+        public string Id { get; init; }
         protected override object EqualityId => Id;
 
-        public string UserId { get; private set; }
-        public int OldBalance { get; private set; }
-        public int NewBalance { get; private set; }
-        public int Change { get; private set; }
+        public string UserId { get; init; }
+        public int OldBalance { get; init; }
+        public int NewBalance { get; init; }
+        public int Change { get; init; }
 
-        public Instant CreatedAt { get; private set; }
+        public Instant CreatedAt { get; init; }
 
-        public string? Type { get; private set; }
+        public string? Type { get; init; }
 
-        public IDictionary<string, object?> AdditionalData { get; private set; }
+        public IDictionary<string, object?> AdditionalData { get; init; }
 
         public TransactionLog(
             string id,
@@ -34,7 +32,7 @@ namespace Persistence.Models
             int newBalance,
             int change,
             Instant createdAt,
-            string type,
+            string? type,
             IDictionary<string, object?> additionalData)
         {
             Id = id;

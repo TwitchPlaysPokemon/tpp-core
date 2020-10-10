@@ -37,15 +37,15 @@ namespace ArgsParsing.TypeParsers
             if (!args[0].StartsWith("#"))
             {
                 string normalizedName = NormalizeName(args[0]);
-                if (_nameLookup.TryGetValue(normalizedName, out PkmnSpecies speciesFromName))
+                if (_nameLookup.TryGetValue(normalizedName, out PkmnSpecies? speciesFromName))
                 {
                     return Task.FromResult(ArgsParseResult<PkmnSpecies>.Success(
-                        speciesFromName, args.Skip(1).ToImmutableList()));
+                        speciesFromName!, args.Skip(1).ToImmutableList()));
                 }
                 if (args.Count >= 2)
                 {
                     string normalizedNameTwoArgs = NormalizeName(args[0] + ' ' + args[1]);
-                    if (_nameLookup.TryGetValue(normalizedNameTwoArgs, out PkmnSpecies speciesFromTwoArgsName))
+                    if (_nameLookup.TryGetValue(normalizedNameTwoArgs, out PkmnSpecies? speciesFromTwoArgsName))
                     {
                         return Task.FromResult(ArgsParseResult<PkmnSpecies>.Success(
                             speciesFromTwoArgsName, args.Skip(2).ToImmutableList()));

@@ -16,11 +16,11 @@ namespace Common.PkmnModels
     [DataContract]
     public struct Stats
     {
-        [DataMember(Name = "hp")] public int Hp { get; set; }
-        [DataMember(Name = "atk")] public int Atk { get; set; }
-        [DataMember(Name = "def")] public int Def { get; set; }
-        [DataMember(Name = "spA")] public int SpA { get; set; }
-        [DataMember(Name = "spD")] public int SpD { get; set; }
-        [DataMember(Name = "spe")] public int Spe { get; set; }
+        [DataMember(Name = "hp")] public int Hp { get; init; }
+        [DataMember(Name = "atk")] public int Atk { get; init; }
+        [DataMember(Name = "def")] public int Def { get; init; }
+        [DataMember(Name = "spA")] public int SpA { get; init; }
+        [DataMember(Name = "spD")] public int SpD { get; init; }
+        [DataMember(Name = "spe")] public int Spe { get; init; }
     }
 }
