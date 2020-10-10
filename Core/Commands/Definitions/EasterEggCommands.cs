@@ -31,7 +31,14 @@ namespace Core.Commands.Definitions
 
         public Task<CommandResult> RaccAttack(CommandContext context)
         {
-            string response = Random.Next(8192) == 0 ? "tppZig" : "RaccAttack";
+            int rand = Random.Next(8192);
+            string response = rand switch
+            {
+                <= 3 => "tppZig tppZag tppOon",
+                <= 11 => "tppZig tppOon",
+                <= 27 => "tppZig",
+                _ => "RaccAttack"
+            };
             return Task.FromResult(new CommandResult { Response = response });
         }
     }
