@@ -42,5 +42,5 @@ builds the project, and then executes it. If you want faster startup times,
 For example, making a release build and running the resulting `dll` with the dotnet runtime may look like this:
 ```
 dotnet publish -c Release
-dotnet ./bin/Release/netcoreapp3.1/Core.dll --help
+dotnet ./bin/Release/net5.0/Core.dll --help
 ```
