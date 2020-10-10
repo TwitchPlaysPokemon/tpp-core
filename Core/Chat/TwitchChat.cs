@@ -58,7 +58,8 @@ namespace Core.Chat
                 logger: loggerFactory.CreateLogger<TwitchClient>());
             var credentials = new ConnectionCredentials(
                 twitchUsername: chatConfig.Username,
-                twitchOAuth: chatConfig.Password);
+                twitchOAuth: chatConfig.Password,
+                disableUsernameCheck: true);
             _twitchClient.Initialize(
                 credentials: credentials,
                 channel: chatConfig.Channel,
