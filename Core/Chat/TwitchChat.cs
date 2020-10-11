@@ -174,7 +174,7 @@ namespace Core.Chat
                 id: twitchLibMessage.UserId,
                 twitchDisplayName: twitchLibMessage.DisplayName,
                 simpleName: twitchLibMessage.Username,
-                color: twitchLibMessage.ColorHex,
+                color: twitchLibMessage.ColorHex.Replace("#", ""),
                 fromMessage: true,
                 updatedAt: _clock.GetCurrentInstant()
             ));
