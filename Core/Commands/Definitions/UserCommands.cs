@@ -77,6 +77,8 @@ namespace Core.Commands.Definitions
             var optionalUser = await context.ParseArgs<Optional<User>>();
             bool isSelf = !optionalUser.IsPresent;
             User user = isSelf ? context.Message.User : optionalUser.Value;
+            // Only differentiate between available and reserved money for self.
+            // For others, just report their total as available and ignore reserved.
             int availablePokeyen = isSelf ? await _pokeyenBank.GetAvailableMoney(user) : user.Pokeyen;
             int reservedPokeyen = isSelf ? await _pokeyenBank.GetReservedMoney(user) : 0;
             int availableTokens = isSelf ? await _tokenBank.GetAvailableMoney(user) : user.Tokens;
