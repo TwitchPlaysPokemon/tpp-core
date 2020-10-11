@@ -19,7 +19,7 @@ namespace Core.Tests.Commands
         private readonly ImmutableList<string> _noArgs = ImmutableList<string>.Empty;
         private readonly User _mockUser = new User(
             id: Guid.NewGuid().ToString(),
-            name: "MockUser", twitchDisplayName: "MockUser", simpleName: "mockuser", color: null,
+            name: "MockUser", twitchDisplayName: "☺MockUser", simpleName: "mockuser", color: null,
             firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
             lastMessageAt: null, pokeyen: 0, tokens: 0);
 

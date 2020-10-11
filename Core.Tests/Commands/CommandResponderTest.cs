@@ -12,7 +12,7 @@ namespace Core.Tests.Commands
     {
         private static User MockUser() => new User(
             id: Guid.NewGuid().ToString(),
-            name: "user", twitchDisplayName: "user", simpleName: "user", color: null,
+            name: "User", twitchDisplayName: "☺user", simpleName: "user", color: null,
             firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
             lastMessageAt: null, pokeyen: 0, tokens: 0);
 
@@ -33,7 +33,7 @@ namespace Core.Tests.Commands
                 new CommandResult { Response = "Whisper response!", ResponseTarget = ResponseTarget.Source });
 
             // then
-            messageSenderMock.Verify(ms => ms.SendMessage($"@{user.TwitchDisplayName} Chat response!"), Times.Once);
+            messageSenderMock.Verify(ms => ms.SendMessage($"@{user.Name} Chat response!"), Times.Once);
             messageSenderMock.Verify(ms => ms.SendWhisper(user, "Whisper response!"), Times.Once);
         }
 
@@ -58,8 +58,8 @@ namespace Core.Tests.Commands
                 new CommandResult { Response = "Whisper response 2!", ResponseTarget = ResponseTarget.Whisper });
 
             // then
-            messageSenderMock.Verify(ms => ms.SendMessage($"@{user.TwitchDisplayName} Chat response 1!"), Times.Once);
-            messageSenderMock.Verify(ms => ms.SendMessage($"@{user.TwitchDisplayName} Chat response 2!"), Times.Once);
+            messageSenderMock.Verify(ms => ms.SendMessage($"@{user.Name} Chat response 1!"), Times.Once);
+            messageSenderMock.Verify(ms => ms.SendMessage($"@{user.Name} Chat response 2!"), Times.Once);
             messageSenderMock.Verify(ms => ms.SendWhisper(user, "Whisper response 1!"), Times.Once);
             messageSenderMock.Verify(ms => ms.SendWhisper(user, "Whisper response 2!"), Times.Once);
         }
@@ -87,7 +87,7 @@ namespace Core.Tests.Commands
                 new CommandResult { Response = "Whisper response 2!", ResponseTarget = ResponseTarget.WhisperIfLong });
 
             // then
-            messageSenderMock.Verify(ms => ms.SendMessage($"@{user.TwitchDisplayName} Chat response!"), Times.Once);
+            messageSenderMock.Verify(ms => ms.SendMessage($"@{user.Name} Chat response!"), Times.Once);
             messageSenderMock.Verify(ms => ms.SendWhisper(user, "Too long chat response!"), Times.Once);
             messageSenderMock.Verify(ms => ms.SendWhisper(user, "Whisper response 1!"), Times.Once);
             messageSenderMock.Verify(ms => ms.SendWhisper(user, "Whisper response 2!"), Times.Once);
