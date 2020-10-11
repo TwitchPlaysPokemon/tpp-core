@@ -27,12 +27,12 @@ namespace Core.Commands
             {
                 case ResponseTarget.Source:
                     if (message.MessageSource == MessageSource.Chat)
-                        await _messageSender.SendMessage($"@{message.User.TwitchDisplayName} {result.Response}");
+                        await _messageSender.SendMessage($"@{message.User.Name} {result.Response}");
                     else if (message.MessageSource == MessageSource.Whisper)
                         await _messageSender.SendWhisper(message.User, result.Response);
                     break;
                 case ResponseTarget.Chat:
-                    await _messageSender.SendMessage($"@{message.User.TwitchDisplayName} {result.Response}");
+                    await _messageSender.SendMessage($"@{message.User.Name} {result.Response}");
                     break;
                 case ResponseTarget.Whisper:
                     await _messageSender.SendWhisper(message.User, result.Response);
@@ -43,12 +43,12 @@ namespace Core.Commands
                         if (result.Response.Length > _whisperIfLongThreshold)
                         {
                             await _messageSender.SendMessage(
-                                $"@{message.User.TwitchDisplayName} The reply has been whispered to you.");
+                                $"@{message.User.Name} The reply has been whispered to you.");
                             await _messageSender.SendWhisper(message.User, result.Response);
                         }
                         else
                         {
-                            await _messageSender.SendMessage($"@{message.User.TwitchDisplayName} {result.Response}");
+                            await _messageSender.SendMessage($"@{message.User.Name} {result.Response}");
                         }
                     }
                     else

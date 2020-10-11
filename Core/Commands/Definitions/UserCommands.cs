@@ -88,7 +88,7 @@ namespace Core.Commands.Definitions
                 ? ""
                 : $" {(isSelf ? "You" : "They")} are currently rank {user.PokeyenBetRank} in the leaderboard.";
             string response =
-                $"{(isSelf ? "You have" : $"{user.TwitchDisplayName} has")}" +
+                $"{(isSelf ? "You have" : $"{user.Name} has")}" +
                 $" P{availablePokeyen} pokeyen{reservedPokeyenMessage}" +
                 $" and T{availableTokens} tokens{reservedTokensMessage}." +
                 rankMessage;

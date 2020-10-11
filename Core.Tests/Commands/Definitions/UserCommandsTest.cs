@@ -27,7 +27,7 @@ namespace Core.Tests.Commands.Definitions
             SortedSet<int>? emblems = null
         ) => new User(
             id: Guid.NewGuid().ToString(),
-            name: name, twitchDisplayName: twitchDisplayName ?? name, simpleName: name.ToLower(), color: null,
+            name: name, twitchDisplayName: twitchDisplayName ?? "☺" + name, simpleName: name.ToLower(), color: null,
             firstActiveAt: Instant.FromUnixTimeSeconds(0),
             lastActiveAt: Instant.FromUnixTimeSeconds(0),
             lastMessageAt: null,
@@ -106,12 +106,12 @@ namespace Core.Tests.Commands.Definitions
             _userRepoMock.Setup(r => r.FindBySimpleName(user.SimpleName))
                 .ReturnsAsync(user);
 
-            var message = new Message(MockUser("someone_else"), "", MessageSource.Chat);
+            var message = new Message(MockUser("Someone_Else"), "", MessageSource.Chat);
             CommandResult result = await _userCommands.CheckBalance(new CommandContext(message,
                 ImmutableList.Create(user.Name), _argsParser));
 
             Assert.AreEqual(
-                $"{user.TwitchDisplayName} has P1000 pokeyen and T10 tokens. " +
+                $"{user.Name} has P1000 pokeyen and T10 tokens. " +
                 "They are currently rank 123 in the leaderboard.",
                 result.Response);
         }
@@ -198,7 +198,7 @@ namespace Core.Tests.Commands.Definitions
         [Test]
         public async Task TestSetDisplaynameSimpleName()
         {
-            var user = MockUser("user", twitchDisplayName: "user");
+            var user = MockUser("User", twitchDisplayName: "user");
             string newDisplayName = user.SimpleName.ToUpper();
 
             CommandResult result = await _userCommands.SetDisplayName(new CommandContext(MockMessage(user),
@@ -213,7 +213,7 @@ namespace Core.Tests.Commands.Definitions
         [Test]
         public async Task TestSetDisplaynameNameWithSpecialChars()
         {
-            var user = MockUser("user", twitchDisplayName: "ユーザー名");
+            var user = MockUser("User", twitchDisplayName: "ユーザー名");
             string newDisplayName = user.SimpleName.ToUpper();
 
             CommandResult result = await _userCommands.SetDisplayName(new CommandContext(MockMessage(user),

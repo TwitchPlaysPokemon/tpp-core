@@ -19,7 +19,7 @@ namespace Core.Tests.Commands.Definitions
     {
         private static User MockUser(string name, PkmnSpecies? selectedBadge = null) => new User(
             id: Guid.NewGuid().ToString(),
-            name: name, twitchDisplayName: name, simpleName: name.ToLower(), color: null,
+            name: name, twitchDisplayName: "☺" + name, simpleName: name.ToLower(), color: null,
             firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
             lastMessageAt: null, pokeyen: 0, tokens: 0,
             selectedBadge: selectedBadge);
@@ -111,7 +111,7 @@ namespace Core.Tests.Commands.Definitions
         public async Task TestUnselectBadge()
         {
             PkmnSpecies species = PkmnSpecies.RegisterName("1", "Mon");
-            User user = MockUser("user", selectedBadge: species);
+            User user = MockUser("MockUser", selectedBadge: species);
 
             CommandResult result = await _badgeCommands.UnselectBadge(new CommandContext(MockMessage(user),
                 ImmutableList<string>.Empty, _argsParser));
@@ -123,7 +123,7 @@ namespace Core.Tests.Commands.Definitions
         [Test]
         public async Task TestUnselectBadgeNoneEquipped()
         {
-            User user = MockUser("user", selectedBadge: null);
+            User user = MockUser("MockUser", selectedBadge: null);
 
             CommandResult result = await _badgeCommands.UnselectBadge(new CommandContext(MockMessage(user),
                 ImmutableList<string>.Empty, _argsParser));

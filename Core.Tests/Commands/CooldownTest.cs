@@ -11,7 +11,7 @@ namespace Core.Tests.Commands
     {
         private static User MockUser(string name) => new User(
             id: Guid.NewGuid().ToString(),
-            name: name, twitchDisplayName: name, simpleName: name.ToLower(), color: null,
+            name: name, twitchDisplayName: "☺" + name, simpleName: name.ToLower(), color: null,
             firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
             lastMessageAt: null, pokeyen: 0, tokens: 0);
 
@@ -42,8 +42,8 @@ namespace Core.Tests.Commands
             Instant t1 = Instant.FromUnixTimeSeconds(1);
             Instant t2 = Instant.FromUnixTimeSeconds(2);
             Instant t3 = Instant.FromUnixTimeSeconds(3);
-            var user1 = MockUser("user1");
-            var user2 = MockUser("user2");
+            var user1 = MockUser("User1");
+            var user2 = MockUser("User2");
             var clockMock = new Mock<IClock>();
             var cooldown = new PerUserCooldown(clockMock.Object, Duration.FromSeconds(2));
 
