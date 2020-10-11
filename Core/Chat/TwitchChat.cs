@@ -54,7 +54,7 @@ namespace Core.Chat
             _userRepo = userRepo;
 
             _twitchClient = new TwitchClient(
-                client: new TcpClient(new ClientOptions()),
+                client: new WebSocketClient(new ClientOptions()),
                 logger: loggerFactory.CreateLogger<TwitchClient>());
             var credentials = new ConnectionCredentials(
                 twitchUsername: chatConfig.Username,
