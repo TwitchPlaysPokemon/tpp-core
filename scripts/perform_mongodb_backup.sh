@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # This script automates the process of making a mongodump backup
-# on linux from one of two nodes in a 2-node replica set.
+# on linux from one of three nodes in a 3-node replica set.
 # You may copy it to e.g. /usr/local/bin/
 
 NC='\033[0m' # No Color
@@ -21,30 +21,37 @@ else
 fi
 
 myhostaddr="$(hostname -I | tr -d '[:space:]'):27017"
-mymemberstatus=$(mongo --quiet --eval 'JSON.stringify(rs.status().members)' \
-| jq -r -c ".[] | select(.name == \"$myhostaddr\").stateStr")
-mynumvotes=$(mongo --quiet --eval 'JSON.stringify(rs.conf().members)' \
-| jq -r -c ".[] | select(.host == \"$myhostaddr\").votes")
-mypriority=$(mongo --quiet --eval 'JSON.stringify(rs.conf().members)' \
-| jq -r -c ".[] | select(.host == \"$myhostaddr\").priority")
+mymemberstatus=$(mongo --quiet --eval 'JSON.stringify(rs.status().members)' | jq -r -c ".[] | select(.self).stateStr")
+mynumvotes=$(mongo --quiet --eval 'JSON.stringify(rs.conf().members)' | jq -r -c ".[] | select(.host == \"$myhostaddr\").votes")
+mypriority=$(mongo --quiet --eval 'JSON.stringify(rs.conf().members)' | jq -r -c ".[] | select(.host == \"$myhostaddr\").priority")
+allvotes=$(mongo --quiet --eval 'JSON.stringify(rs.conf().members)' | jq -r -c "[.[] | .votes] | add")
+allprios=$(mongo --quiet --eval 'JSON.stringify(rs.conf().members)' | jq -r -c "[.[] | .priority] | add")
 
 if [ "$mymemberstatus" != "SECONDARY" ]; then
   echo -e "${RED}Could not verify that the current node $myhostaddr is in SECONDARY state. Detected '$mymemberstatus'${NC}"
+  if [ "$mymemberstatus" = "PRIMARY" ]; then
+    echo -e "If other nodes are healthy and could take over, you may step this node down from PRIMARY."
+    echo -e "To do that, run: ${CYAN}mongo --eval \"rs.stepDown();\"${NC} and wait a minute."
+  fi
   exit 1
 fi
 echo "Successfully verified that the current node $myhostaddr is in SECONDARY state"
 
-if [ "$mynumvotes" != "0" ]; then
-  echo -e "${RED}Could not verify that the current node $myhostaddr has 0 votes. Detected '$mynumvotes'${NC}"
+voteswithoutme=$((allvotes - mynumvotes))
+if [[ $mynumvotes -ge $voteswithoutme ]]; then
+  echo -e "${RED}Could not verify that the replica set would have a majority of votes without this node.${NC}"
+  echo -e "${RED}Detected this node having '$mynumvotes' votes, and '$allvotes' votes total${NC}"
   exit 1
 fi
-echo "Successfully verified that the current node $myhostaddr has 0 votes"
+echo "Successfully verified that the replica set can have a majority of votes without $myhostaddr"
 
-if [ "$mypriority" != "0" ]; then
-  echo -e "${RED}Could not verify that the current node $myhostaddr has 0 votes. Detected '$mypriority'${NC}"
+prioritywithoutme=$((allprios - mypriority))
+if [[ $mypriority -ge $prioritywithoutme ]]; then
+  echo -e "${RED}Could not verify that the replica set would have a majority of priority without this node.${NC}"
+  echo -e "${RED}Detected this node having '$mypriority' priority, and '$allprios' priority total${NC}"
   exit 1
 fi
-echo "Successfully verified that the current node $myhostaddr has 0 priority"
+echo "Successfully verified that the replica set can have a majority priority without $myhostaddr"
 
 echo "Shutting down mongod service..."
 sudo systemctl stop mongod
