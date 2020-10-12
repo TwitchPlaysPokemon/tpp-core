@@ -1,7 +1,7 @@
 using Core.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Core
+namespace Core.Modes
 {
     public sealed class Runmode : ModeBase
     {

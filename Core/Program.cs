@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Core.Configuration;
+using Core.Modes;
 using DocoptNet;
 using JsonNet.ContractResolvers;
 using Microsoft.Extensions.Logging;
@@ -14,32 +15,49 @@ namespace Core
 {
     internal static class Program
     {
-        private const string Usage = @"
+        private static string Usage => $@"
 Usage:
-  core runmode [--config=<file>] [--runmode-config=<file>]
-  core matchmode [--config=<file>] [--matchmode-config=<file>]
-  core testconfigs [--config=<file>] [--runmode-config=<file>] [--matchmode-config=<file>]
-  core gendefaultconfig [--mode=(run|match)] [--outfile=<file>]
+  core start --mode=<mode> [--config=<file>] [--mode-config=<file>]
+  core testconfig [--mode=<mode>] [--config=<file>] [--mode-config=<file>]
+  core gendefaultconfig [--mode=<mode>] [--outfile=<file>]
   core regenjsonschemas
   core -h | --help
 
 Options:
   -h --help                  Show this screen.
+  -m <mode>, --mode=<mode>   Name of the mode to use. Possible values: {string.Join(", ", DefaultConfigs.Keys)}
   --config=<file>            Specifies the base config file for all modes. [default: config.json]
-  --runmode-config=<file>    Specifies the runmode-specific config file. [default: config.runmode.json]
-  --matchmode-config=<file>  Specifies the matchmode-specific config file. [default: config.matchmode.json]
+  --mode-config=<file>       Specifies the mode-specific config file. [default: config.<mode>mode.json]
   --outfile=<file>           Specifies the file to output to. Default is printing to stdout.
 ";
+
+        // null for no mode-specific config
+        private static readonly Dictionary<string, IRootConfig?> DefaultConfigs = new Dictionary<string, IRootConfig?>
+        {
+            ["run"] = new RunmodeConfig(),
+            ["match"] = new MatchmodeConfig(),
+            ["dualcore"] = null,
+        };
 
         private static void Main(string[] argv)
         {
             IDictionary<string, ValueObject> args = new Docopt().Apply(Usage, argv, exit: true);
-            if (args["runmode"].IsTrue) Runmode(args["--config"].ToString(), args["--runmode-config"].ToString());
-            if (args["matchmode"].IsTrue) Matchmode(args["--config"].ToString(), args["--matchmode-config"].ToString());
-            else if (args["testconfigs"].IsTrue)
-                TestConfigs(args["--config"].ToString(), args["--runmode-config"].ToString(),
-                    args["--matchmode-config"].ToString());
-            else if (args["gendefaultconfig"].IsTrue) OutputDefaultConfig(args["--mode"], args["--outfile"]);
+            string? mode = null;
+            string modeConfigFilename = args["--mode-config"].ToString();
+            if (args["--mode"] != null && !args["--mode"].IsNullOrEmpty)
+            {
+                mode = args["--mode"].ToString();
+                if (!DefaultConfigs.ContainsKey(mode))
+                {
+                    Console.WriteLine(
+                        $"Unknown mode '{mode}', possible values: {string.Join(", ", DefaultConfigs.Keys)}");
+                    Environment.Exit(1);
+                }
+                modeConfigFilename = modeConfigFilename.Replace("<mode>", mode);
+            }
+            if (args["start"].IsTrue) Mode(mode!, args["--config"].ToString(), modeConfigFilename);
+            else if (args["testconfig"].IsTrue) TestConfig(args["--config"].ToString(), mode, modeConfigFilename);
+            else if (args["gendefaultconfig"].IsTrue) OutputDefaultConfig(mode, args["--outfile"]);
             else if (args["regenjsonschemas"].IsTrue) RegenerateJsonSchema();
         }
 
@@ -73,16 +91,21 @@ Options:
                 if (baseConfig.LogPath != null) builder.AddFile(Path.Combine(baseConfig.LogPath, "tpp-{Date}.log"));
             });
 
-        private static void Runmode(string baseConfigFilename, string runmodeConfigFilename)
+        private static void Mode(string modeName, string baseConfigFilename, string modeConfigFilename)
         {
             BaseConfig baseConfig = ReadConfig<BaseConfig>(baseConfigFilename);
-            RunmodeConfig runmodeConfig = ReadConfig<RunmodeConfig>(runmodeConfigFilename);
-            using var loggerFactory = BuildLoggerFactory(baseConfig);
+            using ILoggerFactory loggerFactory = BuildLoggerFactory(baseConfig);
             ILogger logger = loggerFactory.CreateLogger("main");
-            using var runmode = new Runmode(loggerFactory, baseConfig, runmodeConfig);
+            ModeBase mode = modeName switch
+            {
+                "run" => new Runmode(loggerFactory, baseConfig, ReadConfig<RunmodeConfig>(modeConfigFilename)),
+                "match" => new Matchmode(loggerFactory, baseConfig, ReadConfig<MatchmodeConfig>(modeConfigFilename)),
+                "dualcore" => new DualcoreMode(loggerFactory, baseConfig),
+                _ => throw new NotSupportedException($"Invalid mode '{modeName}'")
+            };
             try
             {
-                runmode.Run().Wait();
+                mode.Run().Wait();
             }
             catch (Exception ex)
             {
@@ -90,27 +113,10 @@ Options:
             }
         }
 
-        private static void Matchmode(string baseConfigFilename, string matchmodeConfigFilename)
-        {
-            BaseConfig baseConfig = ReadConfig<BaseConfig>(baseConfigFilename);
-            MatchmodeConfig matchmodeConfig = ReadConfig<MatchmodeConfig>(matchmodeConfigFilename);
-            using var loggerFactory = BuildLoggerFactory(baseConfig);
-            ILogger logger = loggerFactory.CreateLogger("main");
-            var matchmode = new Matchmode(loggerFactory, baseConfig, matchmodeConfig);
-            try
-            {
-                matchmode.Run().Wait();
-            }
-            catch (Exception ex)
-            {
-                logger.LogCritical(ex, "uncaught exception! TPP is crashing now, goodbye.");
-            }
-        }
-
-        private static void TestConfigs(
+        private static void TestConfig(
             string configFilename,
-            string runmodeConfigFilename,
-            string matchmodeConfigFilename)
+            string? mode,
+            string modeConfigFilename)
         {
             // just try to read the configs, don't do anything with them
 
@@ -121,30 +127,30 @@ Options:
                     $"missing base config file '{configFilename}', generate one from default values " +
                     $"using 'gendefaultconfig --outfile={configFilename}'");
 
-            if (File.Exists(runmodeConfigFilename))
-                ReadConfig<RunmodeConfig>(runmodeConfigFilename);
-            else
-                Console.Error.WriteLine(
-                    $"missing runmode config file '{runmodeConfigFilename}', generate one from default values " +
-                    $"using 'gendefaultconfig --mode=run --outfile={runmodeConfigFilename}'");
-
-            if (File.Exists(matchmodeConfigFilename))
-                ReadConfig<MatchmodeConfig>(matchmodeConfigFilename);
-            else
-                Console.Error.WriteLine(
-                    $"missing matchmode config file '{matchmodeConfigFilename}', generate one from default values " +
-                    $"using 'gendefaultconfig --mode=match --outfile={matchmodeConfigFilename}'");
+            if (mode != null && DefaultConfigs[mode] != null)
+            {
+                if (File.Exists(modeConfigFilename))
+                    ReadConfig<RunmodeConfig>(modeConfigFilename);
+                else
+                    Console.Error.WriteLine(
+                        $"missing mode config file '{modeConfigFilename}', generate one from default values " +
+                        $"using 'gendefaultconfig {mode} --outfile={modeConfigFilename}'");
+            }
         }
 
-        private static void OutputDefaultConfig(ValueObject? mode, ValueObject? outfileArgument)
+        private static void OutputDefaultConfig(string? modeName, ValueObject? outfileArgument)
         {
-            ConfigBase config = mode?.Value switch
+            IRootConfig? config = modeName switch
             {
                 null => new BaseConfig(),
-                "run" => new RunmodeConfig(),
-                "match" => new MatchmodeConfig(),
-                _ => throw new NotSupportedException($"Invalid mode '{mode}'")
+                var name when DefaultConfigs.ContainsKey(name) => DefaultConfigs[name],
+                _ => throw new NotSupportedException($"Invalid mode '{modeName}'")
             };
+            if (config == null)
+            {
+                Console.Error.WriteLine($"mode '{modeName}' has no config file.");
+                return;
+            }
             string json = JsonConvert.SerializeObject(config, ConfigSerializerSettings);
             if (config is BaseConfig)
             {
@@ -162,15 +168,20 @@ Options:
             generator.GenerationProviders.Add(new StringEnumGenerationProvider());
             generator.DefaultRequired = Required.Default;
             generator.ContractResolver = new PrivateSetterContractResolver();
-            string baseSchemaText = generator.Generate(typeof(BaseConfig)).ToString();
-            string runmodeSchemaText = generator.Generate(typeof(RunmodeConfig)).ToString();
-            string matchmodeSchemaText = generator.Generate(typeof(MatchmodeConfig)).ToString();
-            File.WriteAllText(BaseConfig.Schema, baseSchemaText, Encoding.UTF8);
-            Console.Error.WriteLine($"Wrote base json schemas to '{BaseConfig.Schema}',");
-            File.WriteAllText(RunmodeConfig.Schema, runmodeSchemaText, Encoding.UTF8);
-            Console.Error.WriteLine($"Wrote runmode json schemas to '{RunmodeConfig.Schema}'");
-            File.WriteAllText(MatchmodeConfig.Schema, matchmodeSchemaText, Encoding.UTF8);
-            Console.Error.WriteLine($"Wrote matchmode json schemas to '{MatchmodeConfig.Schema}'");
+            IRootConfig baseConfig = new BaseConfig();
+            string baseSchemaText = generator.Generate(typeof(BaseConfig))
+                .ToString().Replace("\r\n", "\n");
+            File.WriteAllText(baseConfig.Schema, baseSchemaText, Encoding.UTF8);
+            Console.Error.WriteLine($"Wrote base json schema to '{baseConfig.Schema}',");
+
+            foreach ((string modeName, IRootConfig? defaultModeConfig) in DefaultConfigs)
+            {
+                if (defaultModeConfig == null) continue;
+                string modeSchemaText = generator.Generate(defaultModeConfig.GetType())
+                    .ToString().Replace("\r\n", "\n");
+                File.WriteAllText(defaultModeConfig.Schema, modeSchemaText, Encoding.UTF8);
+                Console.Error.WriteLine($"Wrote mode '{modeName}' json schema to '{defaultModeConfig.Schema}'");
+            }
         }
     }
 }

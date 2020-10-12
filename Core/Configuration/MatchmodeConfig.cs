@@ -1,9 +1,7 @@
-using Newtonsoft.Json;
-
 namespace Core.Configuration
 {
-    public class MatchmodeConfig : ConfigBase
+    public class MatchmodeConfig : ConfigBase, IRootConfig
     {
-        [JsonProperty("$schema")] public static string Schema { get; private set; } = "./config.matchmode.schema.json";
+        public string Schema => "./config.matchmode.schema.json";
     }
 }

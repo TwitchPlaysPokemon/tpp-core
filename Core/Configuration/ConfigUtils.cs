@@ -18,6 +18,7 @@ namespace Core.Configuration
         {
             foreach (string configKey in config.UnrecognizedConfigs.Keys)
             {
+                if (config is IRootConfig && configKey == IRootConfig.SchemaFieldName) continue;
                 string fullyQualifiedConfigKey = string.Join(".", parentConfigKeys.Concat(new[] { configKey }));
                 Console.Error.WriteLine($"unrecognized config key '{fullyQualifiedConfigKey}'");
             }
