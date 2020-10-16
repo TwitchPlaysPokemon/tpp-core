@@ -73,8 +73,14 @@ Options:
 
         private static T ReadConfig<T>(string filename) where T : ConfigBase
         {
+            return (T)ReadConfig(filename, typeof(T));
+        }
+
+        private static ConfigBase ReadConfig(string filename, Type type)
+        {
+            if (!type.IsSubclassOf(typeof(ConfigBase))) throw new ArgumentException("", nameof(type));
             string json = File.ReadAllText(filename);
-            var config = JsonConvert.DeserializeObject<T>(json, ConfigSerializerSettings);
+            var config = (ConfigBase?)JsonConvert.DeserializeObject(json, type, ConfigSerializerSettings);
             if (config == null) throw new ArgumentException("config must not be null");
             ConfigUtils.WriteUnrecognizedConfigsToStderr(config);
             if (config is BaseConfig baseConfig && baseConfig.LogPath == null)
@@ -130,7 +136,7 @@ Options:
             if (mode != null && DefaultConfigs[mode] != null)
             {
                 if (File.Exists(modeConfigFilename))
-                    ReadConfig<RunmodeConfig>(modeConfigFilename);
+                    ReadConfig(modeConfigFilename, DefaultConfigs[mode]!.GetType());
                 else
                     Console.Error.WriteLine(
                         $"missing mode config file '{modeConfigFilename}', generate one from default values " +
