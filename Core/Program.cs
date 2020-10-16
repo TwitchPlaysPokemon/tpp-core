@@ -96,7 +96,7 @@ Options:
             BaseConfig baseConfig = ReadConfig<BaseConfig>(baseConfigFilename);
             using ILoggerFactory loggerFactory = BuildLoggerFactory(baseConfig);
             ILogger logger = loggerFactory.CreateLogger("main");
-            ModeBase mode = modeName switch
+            IMode mode = modeName switch
             {
                 "run" => new Runmode(loggerFactory, baseConfig, ReadConfig<RunmodeConfig>(modeConfigFilename)),
                 "match" => new Matchmode(loggerFactory, baseConfig, ReadConfig<MatchmodeConfig>(modeConfigFilename)),
