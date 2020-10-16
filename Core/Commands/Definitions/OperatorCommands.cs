@@ -37,13 +37,17 @@ namespace Core.Commands.Definitions
         {
             var argSet = context.Args.Select(arg => arg.ToLowerInvariant()).ToHashSet();
             bool cancel = argSet.Remove("cancel");
-            if (argSet.Count > 1) return Task.FromResult(new CommandResult { Response = "too many arguments" });
-            if (argSet.Any())
-            {
-                if (argSet.First() == "old") return Task.FromResult(new CommandResult()); // do nothing silently
-                else if (argSet.First() != "new") return Task.FromResult(new CommandResult
-                { Response = $"unknown argument '{argSet.First()}'" });
-            }
+
+            if (argSet.Count > 1)
+                return Task.FromResult(new CommandResult { Response = "too many arguments" });
+            else if (argSet.Count == 0)
+                return Task.FromResult(new CommandResult { Response = "must specify 'old' or 'new' core (new core)" });
+
+            if (argSet.First() == "old")
+                return Task.FromResult(new CommandResult()); // do nothing silently
+            else if (argSet.First() != "new")
+                return Task.FromResult(new CommandResult { Response = $"unknown argument '{argSet.First()}'" });
+
             string message = cancel
                 ? _stopToken.ShouldStop
                     ? "cancelled a prior stop command (new core)"
