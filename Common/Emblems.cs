@@ -54,6 +54,7 @@ namespace Common
             [45] = "Gauntlet Blaze Black 2",
             [46] = "Gauntlet X",
             [47] = "Sirius",
+            [48] = "Rising Ruby",
         };
 
         public static string FormatEmblem(int emblemNum)
