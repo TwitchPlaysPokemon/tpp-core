@@ -1,14 +1,12 @@
-using Newtonsoft.Json;
-
 namespace Core.Configuration
 {
     /// <summary>
     /// The root of TPP-Core-Configuration.
     /// Contains all configurations shared between all modes.
     /// </summary>
-    public sealed class BaseConfig : ConfigBase
+    public sealed class BaseConfig : ConfigBase, IRootConfig
     {
-        [JsonProperty("$schema")] public static string Schema = "./config.schema.json";
+        public string Schema => "./config.schema.json";
 
         /* directory under which log files will be created. null for no log files. */
         public string? LogPath { get; init; } = null;

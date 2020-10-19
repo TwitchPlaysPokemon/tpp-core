@@ -10,28 +10,22 @@ using Core.Configuration;
 using Microsoft.Extensions.Logging;
 using NodaTime;
 
-namespace Core
+namespace Core.Modes
 {
-    public abstract class ModeBase : IDisposable
+    public sealed class ModeBase : IDisposable
     {
-        private readonly ILogger _logger;
-        private readonly BaseConfig _baseConfig;
         private readonly CommandProcessor _commandProcessor;
         private readonly IChat _chat;
         private readonly ICommandResponder _commandResponder;
-        private readonly StopToken _stopToken;
 
-        protected ModeBase(ILoggerFactory loggerFactory, BaseConfig baseConfig)
+        public ModeBase(ILoggerFactory loggerFactory, BaseConfig baseConfig, StopToken stopToken)
         {
-            _logger = loggerFactory.CreateLogger<ModeBase>();
-            _baseConfig = baseConfig;
             PokedexData pokedexData = PokedexData.Load();
             Setups.Databases repos = Setups.SetUpRepositories(baseConfig);
             ArgsParser argsParser = Setups.SetUpArgsParser(repos.UserRepo, pokedexData);
 
-            _stopToken = new StopToken();
             _commandProcessor = Setups.SetUpCommandProcessor(
-                loggerFactory, argsParser, repos, _stopToken, baseConfig.Chat);
+                loggerFactory, argsParser, repos, stopToken, baseConfig.Chat);
 
             _chat = new TwitchChat(loggerFactory, SystemClock.Instance, baseConfig.Chat, repos.UserRepo);
             _chat.IncomingMessage += MessageReceived;
@@ -61,19 +55,9 @@ namespace Core
             }
         }
 
-        public async Task Run()
+        public void Start()
         {
-            _logger.LogInformation("Hi!");
-            await Task.Delay(TimeSpan.FromMilliseconds(100));
-
             _chat.Connect();
-            while (!_stopToken.ShouldStop)
-            {
-                // TODO main loop goes here
-                await Task.Delay(TimeSpan.FromMilliseconds(100));
-            }
-
-            _logger.LogInformation("Bye!");
         }
 
         public void Dispose()

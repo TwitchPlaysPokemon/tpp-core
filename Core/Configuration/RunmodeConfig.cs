@@ -1,9 +1,7 @@
-using Newtonsoft.Json;
-
 namespace Core.Configuration
 {
-    public class RunmodeConfig : ConfigBase
+    public class RunmodeConfig : ConfigBase, IRootConfig
     {
-        [JsonProperty("$schema")] public static string Schema { get; private set; } = "./config.runmode.schema.json";
+        public string Schema => "./config.runmode.schema.json";
     }
 }
