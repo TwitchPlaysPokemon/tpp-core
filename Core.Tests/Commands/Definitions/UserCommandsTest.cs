@@ -237,6 +237,23 @@ namespace Core.Tests.Commands.Definitions
         }
 
         [Test]
+        public async Task TestCheckEmblemsSomeoneElse()
+        {
+            var userSelf = MockUser(emblems: new SortedSet<int>(new[] { 3, 4, 9 }));
+            var userOther = MockUser(name: "OtherUser", emblems: new SortedSet<int>(new[] { 1, 2, 47 }));
+            _userRepoMock
+                .Setup(repo => repo.FindBySimpleName(userOther.SimpleName))
+                .ReturnsAsync(userOther);
+
+            CommandResult result = await _userCommands.CheckEmblems(new CommandContext(MockMessage(userSelf),
+                ImmutableList.Create("oThErUsEr"), _argsParser));
+
+            Assert.AreEqual(
+                "OtherUser has participated in the following runs: #1 (Red), #2 (Crystal), #47 (Sirius)",
+                result.Response);
+        }
+
+        [Test]
         public async Task TestSelectEmblemNotOwned()
         {
             var user = MockUser(emblems: new SortedSet<int>(new[] { 1, 2, 47 }));
