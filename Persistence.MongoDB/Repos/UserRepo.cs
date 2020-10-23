@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Common;
@@ -33,7 +34,11 @@ namespace Persistence.MongoDB.Repos
                 cm.MapProperty(u => u.LastMessageAt).SetElementName("last_message_at");
                 cm.MapProperty(u => u.Pokeyen).SetElementName("pokeyen");
                 cm.MapProperty(u => u.Tokens).SetElementName("tokens");
-                cm.MapProperty(u => u.ParticipationEmblems).SetElementName("participation");
+                cm.MapProperty(u => u.ParticipationEmblems)
+                    .SetElementName("participation")
+                    // behaviour of old core: omit if no participation.
+                    .SetDefaultValue(new SortedSet<int>())
+                    .SetIgnoreIfDefault(true);
                 cm.MapProperty(u => u.SelectedParticipationEmblem).SetElementName("selected_participation_badge");
                 cm.MapProperty(u => u.SelectedBadge).SetElementName("badge");
                 cm.MapProperty(u => u.GlowColor).SetElementName("secondary_color");

@@ -149,6 +149,29 @@ namespace Persistence.MongoDB.Tests.Repos
         }
 
         /// <summary>
+        /// Ensures that if the database does not contain the "participation" field,
+        /// that it gets deserialized as an empty set instead of null.
+        /// </summary>
+        [Test]
+        public async Task TestDeserializeMissingParticipationAsEmpty()
+        {
+            // given
+            var userInfo = new UserInfo("123", "X", "x", null);
+            await _userRepo.RecordUser(userInfo);
+            UpdateResult updateResult = await _userRepo.Collection.UpdateOneAsync(u => u.Id == userInfo.Id,
+                    Builders<User>.Update.Unset(u => u.ParticipationEmblems));
+            Assert.AreEqual(1, updateResult.ModifiedCount);
+
+            // when
+            User? deserializedUser = await _userRepo.FindBySimpleName(userInfo.SimpleName);
+
+            // then
+            Assert.NotNull(deserializedUser);
+            Assert.NotNull(deserializedUser!.ParticipationEmblems);
+            Assert.AreEqual(new SortedSet<int>(), deserializedUser!.ParticipationEmblems);
+        }
+
+        /// <summary>
         /// Tests that concurrent user recordings work reliably and do not cause
         /// "E11000 duplicate key error collection" errors or similar.
         /// </summary>
