@@ -31,6 +31,12 @@ namespace Core.Modes
             _logger.LogInformation("Dualcore mode ended");
         }
 
+        public void Cancel()
+        {
+            // there main loop is basically busylooping, so we can just tell it to stop
+            _stopToken.ShouldStop = true;
+        }
+
         public void Dispose()
         {
             _modeBase.Dispose();
