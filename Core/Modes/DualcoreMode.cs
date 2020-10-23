@@ -8,13 +8,13 @@ namespace Core.Modes
 {
     public sealed class DualcoreMode : IMode, IDisposable
     {
-        private readonly ILogger<Runmode> _logger;
+        private readonly ILogger<DualcoreMode> _logger;
         private readonly StopToken _stopToken;
         private readonly ModeBase _modeBase;
 
         public DualcoreMode(ILoggerFactory loggerFactory, BaseConfig baseConfig)
         {
-            _logger = loggerFactory.CreateLogger<Runmode>();
+            _logger = loggerFactory.CreateLogger<DualcoreMode>();
             _stopToken = new StopToken();
             _modeBase = new ModeBase(loggerFactory, baseConfig, _stopToken);
         }
