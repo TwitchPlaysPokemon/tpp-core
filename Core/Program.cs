@@ -38,6 +38,7 @@ Options:
             ["run"] = new RunmodeConfig(),
             ["match"] = new MatchmodeConfig(),
             ["dualcore"] = null,
+            ["dummy"] = null,
         };
 
         private static void Main(string[] argv)
@@ -108,6 +109,7 @@ Options:
                 "run" => new Runmode(loggerFactory, baseConfig, ReadConfig<RunmodeConfig>(modeConfigFilename)),
                 "match" => new Matchmode(loggerFactory, baseConfig, ReadConfig<MatchmodeConfig>(modeConfigFilename)),
                 "dualcore" => new DualcoreMode(loggerFactory, baseConfig),
+                "dummy" => new DummyMode(loggerFactory, baseConfig),
                 _ => throw new NotSupportedException($"Invalid mode '{modeName}'")
             };
             try
