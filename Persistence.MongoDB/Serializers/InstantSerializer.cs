@@ -18,7 +18,6 @@ namespace Persistence.MongoDB.Serializers
             BsonType type = context.Reader.GetCurrentBsonType();
             return type switch
             {
-                BsonType.Null => default,
                 BsonType.DateTime => Instant.FromUnixTimeMilliseconds(context.Reader.ReadDateTime()),
                 _ => throw CreateCannotBeDeserializedException()
             };
@@ -26,8 +25,7 @@ namespace Persistence.MongoDB.Serializers
 
         public override void Serialize(BsonSerializationContext context, BsonSerializationArgs args, Instant value)
         {
-            if (value == null) context.Writer.WriteNull();
-            else context.Writer.WriteDateTime(value.ToUnixTimeMilliseconds());
+            context.Writer.WriteDateTime(value.ToUnixTimeMilliseconds());
         }
     }
 }

@@ -17,6 +17,7 @@ namespace Persistence.MongoDB.Serializers
             BsonSerializer.RegisterSerializer(BadgeSourceSerializer.Instance);
             BsonSerializer.RegisterSerializer(PkmnSpeciesSerializer.Instance);
             BsonSerializer.RegisterSerializer(InstantSerializer.Instance);
+            BsonSerializer.RegisterSerializer(NullableInstantSerializer.Instance);
         }
     }
 }
