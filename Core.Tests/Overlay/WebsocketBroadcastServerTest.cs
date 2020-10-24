@@ -13,7 +13,7 @@ namespace Core.Tests.Overlay
     [Category("IntegrationTest")]
     public class WebsocketBroadcastServerTest
     {
-        private const int Port = 12345;
+        private const int Port = 53427;
         private Task _wsServerListen = null!;
         private WebsocketBroadcastServer _server = null!;
 
@@ -69,11 +69,12 @@ namespace Core.Tests.Overlay
             List<string> messages = Enumerable.Range(0, numMessages)
                 .Select(i => $"message #{i}").ToList();
 
-            const int numClients = 100;
+            const int numClients = 30;
             List<Task<WebsocketMessageStreamClient>> clientTasks = Enumerable
                 .Range(0, numClients)
                 .Select(_ => CreateConnectedClient())
                 .ToList(); // start all coroutines to establish the connections concurrently
+            await Task.WhenAll(clientTasks);
             List<Task<List<string>>> messageStreams = clientTasks
                 .Select(task => ReadAllMessages(task.Result))
                 .ToList(); // start all coroutines to start consuming websocket messages

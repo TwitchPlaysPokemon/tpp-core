@@ -17,7 +17,7 @@ namespace Core.Overlay
 
     /// A websocket server capable of accepting new connections and broadcasting messages.
     /// It cannot receive messages.
-    public class WebsocketBroadcastServer : IBroadcastServer, IDisposable
+    public class WebsocketBroadcastServer : IBroadcastServer, IAsyncDisposable
     {
         private readonly List<Connection> _connections = new List<Connection>();
         private HttpListener? _httpListener;
@@ -52,7 +52,7 @@ namespace Core.Overlay
         public async Task Send(string message, CancellationToken cancellationToken)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(message);
-            await _connectionsSemaphore.WaitAsync();
+            await _connectionsSemaphore.WaitAsync(cancellationToken);
             try
             {
                 foreach (var connection in _connections)
@@ -121,7 +121,8 @@ namespace Core.Overlay
         /// Keeps accepting new incoming websocket connections until the server is stopped with <see cref="Stop"/>.
         public async Task Listen()
         {
-            await Stop();
+            if (_httpListener != null)
+                throw new InvalidOperationException("Cannot listen: The internal http listener is already running!");
             _httpListener = new HttpListener();
             _httpListener.Prefixes.Add($"http://{_host}:{_port}/");
             _httpListener.Start();
@@ -193,10 +194,10 @@ namespace Core.Overlay
             _httpListener = null;
         }
 
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
-            Stop().Wait();
-            PruneDeadConnections().Wait();
+            await Stop();
+            await PruneDeadConnections();
             _connectionsSemaphore.Dispose();
         }
     }
