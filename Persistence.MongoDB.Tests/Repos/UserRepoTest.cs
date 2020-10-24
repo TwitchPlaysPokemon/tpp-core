@@ -26,7 +26,7 @@ namespace Persistence.MongoDB.Tests.Repos
         /// Tests that recording new data supplied in the <see cref="UserInfo"/> struct works properly.
         /// </summary>
         [Test]
-        public async Task TestRecordUser()
+        public async Task recording_user_updates_userinfo_data()
         {
             // given
             UserRepo userRepo = CreateUserRepo();
@@ -43,20 +43,22 @@ namespace Persistence.MongoDB.Tests.Repos
                 userId, twitchDisplayName: displayNameAfter, simpleName: usernameAfter, color: "bar"));
 
             // then
-            Assert.AreEqual(expected: 1, actual: userRepo.Collection.CountDocuments(FilterDefinition<User>.Empty));
-            Assert.AreEqual(expected: userId, actual: userBefore.Id);
-            Assert.AreEqual(expected: userId, actual: userAfter.Id);
-            Assert.AreEqual(expected: displayNameBefore, actual: userBefore.TwitchDisplayName);
-            Assert.AreEqual(expected: displayNameAfter, actual: userAfter.TwitchDisplayName);
-            Assert.AreEqual(expected: usernameBefore, actual: userBefore.SimpleName);
-            Assert.AreEqual(expected: usernameAfter, actual: userAfter.SimpleName);
+            Assert.AreEqual(1, await userRepo.Collection.CountDocumentsAsync(FilterDefinition<User>.Empty));
+            Assert.AreEqual(userId, userBefore.Id);
+            Assert.AreEqual(userId, userAfter.Id);
+            Assert.AreEqual(displayNameBefore, userBefore.TwitchDisplayName);
+            Assert.AreEqual(displayNameAfter, userAfter.TwitchDisplayName);
+            Assert.AreEqual(usernameBefore, userBefore.SimpleName);
+            Assert.AreEqual(usernameAfter, userAfter.SimpleName);
+            Assert.AreEqual("foo", userBefore.Color);
+            Assert.AreEqual("bar", userAfter.Color);
         }
 
         /// <summary>
         /// Tests that the default starting currencies get set properly, and don't get reset for existing users.
         /// </summary>
         [Test]
-        public async Task TestStartingCurrency()
+        public async Task recording_new_user_sets_starting_currency()
         {
             UserRepo userRepo = CreateUserRepo();
             // given
@@ -82,7 +84,7 @@ namespace Persistence.MongoDB.Tests.Repos
         /// Tests that <see cref="User.LastActiveAt"/> gets updated properly.
         /// </summary>
         [Test]
-        public async Task TestUpdateLastActiveAt()
+        public async Task recording_user_updates_last_active_at()
         {
             UserRepo userRepo = CreateUserRepo();
             // given
@@ -103,7 +105,7 @@ namespace Persistence.MongoDB.Tests.Repos
         /// flag is set.
         /// </summary>
         [Test]
-        public async Task TestUpdateLastMessageAt()
+        public async Task recording_user_with_frommessage_flag_updates_last_message_at()
         {
             UserRepo userRepo = CreateUserRepo();
             // given
@@ -129,7 +131,7 @@ namespace Persistence.MongoDB.Tests.Repos
         /// I use <see cref="User.ParticipationEmblems"/> for this case, whose initial value is an empty sorted set.
         /// </summary>
         [Test]
-        public async Task TestUseDefaultEmptySet()
+        public async Task recording_user_with_default_participation_reads_as_empty_set()
         {
             UserRepo userRepo = CreateUserRepo();
             // given
@@ -153,7 +155,7 @@ namespace Persistence.MongoDB.Tests.Repos
         /// that it gets deserialized as an empty set instead of null.
         /// </summary>
         [Test]
-        public async Task TestDeserializeMissingParticipationAsEmpty()
+        public async Task reading_user_without_participation_returns_as_empty_set()
         {
             UserRepo userRepo = CreateUserRepo();
             // given
@@ -177,7 +179,7 @@ namespace Persistence.MongoDB.Tests.Repos
         /// "E11000 duplicate key error collection" errors or similar.
         /// </summary>
         [Test]
-        public async Task TestRecordUserConcurrently()
+        public async Task recording_users_concurrently_works_reliably()
         {
             UserRepo userRepo = CreateUserRepo();
             var userInfo = new UserInfo("123", "X", "x", null);

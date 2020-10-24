@@ -15,7 +15,7 @@ namespace Persistence.MongoDB.Tests.Repos
     public class BadgeRepoTest : MongoTestBase
     {
         [Test]
-        public async Task TestInsert()
+        public async Task insert_then_read_are_equal()
         {
             var badgeRepo = new BadgeRepo(CreateTemporaryDatabase());
             // when
@@ -34,7 +34,7 @@ namespace Persistence.MongoDB.Tests.Repos
         /// This ensures backwards compatibility to any existing data.
         /// </summary>
         [Test]
-        public async Task TestDatabaseSerialization()
+        public async Task has_expected_bson_datatypes()
         {
             var badgeRepo = new BadgeRepo(CreateTemporaryDatabase());
             // when
@@ -52,7 +52,7 @@ namespace Persistence.MongoDB.Tests.Repos
         }
 
         [Test]
-        public async Task TestFindByUser()
+        public async Task can_find_by_user()
         {
             var badgeRepo = new BadgeRepo(CreateTemporaryDatabase());
             // given
@@ -73,7 +73,7 @@ namespace Persistence.MongoDB.Tests.Repos
         }
 
         [Test]
-        public async Task TestCountByUserAndSpecies()
+        public async Task can_count_by_user_and_species()
         {
             var badgeRepo = new BadgeRepo(CreateTemporaryDatabase());
             // given
@@ -97,7 +97,7 @@ namespace Persistence.MongoDB.Tests.Repos
         }
 
         [Test]
-        public async Task TestCountByUserPerSpecies()
+        public async Task can_count_per_species_for_one_user()
         {
             var badgeRepo = new BadgeRepo(CreateTemporaryDatabase());
             // given
@@ -122,7 +122,7 @@ namespace Persistence.MongoDB.Tests.Repos
         }
 
         [Test]
-        public async Task TestHasUserBadge()
+        public async Task can_check_if_user_has_badge()
         {
             var badgeRepo = new BadgeRepo(CreateTemporaryDatabase());
             // given

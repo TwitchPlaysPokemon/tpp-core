@@ -47,7 +47,7 @@ namespace Persistence.MongoDB.Tests.Repos
         }
 
         [Test]
-        public async Task TestUpdate()
+        public async Task performing_transaction_updates_data_and_user_object()
         {
             (IBank<TestUser> bank, IMongoCollection<TestUser> usersCollection) = CreateDbObjects(new MockClock());
             var user = new TestUser { Money = 10 };
@@ -66,7 +66,7 @@ namespace Persistence.MongoDB.Tests.Repos
         }
 
         [Test]
-        public async Task TestAbortStaleUpdate()
+        public async Task fails_transaction_if_user_object_data_is_stale()
         {
             (IBank<TestUser> bank, IMongoCollection<TestUser> usersCollection) = CreateDbObjects(new MockClock());
             var user = new TestUser { Money = 10 };
@@ -88,7 +88,7 @@ namespace Persistence.MongoDB.Tests.Repos
         }
 
         [Test]
-        public void TestUserNotFound()
+        public void fails_transaction_if_user_not_found()
         {
             (IBank<TestUser> bank, IMongoCollection<TestUser> _) = CreateDbObjects(new MockClock());
             var user = new TestUser { Money = 10 }; // user not persisted
@@ -100,7 +100,7 @@ namespace Persistence.MongoDB.Tests.Repos
         }
 
         [Test]
-        public async Task TestMultipleTransactionsTransactional()
+        public async Task performs_multiple_transactions_transactional()
         {
             (IBank<TestUser> bank, IMongoCollection<TestUser> usersCollection) = CreateDbObjects(new MockClock());
             TestUser knownUser = new TestUser { Money = 10 };
@@ -124,7 +124,7 @@ namespace Persistence.MongoDB.Tests.Repos
         }
 
         [Test]
-        public async Task TestReserveMoney()
+        public async Task checks_reserved_money()
         {
             (IBank<TestUser> bank, IMongoCollection<TestUser> usersCollection) = CreateDbObjects(new MockClock());
             TestUser user = new TestUser { Money = 10 };
@@ -143,7 +143,7 @@ namespace Persistence.MongoDB.Tests.Repos
         }
 
         [Test]
-        public void TestGetMoneyUnknownUser()
+        public void fails_check_money_for_unknown_user()
         {
             (IBank<TestUser> bank, IMongoCollection<TestUser> _) = CreateDbObjects(new MockClock());
             TestUser unknownUser = new TestUser { Money = 0 }; // not persisted
@@ -153,7 +153,7 @@ namespace Persistence.MongoDB.Tests.Repos
         }
 
         [Test]
-        public async Task TestDatabaseSerialization()
+        public async Task log_has_expected_bson_datatypes()
         {
             MockClock clockMock = new MockClock();
             (IBank<TestUser> bank, IMongoCollection<TestUser> usersCollection) = CreateDbObjects(clockMock);
@@ -189,11 +189,9 @@ namespace Persistence.MongoDB.Tests.Repos
         }
 
         [Test]
-        public async Task TestDeserializeWithNullTransactionType()
+        public async Task can_handle_null_transaction_type()
         {
             (IBank<TestUser> _, IMongoCollection<TestUser> usersCollection) = CreateDbObjects(new MockClock());
-            // for some reason the "type" field is sometimes missing in the existing database.
-            // that should just get mapped to "Unknown".
             const string id = "590df61373b975210006fcdf";
             Instant instant = InstantPattern.ExtendedIso.Parse("2017-05-06T16:13:07.314Z").Value;
             IMongoCollection<BsonDocument> bsonTransactionLogCollection =
