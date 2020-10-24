@@ -10,7 +10,6 @@ using NodaTime.Text;
 using NUnit.Framework;
 using Persistence.Models;
 using Persistence.MongoDB.Repos;
-using Persistence.MongoDB.Serializers;
 using Persistence.Repos;
 
 namespace Persistence.MongoDB.Tests.Repos
@@ -29,47 +28,39 @@ namespace Persistence.MongoDB.Tests.Repos
     }
 
     [Category("IntegrationTest")]
+    [Parallelizable(ParallelScope.All)]
     public class BankTest : MongoTestBase
     {
-        private IMongoDatabase _database = null!;
-        private IMongoCollection<TestUser> _usersCollection = null!;
-
-        private readonly MockClock _clockMock = new MockClock();
-
-        private IBank<TestUser> _bank = null!;
-
-        [OneTimeSetUp]
-        public void SetUpSerializers() => CustomSerializers.RegisterAll();
-
-        [SetUp]
-        public void SetUp()
+        private (IBank<TestUser>, IMongoCollection<TestUser>) CreateDbObjects(IClock clock)
         {
-            _database = CreateTemporaryDatabase();
-            _bank = new Bank<TestUser>(
-                database: _database,
+            IMongoDatabase database = CreateTemporaryDatabase();
+            var bank = new Bank<TestUser>(
+                database: database,
                 currencyCollectionName: "users",
                 transactionLogCollectionName: "transactionLog",
                 currencyField: user => user.Money,
                 idField: user => user.Id,
-                clock: _clockMock
+                clock: clock
             );
-            _usersCollection = _database.GetCollection<TestUser>("users");
+            IMongoCollection<TestUser> usersCollection = database.GetCollection<TestUser>("users");
+            return (bank, usersCollection);
         }
 
         [Test]
         public async Task TestUpdate()
         {
+            (IBank<TestUser> bank, IMongoCollection<TestUser> usersCollection) = CreateDbObjects(new MockClock());
             var user = new TestUser { Money = 10 };
-            await _usersCollection.InsertOneAsync(user);
+            await usersCollection.InsertOneAsync(user);
 
             var transaction = new Transaction<TestUser>(user, 1, "test");
-            TransactionLog log = await _bank.PerformTransaction(transaction);
+            TransactionLog log = await bank.PerformTransaction(transaction);
 
             Assert.AreEqual(10, log.OldBalance);
             Assert.AreEqual(11, log.NewBalance);
             Assert.AreEqual(1, log.Change);
             Assert.AreEqual("test", log.Type);
-            TestUser userAfter = await _usersCollection.Find(u => u.Id == user.Id).FirstAsync();
+            TestUser userAfter = await usersCollection.Find(u => u.Id == user.Id).FirstAsync();
             Assert.AreEqual(11, userAfter.Money);
             Assert.AreEqual(11, user.Money); // new balance value was injected into existing object as well
         }
@@ -77,20 +68,21 @@ namespace Persistence.MongoDB.Tests.Repos
         [Test]
         public async Task TestAbortStaleUpdate()
         {
+            (IBank<TestUser> bank, IMongoCollection<TestUser> usersCollection) = CreateDbObjects(new MockClock());
             var user = new TestUser { Money = 10 };
-            await _usersCollection.InsertOneAsync(user);
+            await usersCollection.InsertOneAsync(user);
             user.Money = 5; // object is stale, amount does not match database
 
             var transaction = new Transaction<TestUser>(user, 1, "test");
             InvalidOperationException failure = Assert.ThrowsAsync<InvalidOperationException>(
-                () => _bank.PerformTransaction(transaction));
+                () => bank.PerformTransaction(transaction));
 
             Assert.AreEqual(
                 "Tried to perform transaction with stale user data: " +
                 $"old balance 5 plus change 1 does not equal new balance 11 for user {user}",
                 failure.Message);
 
-            TestUser userAfter = await _usersCollection.Find(u => u.Id == user.Id).FirstAsync();
+            TestUser userAfter = await usersCollection.Find(u => u.Id == user.Id).FirstAsync();
             Assert.AreEqual(10, userAfter.Money);
             Assert.AreEqual(5, user.Money); // no new balance was injected
         }
@@ -98,23 +90,25 @@ namespace Persistence.MongoDB.Tests.Repos
         [Test]
         public void TestUserNotFound()
         {
+            (IBank<TestUser> bank, IMongoCollection<TestUser> _) = CreateDbObjects(new MockClock());
             var user = new TestUser { Money = 10 }; // user not persisted
 
             var transaction = new Transaction<TestUser>(user, 1, "test");
             UserNotFoundException<TestUser> userNotFound = Assert.ThrowsAsync<UserNotFoundException<TestUser>>(
-                () => _bank.PerformTransaction(transaction));
+                () => bank.PerformTransaction(transaction));
             Assert.AreEqual(user, userNotFound.User);
         }
 
         [Test]
         public async Task TestMultipleTransactionsTransactional()
         {
+            (IBank<TestUser> bank, IMongoCollection<TestUser> usersCollection) = CreateDbObjects(new MockClock());
             TestUser knownUser = new TestUser { Money = 10 };
             TestUser unknownUser = new TestUser { Money = 20 };
-            await _usersCollection.InsertOneAsync(knownUser);
+            await usersCollection.InsertOneAsync(knownUser);
 
             UserNotFoundException<TestUser> userNotFound = Assert.ThrowsAsync<UserNotFoundException<TestUser>>(() =>
-                _bank.PerformTransactions(new[]
+                bank.PerformTransactions(new[]
                 {
                     new Transaction<TestUser>(knownUser, 3, "test"),
                     new Transaction<TestUser>(unknownUser, -3, "test")
@@ -125,45 +119,49 @@ namespace Persistence.MongoDB.Tests.Repos
             // ensure neither user's balance was modified
             Assert.AreEqual(10, knownUser.Money);
             Assert.AreEqual(20, unknownUser.Money);
-            TestUser knownUserAfterwards = await _usersCollection.Find(u => u.Id == knownUser.Id).FirstAsync();
+            TestUser knownUserAfterwards = await usersCollection.Find(u => u.Id == knownUser.Id).FirstAsync();
             Assert.AreEqual(10, knownUserAfterwards.Money);
         }
 
         [Test]
         public async Task TestReserveMoney()
         {
+            (IBank<TestUser> bank, IMongoCollection<TestUser> usersCollection) = CreateDbObjects(new MockClock());
             TestUser user = new TestUser { Money = 10 };
             TestUser otherUser = new TestUser { Money = 20 };
-            await _usersCollection.InsertManyAsync(new[] { user, otherUser });
+            await usersCollection.InsertManyAsync(new[] { user, otherUser });
             Task<int> Checker(TestUser u) => Task.FromResult(u == user ? 1 : 0);
 
-            Assert.AreEqual(10, await _bank.GetAvailableMoney(user));
-            Assert.AreEqual(20, await _bank.GetAvailableMoney(otherUser));
-            _bank.AddReservedMoneyChecker(Checker);
-            Assert.AreEqual(9, await _bank.GetAvailableMoney(user));
-            Assert.AreEqual(20, await _bank.GetAvailableMoney(otherUser));
-            _bank.RemoveReservedMoneyChecker(Checker);
-            Assert.AreEqual(10, await _bank.GetAvailableMoney(user));
-            Assert.AreEqual(20, await _bank.GetAvailableMoney(otherUser));
+            Assert.AreEqual(10, await bank.GetAvailableMoney(user));
+            Assert.AreEqual(20, await bank.GetAvailableMoney(otherUser));
+            bank.AddReservedMoneyChecker(Checker);
+            Assert.AreEqual(9, await bank.GetAvailableMoney(user));
+            Assert.AreEqual(20, await bank.GetAvailableMoney(otherUser));
+            bank.RemoveReservedMoneyChecker(Checker);
+            Assert.AreEqual(10, await bank.GetAvailableMoney(user));
+            Assert.AreEqual(20, await bank.GetAvailableMoney(otherUser));
         }
 
         [Test]
         public void TestGetMoneyUnknownUser()
         {
+            (IBank<TestUser> bank, IMongoCollection<TestUser> _) = CreateDbObjects(new MockClock());
             TestUser unknownUser = new TestUser { Money = 0 }; // not persisted
             UserNotFoundException<TestUser> userNotFound = Assert.ThrowsAsync<UserNotFoundException<TestUser>>(
-                () => _bank.GetAvailableMoney(unknownUser));
+                () => bank.GetAvailableMoney(unknownUser));
             Assert.AreEqual(unknownUser, userNotFound.User);
         }
 
         [Test]
         public async Task TestDatabaseSerialization()
         {
+            MockClock clockMock = new MockClock();
+            (IBank<TestUser> bank, IMongoCollection<TestUser> usersCollection) = CreateDbObjects(clockMock);
             TestUser user = new TestUser { Money = 10 };
-            await _usersCollection.InsertOneAsync(user);
+            await usersCollection.InsertOneAsync(user);
             List<int> list = new List<int> { 1, 2, 3 };
             Dictionary<string, bool> dictionary = new Dictionary<string, bool> { ["yes"] = true, ["no"] = false };
-            await _bank.PerformTransaction(new Transaction<TestUser>(user, 1, "test",
+            await bank.PerformTransaction(new Transaction<TestUser>(user, 1, "test",
                 new Dictionary<string, object?>
                 {
                     ["null_field"] = null,
@@ -173,7 +171,7 @@ namespace Persistence.MongoDB.Tests.Repos
                     ["dictionary_field"] = dictionary
                 }));
             IMongoCollection<BsonDocument> transactionLogCollection =
-                _database.GetCollection<BsonDocument>("transactionLog");
+                usersCollection.Database.GetCollection<BsonDocument>("transactionLog");
             BsonDocument log = await transactionLogCollection.Find(FilterDefinition<BsonDocument>.Empty).FirstAsync();
 
             Assert.IsInstanceOf<BsonObjectId>(log["_id"]);
@@ -181,7 +179,7 @@ namespace Persistence.MongoDB.Tests.Repos
             Assert.AreEqual(BsonInt32.Create(1), log["change"]);
             Assert.AreEqual(BsonInt32.Create(10), log["old_balance"]);
             Assert.AreEqual(BsonInt32.Create(11), log["new_balance"]);
-            Assert.AreEqual(_clockMock.FixedCurrentInstant, log["timestamp"].ToUniversalTime().ToInstant());
+            Assert.AreEqual(clockMock.FixedCurrentInstant, log["timestamp"].ToUniversalTime().ToInstant());
             Assert.AreEqual(BsonString.Create("test"), log["type"]);
             Assert.AreEqual(BsonNull.Value, log["null_field"]);
             Assert.AreEqual(BsonInt32.Create(42), log["int_field"]);
@@ -193,12 +191,13 @@ namespace Persistence.MongoDB.Tests.Repos
         [Test]
         public async Task TestDeserializeWithNullTransactionType()
         {
+            (IBank<TestUser> _, IMongoCollection<TestUser> usersCollection) = CreateDbObjects(new MockClock());
             // for some reason the "type" field is sometimes missing in the existing database.
             // that should just get mapped to "Unknown".
             const string id = "590df61373b975210006fcdf";
             Instant instant = InstantPattern.ExtendedIso.Parse("2017-05-06T16:13:07.314Z").Value;
             IMongoCollection<BsonDocument> bsonTransactionLogCollection =
-                _database.GetCollection<BsonDocument>("transactionLog");
+                usersCollection.Database.GetCollection<BsonDocument>("transactionLog");
             await bsonTransactionLogCollection.InsertOneAsync(BsonDocument.Create(new Dictionary<string, object?>
             {
                 ["_id"] = ObjectId.Parse(id),
@@ -211,7 +210,7 @@ namespace Persistence.MongoDB.Tests.Repos
             }));
 
             IMongoCollection<TransactionLog> transactionLogCollection =
-                _database.GetCollection<TransactionLog>("transactionLog");
+                usersCollection.Database.GetCollection<TransactionLog>("transactionLog");
             TransactionLog log = await transactionLogCollection.Find(t => t.Id == id).FirstAsync();
 
             Assert.AreEqual(id, log.Id);

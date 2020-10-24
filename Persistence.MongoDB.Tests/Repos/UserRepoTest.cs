@@ -6,25 +6,20 @@ using NodaTime;
 using NUnit.Framework;
 using Persistence.Models;
 using Persistence.MongoDB.Repos;
-using Persistence.MongoDB.Serializers;
 using Persistence.Repos;
 
 namespace Persistence.MongoDB.Tests.Repos
 {
     [Category("IntegrationTest")]
+    [Parallelizable(ParallelScope.All)]
     public class UserRepoTest : MongoTestBase
     {
-        private UserRepo _userRepo = null!;
-
-        [OneTimeSetUp]
-        public void SetUpSerializers() => CustomSerializers.RegisterAll();
-
-        [SetUp]
-        public void SetUp()
+        private UserRepo CreateUserRepo()
         {
             IMongoDatabase database = CreateTemporaryDatabase();
-            _userRepo = new UserRepo(database, 100, 1);
-            Assert.AreEqual(expected: 0, actual: _userRepo.Collection.CountDocuments(FilterDefinition<User>.Empty));
+            UserRepo userRepo = new UserRepo(database, 100, 1);
+            Assert.AreEqual(expected: 0, actual: userRepo.Collection.CountDocuments(FilterDefinition<User>.Empty));
+            return userRepo;
         }
 
         /// <summary>
@@ -34,6 +29,7 @@ namespace Persistence.MongoDB.Tests.Repos
         public async Task TestRecordUser()
         {
             // given
+            UserRepo userRepo = CreateUserRepo();
             const string userId = "123";
             const string displayNameBefore = "ユーザー名";
             const string displayNameAfter = "インマウィアブ";
@@ -41,13 +37,13 @@ namespace Persistence.MongoDB.Tests.Repos
             const string usernameAfter = "i_changed_my_name";
 
             // when
-            User userBefore = await _userRepo.RecordUser(new UserInfo(
+            User userBefore = await userRepo.RecordUser(new UserInfo(
                 userId, twitchDisplayName: displayNameBefore, simpleName: usernameBefore, color: "foo"));
-            User userAfter = await _userRepo.RecordUser(new UserInfo(
+            User userAfter = await userRepo.RecordUser(new UserInfo(
                 userId, twitchDisplayName: displayNameAfter, simpleName: usernameAfter, color: "bar"));
 
             // then
-            Assert.AreEqual(expected: 1, actual: _userRepo.Collection.CountDocuments(FilterDefinition<User>.Empty));
+            Assert.AreEqual(expected: 1, actual: userRepo.Collection.CountDocuments(FilterDefinition<User>.Empty));
             Assert.AreEqual(expected: userId, actual: userBefore.Id);
             Assert.AreEqual(expected: userId, actual: userAfter.Id);
             Assert.AreEqual(expected: displayNameBefore, actual: userBefore.TwitchDisplayName);
@@ -62,20 +58,21 @@ namespace Persistence.MongoDB.Tests.Repos
         [Test]
         public async Task TestStartingCurrency()
         {
+            UserRepo userRepo = CreateUserRepo();
             // given
             var userInfo = new UserInfo("123", "X", "x", null);
 
             // when new user
-            User userBefore = await _userRepo.RecordUser(userInfo);
+            User userBefore = await userRepo.RecordUser(userInfo);
             // then initial currency
             Assert.AreEqual(100, userBefore.Pokeyen);
             Assert.AreEqual(1, userBefore.Tokens);
 
             // when existing user
-            await _userRepo.Collection.UpdateOneAsync(u => u.Id == userInfo.Id, Builders<User>.Update
+            await userRepo.Collection.UpdateOneAsync(u => u.Id == userInfo.Id, Builders<User>.Update
                 .Set(u => u.Pokeyen, 123)
                 .Set(u => u.Tokens, 5));
-            User userAfter = await _userRepo.RecordUser(userInfo);
+            User userAfter = await userRepo.RecordUser(userInfo);
             // then keep currency
             Assert.AreEqual(123, userAfter.Pokeyen);
             Assert.AreEqual(5, userAfter.Tokens);
@@ -87,6 +84,7 @@ namespace Persistence.MongoDB.Tests.Repos
         [Test]
         public async Task TestUpdateLastActiveAt()
         {
+            UserRepo userRepo = CreateUserRepo();
             // given
             Instant t1 = Instant.FromUnixTimeSeconds(0);
             Instant t2 = Instant.FromUnixTimeSeconds(1);
@@ -94,9 +92,9 @@ namespace Persistence.MongoDB.Tests.Repos
             var userInfoT2 = new UserInfo("123", "X", "x", null, updatedAt: t2);
 
             // when, then
-            User userT1 = await _userRepo.RecordUser(userInfoT1);
+            User userT1 = await userRepo.RecordUser(userInfoT1);
             Assert.AreEqual(t1, userT1.LastActiveAt);
-            User userT2 = await _userRepo.RecordUser(userInfoT2);
+            User userT2 = await userRepo.RecordUser(userInfoT2);
             Assert.AreEqual(t2, userT2.LastActiveAt);
         }
 
@@ -107,6 +105,7 @@ namespace Persistence.MongoDB.Tests.Repos
         [Test]
         public async Task TestUpdateLastMessageAt()
         {
+            UserRepo userRepo = CreateUserRepo();
             // given
             Instant t1 = Instant.FromUnixTimeSeconds(0);
             Instant t2 = Instant.FromUnixTimeSeconds(1);
@@ -116,11 +115,11 @@ namespace Persistence.MongoDB.Tests.Repos
             var userInfoT3 = new UserInfo("123", "X", "x", null, updatedAt: t3);
 
             // when, then
-            User userT1 = await _userRepo.RecordUser(userInfoT1);
+            User userT1 = await userRepo.RecordUser(userInfoT1);
             Assert.AreEqual(null, userT1.LastMessageAt); // fromMessage=false, stayed null
-            User userT2 = await _userRepo.RecordUser(userInfoT2);
+            User userT2 = await userRepo.RecordUser(userInfoT2);
             Assert.AreEqual(t2, userT2.LastMessageAt); // fromMessage=true, got updated
-            User userT3 = await _userRepo.RecordUser(userInfoT3);
+            User userT3 = await userRepo.RecordUser(userInfoT3);
             Assert.AreEqual(t2, userT3.LastMessageAt); // fromMessage=false, didn't get updated
         }
 
@@ -132,18 +131,19 @@ namespace Persistence.MongoDB.Tests.Repos
         [Test]
         public async Task TestUseDefaultEmptySet()
         {
+            UserRepo userRepo = CreateUserRepo();
             // given
             var userInfo = new UserInfo("123", "X", "x", null);
 
             // when, then
-            User userNew = await _userRepo.RecordUser(userInfo);
+            User userNew = await userRepo.RecordUser(userInfo);
             Assert.NotNull(userNew.ParticipationEmblems);
             Assert.AreEqual(new SortedSet<int>(), userNew.ParticipationEmblems);
 
-            await _userRepo.Collection.UpdateOneAsync(u => u.Id == userInfo.Id, Builders<User>.Update
+            await userRepo.Collection.UpdateOneAsync(u => u.Id == userInfo.Id, Builders<User>.Update
                 .Set(u => u.ParticipationEmblems, new SortedSet<int> { 42 }));
             // when, then
-            User userExisting = await _userRepo.RecordUser(userInfo);
+            User userExisting = await userRepo.RecordUser(userInfo);
             Assert.NotNull(userExisting.ParticipationEmblems);
             Assert.AreEqual(new SortedSet<int> { 42 }, userExisting.ParticipationEmblems);
         }
@@ -155,15 +155,16 @@ namespace Persistence.MongoDB.Tests.Repos
         [Test]
         public async Task TestDeserializeMissingParticipationAsEmpty()
         {
+            UserRepo userRepo = CreateUserRepo();
             // given
             var userInfo = new UserInfo("123", "X", "x", null);
-            await _userRepo.RecordUser(userInfo);
-            UpdateResult updateResult = await _userRepo.Collection.UpdateOneAsync(u => u.Id == userInfo.Id,
+            await userRepo.RecordUser(userInfo);
+            UpdateResult updateResult = await userRepo.Collection.UpdateOneAsync(u => u.Id == userInfo.Id,
                     Builders<User>.Update.Unset(u => u.ParticipationEmblems));
             Assert.AreEqual(1, updateResult.ModifiedCount);
 
             // when
-            User? deserializedUser = await _userRepo.FindBySimpleName(userInfo.SimpleName);
+            User? deserializedUser = await userRepo.FindBySimpleName(userInfo.SimpleName);
 
             // then
             Assert.NotNull(deserializedUser);
@@ -178,9 +179,10 @@ namespace Persistence.MongoDB.Tests.Repos
         [Test]
         public async Task TestRecordUserConcurrently()
         {
+            UserRepo userRepo = CreateUserRepo();
             var userInfo = new UserInfo("123", "X", "x", null);
             await Task.WhenAll(Enumerable.Range(0, 100)
-                .Select(i => _userRepo.RecordUser(userInfo)));
+                .Select(i => userRepo.RecordUser(userInfo)));
         }
     }
 }
