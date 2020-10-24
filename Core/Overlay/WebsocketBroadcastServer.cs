@@ -139,6 +139,13 @@ namespace Core.Overlay
                     _logger.LogInformation("Websocket listener was stopped.");
                     return;
                 }
+                catch (ObjectDisposedException)
+                {
+                    // GetContextAsync doesn't take a cancellation token,
+                    // and stopping the http server can cause it to trip over itself for some reason.
+                    _logger.LogError("Encountered ObjectDisposedException while accepting a websocket connection.");
+                    return;
+                }
                 if (!context.Request.IsWebSocketRequest)
                 {
                     continue;
@@ -148,7 +155,6 @@ namespace Core.Overlay
                 WebSocket webSocket = webSocketContext.WebSocket;
                 await AddWebSocket(webSocket, context.Request.RemoteEndPoint);
             }
-            _logger.LogInformation("ded");
         }
 
         public async Task Stop(TimeSpan? closeHandshakeTimeout = null)
