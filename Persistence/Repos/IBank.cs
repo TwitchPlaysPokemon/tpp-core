@@ -24,6 +24,8 @@ namespace Persistence.Repos
     public static class TransactionType
     {
         public const string SecondaryColorUnlock = "secondary_color_unlock";
+        public const string ManualAdjustment = "manual_adjustment";
+
         // collect all the types being used here instead of scattering string literals across the codebase
     }
 
@@ -61,6 +63,10 @@ namespace Persistence.Repos
             Type = type;
             AdditionalData = additionalData ?? ImmutableDictionary<string, object?>.Empty;
         }
+
+        public override string ToString()
+            => $"Transaction({User}{Change:+#;-#} of type {Type} " +
+               $"with data {string.Join(",", AdditionalData.Select(kv => kv.Key + "=" + kv.Value))})";
     }
 
     /// <summary>

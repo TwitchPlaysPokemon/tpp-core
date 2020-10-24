@@ -159,7 +159,8 @@ namespace ArgsParsing.Tests
             argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
 
             PkmnSpecies resultById = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create("#" + speciesId));
-            PkmnSpecies resultByPaddedId = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create("#0" + speciesId));
+            PkmnSpecies resultByPaddedId =
+                await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create("#0" + speciesId));
             PkmnSpecies resultByName1 = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create(speciesName));
             PkmnSpecies resultByName2 = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create("uNiQuAmOn"));
 
@@ -211,21 +212,74 @@ namespace ArgsParsing.Tests
             Assert.AreEqual("did not recognize species '#mahinapea'", exNoAccidentalHashRemoval.Message);
         }
 
-        [Test]
-        public async Task TestPrefixedNumberParsers()
+        [TestFixture]
+        private class PrefixedNumberParser
         {
-            var argsParser = new ArgsParser();
-            argsParser.AddArgumentParser(new PokeyenParser());
-            argsParser.AddArgumentParser(new TokensParser());
+            private readonly ArgsParser _argsParser;
 
-            int result1 = await argsParser.Parse<Pokeyen>(args: ImmutableList.Create("P11"));
-            int result2 = await argsParser.Parse<Tokens>(args: ImmutableList.Create("T22"));
-            Assert.AreEqual(11, result1);
-            Assert.AreEqual(22, result2);
+            public PrefixedNumberParser()
+            {
+                _argsParser = new ArgsParser();
+                _argsParser.AddArgumentParser(new PokeyenParser());
+                _argsParser.AddArgumentParser(new TokensParser());
+                _argsParser.AddArgumentParser(new SignedPokeyenParser());
+                _argsParser.AddArgumentParser(new SignedTokensParser());
+            }
 
-            var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<Pokeyen>(args: ImmutableList.Create("X33")));
-            Assert.AreEqual("did not recognize 'X33' as a 'P'-prefixed number", ex.Message);
+            [Test]
+            public async Task accepts_normal_numbers()
+            {
+                Assert.AreEqual(11, (int)await _argsParser.Parse<Pokeyen>(ImmutableList.Create("P11")));
+                Assert.AreEqual(22, (int)await _argsParser.Parse<Tokens>(ImmutableList.Create("T22")));
+                Assert.AreEqual(33, (int)await _argsParser.Parse<SignedPokeyen>(ImmutableList.Create("P33")));
+                Assert.AreEqual(44, (int)await _argsParser.Parse<SignedTokens>(ImmutableList.Create("T44")));
+            }
+
+            [Test]
+            public async Task accepts_optional_positive_sign()
+            {
+                Assert.AreEqual(11, (int)await _argsParser.Parse<Pokeyen>(ImmutableList.Create("P+11")));
+                Assert.AreEqual(22, (int)await _argsParser.Parse<Tokens>(ImmutableList.Create("T+22")));
+                Assert.AreEqual(33, (int)await _argsParser.Parse<SignedPokeyen>(ImmutableList.Create("P+33")));
+                Assert.AreEqual(44, (int)await _argsParser.Parse<SignedTokens>(ImmutableList.Create("T+44")));
+            }
+
+            [Test]
+            public void rejects_wrong_prefix()
+            {
+                var exPokeyen = Assert.ThrowsAsync<ArgsParseFailure>(() => _argsParser
+                    .Parse<Pokeyen>(ImmutableList.Create("X11")));
+                Assert.AreEqual("did not recognize 'X11' as a 'P'-prefixed number", exPokeyen.Message);
+                var exTokens = Assert.ThrowsAsync<ArgsParseFailure>(() => _argsParser
+                    .Parse<Tokens>(ImmutableList.Create("X22")));
+                Assert.AreEqual("did not recognize 'X22' as a 'T'-prefixed number", exTokens.Message);
+                var exSignedPokeyen = Assert.ThrowsAsync<ArgsParseFailure>(() => _argsParser
+                    .Parse<SignedPokeyen>(ImmutableList.Create("X33")));
+                Assert.AreEqual("did not recognize 'X33' as a 'P'-prefixed number", exSignedPokeyen.Message);
+                var exSignedTokens = Assert.ThrowsAsync<ArgsParseFailure>(() => _argsParser
+                    .Parse<SignedTokens>(ImmutableList.Create("X44")));
+                Assert.AreEqual("did not recognize 'X44' as a 'T'-prefixed number", exSignedTokens.Message);
+            }
+
+            [Test]
+            public void rejects_negative_if_not_signed()
+            {
+                var exPokeyen = Assert.ThrowsAsync<ArgsParseFailure>(() => _argsParser
+                    .Parse<Pokeyen>(args: ImmutableList.Create("P-11")));
+                Assert.AreEqual("'P-11' cannot be less than P0", exPokeyen.Message);
+                var exTokens = Assert.ThrowsAsync<ArgsParseFailure>(() => _argsParser
+                    .Parse<Tokens>(args: ImmutableList.Create("T-22")));
+                Assert.AreEqual("'T-22' cannot be less than T0", exTokens.Message);
+            }
+
+            [Test]
+            public async Task accepts_negative_if_signed()
+            {
+                int resultPokeyen = await _argsParser.Parse<SignedPokeyen>(args: ImmutableList.Create("P-11"));
+                int resultTokens = await _argsParser.Parse<SignedTokens>(args: ImmutableList.Create("T-22"));
+                Assert.AreEqual(-11, resultPokeyen);
+                Assert.AreEqual(-22, resultTokens);
+            }
         }
 
         [Test]

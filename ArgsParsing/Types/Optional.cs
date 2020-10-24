@@ -39,5 +39,8 @@ namespace ArgsParsing.Types
         {
             return IsPresent ? Value : fallback;
         }
+
+        public override string ToString()
+            => IsPresent ? Value?.ToString() ?? "<null>" : "<none>";
     }
 }

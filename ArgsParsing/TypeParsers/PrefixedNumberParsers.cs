@@ -42,7 +42,7 @@ namespace ArgsParsing.TypeParsers
             _maxValue = maxValue;
             var options = RegexOptions.Compiled;
             if (!caseSensitive) options |= RegexOptions.IgnoreCase;
-            _regex = new Regex(@$"^{Regex.Escape(prefix)}(?<number>-?[0-9]+)$", options);
+            _regex = new Regex(@$"^{Regex.Escape(prefix)}(?<number>[+-]?[0-9]+)$", options);
         }
 
         public override Task<ArgsParseResult<T>> Parse(IImmutableList<string> args, Type[] genericTypes)
@@ -88,6 +88,20 @@ namespace ArgsParsing.TypeParsers
     public class TokensParser : PrefixedNumberParser<Tokens>
     {
         public TokensParser() : base("T")
+        {
+        }
+    }
+
+    public class SignedPokeyenParser : PrefixedNumberParser<SignedPokeyen>
+    {
+        public SignedPokeyenParser() : base("P", minValue: int.MinValue)
+        {
+        }
+    }
+
+    public class SignedTokensParser : PrefixedNumberParser<SignedTokens>
+    {
+        public SignedTokensParser() : base("T", minValue: int.MinValue)
         {
         }
     }

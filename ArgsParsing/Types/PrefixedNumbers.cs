@@ -12,4 +12,10 @@ namespace ArgsParsing.Types
     public class Tokens : ImplicitNumber
     {
     }
+    public class SignedPokeyen : ImplicitNumber // may be negative
+    {
+    }
+    public class SignedTokens : ImplicitNumber // may be negative
+    {
+    }
 }
