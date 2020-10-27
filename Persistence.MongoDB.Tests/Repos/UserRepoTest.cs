@@ -182,5 +182,23 @@ namespace Persistence.MongoDB.Tests.Repos
             await Task.WhenAll(Enumerable.Range(0, 100)
                 .Select(i => _userRepo.RecordUser(userInfo)));
         }
+
+        [Test]
+        public async Task TestCrazyAmountOfMoney()
+        {
+            const long pokeyen = long.MaxValue - 123;
+            const long tokens = long.MaxValue - 234;
+            var userRepo = new UserRepo(CreateTemporaryDatabase(), pokeyen, tokens);
+
+            User userFromRecording = await userRepo.RecordUser(new UserInfo("123", "X", "x", null));
+            Assert.AreEqual(pokeyen, userFromRecording.Pokeyen);
+            Assert.AreEqual(tokens, userFromRecording.Tokens);
+
+            User? userFromReading = await userRepo.FindBySimpleName("x");
+            Assert.NotNull(userFromReading);
+            Assert.AreNotSame(userFromReading!, userFromRecording);
+            Assert.AreEqual(pokeyen, userFromReading!.Pokeyen);
+            Assert.AreEqual(tokens, userFromReading!.Tokens);
+        }
     }
 }

@@ -19,34 +19,34 @@ namespace Persistence.MongoDB
         private readonly IMongoDatabase _database;
         public PersistedReservedMoneyCheckers(IMongoDatabase database) => _database = database;
 
-        public async Task<int> AllDatabaseReservedTokens(User user) =>
+        public async Task<long> AllDatabaseReservedTokens(User user) =>
             await PinballReservedTokens(user) +
             await BadgeBuyOffersReservedTokens(user) +
             await ItemBuyOffersReservedTokens(user) +
             await SidegameReservedTokens(user);
 
-        private async Task<int> PinballReservedTokens(User user) =>
+        private async Task<long> PinballReservedTokens(User user) =>
             (await (
                 from doc in _database.GetCollection<BsonDocument>("misc").AsQueryable()
                 where doc["_id"] == "pinball_state" && doc["users"][user.Id] != BsonNull.Value
                 select doc["users"][user.Id]
             ).ToListAsync()).Sum(i => i.ToInt32());
 
-        private async Task<int> BadgeBuyOffersReservedTokens(User user) =>
+        private async Task<long> BadgeBuyOffersReservedTokens(User user) =>
             (await (
                 from doc in _database.GetCollection<BsonDocument>("badgebuyoffers").AsQueryable()
                 where doc["user"] == user.Id
                 select new { Price = doc["price"], Amount = doc["amount"] }
             ).ToListAsync()).Sum(obj => obj.Price.ToInt32() * obj.Amount.ToInt32());
 
-        private async Task<int> ItemBuyOffersReservedTokens(User user) =>
+        private async Task<long> ItemBuyOffersReservedTokens(User user) =>
             (await (
                 from doc in _database.GetCollection<BsonDocument>("itembuyoffers").AsQueryable()
                 where doc["user_id"] == user.Id
                 select new { Offer = doc["offer"], Quantity = doc["quantity"] }
             ).ToListAsync()).Sum(obj => obj.Offer.ToInt32() * obj.Quantity.ToInt32());
 
-        private async Task<int> SidegameReservedTokens(User user) =>
+        private async Task<long> SidegameReservedTokens(User user) =>
             (await (
                 from doc in _database.GetCollection<BsonDocument>("misc").AsQueryable()
                 where doc["_id"] == "sidegame_reserved_tokens" && doc["users"][user.Id] != BsonNull.Value

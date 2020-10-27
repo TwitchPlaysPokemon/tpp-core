@@ -79,10 +79,10 @@ namespace Core.Commands.Definitions
             User user = isSelf ? context.Message.User : optionalUser.Value;
             // Only differentiate between available and reserved money for self.
             // For others, just report their total as available and ignore reserved.
-            int availablePokeyen = isSelf ? await _pokeyenBank.GetAvailableMoney(user) : user.Pokeyen;
-            int reservedPokeyen = isSelf ? await _pokeyenBank.GetReservedMoney(user) : 0;
-            int availableTokens = isSelf ? await _tokenBank.GetAvailableMoney(user) : user.Tokens;
-            int reservedTokens = isSelf ? await _tokenBank.GetReservedMoney(user) : 0;
+            long availablePokeyen = isSelf ? await _pokeyenBank.GetAvailableMoney(user) : user.Pokeyen;
+            long reservedPokeyen = isSelf ? await _pokeyenBank.GetReservedMoney(user) : 0;
+            long availableTokens = isSelf ? await _tokenBank.GetAvailableMoney(user) : user.Tokens;
+            long reservedTokens = isSelf ? await _tokenBank.GetReservedMoney(user) : 0;
 
             string reservedPokeyenMessage = reservedPokeyen > 0 ? $" (P{reservedPokeyen} reserved)" : "";
             string reservedTokensMessage = reservedTokens > 0 ? $" (T{reservedTokens} reserved)" : "";

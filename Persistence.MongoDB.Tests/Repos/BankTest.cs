@@ -18,7 +18,7 @@ namespace Persistence.MongoDB.Tests.Repos
     internal class TestUser
     {
         [BsonId] public string Id { get; } = Guid.NewGuid().ToString();
-        [BsonElement] public int Money { get; set; }
+        [BsonElement] public long Money { get; set; }
         public override string ToString() => Id;
     }
 
@@ -135,7 +135,7 @@ namespace Persistence.MongoDB.Tests.Repos
             TestUser user = new TestUser { Money = 10 };
             TestUser otherUser = new TestUser { Money = 20 };
             await _usersCollection.InsertManyAsync(new[] { user, otherUser });
-            Task<int> Checker(TestUser u) => Task.FromResult(u == user ? 1 : 0);
+            Task<long> Checker(TestUser u) => Task.FromResult(u == user ? 1L : 0L);
 
             Assert.AreEqual(10, await _bank.GetAvailableMoney(user));
             Assert.AreEqual(20, await _bank.GetAvailableMoney(otherUser));
@@ -178,9 +178,9 @@ namespace Persistence.MongoDB.Tests.Repos
 
             Assert.IsInstanceOf<BsonObjectId>(log["_id"]);
             Assert.AreEqual(BsonString.Create(user.Id), log["user"]);
-            Assert.AreEqual(BsonInt32.Create(1), log["change"]);
-            Assert.AreEqual(BsonInt32.Create(10), log["old_balance"]);
-            Assert.AreEqual(BsonInt32.Create(11), log["new_balance"]);
+            Assert.AreEqual(BsonInt64.Create(1), log["change"]);
+            Assert.AreEqual(BsonInt64.Create(10), log["old_balance"]);
+            Assert.AreEqual(BsonInt64.Create(11), log["new_balance"]);
             Assert.AreEqual(_clockMock.FixedCurrentInstant, log["timestamp"].ToUniversalTime().ToInstant());
             Assert.AreEqual(BsonString.Create("test"), log["type"]);
             Assert.AreEqual(BsonNull.Value, log["null_field"]);

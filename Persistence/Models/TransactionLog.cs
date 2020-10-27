@@ -15,9 +15,9 @@ namespace Persistence.Models
         protected override object EqualityId => Id;
 
         public string UserId { get; init; }
-        public int OldBalance { get; init; }
-        public int NewBalance { get; init; }
-        public int Change { get; init; }
+        public long OldBalance { get; init; }
+        public long NewBalance { get; init; }
+        public long Change { get; init; }
 
         public Instant CreatedAt { get; init; }
 
@@ -28,9 +28,9 @@ namespace Persistence.Models
         public TransactionLog(
             string id,
             string userId,
-            int oldBalance,
-            int newBalance,
-            int change,
+            long oldBalance,
+            long newBalance,
+            long change,
             Instant createdAt,
             string? type,
             IDictionary<string, object?> additionalData)
