@@ -10,9 +10,9 @@ namespace Match
 
         /// Sets up a match for the provided match info,
         /// and returns a delegate to perform the prepared match.
-        public Task<Perform> SetUp(MatchInfo matchInfo, CancellationToken? token = null);
+        public Task SetUp(MatchInfo matchInfo, CancellationToken? token = null);
 
-        /// A delegate that performs a match that was prepared with <see cref="IMatchCycle.SetUp"/>.
-        delegate Task<MatchResult> Perform(CancellationToken? token = null);
+        /// Performs a match that was prepared by a previous call to <see cref="IMatchCycle.SetUp"/>.
+        public Task<MatchResult> Perform(CancellationToken? token = null);
     }
 }

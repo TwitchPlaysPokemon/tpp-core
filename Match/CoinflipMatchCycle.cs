@@ -28,14 +28,13 @@ namespace Match
             _logger = logger;
         }
 
-        public async Task<IMatchCycle.Perform> SetUp(MatchInfo matchInfo, CancellationToken? token = null)
+        public async Task SetUp(MatchInfo matchInfo, CancellationToken? token = null)
         {
             _logger.LogInformation("Setting up coinflip match...");
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken: token ?? CancellationToken.None);
-            return Perform;
         }
 
-        private async Task<MatchResult> Perform(CancellationToken? token = null)
+        public async Task<MatchResult> Perform(CancellationToken? token = null)
         {
             _logger.LogInformation("Performing coinflip match...");
             await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken: token ?? CancellationToken.None);
