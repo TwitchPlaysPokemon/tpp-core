@@ -6,7 +6,7 @@ namespace Match
     public interface IMatchCycle
     {
         /// information on what features the match implementation supports
-        public FeatureSet FeatureSet { get; }
+        public Features.FeatureSet FeatureSet { get; }
 
         /// Sets up a match for the provided match info,
         /// and returns a delegate to perform the prepared match.

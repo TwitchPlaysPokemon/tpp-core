@@ -12,13 +12,13 @@ namespace Match
     {
         private static readonly Random Random = new Random();
 
-        private static readonly IImmutableSet<Feature> AllFeatures =
-            Enum.GetValues(typeof(Feature)).Cast<Feature>().ToImmutableHashSet();
+        private static readonly IImmutableSet<Features.Capability> AllCapabilities =
+            Enum.GetValues(typeof(Features.Capability)).Cast<Features.Capability>().ToImmutableHashSet();
 
-        public FeatureSet FeatureSet => new FeatureSet(
-            Generation: Generation.Gen8,
+        public Features.FeatureSet FeatureSet => new Features.FeatureSet(
+            Generation: Features.Generation.Gen8,
             MaxTeamMembers: 3,
-            Features: AllFeatures
+            Capabilities: AllCapabilities
         );
 
         private readonly ILogger<CoinflipMatchCycle> _logger;
