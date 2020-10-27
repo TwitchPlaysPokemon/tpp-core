@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using Core.Configuration;
 using Core.Modes;
 using DocoptNet;
@@ -111,7 +112,16 @@ Options:
             };
             try
             {
-                mode.Run().Wait();
+                Task modeTask = mode.Run();
+                void Abort(object? sender, EventArgs args)
+                {
+                    logger.LogInformation("Aborting mode...");
+                    mode.Cancel();
+                    modeTask.Wait();
+                }
+                AppDomain.CurrentDomain.ProcessExit += Abort; // SIGTERM
+                Console.CancelKeyPress += Abort; // CTRL-C / SIGINT
+                modeTask.Wait();
             }
             catch (Exception ex)
             {

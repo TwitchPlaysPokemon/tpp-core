@@ -33,6 +33,13 @@ namespace Core.Modes
             _logger.LogInformation("Runmode ended");
         }
 
+        public void Cancel()
+        {
+            // once the mainloop is not just busylooping, this needs to be replaced with something
+            // that makes the mode stop immediately
+            _stopToken.ShouldStop = true;
+        }
+
         public void Dispose()
         {
             _modeBase.Dispose();
