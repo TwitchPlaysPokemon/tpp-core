@@ -1,0 +1,25 @@
+name: test-publish
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.100-rc.2.20479.15
+      - uses: actions/checkout@v2
+      - name: Try publishing and running dummy mode
+        run: |
+          cd Core
+          dotnet run -- gendefaultconfig --outfile=config.json
+          dotnet publish -c Release
+          timeout --preserve-status -k1 3 dotnet ./bin/Release/net5.0/Core.dll start -m dummy || exit_code=$?
+          if [ $exit_code -ne 143 ]; then
+              echo "expected exit code 143, which means the program handled SIGTERM, but got $exit_code"
+              exit 1
+          fi
