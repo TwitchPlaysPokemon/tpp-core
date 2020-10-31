@@ -40,7 +40,7 @@ namespace Persistence.Repos
         /// <summary>
         /// The monetary amount delta that should be applied, may also be negative for deductions.
         /// </summary>
-        public int Change { get; }
+        public long Change { get; }
         /// <summary>
         /// What type of transaction this is.
         /// </summary>
@@ -52,7 +52,7 @@ namespace Persistence.Repos
 
         public Transaction(
             T user,
-            int change,
+            long change,
             string type,
             IDictionary<string, object?>? additionalData = default)
         {
@@ -78,7 +78,7 @@ namespace Persistence.Repos
         /// This may apply to e.g. ongoing pinball games or item buy offers.
         /// </summary>
         /// <param name="user">User to retrieve reserved money for.</param>
-        delegate Task<int> ReservedMoneyChecker(T user);
+        delegate Task<long> ReservedMoneyChecker(T user);
 
         /// <summary>
         /// Add a delegate that retrieves reserved money for a user.
@@ -99,7 +99,7 @@ namespace Persistence.Repos
         /// </summary>
         /// <param name="user">User to retrieve reserved money for.</param>
         /// <returns>The amount of reserved money.</returns>
-        Task<int> GetReservedMoney(T user);
+        Task<long> GetReservedMoney(T user);
 
         /// <summary>
         /// Gets the total amount of money a user has.
@@ -110,7 +110,7 @@ namespace Persistence.Repos
         /// <param name="user">User to retrieve total money for.</param>
         /// <returns>The amount of total money.</returns>
         /// <exception cref="UserNotFoundException{T}">Thrown if the user does not exist.</exception>
-        Task<int> GetTotalMoney(T user);
+        Task<long> GetTotalMoney(T user);
 
         /// <summary>
         /// Gets the amount of currently available money a user has.
@@ -121,7 +121,7 @@ namespace Persistence.Repos
         /// <param name="user">User to retrieve available money for.</param>
         /// <returns>The amount of available money.</returns>
         /// <exception cref="UserNotFoundException{T}">Thrown if the user does not exist.</exception>
-        Task<int> GetAvailableMoney(T user);
+        Task<long> GetAvailableMoney(T user);
 
         /// <summary>
         /// Perform multiple monetary transactions atomically.
@@ -160,15 +160,15 @@ namespace Persistence.Repos
         public void AddReservedMoneyChecker(IBank<T>.ReservedMoneyChecker checker) => _checkers.Add(checker);
         public void RemoveReservedMoneyChecker(IBank<T>.ReservedMoneyChecker checker) => _checkers.Remove(checker);
 
-        public async Task<int> GetReservedMoney(T user)
+        public async Task<long> GetReservedMoney(T user)
         {
-            IEnumerable<Task<int>> amounts = _checkers.Select(async checker => await checker(user));
+            IEnumerable<Task<long>> amounts = _checkers.Select(async checker => await checker(user));
             return (await Task.WhenAll(amounts)).Sum();
         }
 
-        public abstract Task<int> GetTotalMoney(T user);
+        public abstract Task<long> GetTotalMoney(T user);
 
-        public async Task<int> GetAvailableMoney(T user) =>
+        public async Task<long> GetAvailableMoney(T user) =>
             await GetTotalMoney(user) - await GetReservedMoney(user);
 
         public abstract Task<IList<TransactionLog>> PerformTransactions(

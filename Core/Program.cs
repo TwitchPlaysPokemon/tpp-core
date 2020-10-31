@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using Core.Configuration;
 using Core.Modes;
 using DocoptNet;
@@ -37,6 +38,7 @@ Options:
             ["run"] = new RunmodeConfig(),
             ["match"] = new MatchmodeConfig(),
             ["dualcore"] = null,
+            ["dummy"] = null,
         };
 
         private static void Main(string[] argv)
@@ -107,11 +109,21 @@ Options:
                 "run" => new Runmode(loggerFactory, baseConfig, ReadConfig<RunmodeConfig>(modeConfigFilename)),
                 "match" => new Matchmode(loggerFactory, baseConfig, ReadConfig<MatchmodeConfig>(modeConfigFilename)),
                 "dualcore" => new DualcoreMode(loggerFactory, baseConfig),
+                "dummy" => new DummyMode(loggerFactory, baseConfig),
                 _ => throw new NotSupportedException($"Invalid mode '{modeName}'")
             };
             try
             {
-                mode.Run().Wait();
+                Task modeTask = mode.Run();
+                void Abort(object? sender, EventArgs args)
+                {
+                    logger.LogInformation("Aborting mode...");
+                    mode.Cancel();
+                    modeTask.Wait();
+                }
+                AppDomain.CurrentDomain.ProcessExit += Abort; // SIGTERM
+                Console.CancelKeyPress += Abort; // CTRL-C / SIGINT
+                modeTask.Wait();
             }
             catch (Exception ex)
             {

@@ -42,9 +42,12 @@ Some other modes require a mode-specific configuration file, which you can test 
 similar to the base config by passing an additional `--mode` or `-m` option.
 See the `--help` output for more details on that.
 
-## faster startup time
+## proper publishing
 `dotnet run` is a development command that always implicitly restores dependencies,
-builds the project, and then executes it. If you want faster startup times,
+builds the project, and then executes it. Running it this way causes a slow startup
+and prevents the application from handling SIGTERM events on linux.
+
+If you want faster startup times or graceful SIGTERM handling,
 [publish](https://docs.microsoft.com/en-us/dotnet/core/deploying/) the project first.
 For example, making a release build and running the resulting `dll` with the dotnet runtime may look like this:
 ```

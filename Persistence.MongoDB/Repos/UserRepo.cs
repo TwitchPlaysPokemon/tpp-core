@@ -17,8 +17,8 @@ namespace Persistence.MongoDB.Repos
 
         public readonly IMongoCollection<User> Collection;
 
-        private readonly int _startingPokeyen;
-        private readonly int _startingTokens;
+        private readonly long _startingPokeyen;
+        private readonly long _startingTokens;
 
         static UserRepo()
         {
@@ -47,7 +47,7 @@ namespace Persistence.MongoDB.Repos
             });
         }
 
-        public UserRepo(IMongoDatabase database, int startingPokeyen, int startingTokens)
+        public UserRepo(IMongoDatabase database, long startingPokeyen, long startingTokens)
         {
             database.CreateCollectionIfNotExists(CollectionName).Wait();
             Collection = database.GetCollection<User>(CollectionName);

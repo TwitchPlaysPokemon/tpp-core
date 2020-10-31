@@ -20,11 +20,11 @@ namespace Persistence.MongoDB.Repos
         private readonly IMongoCollection<TransactionLog> _transactionLogCollection;
         private readonly IMongoCollection<T> _currencyCollection;
         private readonly IMongoClient _mongoClient;
-        private readonly Expression<Func<T, int>> _currencyField;
-        private readonly Func<T, int> _currencyFieldAccessor;
+        private readonly Expression<Func<T, long>> _currencyField;
+        private readonly Func<T, long> _currencyFieldAccessor;
         private readonly Expression<Func<T, string>> _idField;
         private readonly Func<T, string> _idFieldAccessor;
-        private readonly Action<T, int> _currencyFieldSetter;
+        private readonly Action<T, long> _currencyFieldSetter;
         private readonly IClock _clock;
 
         static Bank()
@@ -48,7 +48,7 @@ namespace Persistence.MongoDB.Repos
             IMongoDatabase database,
             string currencyCollectionName,
             string transactionLogCollectionName,
-            Expression<Func<T, int>> currencyField,
+            Expression<Func<T, long>> currencyField,
             Expression<Func<T, string>> idField,
             IClock clock)
         {
@@ -64,8 +64,8 @@ namespace Persistence.MongoDB.Repos
             _clock = clock;
 
             // create a setter action that lets us modify the balance value after a successful transaction
-            var balanceParameter = Expression.Parameter(typeof(int));
-            _currencyFieldSetter = Expression.Lambda<Action<T, int>>(
+            var balanceParameter = Expression.Parameter(typeof(long));
+            _currencyFieldSetter = Expression.Lambda<Action<T, long>>(
                     Expression.Assign(_currencyField.Body, balanceParameter),
                     _currencyField.Parameters.First(), balanceParameter)
                 .Compile();
@@ -89,7 +89,7 @@ namespace Persistence.MongoDB.Repos
                 _idField.Parameters.First());
         }
 
-        public override async Task<int> GetTotalMoney(T user)
+        public override async Task<long> GetTotalMoney(T user)
         {
             string userId = _idFieldAccessor(user);
             FilterDefinition<T> filter = new ExpressionFilterDefinition<T>(GetUserIdFilter(userId));
@@ -109,8 +109,8 @@ namespace Persistence.MongoDB.Repos
             var options = new FindOneAndUpdateOptions<T> { IsUpsert = false, ReturnDocument = ReturnDocument.After };
             T entityAfter = await _currencyCollection.FindOneAndUpdateAsync(session, filter, update, options, token)
                             ?? throw new UserNotFoundException<T>(transaction.User);
-            int oldBalance = _currencyFieldAccessor(transaction.User);
-            int newBalance = _currencyFieldAccessor(entityAfter);
+            long oldBalance = _currencyFieldAccessor(transaction.User);
+            long newBalance = _currencyFieldAccessor(entityAfter);
             if (oldBalance + transaction.Change != newBalance)
             {
                 throw new InvalidOperationException(

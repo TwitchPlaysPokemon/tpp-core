@@ -6,29 +6,27 @@ using Microsoft.Extensions.Logging;
 
 namespace Core.Modes
 {
-    public sealed class DualcoreMode : IMode, IDisposable
+    /// A mode for testing purposes that can be run without any preconditions or configurations.
+    public sealed class DummyMode : IMode, IDisposable
     {
-        private readonly ILogger<DualcoreMode> _logger;
+        private readonly ILogger<DummyMode> _logger;
         private readonly StopToken _stopToken;
-        private readonly ModeBase _modeBase;
 
-        public DualcoreMode(ILoggerFactory loggerFactory, BaseConfig baseConfig)
+        public DummyMode(ILoggerFactory loggerFactory, BaseConfig baseConfig)
         {
-            _logger = loggerFactory.CreateLogger<DualcoreMode>();
+            _logger = loggerFactory.CreateLogger<DummyMode>();
             _stopToken = new StopToken();
-            _modeBase = new ModeBase(loggerFactory, baseConfig, _stopToken);
         }
 
         public async Task Run()
         {
-            _logger.LogInformation("Dualcore mode starting");
-            _modeBase.Start();
+            _logger.LogInformation("Dummy mode starting");
             while (!_stopToken.ShouldStop)
             {
                 // there is no sequence, just busyloop
                 await Task.Delay(TimeSpan.FromMilliseconds(100));
             }
-            _logger.LogInformation("Dualcore mode ended");
+            _logger.LogInformation("Dummy mode ended");
         }
 
         public void Cancel()
@@ -39,7 +37,6 @@ namespace Core.Modes
 
         public void Dispose()
         {
-            _modeBase.Dispose();
         }
     }
 }

@@ -38,8 +38,8 @@ namespace Persistence.Models
         // public Instant? LastBetAt { get; init; }
         public Instant? LastMessageAt { get; init; }
 
-        public int Pokeyen { get; init; }
-        public int Tokens { get; init; }
+        public long Pokeyen { get; init; }
+        public long Tokens { get; init; }
 
         public SortedSet<int> ParticipationEmblems { get; init; }
         public int? SelectedParticipationEmblem { get; init; }
@@ -77,8 +77,8 @@ namespace Persistence.Models
             Instant firstActiveAt,
             Instant lastActiveAt,
             Instant? lastMessageAt,
-            int pokeyen,
-            int tokens,
+            long pokeyen,
+            long tokens,
             SortedSet<int>? participationEmblems = null,
             int? selectedParticipationEmblem = null,
             PkmnSpecies? selectedBadge = null,
