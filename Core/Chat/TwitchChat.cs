@@ -170,11 +170,12 @@ namespace Core.Chat
             string messageText,
             MessageSource source)
         {
+            string? colorHex = twitchLibMessage.ColorHex;
             User user = await _userRepo.RecordUser(new UserInfo(
                 id: twitchLibMessage.UserId,
                 twitchDisplayName: twitchLibMessage.DisplayName,
                 simpleName: twitchLibMessage.Username,
-                color: twitchLibMessage.ColorHex.Replace("#", ""),
+                color: string.IsNullOrEmpty(colorHex) ? null : colorHex.TrimStart('#'),
                 fromMessage: true,
                 updatedAt: _clock.GetCurrentInstant()
             ));
