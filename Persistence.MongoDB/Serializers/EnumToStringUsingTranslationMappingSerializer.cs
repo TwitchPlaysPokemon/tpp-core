@@ -43,7 +43,7 @@ namespace Persistence.MongoDB.Serializers
         public override T Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
         {
             string valueString = context.Reader.ReadString();
-            if (!_translationBack.TryGetValue(valueString, out T value))
+            if (!_translationBack.TryGetValue(valueString, out T? value))
             {
                 throw new InvalidOperationException(
                     $"encountered unknown enum string value '{valueString}' in db for enum '{typeof(T)}'");
