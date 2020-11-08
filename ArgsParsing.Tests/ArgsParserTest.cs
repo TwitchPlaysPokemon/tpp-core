@@ -73,5 +73,25 @@ namespace ArgsParsing.Tests
                 },
                 ex.Failures);
         }
+
+        /// <summary>
+        /// Some argument parsers - the AnyOrderParser in this case - have multiple possible branches.
+        /// This means that the same argument may fail to parse on multiple branches.
+        /// The resulting duplicated parse failures will be present in the ArgsParseFailure,
+        /// but should not be present in the overall parse failure message.
+        /// </summary>
+        [Test]
+        public void TestNoDuplicateErrorMessages()
+        {
+            var argsParser = new ArgsParser();
+            argsParser.AddArgumentParser(new IntParser());
+            argsParser.AddArgumentParser(new AnyOrderParser(argsParser));
+
+            var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<AnyOrder<int, int>>(ImmutableList.Create("1", "x")));
+            Assert.AreEqual("did not recognize 'x' as a number", ex.Message);
+            // this is how it used to be:
+            Assert.AreNotEqual("did not recognize 'x' as a number, or did not recognize 'x' as a number", ex.Message);
+        }
     }
 }

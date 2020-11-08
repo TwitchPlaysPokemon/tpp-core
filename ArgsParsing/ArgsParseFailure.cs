@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 
@@ -18,7 +19,10 @@ namespace ArgsParsing
         private static string FailuresToFailureString(IImmutableList<Failure> failures)
         {
             ErrorRelevanceConfidence maxConfidence = failures.Max(failure => failure.Relevance);
-            var relevantFailureTexts = from f in failures where f.Relevance == maxConfidence select f.Error;
+            IEnumerable<string> relevantFailureTexts = failures
+                .Where(f => f.Relevance == maxConfidence)
+                .Select(f => f.Error)
+                .Distinct();
             return string.Join(", or ", relevantFailureTexts);
         }
 
