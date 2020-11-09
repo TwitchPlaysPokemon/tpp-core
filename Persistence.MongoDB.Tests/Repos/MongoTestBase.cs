@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using MongoDB.Driver;
 using NUnit.Framework;
+using Persistence.MongoDB.Serializers;
 
 namespace Persistence.MongoDB.Tests.Repos
 {
@@ -10,7 +13,7 @@ namespace Persistence.MongoDB.Tests.Repos
     /// Base class for tests that need to operate on an actual MongoDB server.
     /// Connects to a local mongod instance running on the default port (27017).
     /// Provides a CreateTemporaryDatabase method for obtaining a unique IMongoDatabase.
-    /// Databases created that way get cleaned up after the test method finishes.
+    /// Databases created that way get cleaned up while the test class is being torn down.
     /// </summary>
     public abstract class MongoTestBase
     {
@@ -23,8 +26,9 @@ namespace Persistence.MongoDB.Tests.Repos
         [OneTimeSetUp]
         public void SetUpMongoClient()
         {
+            CustomSerializers.RegisterAll();
             // try to connect to a mongodb running on the default port
-            _client = new MongoClient($"mongodb://localhost/?replicaSet={ReplicaSetName}");
+            _client = new MongoClient($"mongodb://localhost:27017/?replicaSet={ReplicaSetName}");
             bool success = _client.ListDatabaseNamesAsync(CancellationToken.None).Wait(TimeSpan.FromSeconds(5));
             if (!success)
             {
@@ -36,13 +40,10 @@ namespace Persistence.MongoDB.Tests.Repos
             }
         }
 
-        [TearDown]
+        [OneTimeTearDown]
         public void TearDownTempDatabases()
         {
-            foreach (string db in _temporaryDatabases)
-            {
-                _client.DropDatabase(db);
-            }
+            Task.WhenAll(_temporaryDatabases.Select(db => _client.DropDatabaseAsync(db))).Wait();
         }
 
         protected IMongoDatabase CreateTemporaryDatabase()
