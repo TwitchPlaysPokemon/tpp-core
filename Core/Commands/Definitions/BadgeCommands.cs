@@ -47,7 +47,7 @@ namespace Core.Commands.Definitions
         public async Task<CommandResult> Badges(CommandContext context)
         {
             (Optional<User> optionalUser, Optional<PkmnSpecies> optionalSpecies) =
-                await context.ParseArgsOptional<User>, <Optional<PkmnSpecies>>();
+                await context.Optional<User>, <ParseArgsOptional<PkmnSpecies>>();
             Console.WriteLine($"species present: {optionalSpecies.IsPresent}");
             Console.WriteLine($"user present: {optionalUser.IsPresent}");
             bool isSelf = !optionalUser.IsPresent;
