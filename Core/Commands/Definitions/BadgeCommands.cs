@@ -17,7 +17,8 @@ namespace Core.Commands.Definitions
             new Command("badges", Badges)
             {
                 Aliases = new[] {"badge"},
-                Description = "Show a user's badges. Argument: <Pokemon> (optional) <Username> (optional)"
+                //Description = "Show a user's badges. Argument: <Pokemon> (optional) <Username> (optional)"
+                Description = "Show a user's badges. Argument: <Username> (optional) <Pokemon> (optional)"
             },
 
             new Command("unselectbadge", UnselectBadge)
@@ -47,7 +48,7 @@ namespace Core.Commands.Definitions
         public async Task<CommandResult> Badges(CommandContext context)
         {
             (Optional<PkmnSpecies> optionalSpecies, Optional<User> optionalUser) =
-                await context.ParseArgs<Optional<PkmnSpecies>, Optional<User>>();
+                await context.ParseArgsOptional<User>, <Optional<PkmnSpecies>>();
             Console.WriteLine($"species present: {optionalSpecies.IsPresent}");
             Console.WriteLine($"user present: {optionalUser.IsPresent}");
             bool isSelf = !optionalUser.IsPresent;
