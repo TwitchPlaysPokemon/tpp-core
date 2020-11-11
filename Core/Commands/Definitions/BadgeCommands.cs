@@ -17,7 +17,6 @@ namespace Core.Commands.Definitions
             new Command("badges", Badges)
             {
                 Aliases = new[] {"badge"},
-                //Description = "Show a user's badges. Argument: <Pokemon> (optional) <Username> (optional)"
                 Description = "Show a user's badges. Argument: <Username> (optional) <Pokemon> (optional)"
             },
 
