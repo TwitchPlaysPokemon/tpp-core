@@ -28,14 +28,31 @@ mynumvotes=$(mongo --quiet --eval 'JSON.stringify(rs.conf().members)' | jq -r -c
 mypriority=$(mongo --quiet --eval 'JSON.stringify(rs.conf().members)' | jq -r -c ".[] | select(.host == \"$myhostaddr\").priority")
 allvotes=$(mongo --quiet --eval 'JSON.stringify(rs.conf().members)' | jq -r -c "[.[] | .votes] | add")
 allprios=$(mongo --quiet --eval 'JSON.stringify(rs.conf().members)' | jq -r -c "[.[] | .priority] | add")
+numsecondaries=$(mongo --quiet --eval 'JSON.stringify(rs.status().members)' | jq -r -c "[.[] | select(.stateStr == \"SECONDARY\")] | length")
 
 if [ "$mymemberstatus" != "SECONDARY" ]; then
-  echo -e "${RED}Could not verify that the current node $myhostaddr is in SECONDARY state. Detected '$mymemberstatus'${NC}"
   if [ "$mymemberstatus" = "PRIMARY" ]; then
-    echo -e "If other nodes are healthy and could take over, you may step this node down from PRIMARY."
-    echo -e "To do that, run: ${CYAN}mongo --eval \"rs.stepDown();\"${NC} and wait a minute."
+    if [[ $numsecondaries -ge 2 ]]; then
+      echo "Detected current node as primary and that there are $numsecondaries secondaries that can take over."
+      echo "Automatically stepping down current node..."
+      mongo --quiet --eval 'rs.stepDown()'
+      echo "Waiting 20 seconds for primary election to finish..."
+      sleep 20
+      mymemberstatus=$(mongo --quiet --eval 'JSON.stringify(rs.status().members)' | jq -r -c ".[] | select(.self).stateStr")
+      if [ "$mymemberstatus" != "SECONDARY" ]; then
+        echo -e "${RED}Could not verify that the current node $myhostaddr is in SECONDARY state. Detected '$mymemberstatus'${NC}"
+        exit 1
+      fi
+    else
+      echo -e "${RED}Detected current node as primary and that there are only $numsecondaries secondaries online.${NC}"
+      echo -e "${RED}Cannot automatically step down current node.${NC}"
+      echo -e "${RED}Ensure at least 2 other nodes are healthy and could take over, and try again.${NC}"
+      exit 1
+    fi
+  else
+    echo -e "${RED}Could not verify that the current node $myhostaddr is in SECONDARY state. Detected '$mymemberstatus'${NC}"
+    exit 1
   fi
-  exit 1
 fi
 echo "Successfully verified that the current node $myhostaddr is in SECONDARY state"
 
