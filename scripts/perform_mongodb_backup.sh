@@ -11,6 +11,8 @@ datenowstr=$(date +'%Y-%m-%d_%H-%M-%S')
 outpath="/var/backups/mongodb/${datenowstr}/"
 logpath="mongodb_backup_${datenowstr}.log"
 
+read -r -e -p "Enter database name to backup: " -i "tpp3" dbname
+
 if sudo systemctl is-active --quiet mongod
 then
   echo -e "${CYAN}mongod service is still running! It will ${RED}NOT${CYAN} be automatically started again after the backup.${NC}"
@@ -64,10 +66,10 @@ echo -e "${CYAN}If you cancel this script now, you need to manually stop the mon
 echo -e "${CYAN}To do that, run: mongo --port 27018 admin --eval \"db.shutdownServer();\"${NC}"
 sleep 10
 
-echo "Starting backup, target path is $outpath"
+echo -e "Starting backup of database ${CYAN}$dbname${NC}, target path is $outpath"
 sudo mkdir "$outpath" \
-&& sudo mongodump --port=27018 --gzip --out="$outpath" \
-&& echo -e "${GREEN}Backup finished! Saved to ${outpath}${NC}"
+&& sudo mongodump --port=27018 --gzip --db="$dbname" --out="$outpath" \
+&& echo -e "${GREEN}Backup finished of database '$dbname'! Saved to ${outpath}${NC}"
 backup_success=$?
 
 echo "Stopping mongodb server running on port 27018 ..."
