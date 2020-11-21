@@ -81,6 +81,6 @@ if [ "$backup_success" != "0" ]; then
   exit 1
 fi
 
-echo "${CYAN}Please assess that the backup looks successful and complete.${NC}"
-echo "${CYAN}If you are certain, you may start the regular database service again.${NC}"
-echo "${CYAN}To do that, run: sudo systemctl start mongod${NC}"
+echo -e "${CYAN}Please assess that the backup looks successful and complete.${NC}"
+echo -e "${CYAN}If you are certain, you may start the regular database service again.${NC}"
+echo -e "${CYAN}To do that, run: sudo systemctl start mongod${NC}"
