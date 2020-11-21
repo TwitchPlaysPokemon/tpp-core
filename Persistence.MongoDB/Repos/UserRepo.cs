@@ -19,6 +19,7 @@ namespace Persistence.MongoDB.Repos
 
         private readonly long _startingPokeyen;
         private readonly long _startingTokens;
+        private readonly long _startingBank;
 
         static UserRepo()
         {
@@ -47,12 +48,14 @@ namespace Persistence.MongoDB.Repos
             });
         }
 
-        public UserRepo(IMongoDatabase database, long startingPokeyen, long startingTokens)
+        public UserRepo(IMongoDatabase database, long startingPokeyen, long startingTokens, long startingBank)
         {
             database.CreateCollectionIfNotExists(CollectionName).Wait();
             Collection = database.GetCollection<User>(CollectionName);
             _startingPokeyen = startingPokeyen;
             _startingTokens = startingTokens;
+            _startingBank = startingBank;
+
             InitIndexes();
             // TODO currently pokeyen are not nullable in the user object, but in the current database some are.
             // There has been an unfinished discussion on whether nullable pokeyen are desired, e.g. to better represent
@@ -72,6 +75,7 @@ namespace Persistence.MongoDB.Repos
                 new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.SimpleName)),
                 new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.Pokeyen)),
                 new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.Tokens)),
+                new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.Bank)),
             });
         }
 
@@ -109,7 +113,8 @@ namespace Persistence.MongoDB.Repos
                 lastActiveAt: userInfo.UpdatedAt,
                 lastMessageAt: userInfo.FromMessage ? userInfo.UpdatedAt : (Instant?)null,
                 pokeyen: _startingPokeyen,
-                tokens: _startingTokens
+                tokens: _startingTokens,
+                bank: _startingBank
             );
             try
             {

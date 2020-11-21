@@ -20,5 +20,6 @@ namespace Core.Configuration
         /* currency amounts for brand new users (new entries in the database) */
         public int StartingPokeyen { get; init; } = 100;
         public int StartingTokens { get; init; } = 0;
+        public int StartingBank { get; init; } = 0;
     }
 }

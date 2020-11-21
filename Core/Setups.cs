@@ -58,7 +58,7 @@ namespace Core
                 new EasterEggCommands().Commands,
                 new StaticResponseCommands().Commands,
                 new UserCommands(
-                    databases.UserRepo, pokeyenBank: databases.PokeyenBank, tokenBank: databases.TokensBank).Commands,
+                    databases.UserRepo, pokeyenBank: databases.PokeyenBank, tokenBank: databases.TokensBank, databases.BankBank).Commands,
                 new BadgeCommands(databases.BadgeRepo, databases.UserRepo).Commands,
                 new OperatorCommands(stopToken, chatConfig.OperatorNames).Commands
             }.SelectMany(cmds => cmds);
@@ -75,13 +75,15 @@ namespace Core
             public IBadgeRepo BadgeRepo { get; }
             public IBank<User> PokeyenBank { get; }
             public IBank<User> TokensBank { get; }
+            public IBank<User> BankBank { get; }
 
-            public Databases(IUserRepo userRepo, IBadgeRepo badgeRepo, IBank<User> pokeyenBank, IBank<User> tokensBank)
+            public Databases(IUserRepo userRepo, IBadgeRepo badgeRepo, IBank<User> pokeyenBank, IBank<User> tokensBank, IBank<User> bankBank)
             {
                 UserRepo = userRepo;
                 BadgeRepo = badgeRepo;
                 PokeyenBank = pokeyenBank;
                 TokensBank = tokensBank;
+                BankBank = bankBank;
             }
         }
 
@@ -93,7 +95,8 @@ namespace Core
             IUserRepo userRepo = new UserRepo(
                 database: mongoDatabase,
                 startingPokeyen: baseConfig.StartingPokeyen,
-                startingTokens: baseConfig.StartingTokens);
+                startingTokens: baseConfig.StartingTokens,
+                startingBank: baseConfig.StartingBank);
             IBadgeRepo badgeRepo = new BadgeRepo(
                 database: mongoDatabase);
             IBank<User> pokeyenBank = new Bank<User>(
@@ -112,11 +115,20 @@ namespace Core
                 clock: SystemClock.Instance);
             tokenBank.AddReservedMoneyChecker(
                 new PersistedReservedMoneyCheckers(mongoDatabase).AllDatabaseReservedTokens);
+            IBank<User> bankBank = new Bank<User>(
+                database: mongoDatabase,
+                currencyCollectionName: UserRepo.CollectionName,
+                transactionLogCollectionName: "banktransactions",
+                u => u.Bank,
+                u => u.Id,
+                clock: SystemClock.Instance);
             return new Databases(
                 userRepo: userRepo,
                 badgeRepo: badgeRepo,
                 pokeyenBank: pokeyenBank,
-                tokensBank: tokenBank);
+                tokensBank: tokenBank,
+                bankBank: bankBank
+                );
         }
     }
 }

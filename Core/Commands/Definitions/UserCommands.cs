@@ -64,12 +64,14 @@ namespace Core.Commands.Definitions
         private readonly IUserRepo _userRepo;
         private readonly IBank<User> _pokeyenBank;
         private readonly IBank<User> _tokenBank;
+        private readonly IBank<User> _bankBank;
 
-        public UserCommands(IUserRepo userRepo, IBank<User> pokeyenBank, IBank<User> tokenBank)
+        public UserCommands(IUserRepo userRepo, IBank<User> pokeyenBank, IBank<User> tokenBank, IBank<User> bankBank)
         {
             _userRepo = userRepo;
             _pokeyenBank = pokeyenBank;
             _tokenBank = tokenBank;
+            _bankBank = bankBank;
         }
 
         public async Task<CommandResult> CheckBalance(CommandContext context)
@@ -83,6 +85,7 @@ namespace Core.Commands.Definitions
             long reservedPokeyen = isSelf ? await _pokeyenBank.GetReservedMoney(user) : 0;
             long availableTokens = isSelf ? await _tokenBank.GetAvailableMoney(user) : user.Tokens;
             long reservedTokens = isSelf ? await _tokenBank.GetReservedMoney(user) : 0;
+            long availableBank = isSelf ? await _bankBank.GetAvailableMoney(user) : user.Bank;
 
             string reservedPokeyenMessage = reservedPokeyen > 0 ? $" (P{reservedPokeyen} reserved)" : "";
             string reservedTokensMessage = reservedTokens > 0 ? $" (T{reservedTokens} reserved)" : "";
@@ -92,6 +95,7 @@ namespace Core.Commands.Definitions
             string response =
                 $"{(isSelf ? "You have" : $"{user.Name} has")}" +
                 $" P{availablePokeyen} pokeyen{reservedPokeyenMessage}" +
+                $"{(availableBank != 0 ? $", P{availableBank} stored in the bank" : "")}" +
                 $" and T{availableTokens} tokens{reservedTokensMessage}." +
                 rankMessage;
             return new CommandResult { Response = response };

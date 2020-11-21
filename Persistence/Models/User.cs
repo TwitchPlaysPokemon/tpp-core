@@ -40,6 +40,7 @@ namespace Persistence.Models
 
         public long Pokeyen { get; init; }
         public long Tokens { get; init; }
+        public long Bank { get; init; }
 
         public SortedSet<int> ParticipationEmblems { get; init; }
         public int? SelectedParticipationEmblem { get; init; }
@@ -79,6 +80,7 @@ namespace Persistence.Models
             Instant? lastMessageAt,
             long pokeyen,
             long tokens,
+            long bank,
             SortedSet<int>? participationEmblems = null,
             int? selectedParticipationEmblem = null,
             PkmnSpecies? selectedBadge = null,
@@ -96,6 +98,7 @@ namespace Persistence.Models
             LastMessageAt = lastMessageAt;
             Pokeyen = pokeyen;
             Tokens = tokens;
+            Bank = bank;
             ParticipationEmblems = participationEmblems ?? new SortedSet<int>();
             SelectedParticipationEmblem = selectedParticipationEmblem;
             SelectedBadge = selectedBadge;
