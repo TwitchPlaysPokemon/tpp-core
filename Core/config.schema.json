@@ -104,6 +104,9 @@
     },
     "StartingTokens": {
       "type": "integer"
+    },
+    "StartingBank": {
+      "type": "integer"
     }
   }
 }
