@@ -11,6 +11,8 @@ datenowstr=$(date +'%Y-%m-%d_%H-%M-%S')
 outpath="/var/backups/mongodb/${datenowstr}/"
 logpath="mongodb_backup_${datenowstr}.log"
 
+read -r -e -p "Enter database name to backup: " -i "tpp3" dbname
+
 if sudo systemctl is-active --quiet mongod
 then
   echo -e "${CYAN}mongod service is still running! It will ${RED}NOT${CYAN} be automatically started again after the backup.${NC}"
@@ -26,14 +28,31 @@ mynumvotes=$(mongo --quiet --eval 'JSON.stringify(rs.conf().members)' | jq -r -c
 mypriority=$(mongo --quiet --eval 'JSON.stringify(rs.conf().members)' | jq -r -c ".[] | select(.host == \"$myhostaddr\").priority")
 allvotes=$(mongo --quiet --eval 'JSON.stringify(rs.conf().members)' | jq -r -c "[.[] | .votes] | add")
 allprios=$(mongo --quiet --eval 'JSON.stringify(rs.conf().members)' | jq -r -c "[.[] | .priority] | add")
+numsecondaries=$(mongo --quiet --eval 'JSON.stringify(rs.status().members)' | jq -r -c "[.[] | select(.stateStr == \"SECONDARY\")] | length")
 
 if [ "$mymemberstatus" != "SECONDARY" ]; then
-  echo -e "${RED}Could not verify that the current node $myhostaddr is in SECONDARY state. Detected '$mymemberstatus'${NC}"
   if [ "$mymemberstatus" = "PRIMARY" ]; then
-    echo -e "If other nodes are healthy and could take over, you may step this node down from PRIMARY."
-    echo -e "To do that, run: ${CYAN}mongo --eval \"rs.stepDown();\"${NC} and wait a minute."
+    if [[ $numsecondaries -ge 2 ]]; then
+      echo "Detected current node as primary and that there are $numsecondaries secondaries that can take over."
+      echo "Automatically stepping down current node..."
+      mongo --quiet --eval 'rs.stepDown()'
+      echo "Waiting 20 seconds for primary election to finish..."
+      sleep 20
+      mymemberstatus=$(mongo --quiet --eval 'JSON.stringify(rs.status().members)' | jq -r -c ".[] | select(.self).stateStr")
+      if [ "$mymemberstatus" != "SECONDARY" ]; then
+        echo -e "${RED}Could not verify that the current node $myhostaddr is in SECONDARY state. Detected '$mymemberstatus'${NC}"
+        exit 1
+      fi
+    else
+      echo -e "${RED}Detected current node as primary and that there are only $numsecondaries secondaries online.${NC}"
+      echo -e "${RED}Cannot automatically step down current node.${NC}"
+      echo -e "${RED}Ensure at least 2 other nodes are healthy and could take over, and try again.${NC}"
+      exit 1
+    fi
+  else
+    echo -e "${RED}Could not verify that the current node $myhostaddr is in SECONDARY state. Detected '$mymemberstatus'${NC}"
+    exit 1
   fi
-  exit 1
 fi
 echo "Successfully verified that the current node $myhostaddr is in SECONDARY state"
 
@@ -45,8 +64,8 @@ if [[ $mynumvotes -ge $voteswithoutme ]]; then
 fi
 echo "Successfully verified that the replica set can have a majority of votes without $myhostaddr"
 
-prioritywithoutme=$((allprios - mypriority))
-if [[ $mypriority -ge $prioritywithoutme ]]; then
+prioritywithoutme=$(echo "$allprios $mypriority" | awk 'print $1-$2')
+if awk "BEGIN{exit ($mypriority >= $prioritywithoutme)}"; then
   echo -e "${RED}Could not verify that the replica set would have a majority of priority without this node.${NC}"
   echo -e "${RED}Detected this node having '$mypriority' priority, and '$allprios' priority total${NC}"
   exit 1
@@ -64,10 +83,10 @@ echo -e "${CYAN}If you cancel this script now, you need to manually stop the mon
 echo -e "${CYAN}To do that, run: mongo --port 27018 admin --eval \"db.shutdownServer();\"${NC}"
 sleep 10
 
-echo "Starting backup, target path is $outpath"
+echo -e "Starting backup of database ${CYAN}$dbname${NC}, target path is $outpath"
 sudo mkdir "$outpath" \
-&& sudo mongodump --port=27018 --gzip --out="$outpath" \
-&& echo -e "${GREEN}Backup finished! Saved to ${outpath}${NC}"
+&& sudo mongodump --port=27018 --gzip --db="$dbname" --out="$outpath" \
+&& echo -e "${GREEN}Backup finished of database '$dbname'! Saved to ${outpath}${NC}"
 backup_success=$?
 
 echo "Stopping mongodb server running on port 27018 ..."
@@ -79,6 +98,6 @@ if [ "$backup_success" != "0" ]; then
   exit 1
 fi
 
-echo "${CYAN}Please assess that the backup looks successful and complete.${NC}"
-echo "${CYAN}If you are certain, you may start the regular database service again.${NC}"
-echo "${CYAN}To do that, run: sudo systemctl start mongod${NC}"
+echo -e "${CYAN}Please assess that the backup looks successful and complete.${NC}"
+echo -e "${CYAN}If you are certain, you may start the regular database service again.${NC}"
+echo -e "${CYAN}To do that, run: sudo systemctl start mongod${NC}"
