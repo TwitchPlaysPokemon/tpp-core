@@ -64,8 +64,9 @@ if [[ $mynumvotes -ge $voteswithoutme ]]; then
 fi
 echo "Successfully verified that the replica set can have a majority of votes without $myhostaddr"
 
-prioritywithoutme=$(echo "$allprios $mypriority" | awk 'print $1-$2')
-if awk "BEGIN{exit ($mypriority >= $prioritywithoutme)}"; then
+prioritywithoutme=$(echo "$allprios $mypriority" | awk '{print $1-$2}')
+# inverted because awk returns booleans (0=false) instead of exit codes
+if ! awk "BEGIN{exit ($mypriority >= $prioritywithoutme)}"; then
   echo -e "${RED}Could not verify that the replica set would have a majority of priority without this node.${NC}"
   echo -e "${RED}Detected this node having '$mypriority' priority, and '$allprios' priority total${NC}"
   exit 1
