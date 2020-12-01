@@ -12,6 +12,8 @@ jobs:
         dotnet-sdk-version:
           - 5.0.100-rc.1.20452.10
           - 5.0.100-rc.2.20479.15
+          - 5.0.100
+          - 5.0.x
 
     steps:
       - name: Setup .NET 5
