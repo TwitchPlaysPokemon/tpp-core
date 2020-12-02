@@ -23,8 +23,8 @@ namespace Core.Tests.Commands
             var messageSenderMock = new Mock<IMessageSender>();
             var commandResponder = new CommandResponder(messageSenderMock.Object);
             var user = MockUser();
-            var chatMessage = new Message(user, "message text", MessageSource.Chat);
-            var whisperMessage = new Message(user, "message text", MessageSource.Whisper);
+            var chatMessage = new Message(user, "message text", MessageSource.Chat, string.Empty);
+            var whisperMessage = new Message(user, "message text", MessageSource.Whisper, string.Empty);
 
             // when
             commandResponder.ProcessResponse(chatMessage,
@@ -44,8 +44,8 @@ namespace Core.Tests.Commands
             var messageSenderMock = new Mock<IMessageSender>();
             var commandResponder = new CommandResponder(messageSenderMock.Object);
             var user = MockUser();
-            var chatMessage = new Message(user, "message text", MessageSource.Chat);
-            var whisperMessage = new Message(user, "message text", MessageSource.Whisper);
+            var chatMessage = new Message(user, "message text", MessageSource.Chat, string.Empty);
+            var whisperMessage = new Message(user, "message text", MessageSource.Whisper, string.Empty);
 
             // when
             commandResponder.ProcessResponse(chatMessage,
@@ -71,10 +71,10 @@ namespace Core.Tests.Commands
             var messageSenderMock = new Mock<IMessageSender>();
             var commandResponder = new CommandResponder(messageSenderMock.Object, whisperIfLongThreshold: 20);
             var user = MockUser();
-            var chatMessageShort = new Message(user, "short", MessageSource.Chat);
-            var chatMessageLong = new Message(user, "longer than 20 characters", MessageSource.Chat);
-            var whisperMessageShort = new Message(user, "short", MessageSource.Whisper);
-            var whisperMessageLong = new Message(user, "longer than 20 characters", MessageSource.Whisper);
+            var chatMessageShort = new Message(user, "short", MessageSource.Chat, string.Empty);
+            var chatMessageLong = new Message(user, "longer than 20 characters", MessageSource.Chat, string.Empty);
+            var whisperMessageShort = new Message(user, "short", MessageSource.Whisper, string.Empty);
+            var whisperMessageLong = new Message(user, "longer than 20 characters", MessageSource.Whisper, string.Empty);
 
             // when
             commandResponder.ProcessResponse(chatMessageShort,
@@ -100,8 +100,8 @@ namespace Core.Tests.Commands
             var messageSenderMock = new Mock<IMessageSender>();
             var commandResponder = new CommandResponder(messageSenderMock.Object);
             var user = MockUser();
-            var chatMessage = new Message(user, "message text", MessageSource.Chat);
-            var whisperMessage = new Message(user, "message text", MessageSource.Whisper);
+            var chatMessage = new Message(user, "message text", MessageSource.Chat, string.Empty);
+            var whisperMessage = new Message(user, "message text", MessageSource.Whisper, string.Empty);
 
             // when
             commandResponder.ProcessResponse(chatMessage,

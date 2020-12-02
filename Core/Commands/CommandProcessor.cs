@@ -23,16 +23,13 @@ namespace Core.Commands
         private readonly ILogger<CommandProcessor> _logger;
         private readonly ArgsParser _argsParser;
         private readonly Dictionary<string, Command> _commands = new Dictionary<string, Command>();
-        private readonly bool _ignoreUnknownCommands;
 
         public CommandProcessor(
             ILogger<CommandProcessor> logger,
-            ArgsParser argsParser,
-            bool ignoreUnknownCommands = false)
+            ArgsParser argsParser)
         {
             _logger = logger;
             _argsParser = argsParser;
-            _ignoreUnknownCommands = ignoreUnknownCommands;
         }
 
         public void InstallCommand(Command command)
@@ -66,20 +63,12 @@ namespace Core.Commands
             }
         }
 
-        public async Task<CommandResult> Process(string commandName, IImmutableList<string> args, Message message)
+        public async Task<CommandResult?> Process(string commandName, IImmutableList<string> args, Message message)
         {
             if (!_commands.TryGetValue(commandName.ToLower(), out Command command))
             {
-                if (_ignoreUnknownCommands)
-                {
-                    _logger.LogDebug($"unknown command '{commandName}'");
-                    return new CommandResult();
-                }
-                else
-                {
-                    return new CommandResult
-                    { Response = $"unknown command '{commandName}'", ResponseTarget = ResponseTarget.Whisper };
-                }
+                _logger.LogDebug($"unknown command '{commandName}'");
+                return null;
             }
             var stopwatch = new Stopwatch();
             stopwatch.Start();

@@ -179,7 +179,10 @@ namespace Core.Chat
                 fromMessage: true,
                 updatedAt: _clock.GetCurrentInstant()
             ));
-            var message = new Message(user, messageText, source);
+            // TODO whispers don't have "RawIrcMessage" yet.
+            // The required change is merged, but not released yet: https://github.com/TwitchLib/TwitchLib.Client/pull/159
+            var rawIrcMessage = (twitchLibMessage as ChatMessage)?.RawIrcMessage ?? string.Empty;
+            var message = new Message(user, messageText, source, rawIrcMessage);
             IncomingMessage?.Invoke(this, new MessageEventArgs(message));
         }
 

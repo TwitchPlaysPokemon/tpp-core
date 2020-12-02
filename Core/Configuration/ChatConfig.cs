@@ -31,7 +31,7 @@ namespace Core.Configuration
         // list of usernames and channels that may receive outbound messages even with suppression enabled
         public ImmutableHashSet<string> SuppressionOverrides { get; init; } = ImmutableHashSet.Create<string>();
 
-        /* whether unknown commands should not cause an appropriate "unknown command" response */
-        public bool IgnoreUnknownCommands { get; init; } = true;
+        /* whether to forward unprocessed messages to the old core by saving them to the "messagequeue" collection */
+        public bool ForwardUnprocessedMessages { get; init; } = true;
     }
 }

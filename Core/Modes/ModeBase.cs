@@ -9,6 +9,7 @@ using Core.Commands.Definitions;
 using Core.Configuration;
 using Microsoft.Extensions.Logging;
 using NodaTime;
+using Persistence.Repos;
 
 namespace Core.Modes
 {
@@ -17,6 +18,8 @@ namespace Core.Modes
         private readonly CommandProcessor _commandProcessor;
         private readonly IChat _chat;
         private readonly ICommandResponder _commandResponder;
+        private readonly IMessagequeueRepo _messagequeueRepo;
+        private readonly bool _forwardUnprocessedMessages;
 
         public ModeBase(ILoggerFactory loggerFactory, BaseConfig baseConfig, StopToken stopToken)
         {
@@ -30,6 +33,9 @@ namespace Core.Modes
             _chat = new TwitchChat(loggerFactory, SystemClock.Instance, baseConfig.Chat, repos.UserRepo);
             _chat.IncomingMessage += MessageReceived;
             _commandResponder = new CommandResponder(_chat);
+
+            _messagequeueRepo = repos.MessagequeueRepo;
+            _forwardUnprocessedMessages = baseConfig.Chat.ForwardUnprocessedMessages;
         }
 
         private async void MessageReceived(object? sender, MessageEventArgs e) =>
@@ -47,11 +53,29 @@ namespace Core.Modes
                               && name.StartsWith("!") => name.Substring(startIndex: 1),
                 _ => null
             };
+            bool wasProcessed = false;
             if (commandName != null)
             {
-                CommandResult result = await _commandProcessor
+                CommandResult? result = await _commandProcessor
                     .Process(commandName, parts.Skip(1).ToImmutableList(), message);
-                await _commandResponder.ProcessResponse(message, result);
+                if (result != null)
+                {
+                    await _commandResponder.ProcessResponse(message, result);
+                    wasProcessed = true;
+                }
+                else if (!_forwardUnprocessedMessages)
+                {
+                    await _commandResponder.ProcessResponse(message, new CommandResult
+                    {
+                        Response = $"unknown command '{commandName}'",
+                        ResponseTarget = ResponseTarget.Whisper
+                    });
+                    wasProcessed = true;
+                }
+            }
+            if (!wasProcessed && _forwardUnprocessedMessages)
+            {
+                await _messagequeueRepo.EnqueueMessage(message.RawIrcMessage);
             }
         }
 

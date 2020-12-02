@@ -63,7 +63,7 @@
             ]
           }
         },
-        "IgnoreUnknownCommands": {
+        "ForwardUnprocessedMessages": {
           "type": "boolean"
         }
       }

@@ -50,8 +50,7 @@ namespace Core
         {
             var commandProcessor = new CommandProcessor(
                 loggerFactory.CreateLogger<CommandProcessor>(),
-                argsParser,
-                chatConfig.IgnoreUnknownCommands);
+                argsParser);
 
             IEnumerable<Command> commands = new[]
             {

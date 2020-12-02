@@ -23,26 +23,17 @@ namespace Core.Tests.Commands
             firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
             lastMessageAt: null, pokeyen: 0, tokens: 0);
 
-        private Message MockMessage(string text = "") => new Message(_mockUser, text, MessageSource.Chat);
+        private Message MockMessage(string text = "")
+            => new Message(_mockUser, text, MessageSource.Chat, string.Empty);
 
         [Test]
         public async Task TestUnknownCommand()
         {
-            var commandProcessor = new CommandProcessor(_nullLogger, new ArgsParser(), ignoreUnknownCommands: false);
+            var commandProcessor = new CommandProcessor(_nullLogger, new ArgsParser());
 
-            CommandResult result = await commandProcessor.Process("unknown", _noArgs, MockMessage());
+            CommandResult? result = await commandProcessor.Process("unknown", _noArgs, MockMessage());
 
-            Assert.AreEqual("unknown command 'unknown'", result.Response);
-        }
-
-        [Test]
-        public async Task TestUnknownCommandIgnored()
-        {
-            var commandProcessor = new CommandProcessor(_nullLogger, new ArgsParser(), ignoreUnknownCommands: true);
-
-            CommandResult result = await commandProcessor.Process("unknown", _noArgs, MockMessage());
-
-            Assert.IsNull(result.Response);
+            Assert.IsNull(result);
         }
 
         [Test]
@@ -72,9 +63,9 @@ namespace Core.Tests.Commands
             commandProcessor.InstallCommand(new Command("broken",
                 context => throw new InvalidOperationException("this command is busted!")));
 
-            CommandResult result = await commandProcessor.Process("broken", _noArgs, MockMessage("bla"));
+            CommandResult? result = await commandProcessor.Process("broken", _noArgs, MockMessage("bla"));
 
-            Assert.AreEqual("An error occurred.", result.Response);
+            Assert.AreEqual("An error occurred.", result?.Response);
             string errorTextRegex = @"^An exception occured while executing command 'broken'\. " +
                                      $@"User: {Regex.Escape(_mockUser.ToString())}, Original text: bla$";
             loggerMock.VerifyLog(logger => logger.LogError(
@@ -89,8 +80,8 @@ namespace Core.Tests.Commands
 
             foreach (string command in ImmutableList.Create("MiXeD", "mixed", "MIXED"))
             {
-                CommandResult result = await commandProcessor.Process(command, _noArgs, MockMessage());
-                Assert.AreEqual("Hi!", result.Response);
+                CommandResult? result = await commandProcessor.Process(command, _noArgs, MockMessage());
+                Assert.AreEqual("Hi!", result?.Response);
             }
         }
 
@@ -103,8 +94,8 @@ namespace Core.Tests.Commands
 
             foreach (string command in ImmutableList.Create("main", "alias1", "ALIAS2"))
             {
-                CommandResult result = await commandProcessor.Process(command, _noArgs, MockMessage());
-                Assert.AreEqual("Hi!", result.Response);
+                CommandResult? result = await commandProcessor.Process(command, _noArgs, MockMessage());
+                Assert.AreEqual("Hi!", result?.Response);
             }
         }
 

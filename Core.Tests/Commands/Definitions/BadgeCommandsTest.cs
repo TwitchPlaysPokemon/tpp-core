@@ -24,7 +24,8 @@ namespace Core.Tests.Commands.Definitions
             lastMessageAt: null, pokeyen: 0, tokens: 0,
             selectedBadge: selectedBadge);
 
-        private Message MockMessage(User user, string text = "") => new Message(user, text, MessageSource.Chat);
+        private Message MockMessage(User user, string text = "")
+            => new Message(user, text, MessageSource.Chat, string.Empty);
 
         private Mock<IBadgeRepo> _badgeRepoMock = null!;
         private Mock<IUserRepo> _userRepoMock = null!;
