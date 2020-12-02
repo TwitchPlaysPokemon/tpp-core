@@ -50,7 +50,7 @@ namespace Core
         {
             var commandProcessor = new CommandProcessor(
                 loggerFactory.CreateLogger<CommandProcessor>(),
-                argsParser);
+                databases.CommandLogger, argsParser);
 
             IEnumerable<Command> commands = new[]
             {
@@ -73,6 +73,7 @@ namespace Core
             IBadgeRepo BadgeRepo,
             IBank<User> PokeyenBank,
             IBank<User> TokensBank,
+            ICommandLogger CommandLogger,
             IMessagequeueRepo MessagequeueRepo
         );
 
@@ -109,6 +110,7 @@ namespace Core
                 BadgeRepo: badgeRepo,
                 PokeyenBank: pokeyenBank,
                 TokensBank: tokenBank,
+                CommandLogger: new CommandLogger(mongoDatabase, SystemClock.Instance),
                 MessagequeueRepo: new MessagequeueRepo(mongoDatabase)
             );
         }

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ArgsParsing;
 using Microsoft.Extensions.Logging;
+using Persistence.Repos;
 
 namespace Core.Commands
 {
@@ -21,14 +22,17 @@ namespace Core.Commands
         private static readonly TimeSpan CommandWarnTimeLimit = TimeSpan.FromMilliseconds(50);
 
         private readonly ILogger<CommandProcessor> _logger;
+        private readonly ICommandLogger _commandLogger;
         private readonly ArgsParser _argsParser;
         private readonly Dictionary<string, Command> _commands = new Dictionary<string, Command>();
 
         public CommandProcessor(
             ILogger<CommandProcessor> logger,
+            ICommandLogger commandLogger,
             ArgsParser argsParser)
         {
             _logger = logger;
+            _commandLogger = commandLogger;
             _argsParser = argsParser;
         }
 
@@ -76,6 +80,7 @@ namespace Core.Commands
             try
             {
                 result = await command.Execution(new CommandContext(message, args, _argsParser));
+                await _commandLogger.Log(message.User, commandName, args, result.Response);
             }
             catch (ArgsParseFailure ex)
             {
