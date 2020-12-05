@@ -74,7 +74,8 @@ namespace Core
             IBank<User> PokeyenBank,
             IBank<User> TokensBank,
             ICommandLogger CommandLogger,
-            IMessagequeueRepo MessagequeueRepo
+            IMessagequeueRepo MessagequeueRepo,
+            IMessagelogRepo MessagelogRepo
         );
 
         public static Databases SetUpRepositories(BaseConfig baseConfig)
@@ -82,6 +83,7 @@ namespace Core
             CustomSerializers.RegisterAll();
             IMongoClient mongoClient = new MongoClient(baseConfig.MongoDbConnectionUri);
             IMongoDatabase mongoDatabase = mongoClient.GetDatabase(baseConfig.MongoDbDatabaseName);
+            IMongoDatabase mongoDatabaseMessagelog = mongoClient.GetDatabase(baseConfig.MongoDbDatabaseNameMessagelog);
             IUserRepo userRepo = new UserRepo(
                 database: mongoDatabase,
                 startingPokeyen: baseConfig.StartingPokeyen,
@@ -111,7 +113,8 @@ namespace Core
                 PokeyenBank: pokeyenBank,
                 TokensBank: tokenBank,
                 CommandLogger: new CommandLogger(mongoDatabase, SystemClock.Instance),
-                MessagequeueRepo: new MessagequeueRepo(mongoDatabase)
+                MessagequeueRepo: new MessagequeueRepo(mongoDatabase),
+                MessagelogRepo: new MessagelogRepo(mongoDatabaseMessagelog)
             );
         }
     }

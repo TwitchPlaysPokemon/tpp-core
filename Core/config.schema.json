@@ -96,6 +96,12 @@
         "null"
       ]
     },
+    "MongoDbDatabaseNameMessagelog": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "Chat": {
       "$ref": "#/definitions/ChatConfig"
     },

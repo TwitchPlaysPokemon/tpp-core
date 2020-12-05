@@ -20,6 +20,8 @@ namespace Core.Modes
         private readonly ICommandResponder _commandResponder;
         private readonly IMessagequeueRepo _messagequeueRepo;
         private readonly bool _forwardUnprocessedMessages;
+        private readonly IMessagelogRepo _messagelogRepo;
+        private readonly IClock _clock;
 
         public ModeBase(ILoggerFactory loggerFactory, BaseConfig baseConfig, StopToken stopToken)
         {
@@ -35,7 +37,9 @@ namespace Core.Modes
             _commandResponder = new CommandResponder(_chat);
 
             _messagequeueRepo = repos.MessagequeueRepo;
+            _messagelogRepo = repos.MessagelogRepo;
             _forwardUnprocessedMessages = baseConfig.Chat.ForwardUnprocessedMessages;
+            _clock = SystemClock.Instance;
         }
 
         private async void MessageReceived(object? sender, MessageEventArgs e) =>
@@ -43,6 +47,9 @@ namespace Core.Modes
 
         private async Task ProcessIncomingMessage(Message message)
         {
+            await _messagelogRepo.LogChat(
+                message.User, message.RawIrcMessage, message.MessageText, _clock.GetCurrentInstant());
+
             string[] parts = message.MessageText.Split(" ");
             string? firstPart = parts.FirstOrDefault();
             string? commandName = firstPart switch
