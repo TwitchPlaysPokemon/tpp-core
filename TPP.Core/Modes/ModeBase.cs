@@ -9,6 +9,7 @@ using TPP.Core.Chat;
 using TPP.Core.Commands;
 using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
+using TPP.Core.Moderation;
 using TPP.Persistence.Repos;
 
 namespace TPP.Core.Modes
@@ -22,6 +23,7 @@ namespace TPP.Core.Modes
         private readonly bool _forwardUnprocessedMessages;
         private readonly IMessagelogRepo _messagelogRepo;
         private readonly IClock _clock;
+        private readonly IModerator _moderator;
 
         public ModeBase(ILoggerFactory loggerFactory, BaseConfig baseConfig, StopToken stopToken)
         {
@@ -41,6 +43,8 @@ namespace TPP.Core.Modes
             _messagelogRepo = repos.MessagelogRepo;
             _forwardUnprocessedMessages = baseConfig.Chat.ForwardUnprocessedMessages;
             _clock = SystemClock.Instance;
+
+            _moderator = new Moderator(loggerFactory.CreateLogger<Moderator>(), twitchChat);
         }
 
         private async void MessageReceived(object? sender, MessageEventArgs e) =>
@@ -50,6 +54,14 @@ namespace TPP.Core.Modes
         {
             await _messagelogRepo.LogChat(
                 message.User.Id, message.RawIrcMessage, message.MessageText, _clock.GetCurrentInstant());
+
+            bool isOk = message.Details.IsStaff
+                        || message.MessageSource != MessageSource.Chat
+                        || await _moderator.Check(message);
+            if (!isOk)
+            {
+                return;
+            }
 
             string[] parts = message.MessageText.Split(" ");
             string? firstPart = parts.FirstOrDefault();

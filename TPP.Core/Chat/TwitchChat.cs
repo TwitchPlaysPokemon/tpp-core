@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
 using TPP.Core.Configuration;
+using TPP.Core.Moderation;
 using TPP.Persistence.Models;
 using TPP.Persistence.Repos;
 using TwitchLib.Client;
@@ -17,7 +18,7 @@ using TwitchLib.Communication.Models;
 
 namespace TPP.Core.Chat
 {
-    public sealed class TwitchChat : IChat, IChatModeChanger
+    public sealed class TwitchChat : IChat, IChatModeChanger, IExecutor
     {
         public event EventHandler<MessageEventArgs> IncomingMessage = null!;
 
@@ -161,31 +162,40 @@ namespace TPP.Core.Chat
         {
             _logger.LogDebug("<#{Channel} {Username}: {Message}",
                 _ircChannel, e.ChatMessage.Username, e.ChatMessage.Message);
-            await AnyMessageReceived(e.ChatMessage, e.ChatMessage.Message, MessageSource.Chat);
+            User user = await _userRepo.RecordUser(GetUserInfoFromTwitchMessage(e.ChatMessage));
+            var message = new Message(user, e.ChatMessage.Message, MessageSource.Chat, e.ChatMessage.RawIrcMessage)
+            {
+                Details = new MessageDetails(
+                    MessageId: e.ChatMessage.Id,
+                    IsAction: e.ChatMessage.IsMe,
+                    IsStaff: e.ChatMessage.IsBroadcaster || e.ChatMessage.IsModerator
+                )
+            };
+            IncomingMessage?.Invoke(this, new MessageEventArgs(message));
         }
 
         private async void WhisperReceived(object? sender, OnWhisperReceivedArgs e)
         {
             _logger.LogDebug("<@{Username}: {Message}", e.WhisperMessage.Username, e.WhisperMessage.Message);
-            await AnyMessageReceived(e.WhisperMessage, e.WhisperMessage.Message, MessageSource.Whisper);
+            User user = await _userRepo.RecordUser(GetUserInfoFromTwitchMessage(e.WhisperMessage));
+            var message = new Message(user, e.WhisperMessage.Message, MessageSource.Whisper, e.WhisperMessage.RawIrcMessage)
+            {
+                Details = new MessageDetails(MessageId: null, IsAction: false, IsStaff: false)
+            };
+            IncomingMessage?.Invoke(this, new MessageEventArgs(message));
         }
 
-        private async Task AnyMessageReceived(
-            TwitchLibMessage twitchLibMessage,
-            string messageText,
-            MessageSource source)
+        private UserInfo GetUserInfoFromTwitchMessage(TwitchLibMessage message)
         {
-            string? colorHex = twitchLibMessage.ColorHex;
-            User user = await _userRepo.RecordUser(new UserInfo(
-                id: twitchLibMessage.UserId,
-                twitchDisplayName: twitchLibMessage.DisplayName,
-                simpleName: twitchLibMessage.Username,
+            string? colorHex = message.ColorHex;
+            return new UserInfo(
+                id: message.UserId,
+                twitchDisplayName: message.DisplayName,
+                simpleName: message.Username,
                 color: string.IsNullOrEmpty(colorHex) ? null : colorHex.TrimStart('#'),
                 fromMessage: true,
                 updatedAt: _clock.GetCurrentInstant()
-            ));
-            Message message = new(user, messageText, source, twitchLibMessage.RawIrcMessage);
-            IncomingMessage?.Invoke(this, new MessageEventArgs(message));
+            );
         }
 
         public void Dispose()
@@ -224,6 +234,18 @@ namespace TPP.Core.Chat
 
             _logger.LogDebug($"disabling emote only mode in #{_ircChannel}");
             await Task.Run(() => _twitchClient.EmoteOnlyOff(_ircChannel));
+        }
+
+        public async Task DeleteMessage(string messageId)
+        {
+            await Task.Run(() => _twitchClient.SendMessage(_ircChannel, ".delete " + messageId));
+        }
+
+        public async Task Timeout(User user, string? message, Duration duration)
+        {
+            await Task.Run(() =>
+                _twitchClient.TimeoutUser(_ircChannel, user.SimpleName, duration.ToTimeSpan(),
+                    message ?? "no timeout reason was given"));
         }
     }
 }
