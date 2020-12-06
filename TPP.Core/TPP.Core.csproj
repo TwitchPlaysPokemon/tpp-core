@@ -14,6 +14,7 @@
         <PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.13" />
         <PackageReference Include="Serilog.Extensions.Logging.File" Version="2.0.0" />
         <PackageReference Include="Serilog.Sinks.Discord" Version="1.0.1" />
+        <PackageReference Include="String.Similarity" Version="3.0.0" />
         <PackageReference Include="TwitchLib.Client" Version="3.2.0" />
     </ItemGroup>
 
