@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -5,6 +6,8 @@ using System.Threading.Tasks;
 using TPP.Core.Moderation.Rules;
 using Microsoft.Extensions.Logging;
 using NodaTime;
+using TPP.Persistence.Models;
+using TPP.Persistence.Repos;
 
 namespace TPP.Core.Moderation
 {
@@ -20,11 +23,21 @@ namespace TPP.Core.Moderation
         private readonly ILogger<Moderator> _logger;
         private readonly IExecutor _executor;
         private readonly IImmutableList<IModerationRule> _rules;
+        private readonly IModLogRepo _modLogRepo;
+        private readonly IClock _clock;
 
-        public Moderator(ILogger<Moderator> logger, IExecutor executor)
+        private static readonly Duration RecentTimeoutsLimit = Duration.FromDays(7);
+        private static readonly Duration InitialTimeoutDuration = Duration.FromMinutes(2);
+        // twitch does not allow timeouts beyond 2 weeks
+        private static readonly Duration MaxTimeoutDuration = Duration.FromDays(14) - Duration.FromSeconds(1);
+        private const int FreeBans = 2;
+
+        public Moderator(ILogger<Moderator> logger, IExecutor executor, IModLogRepo modLogRepo, IClock clock)
         {
             _logger = logger;
             _executor = executor;
+            _modLogRepo = modLogRepo;
+            _clock = clock;
             _rules = ImmutableList.Create<IModerationRule>(
                 new ActionRule(),
                 new ActionBaitRule()
@@ -38,22 +51,46 @@ namespace TPP.Core.Moderation
 
         public async Task<bool> Check(Message message)
         {
-            List<RuleResult> results = _rules.Select(rule => rule.Check(message)).ToList();
+            bool deleteMessage = false;
+            (RuleResult.Timeout, IModerationRule)? timeoutAndRule = null;
 
-            int points = results.OfType<RuleResult.GivePoints>().Sum(p => p.Points);
-            RuleResult additionalAction = ApplyPoints(points);
-            results.Add(additionalAction);
+            List<(RuleResult, IModerationRule)> pointResults = new();
 
-            List<RuleResult.Timeout> timeouts = results.OfType<RuleResult.Timeout>().ToList();
-            List<RuleResult.DeleteMessage> deletions = results.OfType<RuleResult.DeleteMessage>().ToList();
-
-            if (timeouts.Any())
+            void ProcessResult(RuleResult result, IModerationRule rule)
             {
-                Duration timeoutDuration = Duration.FromSeconds(1); // TODO calculate default timeout
-                await _executor.Timeout(message.User, timeouts.First().Message, timeoutDuration);
+                if (result is RuleResult.GivePoints givePoints)
+                    pointResults.Add((ApplyPoints(givePoints.Points), rule));
+                else if (result is RuleResult.DeleteMessage)
+                    deleteMessage = true;
+                else if (result is RuleResult.Timeout resultTimeout)
+                    timeoutAndRule = (resultTimeout, rule);
+                else
+                    _logger.LogWarning($"unhandled moderator rule result type '{result.GetType()}'");
+            }
+
+            foreach (IModerationRule? rule in _rules)
+            {
+                RuleResult result = rule.Check(message);
+                ProcessResult(result, rule);
+            }
+            while (pointResults.Any())
+            {
+                (RuleResult result, IModerationRule rule) = pointResults.First();
+                pointResults.RemoveAt(0);
+                ProcessResult(result, rule);
+            }
+
+            if (timeoutAndRule.HasValue)
+            {
+                (RuleResult.Timeout timeout, IModerationRule rule) = timeoutAndRule.Value;
+                Duration timeoutDuration = await CalculateTimeoutDuration(message.User);
+                await _executor.Timeout(message.User,
+                    "Your message was timed out for the following reason: " + timeout.Message, timeoutDuration);
+                await _modLogRepo.LogModAction(
+                    message.User, timeout.Message, rule.Id, _clock.GetCurrentInstant());
                 return false;
             }
-            if (deletions.Any())
+            else if (deleteMessage)
             {
                 if (message.Details.MessageId != null)
                     await _executor.DeleteMessage(message.Details.MessageId);
@@ -63,6 +100,19 @@ namespace TPP.Core.Moderation
                 return false;
             }
             return true;
+        }
+
+        private async Task<Duration> CalculateTimeoutDuration(User user)
+        {
+            Instant cutoff = _clock.GetCurrentInstant() - RecentTimeoutsLimit;
+            long recentBans = await _modLogRepo.CountRecentBans(user, cutoff);
+
+            Duration duration = InitialTimeoutDuration;
+            long increases = Math.Max(0, recentBans - FreeBans);
+            duration *= increases + 1;
+            if (duration > MaxTimeoutDuration) duration = MaxTimeoutDuration;
+
+            return duration;
         }
     }
 }

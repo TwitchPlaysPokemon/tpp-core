@@ -27,11 +27,12 @@ namespace TPP.Core.Modes
 
         public ModeBase(ILoggerFactory loggerFactory, BaseConfig baseConfig, StopToken stopToken)
         {
+            IClock clock = SystemClock.Instance;
             PokedexData pokedexData = PokedexData.Load();
             Setups.Databases repos = Setups.SetUpRepositories(baseConfig);
             ArgsParser argsParser = Setups.SetUpArgsParser(repos.UserRepo, pokedexData);
 
-            TwitchChat twitchChat = new TwitchChat(loggerFactory, SystemClock.Instance, baseConfig.Chat, repos.UserRepo);
+            TwitchChat twitchChat = new TwitchChat(loggerFactory, clock, baseConfig.Chat, repos.UserRepo);
             _chat = twitchChat;
             _chat.IncomingMessage += MessageReceived;
             _commandResponder = new CommandResponder(_chat);
@@ -44,7 +45,7 @@ namespace TPP.Core.Modes
             _forwardUnprocessedMessages = baseConfig.Chat.ForwardUnprocessedMessages;
             _clock = SystemClock.Instance;
 
-            _moderator = new Moderator(loggerFactory.CreateLogger<Moderator>(), twitchChat);
+            _moderator = new Moderator(loggerFactory.CreateLogger<Moderator>(), twitchChat, repos.ModLogRepo, clock);
         }
 
         private async void MessageReceived(object? sender, MessageEventArgs e) =>
