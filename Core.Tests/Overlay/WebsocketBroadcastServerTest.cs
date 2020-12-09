@@ -10,34 +10,26 @@ using NUnit.Framework;
 
 namespace Core.Tests.Overlay
 {
-    [Category("IntegrationTest")]
+    [Category("IntegrationTest"), Timeout(10_000)]
     public class WebsocketBroadcastServerTest
     {
         private const int Port = 53427;
-        private Task _wsServerListen = null!;
-        private WebsocketBroadcastServer _server = null!;
 
-        [SetUp]
-        public void SetUp()
-        {
-            _server = new WebsocketBroadcastServer(NullLogger<WebsocketBroadcastServer>.Instance, "localhost", Port);
-            _wsServerListen = _server.Listen();
-        }
+        private static WebsocketBroadcastServer CreateServer() =>
+            new(NullLogger<WebsocketBroadcastServer>.Instance, "localhost", Port);
 
-        [TearDown]
-        public async Task TearDown()
-        {
-            await _server.Stop();
-            await _wsServerListen;
-        }
-
-        private static async Task<WebsocketMessageStreamClient> CreateConnectedClient()
+        private static async Task<WebsocketMessageStreamClient> CreateClient()
         {
             var url = new Uri($"ws://localhost:{Port}");
             var wsClient = new WebsocketMessageStreamClient();
             await wsClient.Connect(url, CancellationToken.None);
-            await Task.Delay(TimeSpan.FromMilliseconds(10)); // wait for the server to accept the connection
             return wsClient;
+        }
+
+        private static async Task AwaitConnectedClients(WebsocketBroadcastServer server, int n)
+        {
+            while (server.NumConnectedClients < n)
+                await Task.Delay(TimeSpan.FromMilliseconds(1));
         }
 
         private static async Task<List<string>> ReadAllMessages(WebsocketMessageStreamClient client)
@@ -54,17 +46,24 @@ namespace Core.Tests.Overlay
         [Test]
         public async Task read_messages_until_clean_shutdown()
         {
-            WebsocketMessageStreamClient client = await CreateConnectedClient();
+            await using WebsocketBroadcastServer server = CreateServer();
+            Task _ = server.Listen();
+
+            WebsocketMessageStreamClient client = await CreateClient();
+            await AwaitConnectedClients(server, 1);
             Task<List<string>> readMessagesTask = ReadAllMessages(client);
-            await _server.Send("beep", CancellationToken.None);
-            await _server.Send("boop", CancellationToken.None);
-            await _server.Stop();
+            await server.Send("beep", CancellationToken.None);
+            await server.Send("boop", CancellationToken.None);
+            await server.Stop();
             Assert.AreEqual(new List<string> { "beep", "boop" }, await readMessagesTask);
         }
 
         [Test]
         public async Task read_many_messages_from_many_clients()
         {
+            await using WebsocketBroadcastServer server = CreateServer();
+            Task _ = server.Listen();
+
             const int numMessages = 250;
             List<string> messages = Enumerable.Range(0, numMessages)
                 .Select(i => $"message #{i}").ToList();
@@ -72,15 +71,16 @@ namespace Core.Tests.Overlay
             const int numClients = 30;
             List<Task<WebsocketMessageStreamClient>> clientTasks = Enumerable
                 .Range(0, numClients)
-                .Select(_ => CreateConnectedClient())
+                .Select(_ => CreateClient())
                 .ToList(); // start all coroutines to establish the connections concurrently
             await Task.WhenAll(clientTasks);
+            await AwaitConnectedClients(server, numClients);
             List<Task<List<string>>> messageStreams = clientTasks
                 .Select(task => ReadAllMessages(task.Result))
                 .ToList(); // start all coroutines to start consuming websocket messages
 
-            await Task.WhenAll(messages.Select(msg => _server.Send(msg, CancellationToken.None)));
-            await _server.Stop();
+            await Task.WhenAll(messages.Select(msg => server.Send(msg, CancellationToken.None)));
+            await server.Stop();
 
             foreach (var stream in messageStreams)
             {
@@ -91,7 +91,10 @@ namespace Core.Tests.Overlay
         [Test]
         public async Task client_cannot_send_messages()
         {
-            WebsocketMessageStreamClient client = await CreateConnectedClient();
+            await using WebsocketBroadcastServer server = CreateServer();
+            Task _ = server.Listen();
+
+            WebsocketMessageStreamClient client = await CreateClient();
 
             await client.WriteAsync("Hi server!", CancellationToken.None);
             Assert.IsNull(await client.ReadAsync(CancellationToken.None)); // server is terminating the connection

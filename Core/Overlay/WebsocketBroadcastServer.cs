@@ -48,6 +48,8 @@ namespace Core.Overlay
             _port = port;
         }
 
+        public int NumConnectedClients => _connections.Count;
+
         /// Send a message to all currently connected clients.
         public async Task Send(string message, CancellationToken cancellationToken)
         {
