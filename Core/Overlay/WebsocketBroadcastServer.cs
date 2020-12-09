@@ -15,31 +15,31 @@ namespace Core.Overlay
         public Task Send(string message, CancellationToken cancellationToken);
     }
 
+    internal struct Connection : IAsyncDisposable
+    {
+        internal IPEndPoint RemoteEndPoint { get; init; }
+        internal WebSocket WebSocket { get; init; }
+        internal Task ReaderTask { get; init; }
+        internal CancellationTokenSource TokenSource { get; init; }
+
+        public async ValueTask DisposeAsync()
+        {
+            await ReaderTask;
+            WebSocket.Dispose();
+        }
+    }
+
     /// A websocket server capable of accepting new connections and broadcasting messages.
     /// It cannot receive messages.
     public class WebsocketBroadcastServer : IBroadcastServer, IAsyncDisposable
     {
         private readonly List<Connection> _connections = new List<Connection>();
-        private HttpListener? _httpListener;
-
-        private struct Connection : IAsyncDisposable
-        {
-            internal IPEndPoint RemoteEndPoint { get; init; }
-            internal WebSocket WebSocket { get; init; }
-            internal Task ReaderTask { get; init; }
-            internal CancellationTokenSource TokenSource { get; init; }
-
-            public async ValueTask DisposeAsync()
-            {
-                await ReaderTask;
-                WebSocket.Dispose();
-            }
-        }
-
         private readonly string _host;
         private readonly int _port;
         private readonly ILogger<WebsocketBroadcastServer> _logger;
         private readonly SemaphoreSlim _connectionsSemaphore = new SemaphoreSlim(initialCount: 100, maxCount: 100);
+
+        private HttpListener? _httpListener;
 
         public WebsocketBroadcastServer(ILogger<WebsocketBroadcastServer> logger, string host, int port)
         {
