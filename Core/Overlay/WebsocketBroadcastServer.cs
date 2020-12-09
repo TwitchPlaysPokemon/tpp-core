@@ -54,18 +54,30 @@ namespace Core.Overlay
         public async Task Send(string message, CancellationToken cancellationToken)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(message);
+            List<WebSocketException> errors = new();
             await _connectionsSemaphore.WaitAsync(cancellationToken);
             try
             {
-                foreach (var connection in _connections)
+                foreach (Connection connection in _connections)
                 {
-                    await connection.WebSocket.SendAsync(bytes, WebSocketMessageType.Text, endOfMessage: true,
-                        cancellationToken);
+                    try
+                    {
+                        await connection.WebSocket.SendAsync(bytes, WebSocketMessageType.Text, endOfMessage: true,
+                            cancellationToken);
+                    }
+                    catch (WebSocketException ex)
+                    {
+                        errors.Add(ex);
+                    }
                 }
             }
             finally
             {
                 _connectionsSemaphore.Release();
+            }
+            if (errors.Any())
+            {
+                throw new AggregateException($"Sending failed for {errors.Count} connection(s)", errors);
             }
         }
 
