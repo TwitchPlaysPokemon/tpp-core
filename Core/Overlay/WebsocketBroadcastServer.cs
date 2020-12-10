@@ -58,6 +58,7 @@ namespace Core.Overlay
             await _connectionsSemaphore.WaitAsync(cancellationToken);
             try
             {
+                await PruneDeadConnections();
                 foreach (Connection connection in _connections)
                 {
                     try
