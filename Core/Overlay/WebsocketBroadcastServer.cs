@@ -44,7 +44,7 @@ namespace Core.Overlay
         private readonly string _host;
         private readonly int _port;
         private readonly ILogger<WebsocketBroadcastServer> _logger;
-        private readonly SemaphoreSlim _connectionsSemaphore = new SemaphoreSlim(initialCount: 100, maxCount: 100);
+        private readonly SemaphoreSlim _connectionsSemaphore = new SemaphoreSlim(initialCount: 1, maxCount: 1);
 
         private HttpListener? _httpListener;
 
