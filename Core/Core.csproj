@@ -18,6 +18,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\ArgsParsing\ArgsParsing.csproj" />
+        <ProjectReference Include="..\Match\Match.csproj" />
         <ProjectReference Include="..\Persistence.MongoDB\Persistence.MongoDB.csproj" />
     </ItemGroup>
 
