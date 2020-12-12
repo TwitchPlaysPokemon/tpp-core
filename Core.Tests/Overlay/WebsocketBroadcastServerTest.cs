@@ -102,5 +102,20 @@ namespace Core.Tests.Overlay
                 => client.WriteAsync("Websocket is already dead", CancellationToken.None));
             Assert.AreEqual(WebSocketError.InvalidState, ex.WebSocketErrorCode);
         }
+
+        [Test]
+        public async Task send_after_client_disconnected()
+        {
+            await using WebsocketBroadcastServer server = CreateServer();
+            Task _ = server.Listen();
+
+            WebsocketMessageStreamClient client = await CreateClient();
+            await AwaitConnectedClients(server, 1);
+            await client.Disconnect(CancellationToken.None);
+
+            await server.Send("plsnocrash", CancellationToken.None);
+            await server.Stop();
+            // exits cleanly
+        }
     }
 }

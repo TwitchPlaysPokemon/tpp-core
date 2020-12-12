@@ -24,8 +24,15 @@ namespace Core.Overlay
 
         public async ValueTask DisposeAsync()
         {
-            await ReaderTask;
-            WebSocket.Dispose();
+            try
+            {
+                await ReaderTask;
+                WebSocket.Dispose();
+            }
+            catch (WebSocketException)
+            {
+                // we're just trying to get rid of it, even if the connection died unexpectedly
+            }
         }
     }
 
@@ -37,7 +44,7 @@ namespace Core.Overlay
         private readonly string _host;
         private readonly int _port;
         private readonly ILogger<WebsocketBroadcastServer> _logger;
-        private readonly SemaphoreSlim _connectionsSemaphore = new SemaphoreSlim(initialCount: 100, maxCount: 100);
+        private readonly SemaphoreSlim _connectionsSemaphore = new SemaphoreSlim(initialCount: 1, maxCount: 1);
 
         private HttpListener? _httpListener;
 
@@ -58,6 +65,7 @@ namespace Core.Overlay
             await _connectionsSemaphore.WaitAsync(cancellationToken);
             try
             {
+                await PruneDeadConnections();
                 foreach (Connection connection in _connections)
                 {
                     try
@@ -67,7 +75,16 @@ namespace Core.Overlay
                     }
                     catch (WebSocketException ex)
                     {
-                        errors.Add(ex);
+                        if (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely
+                            || ex.WebSocketErrorCode == WebSocketError.InvalidState)
+                        {
+                            // the connection might unexpectedly die, but that's not our problem.
+                            _logger.LogWarning(ex, "Could not send message to client");
+                        }
+                        else
+                        {
+                            errors.Add(ex);
+                        }
                     }
                 }
             }
@@ -194,11 +211,11 @@ namespace Core.Overlay
                     connection.TokenSource.Cancel();
                     try
                     {
-                        await connection.ReaderTask;
+                        await connection.DisposeAsync();
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Exception occured in websocket reader task");
+                        _logger.LogError(ex, "Unexpected exception occured in websocket reader task");
                     }
                 }));
                 _connections.Clear();
