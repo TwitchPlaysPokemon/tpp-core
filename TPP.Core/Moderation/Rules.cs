@@ -92,7 +92,7 @@ namespace TPP.Core.Moderation
             Duration? recentMessagesTtl = null,
             int copypastaPoints = 175,
             int minMessageLength = 60,
-            double minSimilarity = 0.80)
+            double minSimilarity = 0.75)
         {
             Duration ttl = recentMessagesTtl ?? Duration.FromMinutes(2);
             _recentMessages = new TtlQueue<string>(ttl, clock);
