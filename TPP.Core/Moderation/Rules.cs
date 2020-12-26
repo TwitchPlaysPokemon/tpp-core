@@ -1,5 +1,8 @@
 using System;
+using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using F23.StringSimilarity;
 using NodaTime;
@@ -68,7 +71,7 @@ namespace TPP.Core.Moderation
             int numEmojis = EmojiRegex.Matches(message.MessageText).Count;
             int numActionable = numEmotes + numEmojis - _freeEmotes;
             return numActionable > 0
-                ? new RuleResult.GivePoints((int) Math.Pow(numActionable, _powerOfEmotes))
+                ? new RuleResult.GivePoints((int)Math.Pow(numActionable, _powerOfEmotes))
                 : new RuleResult.Nothing();
         }
     }
@@ -111,5 +114,51 @@ namespace TPP.Core.Moderation
             IsCopypasta(message.MessageText)
                 ? new RuleResult.GivePoints(_copypastaPoints)
                 : new RuleResult.Nothing();
+    }
+
+    /// Excessive amounts of symbols that are typically rare in regular text accumulate points.
+    /// This detects e.g. zalgo or ascii-art
+    public class UnicodeCharacterCategoryRule : IModerationRule
+    {
+        public string Id => "unicode-char-category";
+
+        private readonly int _badnessPointsMultiplier;
+        private readonly double _minBadness;
+        private readonly int _minMessageLength;
+
+        public UnicodeCharacterCategoryRule(
+            int badnessPointsMultiplier = 200,
+            double minBadness = 0.2,
+            int minMessageLength = 40)
+        {
+            _badnessPointsMultiplier = badnessPointsMultiplier;
+            _minBadness = minBadness;
+            _minMessageLength = minMessageLength;
+        }
+
+        public RuleResult Check(Message message)
+        {
+            if (message.MessageText.Length < _minMessageLength)
+                return new RuleResult.Nothing();
+            int numGood = 0;
+            int numBad = 0;
+            foreach (char c in message.MessageText.Normalize(NormalizationForm.FormD))
+            {
+                UnicodeCategory category = CharUnicodeInfo.GetUnicodeCategory(c);
+                if (category == UnicodeCategory.LowercaseLetter ||
+                    category == UnicodeCategory.UppercaseLetter ||
+                    category == UnicodeCategory.SpaceSeparator ||
+                    category == UnicodeCategory.DecimalDigitNumber)
+                    numGood++;
+                else
+                    numBad++;
+            }
+            int total = numGood + numBad;
+            Debug.Assert(total > 0);
+            double badness = numBad / (double)total;
+            return badness > _minBadness
+                ? new RuleResult.GivePoints((int)(_badnessPointsMultiplier * badness))
+                : new RuleResult.Nothing();
+        }
     }
 }
