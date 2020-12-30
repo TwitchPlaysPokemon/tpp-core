@@ -33,7 +33,7 @@ namespace Core.Overlay
             _serializer = obj => JsonConvert.SerializeObject(obj, SerializerSettings);
         }
 
-        public async Task Send(IOverlayEvent evt)
+        public async Task Send(IOverlayEvent evt, CancellationToken cancellationToken)
         {
             string text = _serializer(new
             {
@@ -41,7 +41,7 @@ namespace Core.Overlay
                 extra_parameters = evt
             });
             _logger.LogDebug($"sending overlay event of type '{evt.OverlayEventType}', text: {text}");
-            await _broadcastServer.Send(text, CancellationToken.None);
+            await _broadcastServer.Send(text, cancellationToken);
         }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Immutable;
+using System.Threading;
 using System.Threading.Tasks;
 using Core.Commands.Definitions;
 using Core.Configuration;
@@ -17,6 +18,7 @@ namespace Core.Modes
         private readonly ILogger<Matchmode> _logger;
         private readonly ILoggerFactory _loggerFactory;
         private readonly StopToken _stopToken;
+        private CancellationTokenSource? _loopCancelToken;
         private readonly ModeBase _modeBase;
         private readonly WebsocketBroadcastServer _broadcastServer;
         private readonly OverlayConnection _overlayConnection;
@@ -42,27 +44,35 @@ namespace Core.Modes
             Task overlayWebsocketTask = _broadcastServer.Listen();
             while (!_stopToken.ShouldStop)
             {
-                await Loop();
+                _loopCancelToken = new CancellationTokenSource();
+                try
+                {
+                    await Loop(_loopCancelToken.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    _logger.LogInformation("Match loop cancelled");
+                }
             }
             await _broadcastServer.Stop();
             await overlayWebsocketTask;
             _logger.LogInformation("Matchmode ended");
         }
 
-        private async Task Loop()
+        private async Task Loop(CancellationToken cancellationToken)
         {
             var teams = new Teams
             {
                 Blue = ImmutableList.Create(MatchTesting.TestVenonatForOverlay),
                 Red = ImmutableList.Create(MatchTesting.TestVenonatForOverlay),
             };
-            await Task.Delay(TimeSpan.FromSeconds(3));
+            await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
 
             IMatchCycle match = new CoinflipMatchCycle(_loggerFactory.CreateLogger<CoinflipMatchCycle>());
-            Task setupTask = match.SetUp(new MatchInfo(teams.Blue, teams.Red));
-            await _overlayConnection.Send(new MatchCreatedEvent());
-            await _overlayConnection.Send(new MatchBettingEvent());
-            await _overlayConnection.Send(new MatchModesChosenEvent()); // TODO
+            Task setupTask = match.SetUp(new MatchInfo(teams.Blue, teams.Red), cancellationToken);
+            await _overlayConnection.Send(new MatchCreatedEvent(), cancellationToken);
+            await _overlayConnection.Send(new MatchBettingEvent(), cancellationToken);
+            await _overlayConnection.Send(new MatchModesChosenEvent(), cancellationToken); // TODO
             await _overlayConnection.Send(new MatchSettingUpEvent
             {
                 MatchId = 1234,
@@ -94,30 +104,29 @@ namespace Core.Modes
                 },
                 BetBonus = 35,
                 BetBonusType = "bet",
-            });
+            }, cancellationToken);
 
             Duration bettingBeforeWarning = _matchmodeConfig.DefaultBettingDuration - _matchmodeConfig.WarningDuration;
-            await Task.Delay(bettingBeforeWarning.ToTimeSpan());
-            await _overlayConnection.Send(new MatchWarningEvent());
+            await Task.Delay(bettingBeforeWarning.ToTimeSpan(), cancellationToken);
+            await _overlayConnection.Send(new MatchWarningEvent(), cancellationToken);
 
-            await Task.Delay(_matchmodeConfig.WarningDuration.ToTimeSpan());
+            await Task.Delay(_matchmodeConfig.WarningDuration.ToTimeSpan(), cancellationToken);
             await setupTask;
-            Task<MatchResult> performTask = match.Perform();
-            await _overlayConnection.Send(new MatchPerformingEvent { Teams = teams });
+            Task<MatchResult> performTask = match.Perform(cancellationToken);
+            await _overlayConnection.Send(new MatchPerformingEvent { Teams = teams }, cancellationToken);
 
             MatchResult result = await performTask;
             object winnerForOverlay = result.Winner switch { Side.Blue => 0, Side.Red => 1, _ => "draw" };
-            await _overlayConnection.Send(new MatchOverEvent { MatchResult = winnerForOverlay });
+            await _overlayConnection.Send(new MatchOverEvent { MatchResult = winnerForOverlay }, cancellationToken);
 
-            await Task.Delay(_matchmodeConfig.ResultDuration.ToTimeSpan());
-            await _overlayConnection.Send(new ResultsFinishedEvent());
+            await Task.Delay(_matchmodeConfig.ResultDuration.ToTimeSpan(), cancellationToken);
+            await _overlayConnection.Send(new ResultsFinishedEvent(), cancellationToken);
         }
 
         public void Cancel()
         {
-            // once the mainloop is not just busylooping, this needs to be replaced with something
-            // that makes the mode stop immediately
             _stopToken.ShouldStop = true;
+            _loopCancelToken?.Cancel();
         }
 
         public void Dispose()
