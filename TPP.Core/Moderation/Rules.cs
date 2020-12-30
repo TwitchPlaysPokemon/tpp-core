@@ -49,9 +49,9 @@ namespace TPP.Core.Moderation
         public string Id => "emote";
 
         private readonly int _freeEmotes;
-        private readonly int _powerOfEmotes;
+        private readonly double _powerOfEmotes;
 
-        public EmoteRule(int freeEmotes = 2, int powerOfEmotes = 3)
+        public EmoteRule(int freeEmotes = 2, double powerOfEmotes = 3)
         {
             _freeEmotes = freeEmotes;
             _powerOfEmotes = powerOfEmotes;
@@ -70,9 +70,13 @@ namespace TPP.Core.Moderation
             int numEmotes = message.Details.Emotes.Count;
             int numEmojis = EmojiRegex.Matches(message.MessageText).Count;
             int numActionable = numEmotes + numEmojis - _freeEmotes;
-            return numActionable > 0
-                ? new RuleResult.GivePoints((int)Math.Pow(numActionable, _powerOfEmotes))
-                : new RuleResult.Nothing();
+            if (numActionable > 0)
+            {
+                return new RuleResult.GivePoints(
+                    (int)Math.Pow(numActionable, _powerOfEmotes),
+                    "excessive usage of emotes/emojis");
+            }
+            return new RuleResult.Nothing();
         }
     }
 
@@ -112,7 +116,7 @@ namespace TPP.Core.Moderation
 
         public RuleResult Check(Message message) =>
             IsCopypasta(message.MessageText)
-                ? new RuleResult.GivePoints(_copypastaPoints)
+                ? new RuleResult.GivePoints(_copypastaPoints, "participating in copypasta")
                 : new RuleResult.Nothing();
     }
 
@@ -156,9 +160,13 @@ namespace TPP.Core.Moderation
             int total = numGood + numBad;
             Debug.Assert(total > 0);
             double badness = numBad / (double)total;
-            return badness > _minBadness
-                ? new RuleResult.GivePoints((int)(_badnessPointsMultiplier * badness))
-                : new RuleResult.Nothing();
+            if (badness > _minBadness)
+            {
+                return new RuleResult.GivePoints(
+                    (int)(_badnessPointsMultiplier * badness),
+                    "suspiciously excessive usage of special characters");
+            }
+            return new RuleResult.Nothing();
         }
     }
 }

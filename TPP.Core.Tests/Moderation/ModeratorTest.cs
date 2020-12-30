@@ -17,7 +17,7 @@ namespace TPP.Core.Tests.Moderation
         public string Id => "test-give-points";
         private readonly int _points;
         public GivePointsRule(int points) => _points = points;
-        public RuleResult Check(Message message) => new RuleResult.GivePoints(_points);
+        public RuleResult Check(Message message) => new RuleResult.GivePoints(_points, "points for testing");
     }
 
     public class ModeratorTest

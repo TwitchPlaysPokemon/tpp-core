@@ -59,11 +59,11 @@ namespace TPP.Core.Moderation
             _pointsForTimeout = pointsForTimeout;
         }
 
-        private RuleResult ApplyPoints(User user, int points)
+        private RuleResult ApplyPoints(User user, int points, string reason)
         {
             if (points < _minPoints)
             {
-                _logger.LogDebug($"Ignoring {points} being issues to {user}, because the minimum is {_minPoints}.");
+                _logger.LogDebug($"Ignoring {points} being issued to {user}, because the minimum is {_minPoints}.");
                 return new RuleResult.Nothing();
             }
 
@@ -80,13 +80,16 @@ namespace TPP.Core.Moderation
                 _pointsPerUser[user] = store;
             }
 
-            store.AddPoints(points);
+            store.AddPoints(points, reason);
             int currentPoints = store.GetCurrentPoints();
+            _logger.LogDebug($"Issued {points} points to {user}, which now has {currentPoints} total.");
 
             if (currentPoints >= _pointsForTimeout)
             {
+                IImmutableList<(int, string)> violations = store.GetTopViolations();
                 _pointsPerUser.Remove(user);
-                return new RuleResult.Timeout("You have accumulated too many points through various methods of spam.");
+                string topReasons = string.Join(", and ", violations.Select(v => v.Item2));
+                return new RuleResult.Timeout(topReasons);
             }
 
             return new RuleResult.Nothing();
@@ -102,11 +105,12 @@ namespace TPP.Core.Moderation
             void ProcessResult(RuleResult result, IModerationRule rule)
             {
                 if (result is RuleResult.GivePoints givePoints)
-                    pointResults.Add((ApplyPoints(message.User, givePoints.Points), rule));
+                    pointResults.Add((ApplyPoints(message.User, givePoints.Points, givePoints.Reason), rule));
                 else if (result is RuleResult.DeleteMessage)
                     deleteMessage = true;
                 else if (result is RuleResult.Timeout resultTimeout)
                     timeoutAndRule = (resultTimeout, rule);
+                else if (result is RuleResult.Nothing) { }
                 else
                     _logger.LogWarning($"unhandled moderator rule result type '{result.GetType()}'");
             }
@@ -127,10 +131,8 @@ namespace TPP.Core.Moderation
             {
                 (RuleResult.Timeout timeout, IModerationRule rule) = timeoutAndRule.Value;
                 Duration timeoutDuration = await CalculateTimeoutDuration(message.User);
-                await _executor.Timeout(message.User,
-                    "Your message was timed out for the following reason: " + timeout.Message, timeoutDuration);
-                await _modLogRepo.LogModAction(
-                    message.User, timeout.Message, rule.Id, _clock.GetCurrentInstant());
+                await _executor.Timeout(message.User, timeout.Message, timeoutDuration);
+                await _modLogRepo.LogModAction(message.User, timeout.Message, rule.Id, _clock.GetCurrentInstant());
                 return false;
             }
             else if (deleteMessage)

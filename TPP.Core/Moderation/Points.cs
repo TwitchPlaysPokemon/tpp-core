@@ -1,10 +1,11 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using NodaTime;
 
 namespace TPP.Core.Moderation
 {
-    internal record GivenPoints(int Points, Instant GivenAt);
+    internal record GivenPoints(int Points, string Reason, Instant GivenAt);
 
     public class PointStore
     {
@@ -16,16 +17,16 @@ namespace TPP.Core.Moderation
         {
             _clock = clock;
             _decayPerSecond = decayPerSecond;
-            _points= new SortedList<Instant, GivenPoints>();
+            _points = new SortedList<Instant, GivenPoints>();
         }
 
-        public void AddPoints(int points)
+        public void AddPoints(int points, string reason)
         {
             Instant now = _clock.GetCurrentInstant();
             Instant expiresAt = now + Duration.FromSeconds(points / _decayPerSecond);
             while (_points.ContainsKey(expiresAt))
                 expiresAt = expiresAt.Plus(Duration.FromMilliseconds(1));
-            _points.Add(expiresAt, new GivenPoints(points, now));
+            _points.Add(expiresAt, new GivenPoints(points, reason, now));
         }
 
         public bool IsEmpty()
@@ -43,7 +44,23 @@ namespace TPP.Core.Moderation
                 double pointsDecayed = (now - p.GivenAt).TotalSeconds * _decayPerSecond;
                 return p.Points - pointsDecayed;
             }).Sum();
-            return (int) totalPoints;
+            return (int)totalPoints;
+        }
+
+        public IImmutableList<(int, string)> GetTopViolations()
+        {
+            PruneDecayed();
+            Instant now = _clock.GetCurrentInstant();
+            return _points.Values
+                .Select(p =>
+                {
+                    double pointsDecayed = (now - p.GivenAt).TotalSeconds * _decayPerSecond;
+                    return ((int)(p.Points - pointsDecayed), p.Reason);
+                })
+                .GroupBy(tpl => tpl.Item2)
+                .Select(group => (group.Sum(tpl => tpl.Item1), group.Key))
+                .OrderBy(tpl => -tpl.Item1)
+                .ToImmutableList();
         }
 
         private void PruneDecayed()

@@ -23,7 +23,12 @@ namespace TPP.Core.Moderation
         public sealed class GivePoints : RuleResult
         {
             public int Points { get; }
-            public GivePoints(int points) => Points = points;
+            public string Reason { get; }
+            public GivePoints(int points, string reason)
+            {
+                Points = points;
+                Reason = reason;
+            }
         }
 
         public sealed class Timeout : RuleResult
