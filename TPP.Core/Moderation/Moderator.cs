@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using TPP.Core.Moderation.Rules;
 using Microsoft.Extensions.Logging;
 using NodaTime;
 using TPP.Persistence.Models;
@@ -30,22 +29,66 @@ namespace TPP.Core.Moderation
         private static readonly Duration InitialTimeoutDuration = Duration.FromMinutes(2);
         // twitch does not allow timeouts beyond 2 weeks
         private static readonly Duration MaxTimeoutDuration = Duration.FromDays(14) - Duration.FromSeconds(1);
-        private const int FreeBans = 2;
 
-        public Moderator(ILogger<Moderator> logger, IExecutor executor, IModLogRepo modLogRepo, IClock clock)
+        private readonly int _freeTimeouts;
+        private readonly float _pointsDecayPerSecond;
+        private readonly int _minPoints;
+        private readonly int _pointsForTimeout;
+
+        private readonly Dictionary<User, PointStore> _pointsPerUser = new();
+
+        public Moderator(
+            ILogger<Moderator> logger,
+            IExecutor executor,
+            IImmutableList<IModerationRule> rules,
+            IModLogRepo modLogRepo,
+            IClock clock,
+            int freeTimeouts = 2,
+            float pointsDecayPerSecond = 1f,
+            int minPoints = 20,
+            int pointsForTimeout = 300)
         {
             _logger = logger;
             _executor = executor;
             _modLogRepo = modLogRepo;
             _clock = clock;
-            _rules = ImmutableList.Create<IModerationRule>(
-                new ActionRule(),
-                new ActionBaitRule()
-            );
+            _rules = rules;
+            _freeTimeouts = freeTimeouts;
+            _pointsDecayPerSecond = pointsDecayPerSecond;
+            _minPoints = minPoints;
+            _pointsForTimeout = pointsForTimeout;
         }
 
-        private RuleResult ApplyPoints(int points)
+        private RuleResult ApplyPoints(User user, int points)
         {
+            if (points < _minPoints)
+            {
+                _logger.LogDebug($"Ignoring {points} being issues to {user}, because the minimum is {_minPoints}.");
+                return new RuleResult.Nothing();
+            }
+
+            // clean up expired entries, so we don't leak memory
+            List<User> expiredEntries = _pointsPerUser
+                .Where(kvp => kvp.Value.IsEmpty())
+                .Select(kvp => kvp.Key)
+                .ToList();
+            expiredEntries.ForEach(u => _pointsPerUser.Remove(u));
+
+            if (!_pointsPerUser.TryGetValue(user, out PointStore? store))
+            {
+                store = new PointStore(_clock, _pointsDecayPerSecond);
+                _pointsPerUser[user] = store;
+            }
+
+            store.AddPoints(points);
+            int currentPoints = store.GetCurrentPoints();
+
+            if (currentPoints >= _pointsForTimeout)
+            {
+                _pointsPerUser.Remove(user);
+                return new RuleResult.Timeout("You have accumulated too many points through various methods of spam.");
+            }
+
             return new RuleResult.Nothing();
         }
 
@@ -59,7 +102,7 @@ namespace TPP.Core.Moderation
             void ProcessResult(RuleResult result, IModerationRule rule)
             {
                 if (result is RuleResult.GivePoints givePoints)
-                    pointResults.Add((ApplyPoints(givePoints.Points), rule));
+                    pointResults.Add((ApplyPoints(message.User, givePoints.Points), rule));
                 else if (result is RuleResult.DeleteMessage)
                     deleteMessage = true;
                 else if (result is RuleResult.Timeout resultTimeout)
@@ -108,7 +151,7 @@ namespace TPP.Core.Moderation
             long recentBans = await _modLogRepo.CountRecentBans(user, cutoff);
 
             Duration duration = InitialTimeoutDuration;
-            long increases = Math.Max(0, recentBans - FreeBans);
+            long increases = Math.Max(0, recentBans - _freeTimeouts);
             duration *= increases + 1;
             if (duration > MaxTimeoutDuration) duration = MaxTimeoutDuration;
 
