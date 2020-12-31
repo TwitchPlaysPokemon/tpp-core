@@ -34,6 +34,7 @@ namespace TPP.Core.Moderation
         private readonly float _pointsDecayPerSecond;
         private readonly int _minPoints;
         private readonly int _pointsForTimeout;
+        private readonly int _pointsForDelete;
 
         private readonly Dictionary<User, PointStore> _pointsPerUser = new();
 
@@ -46,7 +47,8 @@ namespace TPP.Core.Moderation
             int freeTimeouts = 2,
             float pointsDecayPerSecond = 1f,
             int minPoints = 20,
-            int pointsForTimeout = 300)
+            int pointsForTimeout = 300,
+            int pointsForDelete = 200)
         {
             _logger = logger;
             _executor = executor;
@@ -57,13 +59,15 @@ namespace TPP.Core.Moderation
             _pointsDecayPerSecond = pointsDecayPerSecond;
             _minPoints = minPoints;
             _pointsForTimeout = pointsForTimeout;
+            _pointsForDelete = pointsForDelete;
         }
 
         private RuleResult ApplyPoints(User user, int points, string reason)
         {
             if (points < _minPoints)
             {
-                _logger.LogDebug($"Ignoring {points} being issued to {user}, because the minimum is {_minPoints}.");
+                _logger.LogDebug($"Ignoring {points} being issued to {user} for reason '{reason}', " +
+                                 $"because the minimum amount of issuable points is {_minPoints}.");
                 return new RuleResult.Nothing();
             }
 
@@ -82,7 +86,8 @@ namespace TPP.Core.Moderation
 
             store.AddPoints(points, reason);
             int currentPoints = store.GetCurrentPoints();
-            _logger.LogDebug($"Issued {points} points to {user}, which now has {currentPoints} total.");
+            _logger.LogDebug($"Issued {points} points to {user} for reason '{reason}', " +
+                             $"which now has {currentPoints} total.");
 
             if (currentPoints >= _pointsForTimeout)
             {
@@ -90,6 +95,10 @@ namespace TPP.Core.Moderation
                 _pointsPerUser.Remove(user);
                 string topReasons = string.Join(", and ", violations.Select(v => v.Item2));
                 return new RuleResult.Timeout(topReasons);
+            }
+            else if (currentPoints >= _pointsForDelete)
+            {
+                return new RuleResult.DeleteMessage();
             }
 
             return new RuleResult.Nothing();

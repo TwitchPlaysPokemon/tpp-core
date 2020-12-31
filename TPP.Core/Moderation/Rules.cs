@@ -87,6 +87,7 @@ namespace TPP.Core.Moderation
 
         private static readonly NormalizedLevenshtein NormLevenshtein = new();
         private readonly int _copypastaPoints;
+        private readonly float _messageLengthMultiplier;
         private readonly TtlQueue<string> _recentMessages;
         private readonly int _minMessageLength;
         private readonly double _minSimilarity;
@@ -94,13 +95,15 @@ namespace TPP.Core.Moderation
         public CopypastaRule(
             IClock clock,
             Duration? recentMessagesTtl = null,
-            int copypastaPoints = 175,
+            int copypastaPoints = 100,
+            float messageLengthMultiplier = 0.01f,
             int minMessageLength = 60,
             double minSimilarity = 0.75)
         {
             Duration ttl = recentMessagesTtl ?? Duration.FromMinutes(2);
             _recentMessages = new TtlQueue<string>(ttl, clock);
             _copypastaPoints = copypastaPoints;
+            _messageLengthMultiplier = messageLengthMultiplier;
             _minMessageLength = minMessageLength;
             _minSimilarity = minSimilarity;
         }
@@ -116,7 +119,9 @@ namespace TPP.Core.Moderation
 
         public RuleResult Check(Message message) =>
             IsCopypasta(message.MessageText)
-                ? new RuleResult.GivePoints(_copypastaPoints, "participating in copypasta")
+                ? new RuleResult.GivePoints(
+                    (int)(_copypastaPoints * _messageLengthMultiplier * message.MessageText.Length),
+                    "participating in copypasta")
                 : new RuleResult.Nothing();
     }
 
@@ -127,15 +132,18 @@ namespace TPP.Core.Moderation
         public string Id => "unicode-char-category";
 
         private readonly int _badnessPointsMultiplier;
+        private readonly float _messageLengthMultiplier;
         private readonly double _minBadness;
         private readonly int _minMessageLength;
 
         public UnicodeCharacterCategoryRule(
             int badnessPointsMultiplier = 200,
+            float messageLengthMultiplier = 0.01f,
             double minBadness = 0.2,
             int minMessageLength = 40)
         {
             _badnessPointsMultiplier = badnessPointsMultiplier;
+            _messageLengthMultiplier = messageLengthMultiplier;
             _minBadness = minBadness;
             _minMessageLength = minMessageLength;
         }
@@ -163,7 +171,7 @@ namespace TPP.Core.Moderation
             if (badness > _minBadness)
             {
                 return new RuleResult.GivePoints(
-                    (int)(_badnessPointsMultiplier * badness),
+                    (int)(_badnessPointsMultiplier * badness * _messageLengthMultiplier * total),
                     "suspiciously excessive usage of special characters");
             }
             return new RuleResult.Nothing();
