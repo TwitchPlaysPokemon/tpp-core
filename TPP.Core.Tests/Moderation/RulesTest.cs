@@ -107,11 +107,23 @@ namespace TPP.Core.Tests.Moderation
             }
 
             [Test]
+            public void detects_all_space_spam()
+            {
+                UnicodeCharacterCategoryRule rule = new(badnessPointsMultiplier: 200);
+                RuleResult result = rule.Check(TextMessage(
+                    "P A R T Y L I K E I T S T E N P M P A R T Y L I K E I T S T E N P M"));
+                Assert.IsInstanceOf<RuleResult.GivePoints>(result);
+                Assert.IsTrue(((RuleResult.GivePoints)result).Points > 50);
+            }
+
+            [Test]
             public void ignores_short_messages()
             {
                 UnicodeCharacterCategoryRule rule = new();
-                RuleResult result = rule.Check(TextMessage("♫ ┌༼ຈل͜ຈ༽┘ ♪ DANCE RIOT ♪ └༼ຈل͜ຈ༽┐♫"));
-                Assert.IsInstanceOf<RuleResult.Nothing>(result);
+                Assert.IsInstanceOf<RuleResult.Nothing>(rule.Check(TextMessage(
+                    "♫ ┌༼ຈل͜ຈ༽┘ ♪ DANCE RIOT ♪ └༼ຈل͜ຈ༽┐♫")));
+                Assert.IsInstanceOf<RuleResult.Nothing>(rule.Check(TextMessage(
+                    "♫ └༼ຈل͜ຈ༽┐♫ O E A E A U I E O E A ♫ └༼ຈل͜ຈ༽┐ ♫")));
             }
         }
     }

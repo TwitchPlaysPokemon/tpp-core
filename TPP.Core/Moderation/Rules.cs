@@ -139,8 +139,8 @@ namespace TPP.Core.Moderation
         public UnicodeCharacterCategoryRule(
             int badnessPointsMultiplier = 200,
             float messageLengthMultiplier = 0.01f,
-            double minBadness = 0.2,
-            int minMessageLength = 40)
+            double minBadness = 0.3,
+            int minMessageLength = 60)
         {
             _badnessPointsMultiplier = badnessPointsMultiplier;
             _messageLengthMultiplier = messageLengthMultiplier;
@@ -159,7 +159,6 @@ namespace TPP.Core.Moderation
                 UnicodeCategory category = CharUnicodeInfo.GetUnicodeCategory(c);
                 if (category == UnicodeCategory.LowercaseLetter ||
                     category == UnicodeCategory.UppercaseLetter ||
-                    category == UnicodeCategory.SpaceSeparator ||
                     category == UnicodeCategory.DecimalDigitNumber)
                     numGood++;
                 else
