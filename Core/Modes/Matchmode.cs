@@ -116,8 +116,7 @@ namespace Core.Modes
             await _overlayConnection.Send(new MatchPerformingEvent { Teams = teams }, cancellationToken);
 
             MatchResult result = await performTask;
-            object winnerForOverlay = result.Winner switch { Side.Blue => 0, Side.Red => 1, _ => "draw" };
-            await _overlayConnection.Send(new MatchOverEvent { MatchResult = winnerForOverlay }, cancellationToken);
+            await _overlayConnection.Send(new MatchOverEvent { MatchResult = result }, cancellationToken);
 
             await Task.Delay(_matchmodeConfig.ResultDuration.ToTimeSpan(), cancellationToken);
             await _overlayConnection.Send(new ResultsFinishedEvent(), cancellationToken);
