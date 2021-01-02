@@ -246,11 +246,27 @@ namespace TPP.Core.Chat
 
         public async Task DeleteMessage(string messageId)
         {
+            if (_suppressions.Contains(ChatConfig.SuppressionType.Command) &&
+                !_suppressionOverrides.Contains(_ircChannel))
+            {
+                _logger.LogDebug($"(suppressed) deleting message {messageId} in #{_ircChannel}");
+                return;
+            }
+
+            _logger.LogDebug($"deleting message {messageId} in #{_ircChannel}");
             await Task.Run(() => _twitchClient.SendMessage(_ircChannel, ".delete " + messageId));
         }
 
         public async Task Timeout(User user, string? message, Duration duration)
         {
+            if (_suppressions.Contains(ChatConfig.SuppressionType.Command) &&
+                !(_suppressionOverrides.Contains(_ircChannel) && _suppressionOverrides.Contains(user.SimpleName)))
+            {
+                _logger.LogDebug($"(suppressed) time out {user} for {duration} in #{_ircChannel}: {message}");
+                return;
+            }
+
+            _logger.LogDebug($"time out {user} for {duration} in #{_ircChannel}: {message}");
             await Task.Run(() =>
                 _twitchClient.TimeoutUser(_ircChannel, user.SimpleName, duration.ToTimeSpan(),
                     message ?? "no timeout reason was given"));
