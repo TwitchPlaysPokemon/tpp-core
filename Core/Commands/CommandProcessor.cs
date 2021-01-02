@@ -67,6 +67,9 @@ namespace Core.Commands
             }
         }
 
+        public Command? FindCommand(string commandName) =>
+            _commands.TryGetValue(commandName.ToLower(), out Command command) ? command : null;
+
         public async Task<CommandResult?> Process(string commandName, IImmutableList<string> args, Message message)
         {
             if (!_commands.TryGetValue(commandName.ToLower(), out Command command))

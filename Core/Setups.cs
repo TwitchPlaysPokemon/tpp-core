@@ -60,7 +60,10 @@ namespace Core
                     databases.UserRepo, pokeyenBank: databases.PokeyenBank, tokenBank: databases.TokensBank).Commands,
                 new BadgeCommands(databases.BadgeRepo, databases.UserRepo).Commands,
                 new OperatorCommands(stopToken, chatConfig.OperatorNames).Commands
-            }.SelectMany(cmds => cmds);
+            }.SelectMany(cmds => cmds).Concat(new[]
+            {
+                new HelpCommand(commandProcessor).Command
+            });
             foreach (Command command in commands)
             {
                 commandProcessor.InstallCommand(command);
