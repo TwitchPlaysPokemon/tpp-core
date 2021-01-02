@@ -41,10 +41,10 @@ namespace Persistence.MongoDB.Repos
             _clock = clock;
         }
 
-        public async Task<CommandLog> Log(User user, string command, IImmutableList<string> args, string? response)
+        public async Task<CommandLog> Log(string userId, string command, IImmutableList<string> args, string? response)
         {
             var log = new CommandLog(
-                string.Empty, user.Id, command, args.ToImmutableList(), _clock.GetCurrentInstant(), response);
+                string.Empty, userId, command, args, _clock.GetCurrentInstant(), response);
             await Collection.InsertOneAsync(log);
             Debug.Assert(log.Id.Length > 0, "The MongoDB driver injected a generated ID");
             return log;

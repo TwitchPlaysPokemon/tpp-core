@@ -6,6 +6,6 @@ namespace Persistence.Repos
 {
     public interface IMessagelogRepo
     {
-        Task<Messagelog> LogChat(User user, string ircLine, string message, Instant timestamp);
+        Task<Messagelog> LogChat(string userId, string ircLine, string message, Instant timestamp);
     }
 }

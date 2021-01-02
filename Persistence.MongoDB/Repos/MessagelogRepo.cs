@@ -36,9 +36,9 @@ namespace Persistence.MongoDB.Repos
             Collection = database.GetCollection<Messagelog>(CollectionName);
         }
 
-        public async Task<Messagelog> LogChat(User user, string ircLine, string message, Instant timestamp)
+        public async Task<Messagelog> LogChat(string userId, string ircLine, string message, Instant timestamp)
         {
-            var item = new Messagelog(string.Empty, ircLine, user.Id, message, timestamp);
+            var item = new Messagelog(string.Empty, ircLine, userId, message, timestamp);
             await Collection.InsertOneAsync(item);
             Debug.Assert(item.Id.Length > 0, "The MongoDB driver injected a generated ID");
             return item;

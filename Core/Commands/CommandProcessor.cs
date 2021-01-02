@@ -83,7 +83,7 @@ namespace Core.Commands
             try
             {
                 result = await command.Execution(new CommandContext(message, args, _argsParser));
-                await _commandLogger.Log(message.User, commandName, args, result.Response);
+                await _commandLogger.Log(message.User.Id, commandName, args, result.Response);
             }
             catch (ArgsParseFailure ex)
             {

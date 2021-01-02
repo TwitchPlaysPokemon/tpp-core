@@ -6,6 +6,6 @@ namespace Persistence.Repos
 {
     public interface ICommandLogger
     {
-        public Task<CommandLog> Log(User user, string command, IImmutableList<string> args, string? response);
+        public Task<CommandLog> Log(string userId, string command, IImmutableList<string> args, string? response);
     }
 }

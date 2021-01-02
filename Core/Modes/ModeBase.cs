@@ -48,7 +48,7 @@ namespace Core.Modes
         private async Task ProcessIncomingMessage(Message message)
         {
             await _messagelogRepo.LogChat(
-                message.User, message.RawIrcMessage, message.MessageText, _clock.GetCurrentInstant());
+                message.User.Id, message.RawIrcMessage, message.MessageText, _clock.GetCurrentInstant());
 
             string[] parts = message.MessageText.Split(" ");
             string? firstPart = parts.FirstOrDefault();
