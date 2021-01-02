@@ -10,14 +10,15 @@ namespace Core.Overlay.Events
     [DataContract]
     public struct MovesInputOptions
     {
-        [DataMember(Name = "policy")] public string Policy { get; set; } // TODO
+        [DataMember(Name = "policy")] public MoveSelectingPolicy Policy { get; set; }
         [DataMember(Name = "permitted")] public IImmutableList<string> Permitted { get; set; } // TODO
     }
 
     [DataContract]
     public struct SwitchesInputOptions
     {
-        [DataMember(Name = "policy")] public string Policy { get; set; } // TODO
+        // TODO does this even differ from the match's switching policy...?
+        [DataMember(Name = "policy")] public SwitchingPolicy Policy { get; set; }
         [DataMember(Name = "permitted")] public IImmutableList<string> Permitted { get; set; } // TODO
         [DataMember(Name = "random_chance")] public float RandomChance { get; set; }
     }
@@ -25,7 +26,7 @@ namespace Core.Overlay.Events
     [DataContract]
     public struct TargetsInputOptions
     {
-        [DataMember(Name = "policy")] public string Policy { get; set; } // TODO
+        [DataMember(Name = "policy")] public TargetingPolicy Policy { get; set; }
         [DataMember(Name = "permitted")] public IImmutableList<string> Permitted { get; set; } // TODO
         [DataMember(Name = "ally_hit_chance")] public float AllyHitChance { get; set; }
     }
@@ -75,8 +76,8 @@ namespace Core.Overlay.Events
         [DataMember(Name = "betting_duration")] public double BettingDuration { get; set; }
         [DataMember(Name = "reveal_duration")] public double RevealDuration { get; set; }
         [DataMember(Name = "gimmick")] public string Gimmick { get; set; } // TODO
-        [DataMember(Name = "switching")] public string Switching { get; set; } // TODO
-        [DataMember(Name = "battle_style")] public string BattleStyle { get; set; } // TODO
+        [DataMember(Name = "switching")] public SwitchingPolicy Switching { get; set; }
+        [DataMember(Name = "battle_style")] public BattleStyle BattleStyle { get; set; }
         [DataMember(Name = "input_options")] public InputOptions InputOptions { get; set; }
         [DataMember(Name = "hide_odds")] public bool HideOdds { get; set; }
         [DataMember(Name = "hide_bets")] public bool HideBets { get; set; }

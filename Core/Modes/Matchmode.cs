@@ -80,24 +80,24 @@ namespace Core.Modes
                 BettingDuration = _matchmodeConfig.DefaultBettingDuration.TotalSeconds,
                 RevealDuration = 0,
                 Gimmick = "speed",
-                Switching = "never",
-                BattleStyle = "singles",
+                Switching = SwitchingPolicy.Never,
+                BattleStyle = BattleStyle.Singles,
                 InputOptions = new InputOptions
                 {
                     Moves = new MovesInputOptions
                     {
-                        Policy = "always",
+                        Policy = MoveSelectingPolicy.Always,
                         Permitted = ImmutableList.Create("a", "b", "c", "d")
                     },
                     Switches = new SwitchesInputOptions
                     {
-                        Policy = "never",
+                        Policy = SwitchingPolicy.Never,
                         Permitted = ImmutableList<string>.Empty,
                         RandomChance = 0
                     },
                     Targets = new TargetsInputOptions
                     {
-                        Policy = "disabled",
+                        Policy = TargetingPolicy.Disabled,
                         Permitted = ImmutableList<string>.Empty,
                         AllyHitChance = 0
                     },
