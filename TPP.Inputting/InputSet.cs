@@ -10,10 +10,11 @@ namespace TPP.Inputting
     /// An input set is a set of inputs being inputted simultaneously.
     /// These include buttons, touch screen coordinates, waits etc.
     /// </summary>
-    public readonly struct InputSet : IEquatable<InputSet>
+    public sealed record InputSet(ImmutableList<Input> Inputs)
     {
-        public ImmutableList<Input> Inputs { get; }
-        public bool Equals(InputSet other) => Inputs.SequenceEqual(other.Inputs);
+        // Need to manually define these, because lists don't implement a proper Equals and GetHashCode themselves.
+        public bool Equals(InputSet? other) => other != null && Inputs.SequenceEqual(other.Inputs);
+        public override int GetHashCode() => Inputs.Select(i => i.GetHashCode()).Aggregate(HashCode.Combine);
 
         /// <summary>
         /// Determines whether this input set is effectively equal to another input set,
@@ -26,11 +27,6 @@ namespace TPP.Inputting
         public bool HasSameOutcomeAs(InputSet other)
         {
             return new HashSet<Input>(Inputs, SameOutcomeComparer.Instance).SetEquals(other.Inputs);
-        }
-
-        public InputSet(IEnumerable<Input> inputs)
-        {
-            Inputs = inputs.ToImmutableList();
         }
 
         public override string ToString() => string.Join("+", Inputs);

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text.RegularExpressions;
 using TPP.Inputting.Inputs;
@@ -105,7 +106,7 @@ namespace TPP.Inputting.Parsing
                 {
                     numRepeat = int.Parse(capturesRepeat.Dequeue().Value);
                 }
-                var inputSet = new InputSet(inputs.ToList());
+                var inputSet = new InputSet(inputs.ToImmutableList());
                 inputSets.AddRange(Enumerable.Repeat(inputSet, numRepeat));
                 // we need to check the length, because the regex cannot enforce the max length since the sequence may
                 // have been lengthened with a specified number of repetitions for a button set.
@@ -114,7 +115,7 @@ namespace TPP.Inputting.Parsing
                     return null;
                 }
             }
-            return new InputSequence(inputSets);
+            return new InputSequence(inputSets.ToImmutableList());
         }
     }
 }
