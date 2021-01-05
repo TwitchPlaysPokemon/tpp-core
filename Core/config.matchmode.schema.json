@@ -6,6 +6,15 @@
         "string",
         "null"
       ]
+    },
+    "DefaultBettingDuration": {
+      "type": "string"
+    },
+    "WarningDuration": {
+      "type": "string"
+    },
+    "ResultDuration": {
+      "type": "string"
     }
   }
 }

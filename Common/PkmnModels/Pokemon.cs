@@ -7,6 +7,7 @@ namespace Common.PkmnModels
     public struct Pokemon
     {
         [DataMember(Name = "displayname")] public string Name { get; init; }
+        [DataMember(Name = "setname")] public string Setname { get; init; }
         [DataMember(Name = "species")] public Species Species { get; init; }
         [DataMember(Name = "nature")] public Nature? Nature { get; init; }
         [DataMember(Name = "ability")] public Ability Ability { get; init; }

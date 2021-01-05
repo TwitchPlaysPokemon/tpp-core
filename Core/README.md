@@ -35,10 +35,19 @@ Finally, you run the project, e.g. in dualcore mode:
 dotnet run -- start -m dualcore
 ```
 
-The `dualcore` mode is a simple mode meant for replacing some functionality
-that has been ported and subsequently removed from the old python core.
+## modes
 
-Some other modes require a mode-specific configuration file, which you can test and generate
+You can run different modes by specifying its mode name in the `dotnet run -- start -m <mode>` command.
+Currently the following modes are supported:
+
+| mode     | description |
+|----------|-------------|
+| dualcore | This is is a simple mode meant for replacing some functionality that has been ported and subsequently removed from the old python core. |
+| match    | This mode runs basic match cycles. To see anything at `http://localhost:5000/overlay` the overlay must be started from the old core with `python -m tpp overlay`. It will then be able to connect to the new core's websocket to receive overlay events. |
+| run      | This mode does nothing yet. |
+| dummy    | This mode purposely does nothing for testing purposes. |
+
+The modes `match` and `run` require a mode-specific configuration file, which you can test and generate
 similar to the base config by passing an additional `--mode` or `-m` option.
 See the `--help` output for more details on that.
 

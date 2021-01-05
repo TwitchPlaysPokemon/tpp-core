@@ -26,7 +26,7 @@ namespace Core.Tests.Overlay
         [Test]
         public async Task send_event_without_data()
         {
-            await _connection.Send(new EventWithoutData());
+            await _connection.Send(new EventWithoutData(), CancellationToken.None);
             const string json = @"{""type"":""test"",""extra_parameters"":{}}";
             _broadcastServerMock.Verify(s => s.Send(json, CancellationToken.None), Times.Once);
         }
@@ -44,7 +44,9 @@ namespace Core.Tests.Overlay
         [Test]
         public async Task send_event_with_enum_use_DataMember_and_EnumMember_attributes()
         {
-            await _connection.Send(new EventWithEnum { EnumValue = EventWithEnum.TestEnum.FooBar });
+            await _connection.Send(
+                new EventWithEnum { EnumValue = EventWithEnum.TestEnum.FooBar },
+                CancellationToken.None);
             const string json = @"{""type"":""test"",""extra_parameters"":{""enum_value"":""foo_bar""}}";
             _broadcastServerMock.Verify(s => s.Send(json, CancellationToken.None), Times.Once);
         }
