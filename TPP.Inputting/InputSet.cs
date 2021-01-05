@@ -33,6 +33,11 @@ namespace TPP.Inputting
     }
 
     /// <summary>
+    /// An input set with additional timing info attached regarding the hold duration and the pause duration afterwards.
+    /// </summary>
+    public sealed record TimedInputSet(InputSet InputSet, float HoldDuration, float SleepDuration);
+
+    /// <summary>
     /// Equality comparer for effective equality (whether two inputs would cause the same action).
     /// </summary>
     internal class SameOutcomeComparer : IEqualityComparer<Input>
