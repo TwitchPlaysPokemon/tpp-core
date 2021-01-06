@@ -54,7 +54,7 @@ namespace TPP.Inputting.Tests.Parsing
             AssertInput("a", Seq(Set("a")));
             Assert.AreEqual(Seq(new InputSet(ImmutableList.Create(
                 new Input("a", "a", "a"),
-                new Input("hold", "hold", "-")))
+                HoldInput.Instance))
             ), _inputParser.Parse("a-"));
 
             // hold disabled

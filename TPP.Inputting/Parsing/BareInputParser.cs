@@ -14,8 +14,6 @@ namespace TPP.Inputting.Parsing
     /// </summary>
     public class BareInputParser : IInputParser
     {
-        public static readonly Input InputHold = new Input("hold", "hold", "-");
-
         private readonly List<IInputDefinition> _inputDefinitions;
         private readonly int _maxSequenceLength;
         private readonly Regex _regex;
@@ -98,7 +96,7 @@ namespace TPP.Inputting.Parsing
                 inputs.AddRange(inputWithIndexes.OrderBy(tuple => tuple.Item1).Select(tuple => tuple.Item2));
                 if (capturesHold.Any() && capturesHold.Peek().Index < endIndex)
                 {
-                    inputs.Add(InputHold);
+                    inputs.Add(HoldInput.Instance);
                     capturesHold.Dequeue();
                 }
                 int numRepeat = 1;
