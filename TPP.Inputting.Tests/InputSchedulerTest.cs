@@ -171,5 +171,18 @@ namespace TPP.Inputting.Tests
             Assert.AreEqual(targetDurationSeconds * (0.5f + 0.5f / 8), t5);
             Assert.AreEqual(targetDurationSeconds * (0.5f + 0.5f / 16), t6);
         }
+
+        [Test]
+        public void TestMaxCapacity()
+        {
+            var inputScheduler = new InputBufferQueue<int>(maxBufferLength: 2);
+            Assert.IsTrue(inputScheduler.Enqueue(1));
+            Assert.IsTrue(inputScheduler.Enqueue(2));
+            Assert.IsFalse(inputScheduler.Enqueue(3));
+
+            Assert.AreEqual(1, inputScheduler.Dequeue().Item1);
+            Assert.AreEqual(2, inputScheduler.Dequeue().Item1);
+            Assert.IsTrue(inputScheduler.IsEmpty);
+        }
     }
 }

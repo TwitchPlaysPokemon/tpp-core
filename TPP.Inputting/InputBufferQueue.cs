@@ -20,11 +20,11 @@ namespace TPP.Inputting
         private readonly float _slowdownRate;
         private readonly float _minInputDuration;
         private readonly float _maxInputDuration;
+        private readonly int _maxBufferLength;
 
         private float _prevInputDuration;
 
-        private Queue<TaskCompletionSource<(T, float)>> _awaitedDequeueings =
-            new Queue<TaskCompletionSource<(T, float)>>();
+        private readonly Queue<TaskCompletionSource<(T, float)>> _awaitedDequeueings = new();
 
         /// <summary>
         /// Create a new buffer for the given settings.
@@ -38,12 +38,15 @@ namespace TPP.Inputting
         /// as a percentage from 0 to 1 with 1 being instantaneous.</param>
         /// <param name="minInputDuration">The minimum duration a single input can have, in seconds.</param>
         /// <param name="maxInputDuration">The maximum duration a single input can have, in seconds.</param>
+        /// <param name="maxBufferLength">Maximum number of queued inputs before new incoming inputs are discarded.
+        /// Prevents the queue from growing unbounded if inputs aren't dequeued fast enough for some reason.</param>
         public InputBufferQueue(
             float bufferLengthSeconds = 3f,
             float speedupRate = 0.2f,
             float slowdownRate = 1f,
             float minInputDuration = 1 / 60f,
-            float maxInputDuration = 100 / 60f)
+            float maxInputDuration = 100 / 60f,
+            int maxBufferLength = 1000)
         {
             _minInputDuration = minInputDuration;
             _bufferLengthSeconds = bufferLengthSeconds;
@@ -52,6 +55,7 @@ namespace TPP.Inputting
             _minInputDuration = minInputDuration;
             _maxInputDuration = maxInputDuration;
             _prevInputDuration = _bufferLengthSeconds;
+            _maxBufferLength = maxBufferLength;
         }
 
         private float CalcInputDuration(float prevInputDuration)
@@ -71,13 +75,16 @@ namespace TPP.Inputting
         /// Enqueue a new input.
         /// </summary>
         /// <param name="value">The input to enqueue.</param>
-        public void Enqueue(T value)
+        /// <returns>If the input was enqueued. False if e.g. the queue is at maximum capacity.</returns>
+        public bool Enqueue(T value)
         {
+            if (_queue.Count >= _maxBufferLength) return false;
             _queue.Enqueue(value);
             if (_awaitedDequeueings.TryDequeue(out TaskCompletionSource<(T, float)>? task))
             {
                 task.SetResult(Dequeue());
             }
+            return true;
         }
 
         /// <summary>
