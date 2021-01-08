@@ -19,6 +19,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\TPP.ArgsParsing\TPP.ArgsParsing.csproj" />
+        <ProjectReference Include="..\TPP.Inputting\TPP.Inputting.csproj" />
         <ProjectReference Include="..\TPP.Match\TPP.Match.csproj" />
         <ProjectReference Include="..\TPP.Persistence.MongoDB\TPP.Persistence.MongoDB.csproj" />
     </ItemGroup>
