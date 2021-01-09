@@ -116,7 +116,7 @@ Options:
             ILogger logger = loggerFactory.CreateLogger("main");
             IMode mode = modeName switch
             {
-                "run" => new Runmode(loggerFactory, baseConfig, ReadConfig<RunmodeConfig>(modeConfigFilename)),
+                "run" => new Runmode(loggerFactory, baseConfig, () => ReadConfig<RunmodeConfig>(modeConfigFilename)),
                 "match" => new Matchmode(loggerFactory, baseConfig, ReadConfig<MatchmodeConfig>(modeConfigFilename)),
                 "dualcore" => new DualcoreMode(loggerFactory, baseConfig),
                 "dummy" => new DummyMode(loggerFactory, baseConfig),
