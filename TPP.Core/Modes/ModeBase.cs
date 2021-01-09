@@ -22,14 +22,24 @@ namespace TPP.Core.Modes
         private readonly bool _forwardUnprocessedMessages;
         private readonly IMessagelogRepo _messagelogRepo;
         private readonly IClock _clock;
+        private readonly ProcessMessage _processMessage;
 
-        public ModeBase(ILoggerFactory loggerFactory, BaseConfig baseConfig, StopToken stopToken)
+        /// Processes a message that wasn't already processed by the mode base,
+        /// and returns whether the message was actively processed.
+        public delegate Task<bool> ProcessMessage(Message message);
+
+        public ModeBase(
+            ILoggerFactory loggerFactory,
+            BaseConfig baseConfig,
+            StopToken stopToken,
+            ProcessMessage? processMessage = null)
         {
             PokedexData pokedexData = PokedexData.Load();
             Setups.Databases repos = Setups.SetUpRepositories(baseConfig);
             ArgsParser argsParser = Setups.SetUpArgsParser(repos.UserRepo, pokedexData);
+            _processMessage = processMessage ?? (_ => Task.FromResult(false));
 
-            TwitchChat twitchChat = new TwitchChat(loggerFactory, SystemClock.Instance, baseConfig.Chat, repos.UserRepo);
+            TwitchChat twitchChat = new(loggerFactory, SystemClock.Instance, baseConfig.Chat, repos.UserRepo);
             _chat = twitchChat;
             _chat.IncomingMessage += MessageReceived;
             _chat.IncomingUnhandledIrcLine += UnhandledIrcLineReceived;
@@ -42,6 +52,11 @@ namespace TPP.Core.Modes
             _messagelogRepo = repos.MessagelogRepo;
             _forwardUnprocessedMessages = baseConfig.Chat.ForwardUnprocessedMessages;
             _clock = SystemClock.Instance;
+        }
+
+        public void InstallAdditionalCommand(Command command)
+        {
+            _commandProcessor.InstallCommand(command);
         }
 
         private async void MessageReceived(object? sender, MessageEventArgs e) =>
@@ -89,6 +104,7 @@ namespace TPP.Core.Modes
                     wasProcessed = true;
                 }
             }
+            wasProcessed |= await _processMessage(message);
             if (!wasProcessed && _forwardUnprocessedMessages)
             {
                 await _messagequeueRepo.EnqueueMessage(message.RawIrcMessage);
