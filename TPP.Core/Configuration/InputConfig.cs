@@ -3,6 +3,7 @@ namespace TPP.Core.Configuration
     /// Contains all parameters that affect how inputs are performed.
     public sealed class InputConfig : ConfigBase
     {
+        public ButtonProfile ButtonsProfile { get; init; } = ButtonProfile.GameBoy;
         public int FramesPerSecond { get; init; } = 60;
 
         // input duration timings
