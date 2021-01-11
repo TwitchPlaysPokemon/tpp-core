@@ -10,6 +10,7 @@ namespace TPP.Inputting
         /// <summary>
         /// For an <see cref="InputSet"/> and a given duration,
         /// determines how long the button set should be held and how long of a pause there should be afterwards.
+        /// Removes <see cref="HoldInput"/>s from the button set in the process.
         /// </summary>
         public TimedInputSet TimeInput(InputSet inputSet, float duration);
     }
