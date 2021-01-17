@@ -8,12 +8,12 @@ using ArgsParsing.Types;
 namespace ArgsParsing.TypeParsers
 {
     /// <summary>
-    /// Parser capable of parsing colors represented as a 6-digit hexadecimal string prefixed with '#',
+    /// Parser capable of parsing colors represented as a 6-digit hexadecimal string optionally prefixed with '#',
     /// for example <c>#ff0000</c> for pure red, which will result in a <see cref="HexColor"/> of <c>#FF0000</c>.
     /// </summary>
     public class HexColorParser : BaseArgumentParser<HexColor>
     {
-        private readonly Regex _regex = new Regex(@"^#[0-9a-f]{6}$",
+        private readonly Regex _regex = new Regex(@"^#?[0-9a-f]{6}$",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         public override Task<ArgsParseResult<HexColor>> Parse(IImmutableList<string> args, Type[] genericTypes)
@@ -21,7 +21,8 @@ namespace ArgsParsing.TypeParsers
             Match colorMatch = _regex.Match(args[0]);
             if (colorMatch.Success)
             {
-                var color = new HexColor(colorMatch.Value.ToUpper());
+                string colorUpper = colorMatch.Value.ToUpper();
+                HexColor color = new(colorUpper.StartsWith('#') ? colorUpper : '#' + colorUpper);
                 return Task.FromResult(ArgsParseResult<HexColor>.Success(color, args.Skip(1).ToImmutableList()));
             }
             else
