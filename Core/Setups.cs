@@ -59,6 +59,7 @@ namespace Core
                 new StaticResponseCommands().Commands,
                 new UserCommands(
                     databases.UserRepo, pokeyenBank: databases.PokeyenBank, tokenBank: databases.TokensBank).Commands,
+                new PollCommands(databases.PollRepo).Commands,
                 new BadgeCommands(databases.BadgeRepo, databases.UserRepo).Commands,
                 new OperatorCommands(stopToken, chatConfig.OperatorNames).Commands
             }.SelectMany(cmds => cmds);
@@ -72,13 +73,15 @@ namespace Core
         public class Databases
         {
             public IUserRepo UserRepo { get; }
+            public IPollRepo PollRepo { get; }
             public IBadgeRepo BadgeRepo { get; }
             public IBank<User> PokeyenBank { get; }
             public IBank<User> TokensBank { get; }
 
-            public Databases(IUserRepo userRepo, IBadgeRepo badgeRepo, IBank<User> pokeyenBank, IBank<User> tokensBank)
+            public Databases(IUserRepo userRepo, IPollRepo pollRepo, IBadgeRepo badgeRepo, IBank<User> pokeyenBank, IBank<User> tokensBank)
             {
                 UserRepo = userRepo;
+                PollRepo = pollRepo;
                 BadgeRepo = badgeRepo;
                 PokeyenBank = pokeyenBank;
                 TokensBank = tokensBank;
@@ -95,6 +98,8 @@ namespace Core
                 startingPokeyen: baseConfig.StartingPokeyen,
                 startingTokens: baseConfig.StartingTokens);
             IBadgeRepo badgeRepo = new BadgeRepo(
+                database: mongoDatabase);
+            IPollRepo pollRepo = new PollRepo(
                 database: mongoDatabase);
             IBank<User> pokeyenBank = new Bank<User>(
                 database: mongoDatabase,
@@ -114,6 +119,7 @@ namespace Core
                 new PersistedReservedMoneyCheckers(mongoDatabase).AllDatabaseReservedTokens);
             return new Databases(
                 userRepo: userRepo,
+                pollRepo: pollRepo,
                 badgeRepo: badgeRepo,
                 pokeyenBank: pokeyenBank,
                 tokensBank: tokenBank);
