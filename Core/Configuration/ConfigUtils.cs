@@ -27,8 +27,12 @@ namespace Core.Configuration
             {
                 if (property.PropertyType.IsSubclassOf(typeof(ConfigBase)))
                 {
-                    var value = (ConfigBase)property.GetValue(config)!;
-                    WriteUnrecognizedConfigsToStderr(value, parentConfigKeys.Concat(new[] { property.Name }).ToList());
+                    var value = (ConfigBase?)property.GetValue(config);
+                    if (value != null)
+                    {
+                        WriteUnrecognizedConfigsToStderr(value,
+                            parentConfigKeys.Concat(new[] { property.Name }).ToList());
+                    }
                 }
             }
         }
