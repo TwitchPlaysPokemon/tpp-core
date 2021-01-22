@@ -5,8 +5,8 @@ using NodaTime;
 
 namespace TPP.Core.Utils
 {
-    /// A list, but with a time to live.
-    /// Items are automatically removed after the ttl.
+    /// A queue, but with a time to live.
+    /// Items are automatically removed after the ttl and cannot be dequeued manually.
     public class TtlQueue<T> : IReadOnlyCollection<T>
     {
         private readonly Duration _ttl;
