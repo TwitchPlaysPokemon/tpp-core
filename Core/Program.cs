@@ -11,6 +11,9 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Schema.Generation;
+using Serilog;
+using Serilog.Sinks.Discord;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Core
 {
@@ -97,6 +100,13 @@ Options:
             {
                 builder.AddConsole().SetMinimumLevel(LogLevel.Debug);
                 if (baseConfig.LogPath != null) builder.AddFile(Path.Combine(baseConfig.LogPath, "tpp-{Date}.log"));
+                if (baseConfig.DiscordLoggingConfig != null)
+                {
+                    builder.AddSerilog(new LoggerConfiguration()
+                        .WriteTo.Discord(baseConfig.DiscordLoggingConfig.WebhookId, baseConfig.DiscordLoggingConfig.WebhookToken)
+                        .MinimumLevel.Is(baseConfig.DiscordLoggingConfig.MinLogLevel)
+                        .CreateLogger());
+                }
             });
 
         private static void Mode(string modeName, string baseConfigFilename, string modeConfigFilename)
