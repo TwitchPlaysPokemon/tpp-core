@@ -10,12 +10,14 @@ using Moq;
 using NodaTime;
 using NUnit.Framework;
 using Persistence.Models;
+using Persistence.Repos;
 
 namespace Core.Tests.Commands
 {
     public class CommandProcessorTest
     {
         private readonly ILogger<CommandProcessor> _nullLogger = new NullLogger<CommandProcessor>();
+        private readonly Mock<ICommandLogger> _commandLoggerMock = new();
         private readonly ImmutableList<string> _noArgs = ImmutableList<string>.Empty;
         private readonly User _mockUser = new User(
             id: Guid.NewGuid().ToString(),
@@ -23,26 +25,17 @@ namespace Core.Tests.Commands
             firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
             lastMessageAt: null, pokeyen: 0, tokens: 0);
 
-        private Message MockMessage(string text = "") => new Message(_mockUser, text, MessageSource.Chat);
+        private Message MockMessage(string text = "")
+            => new Message(_mockUser, text, MessageSource.Chat, string.Empty);
 
         [Test]
         public async Task TestUnknownCommand()
         {
-            var commandProcessor = new CommandProcessor(_nullLogger, new ArgsParser(), ignoreUnknownCommands: false);
+            var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock.Object, new ArgsParser());
 
-            CommandResult result = await commandProcessor.Process("unknown", _noArgs, MockMessage());
+            CommandResult? result = await commandProcessor.Process("unknown", _noArgs, MockMessage());
 
-            Assert.AreEqual("unknown command 'unknown'", result.Response);
-        }
-
-        [Test]
-        public async Task TestUnknownCommandIgnored()
-        {
-            var commandProcessor = new CommandProcessor(_nullLogger, new ArgsParser(), ignoreUnknownCommands: true);
-
-            CommandResult result = await commandProcessor.Process("unknown", _noArgs, MockMessage());
-
-            Assert.IsNull(result.Response);
+            Assert.IsNull(result);
         }
 
         [Test]
@@ -50,7 +43,7 @@ namespace Core.Tests.Commands
         public async Task TestLogSlowCommand()
         {
             var loggerMock = new Mock<ILogger<CommandProcessor>>();
-            var commandProcessor = new CommandProcessor(loggerMock.Object, new ArgsParser());
+            var commandProcessor = new CommandProcessor(loggerMock.Object, _commandLoggerMock.Object, new ArgsParser());
             commandProcessor.InstallCommand(new Command("slow", async context =>
             {
                 await Task.Delay(TimeSpan.FromMilliseconds(300));
@@ -68,13 +61,13 @@ namespace Core.Tests.Commands
         public async Task TestCommandThrowsError()
         {
             var loggerMock = new Mock<ILogger<CommandProcessor>>();
-            var commandProcessor = new CommandProcessor(loggerMock.Object, new ArgsParser());
+            var commandProcessor = new CommandProcessor(loggerMock.Object, _commandLoggerMock.Object, new ArgsParser());
             commandProcessor.InstallCommand(new Command("broken",
                 context => throw new InvalidOperationException("this command is busted!")));
 
-            CommandResult result = await commandProcessor.Process("broken", _noArgs, MockMessage("bla"));
+            CommandResult? result = await commandProcessor.Process("broken", _noArgs, MockMessage("bla"));
 
-            Assert.AreEqual("An error occurred.", result.Response);
+            Assert.AreEqual("An error occurred.", result?.Response);
             string errorTextRegex = @"^An exception occured while executing command 'broken'\. " +
                                      $@"User: {Regex.Escape(_mockUser.ToString())}, Original text: bla$";
             loggerMock.VerifyLog(logger => logger.LogError(
@@ -84,34 +77,34 @@ namespace Core.Tests.Commands
         [Test]
         public async Task TestCaseInsensitive()
         {
-            var commandProcessor = new CommandProcessor(_nullLogger, new ArgsParser());
+            var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock.Object, new ArgsParser());
             commandProcessor.InstallCommand(new Command("MiXeD", CommandUtils.StaticResponse("Hi!")));
 
             foreach (string command in ImmutableList.Create("MiXeD", "mixed", "MIXED"))
             {
-                CommandResult result = await commandProcessor.Process(command, _noArgs, MockMessage());
-                Assert.AreEqual("Hi!", result.Response);
+                CommandResult? result = await commandProcessor.Process(command, _noArgs, MockMessage());
+                Assert.AreEqual("Hi!", result?.Response);
             }
         }
 
         [Test]
         public async Task TestAliases()
         {
-            var commandProcessor = new CommandProcessor(_nullLogger, new ArgsParser());
+            var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock.Object, new ArgsParser());
             commandProcessor.InstallCommand(new Command("main", CommandUtils.StaticResponse("Hi!"))
             { Aliases = new[] { "alias1", "alias2" } });
 
             foreach (string command in ImmutableList.Create("main", "alias1", "ALIAS2"))
             {
-                CommandResult result = await commandProcessor.Process(command, _noArgs, MockMessage());
-                Assert.AreEqual("Hi!", result.Response);
+                CommandResult? result = await commandProcessor.Process(command, _noArgs, MockMessage());
+                Assert.AreEqual("Hi!", result?.Response);
             }
         }
 
         [Test]
         public void InstallConflictName()
         {
-            var commandProcessor = new CommandProcessor(_nullLogger, new ArgsParser());
+            var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock.Object, new ArgsParser());
 
             commandProcessor.InstallCommand(new Command("a", CommandUtils.StaticResponse("Hi!")));
             var ex = Assert.Throws<ArgumentException>(() => commandProcessor
@@ -122,7 +115,7 @@ namespace Core.Tests.Commands
         [Test]
         public void InstallConflictAlias()
         {
-            var commandProcessor = new CommandProcessor(_nullLogger, new ArgsParser());
+            var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock.Object, new ArgsParser());
 
             commandProcessor.InstallCommand(new Command("a", CommandUtils.StaticResponse("Hi!"))
             { Aliases = new[] { "x" } });
@@ -134,7 +127,7 @@ namespace Core.Tests.Commands
         [Test]
         public void InstallConflictNameVsAlias()
         {
-            var commandProcessor = new CommandProcessor(_nullLogger, new ArgsParser());
+            var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock.Object, new ArgsParser());
 
             commandProcessor.InstallCommand(new Command("a", CommandUtils.StaticResponse("Hi!"))
             { Aliases = new[] { "b" } });

@@ -179,7 +179,7 @@ namespace Core.Chat
                 fromMessage: true,
                 updatedAt: _clock.GetCurrentInstant()
             ));
-            var message = new Message(user, messageText, source);
+            Message message = new(user, messageText, source, twitchLibMessage.RawIrcMessage);
             IncomingMessage?.Invoke(this, new MessageEventArgs(message));
         }
 

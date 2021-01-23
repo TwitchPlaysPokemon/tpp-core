@@ -35,7 +35,8 @@ namespace Core.Tests.Commands.Definitions
             pokeyenBetRank: pokeyenBetRank, glowColorUnlocked: glowColorUnlocked,
             participationEmblems: emblems);
 
-        private static Message MockMessage(User user, string text = "") => new Message(user, text, MessageSource.Chat);
+        private static Message MockMessage(User user, string text = "")
+            => new Message(user, text, MessageSource.Chat, string.Empty);
 
         private Mock<IUserRepo> _userRepoMock = null!;
         private Mock<IBank<User>> _pokeyenBankMock = null!;
@@ -106,7 +107,7 @@ namespace Core.Tests.Commands.Definitions
             _userRepoMock.Setup(r => r.FindBySimpleName(user.SimpleName))
                 .ReturnsAsync(user);
 
-            var message = new Message(MockUser("Someone_Else"), "", MessageSource.Chat);
+            var message = new Message(MockUser("Someone_Else"), "", MessageSource.Chat, string.Empty);
             CommandResult result = await _userCommands.CheckBalance(new CommandContext(message,
                 ImmutableList.Create(user.Name), _argsParser));
 

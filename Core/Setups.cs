@@ -50,8 +50,7 @@ namespace Core
         {
             var commandProcessor = new CommandProcessor(
                 loggerFactory.CreateLogger<CommandProcessor>(),
-                argsParser,
-                chatConfig.IgnoreUnknownCommands);
+                databases.CommandLogger, argsParser);
 
             IEnumerable<Command> commands = new[]
             {
@@ -61,7 +60,10 @@ namespace Core
                     databases.UserRepo, pokeyenBank: databases.PokeyenBank, tokenBank: databases.TokensBank).Commands,
                 new BadgeCommands(databases.BadgeRepo, databases.UserRepo).Commands,
                 new OperatorCommands(stopToken, chatConfig.OperatorNames).Commands
-            }.SelectMany(cmds => cmds);
+            }.SelectMany(cmds => cmds).Concat(new[]
+            {
+                new HelpCommand(commandProcessor).Command
+            });
             foreach (Command command in commands)
             {
                 commandProcessor.InstallCommand(command);
@@ -69,27 +71,22 @@ namespace Core
             return commandProcessor;
         }
 
-        public class Databases
-        {
-            public IUserRepo UserRepo { get; }
-            public IBadgeRepo BadgeRepo { get; }
-            public IBank<User> PokeyenBank { get; }
-            public IBank<User> TokensBank { get; }
-
-            public Databases(IUserRepo userRepo, IBadgeRepo badgeRepo, IBank<User> pokeyenBank, IBank<User> tokensBank)
-            {
-                UserRepo = userRepo;
-                BadgeRepo = badgeRepo;
-                PokeyenBank = pokeyenBank;
-                TokensBank = tokensBank;
-            }
-        }
+        public record Databases(
+            IUserRepo UserRepo,
+            IBadgeRepo BadgeRepo,
+            IBank<User> PokeyenBank,
+            IBank<User> TokensBank,
+            ICommandLogger CommandLogger,
+            IMessagequeueRepo MessagequeueRepo,
+            IMessagelogRepo MessagelogRepo
+        );
 
         public static Databases SetUpRepositories(BaseConfig baseConfig)
         {
             CustomSerializers.RegisterAll();
             IMongoClient mongoClient = new MongoClient(baseConfig.MongoDbConnectionUri);
             IMongoDatabase mongoDatabase = mongoClient.GetDatabase(baseConfig.MongoDbDatabaseName);
+            IMongoDatabase mongoDatabaseMessagelog = mongoClient.GetDatabase(baseConfig.MongoDbDatabaseNameMessagelog);
             IUserRepo userRepo = new UserRepo(
                 database: mongoDatabase,
                 startingPokeyen: baseConfig.StartingPokeyen,
@@ -112,11 +109,16 @@ namespace Core
                 clock: SystemClock.Instance);
             tokenBank.AddReservedMoneyChecker(
                 new PersistedReservedMoneyCheckers(mongoDatabase).AllDatabaseReservedTokens);
-            return new Databases(
-                userRepo: userRepo,
-                badgeRepo: badgeRepo,
-                pokeyenBank: pokeyenBank,
-                tokensBank: tokenBank);
+            return new Databases
+            (
+                UserRepo: userRepo,
+                BadgeRepo: badgeRepo,
+                PokeyenBank: pokeyenBank,
+                TokensBank: tokenBank,
+                CommandLogger: new CommandLogger(mongoDatabase, SystemClock.Instance),
+                MessagequeueRepo: new MessagequeueRepo(mongoDatabase),
+                MessagelogRepo: new MessagelogRepo(mongoDatabaseMessagelog)
+            );
         }
     }
 }

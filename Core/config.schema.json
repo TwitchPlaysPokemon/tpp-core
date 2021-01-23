@@ -63,7 +63,7 @@
             ]
           }
         },
-        "IgnoreUnknownCommands": {
+        "ForwardUnprocessedMessages": {
           "type": "boolean"
         }
       }
@@ -91,6 +91,12 @@
       ]
     },
     "MongoDbDatabaseName": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "MongoDbDatabaseNameMessagelog": {
       "type": [
         "string",
         "null"

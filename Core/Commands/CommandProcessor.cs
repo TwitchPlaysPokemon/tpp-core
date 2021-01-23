@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ArgsParsing;
 using Microsoft.Extensions.Logging;
+using Persistence.Repos;
 
 namespace Core.Commands
 {
@@ -21,18 +22,18 @@ namespace Core.Commands
         private static readonly TimeSpan CommandWarnTimeLimit = TimeSpan.FromMilliseconds(50);
 
         private readonly ILogger<CommandProcessor> _logger;
+        private readonly ICommandLogger _commandLogger;
         private readonly ArgsParser _argsParser;
         private readonly Dictionary<string, Command> _commands = new Dictionary<string, Command>();
-        private readonly bool _ignoreUnknownCommands;
 
         public CommandProcessor(
             ILogger<CommandProcessor> logger,
-            ArgsParser argsParser,
-            bool ignoreUnknownCommands = false)
+            ICommandLogger commandLogger,
+            ArgsParser argsParser)
         {
             _logger = logger;
+            _commandLogger = commandLogger;
             _argsParser = argsParser;
-            _ignoreUnknownCommands = ignoreUnknownCommands;
         }
 
         public void InstallCommand(Command command)
@@ -66,20 +67,15 @@ namespace Core.Commands
             }
         }
 
-        public async Task<CommandResult> Process(string commandName, IImmutableList<string> args, Message message)
+        public Command? FindCommand(string commandName) =>
+            _commands.TryGetValue(commandName.ToLower(), out Command command) ? command : null;
+
+        public async Task<CommandResult?> Process(string commandName, IImmutableList<string> args, Message message)
         {
             if (!_commands.TryGetValue(commandName.ToLower(), out Command command))
             {
-                if (_ignoreUnknownCommands)
-                {
-                    _logger.LogDebug($"unknown command '{commandName}'");
-                    return new CommandResult();
-                }
-                else
-                {
-                    return new CommandResult
-                    { Response = $"unknown command '{commandName}'", ResponseTarget = ResponseTarget.Whisper };
-                }
+                _logger.LogDebug($"unknown command '{commandName}'");
+                return null;
             }
             var stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -87,6 +83,7 @@ namespace Core.Commands
             try
             {
                 result = await command.Execution(new CommandContext(message, args, _argsParser));
+                await _commandLogger.Log(message.User.Id, commandName, args, result.Response);
             }
             catch (ArgsParseFailure ex)
             {

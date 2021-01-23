@@ -14,6 +14,7 @@ namespace Core.Configuration
         /* connection details for mongodb */
         public string MongoDbConnectionUri { get; init; } = "mongodb://localhost:27017/?replicaSet=rs0";
         public string MongoDbDatabaseName { get; init; } = "tpp3";
+        public string MongoDbDatabaseNameMessagelog { get; init; } = "tpp3_messagelog";
 
         public ChatConfig Chat { get; init; } = new ChatConfig();
 
