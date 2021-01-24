@@ -34,6 +34,7 @@ namespace Core.Modes
 
             _chat = new TwitchChat(loggerFactory, SystemClock.Instance, baseConfig.Chat, repos.UserRepo);
             _chat.IncomingMessage += MessageReceived;
+            _chat.IncomingUnhandledIrcLine += UnhandledIrcLineReceived;
             _commandResponder = new CommandResponder(_chat);
 
             _messagequeueRepo = repos.MessagequeueRepo;
@@ -44,6 +45,12 @@ namespace Core.Modes
 
         private async void MessageReceived(object? sender, MessageEventArgs e) =>
             await ProcessIncomingMessage(e.Message);
+
+        private async void UnhandledIrcLineReceived(object? sender, string unhandledIrcLine)
+        {
+            if (_forwardUnprocessedMessages)
+                await _messagequeueRepo.EnqueueMessage(unhandledIrcLine);
+        }
 
         private async Task ProcessIncomingMessage(Message message)
         {
@@ -96,6 +103,7 @@ namespace Core.Modes
         {
             _chat.Dispose();
             _chat.IncomingMessage -= MessageReceived;
+            _chat.IncomingUnhandledIrcLine -= UnhandledIrcLineReceived;
         }
     }
 }
