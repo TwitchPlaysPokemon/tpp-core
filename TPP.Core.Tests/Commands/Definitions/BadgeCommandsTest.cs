@@ -199,5 +199,24 @@ namespace TPP.Core.Tests.Commands.Definitions
                 ImmutableList.Create("@PersonMon"), _argsParser));
             Assert.AreEqual("PersonMon has no badges.", resultDisambiguated.Response);
         }
+
+        [Test]
+        public async Task TestPokedex()
+        {
+            User user = MockUser("MockUser");
+            _badgeRepoMock
+                .Setup(repo => repo.CountByUserPerSpecies(user.Id))
+                .ReturnsAsync(new Dictionary<PkmnSpecies, int>
+                {
+                    [PkmnSpecies.OfId("1")] = 12,
+                    [PkmnSpecies.OfId("2")] = 23,
+                    [PkmnSpecies.OfId("3")] = 34,
+                }.ToImmutableSortedDictionary());
+
+            CommandResult result = await _badgeCommands.Pokedex(new CommandContext(MockMessage(user),
+                ImmutableList<string>.Empty, _argsParser));
+
+            Assert.AreEqual("You have collected 3 distinct Pokémon badge(s)", result.Response);
+        }
     }
 }

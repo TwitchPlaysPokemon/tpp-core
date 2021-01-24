@@ -16,21 +16,27 @@ namespace TPP.Core.Commands.Definitions
         {
             new Command("badges", Badges)
             {
-                Aliases = new[] {"badge"},
+                Aliases = new[] { "badge" },
                 Description = "Show a user's badges. Argument: <Pokemon> (optional) <Username> (optional)"
             },
 
             new Command("unselectbadge", UnselectBadge)
             {
-                Aliases = new[] {"unchoosebadge", "unequipbadge"},
+                Aliases = new[] { "unchoosebadge", "unequipbadge" },
                 Description = "Unequip your displayed badge."
             },
 
             new Command("selectbadge", SelectBadge)
             {
-                Aliases = new[] {"choosebadge", "equipbadge"},
+                Aliases = new[] { "choosebadge", "equipbadge" },
                 Description = "Change your displayed badge. Argument: <Pokemon>"
-            }
+            },
+
+            new Command("pokedex", Pokedex)
+            {
+                Aliases = new[] { "dex" },
+                Description = "Show how many different species of badge a user owns. Argument: <username> (optional)"
+            },
         };
 
         private readonly IBadgeRepo _badgeRepo;
@@ -114,6 +120,19 @@ namespace TPP.Core.Commands.Definitions
             }
             await _userRepo.SetSelectedBadge(context.Message.User, species);
             return new CommandResult { Response = $"{species} selected as badge." };
+        }
+
+        public async Task<CommandResult> Pokedex(CommandContext context)
+        {
+            User user = (await context.ParseArgs<Optional<User>>()).OrElse(context.Message.User);
+            bool isSelf = user == context.Message.User;
+            int numUniqueSpecies = (await _badgeRepo.CountByUserPerSpecies(user.Id)).Count;
+            return new CommandResult
+            {
+                Response = isSelf
+                    ? $"You have collected {numUniqueSpecies} distinct Pokémon badge(s)"
+                    : $"{user} has collected {numUniqueSpecies} distinct Pokémon badge(s)"
+            };
         }
     }
 }
