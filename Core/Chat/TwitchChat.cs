@@ -176,6 +176,11 @@ namespace Core.Chat
             // Simplified example: "@tags :user@twitch.tv PRIVMSG #twitchplayspokemon :test"
             if (e.Direction != SendReceiveDirection.Received) return;
             string ircLine = e.Data;
+            if (ircLine.StartsWith("PING"))
+            {
+                IncomingUnhandledIrcLine?.Invoke(this, ircLine);
+                return;
+            }
             if (ircLine.StartsWith("PONG")) return;
             string[] splitTagsMetaMessage = Regex.Split(ircLine, @"(?:^| ):");
             if (splitTagsMetaMessage.Length < 2)
