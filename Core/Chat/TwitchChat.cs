@@ -10,6 +10,7 @@ using NodaTime;
 using Persistence.Models;
 using Persistence.Repos;
 using TwitchLib.Client;
+using TwitchLib.Client.Enums;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
 using TwitchLib.Communication.Clients;
@@ -173,8 +174,9 @@ namespace Core.Chat
             // This gives us _everything_, but we already explicitly handle messages and whispers.
             // Therefore do a quick&dirty parse over the message to filter those out.
             // Simplified example: "@tags :user@twitch.tv PRIVMSG #twitchplayspokemon :test"
+            if (e.Direction != SendReceiveDirection.Received) return;
             string ircLine = e.Data;
-            if (ircLine.StartsWith("PING") || ircLine.StartsWith("PONG")) return;
+            if (ircLine.StartsWith("PONG")) return;
             string[] splitTagsMetaMessage = Regex.Split(ircLine, @"(?:^| ):");
             if (splitTagsMetaMessage.Length < 2)
             {
