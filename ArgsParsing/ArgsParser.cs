@@ -78,7 +78,7 @@ namespace ArgsParsing
             IEnumerable<Type> types,
             bool errorOnRemainingArgs = false)
         {
-            var allRemainingArgs = args;
+            IImmutableList<string> allRemainingArgs = args;
             var results = new List<object>();
             bool success = true;
             var failures = new List<Failure>();
@@ -94,7 +94,7 @@ namespace ArgsParsing
                     throw new MissingParserException(typeWithoutParser: type);
                 }
                 Debug.Assert(parser != null, "try-get succeeded and the dictionary does not contain null values");
-                Type[] genericTypes = type.IsGenericType ? type.GenericTypeArguments : new Type[] { };
+                Type[] genericTypes = type.IsGenericType ? type.GenericTypeArguments : Array.Empty<Type>();
                 ArgsParseResult<object> parseResult;
                 try
                 {

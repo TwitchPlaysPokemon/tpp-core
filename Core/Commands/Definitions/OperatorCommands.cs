@@ -35,7 +35,7 @@ namespace Core.Commands.Definitions
 
         private Task<CommandResult> Stop(CommandContext context)
         {
-            var argSet = context.Args.Select(arg => arg.ToLowerInvariant()).ToHashSet();
+            HashSet<string> argSet = context.Args.Select(arg => arg.ToLowerInvariant()).ToHashSet();
             bool cancel = argSet.Remove("cancel");
 
             if (argSet.Count > 1)

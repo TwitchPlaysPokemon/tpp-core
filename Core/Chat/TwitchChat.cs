@@ -22,12 +22,15 @@ namespace Core.Chat
     {
         public event EventHandler<MessageEventArgs> IncomingMessage = null!;
         public event EventHandler<string> IncomingUnhandledIrcLine = null!;
+
         /// Twitch Messaging Interface (TMI, the somewhat IRC-compatible protocol twitch uses) maximum message length.
         /// This limit is in characters, not bytes. See https://discuss.dev.twitch.tv/t/message-character-limit/7793/6
         private const int MaxMessageLength = 500;
-        private static readonly MessageSplitter MessageSplitterRegular = new MessageSplitter(
+
+        private static readonly MessageSplitter MessageSplitterRegular = new(
             maxMessageLength: MaxMessageLength - "/me ".Length);
-        private static readonly MessageSplitter MessageSplitterWhisper = new MessageSplitter(
+
+        private static readonly MessageSplitter MessageSplitterWhisper = new(
             // visual representation of the longest possible username (25 characters)
             maxMessageLength: MaxMessageLength - "/w ,,,,,''''',,,,,''''',,,,, ".Length);
 
@@ -76,10 +79,10 @@ namespace Core.Chat
             if (_suppressions.Contains(ChatConfig.SuppressionType.Message) &&
                 !_suppressionOverrides.Contains(_ircChannel))
             {
-                _logger.LogDebug($"(suppressed) >#{_ircChannel}: {message}");
+                _logger.LogDebug("(suppressed) >#{Channel}: {Message}", _ircChannel, message);
                 return;
             }
-            _logger.LogDebug($">#{_ircChannel}: {message}");
+            _logger.LogDebug(">#{Channel}: {Message}", _ircChannel, message);
             await Task.Run(() =>
             {
                 foreach (string part in MessageSplitterRegular.FitToMaxLength(message))
@@ -94,10 +97,10 @@ namespace Core.Chat
             if (_suppressions.Contains(ChatConfig.SuppressionType.Whisper) &&
                 !_suppressionOverrides.Contains(target.SimpleName))
             {
-                _logger.LogDebug($"(suppressed) >@{target.SimpleName}: {message}");
+                _logger.LogDebug("(suppressed) >@{Username}: {Message}", target.SimpleName, message);
                 return;
             }
-            _logger.LogDebug($">@{target.SimpleName}: {message}");
+            _logger.LogDebug(">@{Username}: {Message}", target.SimpleName, message);
             await Task.Run(() =>
             {
                 foreach (string part in MessageSplitterWhisper.FitToMaxLength(message))
@@ -149,7 +152,7 @@ namespace Core.Chat
                     }
                     catch (Exception)
                     {
-                        _logger.LogError($"Failed to reconnect, trying again in {delay.TotalSeconds} seconds.");
+                        _logger.LogError("Failed to reconnect, trying again in {Delay} seconds", delay.TotalSeconds);
                     }
                 }
 
@@ -159,13 +162,14 @@ namespace Core.Chat
 
         private async void MessageReceived(object? sender, OnMessageReceivedArgs e)
         {
-            _logger.LogDebug($"<#{_ircChannel} {e.ChatMessage.Username}: {e.ChatMessage.Message}");
+            _logger.LogDebug("<#{Channel} {Username}: {Message}",
+                _ircChannel, e.ChatMessage.Username, e.ChatMessage.Message);
             await AnyMessageReceived(e.ChatMessage, e.ChatMessage.Message, MessageSource.Chat);
         }
 
         private async void WhisperReceived(object? sender, OnWhisperReceivedArgs e)
         {
-            _logger.LogDebug($"<@{e.WhisperMessage.Username}: {e.WhisperMessage.Message}");
+            _logger.LogDebug("<@{Username}: {Message}", e.WhisperMessage.Username, e.WhisperMessage.Message);
             await AnyMessageReceived(e.WhisperMessage, e.WhisperMessage.Message, MessageSource.Whisper);
         }
 
@@ -185,13 +189,13 @@ namespace Core.Chat
             string[] splitTagsMetaMessage = Regex.Split(ircLine, @"(?:^| ):");
             if (splitTagsMetaMessage.Length < 2)
             {
-                _logger.LogWarning($"received unparsable irc line (colon delimiter): {ircLine}");
+                _logger.LogWarning("received unparsable irc line (colon delimiter): {IrcLine}", ircLine);
                 return;
             }
             string[] splitHostCommandChannel = splitTagsMetaMessage[1].Split(' ', count: 3);
             if (splitHostCommandChannel.Length < 3)
             {
-                _logger.LogWarning($"received unparsable irc line (space delimiter): {ircLine}");
+                _logger.LogWarning("received unparsable irc line (space delimiter): {IrcLine}", ircLine);
                 return;
             }
             string command = splitHostCommandChannel[1];
@@ -229,7 +233,7 @@ namespace Core.Chat
             }
             _twitchClient.OnMessageReceived -= MessageReceived;
             _twitchClient.OnWhisperReceived -= WhisperReceived;
-            _logger.LogDebug("twitch chat is now fully shut down.");
+            _logger.LogDebug("twitch chat is now fully shut down");
         }
     }
 }

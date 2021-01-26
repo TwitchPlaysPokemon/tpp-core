@@ -113,7 +113,7 @@ namespace Persistence.MongoDB.Tests.Repos
             ImmutableSortedDictionary<PkmnSpecies, int> result = await badgeRepo.CountByUserPerSpecies("user");
 
             // then
-            var expected = new[]
+            ImmutableSortedDictionary<PkmnSpecies, int> expected = new[]
             {
                 (PkmnSpecies.OfId("2"), 1),
                 (PkmnSpecies.OfId("3"), 3),
