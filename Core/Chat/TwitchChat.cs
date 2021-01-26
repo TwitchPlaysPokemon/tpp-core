@@ -132,7 +132,7 @@ namespace Core.Chat
         private async Task CheckConnectivityWorker(CancellationToken cancellationToken)
         {
             TimeSpan minDelay = TimeSpan.FromSeconds(3);
-            TimeSpan maxDelay = TimeSpan.FromMinutes(10);
+            TimeSpan maxDelay = TimeSpan.FromSeconds(30);
             TimeSpan delay = minDelay;
             while (!cancellationToken.IsCancellationRequested)
             {
