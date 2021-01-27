@@ -26,7 +26,7 @@ namespace Core.Commands.Definitions
 
         public IEnumerable<Command> Commands => new[]
         {
-            new Command("stop", Stop),
+            new Command("stopnew", Stop),
         }.Select(cmd => cmd.WithCondition(
             canExecute: ctx => IsOperator(ctx.Message.User),
             ersatzResult: new CommandResult { Response = "Only operators can use that command" }));
@@ -38,15 +38,8 @@ namespace Core.Commands.Definitions
             HashSet<string> argSet = context.Args.Select(arg => arg.ToLowerInvariant()).ToHashSet();
             bool cancel = argSet.Remove("cancel");
 
-            if (argSet.Count > 1)
+            if (argSet.Count > 0)
                 return Task.FromResult(new CommandResult { Response = "too many arguments" });
-            else if (argSet.Count == 0)
-                return Task.FromResult(new CommandResult { Response = "must specify 'old' or 'new' core (new core)" });
-
-            if (argSet.First() == "old")
-                return Task.FromResult(new CommandResult()); // do nothing silently
-            else if (argSet.First() != "new")
-                return Task.FromResult(new CommandResult { Response = $"unknown argument '{argSet.First()}'" });
 
             string message = cancel
                 ? _stopToken.ShouldStop
