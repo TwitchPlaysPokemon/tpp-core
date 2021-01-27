@@ -59,7 +59,8 @@ namespace Core
                 new UserCommands(
                     databases.UserRepo, pokeyenBank: databases.PokeyenBank, tokenBank: databases.TokensBank).Commands,
                 new BadgeCommands(databases.BadgeRepo, databases.UserRepo).Commands,
-                new OperatorCommands(stopToken, chatConfig.OperatorNames).Commands
+                new OperatorCommands(stopToken, chatConfig.OperatorNames).Commands,
+                new MiscCommands().Commands,
             }.SelectMany(cmds => cmds).Concat(new[]
             {
                 new HelpCommand(commandProcessor).Command
