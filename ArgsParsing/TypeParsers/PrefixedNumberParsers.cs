@@ -48,7 +48,7 @@ namespace ArgsParsing.TypeParsers
         public override Task<ArgsParseResult<T>> Parse(IImmutableList<string> args, Type[] genericTypes)
         {
             string str = args[0];
-            var match = _regex.Match(str);
+            Match match = _regex.Match(str);
             if (!match.Success)
             {
                 return Task.FromResult(ArgsParseResult<T>.Failure(

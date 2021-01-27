@@ -31,7 +31,7 @@ namespace ArgsParsing.TypeParsers
                 throw new ArgumentException($"Only expected 1 generic argument for {typeof(Optional)}, " +
                                             $"but got {genericTypes.Length}");
             }
-            var type = typeof(Optional<>).MakeGenericType(genericTypes[0]);
+            Type type = typeof(Optional<>).MakeGenericType(genericTypes[0]);
             ConstructorInfo? constructor = type.GetConstructor(new[] { typeof(bool), genericTypes[0] });
             if (constructor == null)
             {

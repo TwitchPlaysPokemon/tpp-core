@@ -26,7 +26,7 @@ namespace ArgsParsing.TypeParsers
         public override Task<ArgsParseResult<TimeSpan>> Parse(IImmutableList<string> args, Type[] genericTypes)
         {
             string str = args[0];
-            var match = Regex.Match(str);
+            Match match = Regex.Match(str);
             if (match.Success)
             {
                 try

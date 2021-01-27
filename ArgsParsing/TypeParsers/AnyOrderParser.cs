@@ -53,7 +53,7 @@ namespace ArgsParsing.TypeParsers
             IImmutableList<string> args,
             Type[] genericTypes)
         {
-            var argList = args.Take(genericTypes.Length).ToList();
+            List<string> argList = args.Take(genericTypes.Length).ToList();
             var failures = new List<Failure>();
             foreach (var argsPermutation in Permutations(argList))
             {

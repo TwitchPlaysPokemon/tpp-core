@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -8,9 +9,9 @@ namespace Core.Commands
         public delegate Task<CommandResult> Execute(CommandContext context);
 
         public string Name { get; }
-        public string[] Aliases { get; set; }
+        public string[] Aliases { get; init; }
         public Execute Execution { get; }
-        public string? Description { get; set; }
+        public string? Description { get; init; }
 
         public Command(
             string name,
@@ -18,7 +19,7 @@ namespace Core.Commands
         {
             Name = name;
             Execution = execution;
-            Aliases = new string[] { };
+            Aliases = Array.Empty<string>();
             Description = null;
         }
 

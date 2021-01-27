@@ -11,7 +11,7 @@ namespace Core.Commands
 
     public class CommandResult
     {
-        public string? Response { get; set; } = null;
-        public ResponseTarget ResponseTarget { get; set; } = ResponseTarget.Source;
+        public string? Response { get; init; } = null;
+        public ResponseTarget ResponseTarget { get; init; } = ResponseTarget.Source;
     }
 }

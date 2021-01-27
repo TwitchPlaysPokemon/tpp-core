@@ -12,7 +12,7 @@ namespace ArgsParsing.Types
 
         public HexColor(string hexColorString)
         {
-            if (!hexColorString.StartsWith('#')) throw new ArgumentException($"hex color string must start with '#'");
+            if (!hexColorString.StartsWith('#')) throw new ArgumentException("hex color string must start with '#'");
             HexColorString = hexColorString;
         }
 

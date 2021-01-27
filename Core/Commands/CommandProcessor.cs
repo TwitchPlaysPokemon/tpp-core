@@ -74,7 +74,7 @@ namespace Core.Commands
         {
             if (!_commands.TryGetValue(commandName.ToLower(), out Command command))
             {
-                _logger.LogDebug($"unknown command '{commandName}'");
+                _logger.LogDebug("unknown command '{Command}'", commandName);
                 return null;
             }
             var stopwatch = new Stopwatch();
@@ -92,16 +92,16 @@ namespace Core.Commands
             catch (Exception ex)
             {
                 _logger.LogError(ex,
-                    $"An exception occured while executing command '{command.Name}'. " +
-                    $"User: {message.User}, Original text: {message.MessageText}");
+                    "An exception occured while executing command '{Command}'. User: {User}, Original text: {MessageText}",
+                    command.Name, message.User, message.MessageText);
                 result = new CommandResult { Response = "An error occurred." };
             }
             stopwatch.Stop();
             if (stopwatch.Elapsed >= CommandWarnTimeLimit)
             {
                 _logger.LogWarning(
-                    $"Command '{command.Name}' took {stopwatch.ElapsedMilliseconds}ms to finish! " +
-                    $"User: {message.User}, Original text: {message.MessageText}");
+                    "Command '{Command}' took {Duration}ms to finish! User: {User}, Original text: {MessageText}",
+                    command.Name, stopwatch.ElapsedMilliseconds, message.User, message.MessageText);
             }
             return result;
         }

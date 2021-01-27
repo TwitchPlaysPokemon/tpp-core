@@ -99,7 +99,7 @@ namespace Core.Overlay
         }
 
         /// Handle incoming messages (which is just the close message) until the websocket closes.
-        private async Task HandleUntilDead(WebSocket webSocket, CancellationToken token)
+        private async Task HandleUntilDead(WebSocket webSocket, IPEndPoint remoteEndPoint, CancellationToken token)
         {
             while (webSocket.State == WebSocketState.Open && !token.IsCancellationRequested)
             {
@@ -112,11 +112,12 @@ namespace Core.Overlay
                     {
                         await webSocket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, string.Empty, token);
                     }
-                    _logger.LogInformation($"Closed websocket connection: {webSocket}");
+                    _logger.LogInformation("Closed websocket connection from: {IP}", remoteEndPoint);
                 }
                 else
                 {
-                    _logger.LogError($"Unexpectedly received data from websocket {webSocket}, closing connection");
+                    _logger.LogError("Unexpectedly received websocket data from {IP}, closing connection",
+                        remoteEndPoint);
                     await webSocket.CloseAsync(WebSocketCloseStatus.PolicyViolation,
                         "clients must not send data themselves", token);
                 }
@@ -143,10 +144,10 @@ namespace Core.Overlay
             {
                 RemoteEndPoint = remoteEndPoint,
                 WebSocket = ws,
-                ReaderTask = HandleUntilDead(ws, tokenSource.Token),
+                ReaderTask = HandleUntilDead(ws, remoteEndPoint, tokenSource.Token),
                 TokenSource = tokenSource
             });
-            _logger.LogInformation($"New websocket connection: {ws}");
+            _logger.LogInformation("New websocket connection from: {IP}", remoteEndPoint);
         }
 
         /// Keeps accepting new incoming websocket connections until the server is stopped with <see cref="Stop"/>.
@@ -167,14 +168,14 @@ namespace Core.Overlay
                 }
                 catch (HttpListenerException)
                 {
-                    _logger.LogInformation("Websocket listener was stopped.");
+                    _logger.LogInformation("Websocket listener was stopped");
                     return;
                 }
                 catch (ObjectDisposedException)
                 {
                     // GetContextAsync doesn't take a cancellation token,
                     // and stopping the http server can cause it to trip over itself for some reason.
-                    _logger.LogError("Encountered ObjectDisposedException while accepting a websocket connection.");
+                    _logger.LogError("Encountered ObjectDisposedException while accepting a websocket connection");
                     return;
                 }
                 if (!context.Request.IsWebSocketRequest)
@@ -201,12 +202,12 @@ namespace Core.Overlay
                     if (await Task.WhenAny(closeTask, Task.Delay(timeout)) != closeTask)
                     {
                         _logger.LogWarning(
-                            $"websocket from {connection.RemoteEndPoint} takes longer than {timeout.TotalMilliseconds}ms " +
-                            "to finish the close handshake. Aborting the connection.");
+                            "websocket from {IP} takes longer than {Timeout}ms to finish the close handshake. Aborting the connection",
+                            connection.RemoteEndPoint, timeout.TotalMilliseconds);
                         connection.WebSocket.Abort();
                     }
-                    // Cancelling before finishing the close handshare puts the websocket in the "Aborted" state.
-                    // Cancelling _after_ finishing the close handshare is the websocket library's expected workflow
+                    // Cancelling before finishing the close handshake puts the websocket in the "Aborted" state.
+                    // Cancelling _after_ finishing the close handshake is the websocket library's expected workflow
                     // if the server initiates closing the websocket connection.
                     connection.TokenSource.Cancel();
                     try

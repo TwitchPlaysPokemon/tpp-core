@@ -11,30 +11,30 @@ namespace Common.PkmnModels
         [DataMember(Name = "decreased")] public Stat? Dec { get; init; }
         [DataMember(Name = "description")] public string Description { get; init; }
 
-        public static Nature Hardy = new Nature { Id = 0, Name = "Hardy" };
-        public static Nature Lonely = new Nature { Id = 1, Name = "Lonely", Inc = Stat.Atk, Dec = Stat.Def };
-        public static Nature Brave = new Nature { Id = 2, Name = "Brave", Inc = Stat.Atk, Dec = Stat.Spe };
-        public static Nature Adamant = new Nature { Id = 3, Name = "Adamant", Inc = Stat.Atk, Dec = Stat.SpA };
-        public static Nature Naughty = new Nature { Id = 4, Name = "Naughty", Inc = Stat.Atk, Dec = Stat.SpD };
-        public static Nature Bold = new Nature { Id = 5, Name = "Bold", Inc = Stat.Def, Dec = Stat.Atk };
-        public static Nature Docile = new Nature { Id = 6, Name = "Docile" };
-        public static Nature Relaxed = new Nature { Id = 7, Name = "Relaxed", Inc = Stat.Def, Dec = Stat.Spe };
-        public static Nature Impish = new Nature { Id = 8, Name = "Impish", Inc = Stat.Def, Dec = Stat.SpA };
-        public static Nature Lax = new Nature { Id = 9, Name = "Lax", Inc = Stat.Def, Dec = Stat.SpD };
-        public static Nature Timid = new Nature { Id = 10, Name = "Timid", Inc = Stat.Spe, Dec = Stat.Atk };
-        public static Nature Hasty = new Nature { Id = 11, Name = "Hasty", Inc = Stat.Spe, Dec = Stat.Def };
-        public static Nature Serious = new Nature { Id = 12, Name = "Serious" };
-        public static Nature Jolly = new Nature { Id = 13, Name = "Jolly", Inc = Stat.Spe, Dec = Stat.SpA };
-        public static Nature Naive = new Nature { Id = 14, Name = "Naive", Inc = Stat.Spe, Dec = Stat.SpD };
-        public static Nature Modest = new Nature { Id = 15, Name = "Modest", Inc = Stat.SpA, Dec = Stat.Atk };
-        public static Nature Mild = new Nature { Id = 16, Name = "Mild", Inc = Stat.SpA, Dec = Stat.Def };
-        public static Nature Quiet = new Nature { Id = 17, Name = "Quiet", Inc = Stat.SpA, Dec = Stat.Spe };
-        public static Nature Bashful = new Nature { Id = 18, Name = "Bashful" };
-        public static Nature Rash = new Nature { Id = 19, Name = "Rash", Inc = Stat.SpA, Dec = Stat.SpD };
-        public static Nature Calm = new Nature { Id = 20, Name = "Calm", Inc = Stat.SpD, Dec = Stat.Atk };
-        public static Nature Gentle = new Nature { Id = 21, Name = "Gentle", Inc = Stat.SpD, Dec = Stat.Def };
-        public static Nature Sassy = new Nature { Id = 22, Name = "Sassy", Inc = Stat.SpD, Dec = Stat.Spe };
-        public static Nature Careful = new Nature { Id = 23, Name = "Careful", Inc = Stat.SpD, Dec = Stat.SpA };
-        public static Nature Quirky = new Nature { Id = 24, Name = "Quirky" };
+        public static readonly Nature Hardy = new() { Id = 0, Name = "Hardy" };
+        public static readonly Nature Lonely = new() { Id = 1, Name = "Lonely", Inc = Stat.Atk, Dec = Stat.Def };
+        public static readonly Nature Brave = new() { Id = 2, Name = "Brave", Inc = Stat.Atk, Dec = Stat.Spe };
+        public static readonly Nature Adamant = new() { Id = 3, Name = "Adamant", Inc = Stat.Atk, Dec = Stat.SpA };
+        public static readonly Nature Naughty = new() { Id = 4, Name = "Naughty", Inc = Stat.Atk, Dec = Stat.SpD };
+        public static readonly Nature Bold = new() { Id = 5, Name = "Bold", Inc = Stat.Def, Dec = Stat.Atk };
+        public static readonly Nature Docile = new() { Id = 6, Name = "Docile" };
+        public static readonly Nature Relaxed = new() { Id = 7, Name = "Relaxed", Inc = Stat.Def, Dec = Stat.Spe };
+        public static readonly Nature Impish = new() { Id = 8, Name = "Impish", Inc = Stat.Def, Dec = Stat.SpA };
+        public static readonly Nature Lax = new() { Id = 9, Name = "Lax", Inc = Stat.Def, Dec = Stat.SpD };
+        public static readonly Nature Timid = new() { Id = 10, Name = "Timid", Inc = Stat.Spe, Dec = Stat.Atk };
+        public static readonly Nature Hasty = new() { Id = 11, Name = "Hasty", Inc = Stat.Spe, Dec = Stat.Def };
+        public static readonly Nature Serious = new() { Id = 12, Name = "Serious" };
+        public static readonly Nature Jolly = new() { Id = 13, Name = "Jolly", Inc = Stat.Spe, Dec = Stat.SpA };
+        public static readonly Nature Naive = new() { Id = 14, Name = "Naive", Inc = Stat.Spe, Dec = Stat.SpD };
+        public static readonly Nature Modest = new() { Id = 15, Name = "Modest", Inc = Stat.SpA, Dec = Stat.Atk };
+        public static readonly Nature Mild = new() { Id = 16, Name = "Mild", Inc = Stat.SpA, Dec = Stat.Def };
+        public static readonly Nature Quiet = new() { Id = 17, Name = "Quiet", Inc = Stat.SpA, Dec = Stat.Spe };
+        public static readonly Nature Bashful = new() { Id = 18, Name = "Bashful" };
+        public static readonly Nature Rash = new() { Id = 19, Name = "Rash", Inc = Stat.SpA, Dec = Stat.SpD };
+        public static readonly Nature Calm = new() { Id = 20, Name = "Calm", Inc = Stat.SpD, Dec = Stat.Atk };
+        public static readonly Nature Gentle = new() { Id = 21, Name = "Gentle", Inc = Stat.SpD, Dec = Stat.Def };
+        public static readonly Nature Sassy = new() { Id = 22, Name = "Sassy", Inc = Stat.SpD, Dec = Stat.Spe };
+        public static readonly Nature Careful = new() { Id = 23, Name = "Careful", Inc = Stat.SpD, Dec = Stat.SpA };
+        public static readonly Nature Quirky = new() { Id = 24, Name = "Quirky" };
     }
 }
