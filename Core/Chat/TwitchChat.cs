@@ -12,13 +12,14 @@ using Persistence.Repos;
 using TwitchLib.Client;
 using TwitchLib.Client.Enums;
 using TwitchLib.Client.Events;
+using TwitchLib.Client.Extensions;
 using TwitchLib.Client.Models;
 using TwitchLib.Communication.Clients;
 using TwitchLib.Communication.Models;
 
 namespace Core.Chat
 {
-    public sealed class TwitchChat : IChat
+    public sealed class TwitchChat : IChat, IChatModeChanger
     {
         public event EventHandler<MessageEventArgs> IncomingMessage = null!;
         public event EventHandler<string> IncomingUnhandledIrcLine = null!;
@@ -234,6 +235,32 @@ namespace Core.Chat
             _twitchClient.OnMessageReceived -= MessageReceived;
             _twitchClient.OnWhisperReceived -= WhisperReceived;
             _logger.LogDebug("twitch chat is now fully shut down");
+        }
+
+        public async Task EnableEmoteOnly()
+        {
+            if (_suppressions.Contains(ChatConfig.SuppressionType.Command) &&
+                !_suppressionOverrides.Contains(_ircChannel))
+            {
+                _logger.LogDebug($"(suppressed) enabling emote only mode in #{_ircChannel}");
+                return;
+            }
+
+            _logger.LogDebug($"enabling emote only mode in #{_ircChannel}");
+            await Task.Run(() => _twitchClient.EmoteOnlyOn(_ircChannel));
+        }
+
+        public async Task DisableEmoteOnly()
+        {
+            if (_suppressions.Contains(ChatConfig.SuppressionType.Command) &&
+                !_suppressionOverrides.Contains(_ircChannel))
+            {
+                _logger.LogDebug($"(suppressed) disabling emote only mode in #{_ircChannel}");
+                return;
+            }
+
+            _logger.LogDebug($"disabling emote only mode in #{_ircChannel}");
+            await Task.Run(() => _twitchClient.EmoteOnlyOff(_ircChannel));
         }
     }
 }
