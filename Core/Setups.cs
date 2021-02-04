@@ -32,6 +32,8 @@ namespace Core
             argsParser.AddArgumentParser(new HexColorParser());
             argsParser.AddArgumentParser(new PokeyenParser());
             argsParser.AddArgumentParser(new TokensParser());
+            argsParser.AddArgumentParser(new SignedPokeyenParser());
+            argsParser.AddArgumentParser(new SignedTokensParser());
             argsParser.AddArgumentParser(new PkmnSpeciesParser(pokedexData.KnownSpecies, PokedexData.NormalizeName));
 
             argsParser.AddArgumentParser(new AnyOrderParser(argsParser));
@@ -61,7 +63,10 @@ namespace Core
                 new UserCommands(
                     databases.UserRepo, pokeyenBank: databases.PokeyenBank, tokenBank: databases.TokensBank).Commands,
                 new BadgeCommands(databases.BadgeRepo, databases.UserRepo).Commands,
-                new OperatorCommands(stopToken, chatConfig.OperatorNames).Commands,
+                new OperatorCommands(
+                    stopToken, chatConfig.OperatorNames, databases.PokeyenBank, databases.TokensBank,
+                    messageSender: chat
+                ).Commands,
                 new ModeratorCommands(chatConfig.ModeratorNames, chatConfig.OperatorNames, chat).Commands,
                 new MiscCommands().Commands,
             }.SelectMany(cmds => cmds).Concat(new[]
