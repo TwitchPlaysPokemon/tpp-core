@@ -71,4 +71,4 @@ A
 A
 ```
 
-For more examples, check out the [tests](../Inputting.Tests).
+For more examples, check out the [tests](../TPP.Inputting.Tests).

@@ -28,4 +28,4 @@ This project already includes parser implementations for a bunch of commonly use
 but can be extended by deriving from [BaseArgumentParser](IArgumentParser.cs)
 and adding that parser to your `ArgsParser`-instance.
 
-Take a look at the [tests](../ArgsParsing.Tests) for more in-depth usage examples.
+Take a look at the [tests](../TPP.ArgsParsing.Tests) for more in-depth usage examples.

@@ -28,7 +28,7 @@ You need to customize a few configurations:
 All unchanged entries can be deleted. Missing configurations revert to their default value.
 
 Ensure that you have a properly configured MongoDB server running.
-See the [Persistence.MongoDB](../Persistence.MongoDB) project for instructions.
+See the [TPP.Persistence.MongoDB](../TPP.Persistence.MongoDB) project for instructions.
 
 Finally, you run the project, e.g. in dualcore mode:
 ```
@@ -61,5 +61,5 @@ If you want faster startup times or graceful SIGTERM handling,
 For example, making a release build and running the resulting `dll` with the dotnet runtime may look like this:
 ```
 dotnet publish -c Release
-dotnet ./bin/Release/net5.0/Core.dll --help
+dotnet ./bin/Release/net5.0/TPP.Core.dll --help
 ```
