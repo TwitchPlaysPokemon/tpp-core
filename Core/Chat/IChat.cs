@@ -19,6 +19,7 @@ namespace Core.Chat
     public interface IChat : IMessageSender, IDisposable
     {
         event EventHandler<MessageEventArgs> IncomingMessage;
+        event EventHandler<string> IncomingUnhandledIrcLine;
 
         /// Establishes the connection.
         /// All subsequent repeated invocations on this instance will fail.

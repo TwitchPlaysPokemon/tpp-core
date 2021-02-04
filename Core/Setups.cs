@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ArgsParsing;
 using ArgsParsing.TypeParsers;
+using Core.Chat;
 using Core.Commands;
 using Core.Commands.Definitions;
 using Core.Configuration;
@@ -46,7 +47,8 @@ namespace Core
             ArgsParser argsParser,
             Databases databases,
             StopToken stopToken,
-            ChatConfig chatConfig)
+            ChatConfig chatConfig,
+            TwitchChat chat)
         {
             var commandProcessor = new CommandProcessor(
                 loggerFactory.CreateLogger<CommandProcessor>(),
@@ -59,7 +61,9 @@ namespace Core
                 new UserCommands(
                     databases.UserRepo, pokeyenBank: databases.PokeyenBank, tokenBank: databases.TokensBank).Commands,
                 new BadgeCommands(databases.BadgeRepo, databases.UserRepo).Commands,
-                new OperatorCommands(stopToken, chatConfig.OperatorNames).Commands
+                new OperatorCommands(stopToken, chatConfig.OperatorNames).Commands,
+                new ModeratorCommands(chatConfig.ModeratorNames, chatConfig.OperatorNames, chat).Commands,
+                new MiscCommands().Commands,
             }.SelectMany(cmds => cmds).Concat(new[]
             {
                 new HelpCommand(commandProcessor).Command

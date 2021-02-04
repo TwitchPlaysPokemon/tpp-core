@@ -18,6 +18,7 @@ namespace Core.Configuration
 
         // TODO this configurations should probably be in the database instead
         public IImmutableList<string> OperatorNames { get; init; } = ImmutableList<string>.Empty;
+        public IImmutableList<string> ModeratorNames { get; init; } = ImmutableList<string>.Empty;
 
         /* communication settings */
         public enum SuppressionType

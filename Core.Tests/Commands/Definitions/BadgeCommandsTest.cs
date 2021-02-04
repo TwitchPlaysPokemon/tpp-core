@@ -24,8 +24,8 @@ namespace Core.Tests.Commands.Definitions
             lastMessageAt: null, pokeyen: 0, tokens: 0,
             selectedBadge: selectedBadge);
 
-        private Message MockMessage(User user, string text = "")
-            => new Message(user, text, MessageSource.Chat, string.Empty);
+        private static Message MockMessage(User user, string text = "") =>
+            new(user, text, MessageSource.Chat, string.Empty);
 
         private Mock<IBadgeRepo> _badgeRepoMock = null!;
         private Mock<IUserRepo> _userRepoMock = null!;
@@ -101,7 +101,7 @@ namespace Core.Tests.Commands.Definitions
         [Test]
         public void TestBadgesUserNotFound()
         {
-            _argsParser.AddArgumentParser(new PkmnSpeciesParser(new PkmnSpecies[0]));
+            _argsParser.AddArgumentParser(new PkmnSpeciesParser(Array.Empty<PkmnSpecies>()));
             User user = MockUser("MockUser");
             ArgsParseFailure exception = Assert.ThrowsAsync<ArgsParseFailure>(() => _badgeCommands.Badges(
                 new CommandContext(MockMessage(user), ImmutableList.Create("@someone_unknown"), _argsParser)));
@@ -166,7 +166,7 @@ namespace Core.Tests.Commands.Definitions
         [Test]
         public void TestSelectUnknownBadge()
         {
-            _argsParser.AddArgumentParser(new PkmnSpeciesParser(new PkmnSpecies[0]));
+            _argsParser.AddArgumentParser(new PkmnSpeciesParser(Array.Empty<PkmnSpecies>()));
             User user = MockUser("MockUser");
             ArgsParseFailure failure = Assert.ThrowsAsync<ArgsParseFailure>(() =>
                 _badgeCommands.SelectBadge(new CommandContext(MockMessage(user),

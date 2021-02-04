@@ -88,7 +88,7 @@ Options:
             var config = (ConfigBase?)JsonConvert.DeserializeObject(json, type, ConfigSerializerSettings);
             if (config == null) throw new ArgumentException("config must not be null");
             ConfigUtils.WriteUnrecognizedConfigsToStderr(config);
-            if (config is BaseConfig baseConfig && baseConfig.LogPath == null)
+            if (config is BaseConfig { LogPath: null })
             {
                 Console.Error.WriteLine("no logging path is configured, logs will only be printed to console");
             }
@@ -137,7 +137,7 @@ Options:
             }
             catch (Exception ex)
             {
-                logger.LogCritical(ex, "uncaught exception! TPP is crashing now, goodbye.");
+                logger.LogCritical(ex, "uncaught exception! TPP is crashing now, goodbye");
             }
         }
 

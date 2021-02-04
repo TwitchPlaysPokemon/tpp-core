@@ -64,7 +64,7 @@ namespace Persistence.MongoDB.Repos
             _clock = clock;
 
             // create a setter action that lets us modify the balance value after a successful transaction
-            var balanceParameter = Expression.Parameter(typeof(long));
+            ParameterExpression balanceParameter = Expression.Parameter(typeof(long));
             _currencyFieldSetter = Expression.Lambda<Action<T, long>>(
                     Expression.Assign(_currencyField.Body, balanceParameter),
                     _currencyField.Parameters.First(), balanceParameter)

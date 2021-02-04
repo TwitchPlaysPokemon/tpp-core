@@ -40,7 +40,8 @@ namespace Core.Overlay
                 type = evt.OverlayEventType,
                 extra_parameters = evt
             });
-            _logger.LogDebug($"sending overlay event of type '{evt.OverlayEventType}', text: {text}");
+            _logger.LogDebug("sending overlay event of type '{EventType}', text: {EventText}",
+                evt.OverlayEventType, text);
             await _broadcastServer.Send(text, cancellationToken);
         }
     }
