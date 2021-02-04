@@ -15,8 +15,7 @@ namespace Core.Commands.Definitions
 
         public ModeratorCommands(IEnumerable<string> moderatorNames, IEnumerable<string> operatorNames, IChatModeChanger changer)
         {
-            _moderatorNamesLower = new List<IEnumerable<string>> { operatorNames, moderatorNames }
-                .SelectMany(x => x.Select(y => y.ToLowerInvariant()))
+            _moderatorNamesLower = operatorNames.Concat(moderatorNames).Select(s => s.ToLowerInvariant())
                 .Distinct().ToImmutableHashSet(); //add both mods and ops to mod list
             _changer = changer;
         }
