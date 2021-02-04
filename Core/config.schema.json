@@ -79,6 +79,35 @@
           "type": "boolean"
         }
       }
+    },
+    "DiscordLoggingConfig": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "WebhookId": {
+          "type": "integer"
+        },
+        "WebhookToken": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "MinLogLevel": {
+          "type": "string",
+          "enum": [
+            "Verbose",
+            "Debug",
+            "Information",
+            "Warning",
+            "Error",
+            "Fatal"
+          ]
+        }
+      }
     }
   },
   "type": "object",
@@ -122,6 +151,9 @@
     },
     "StartingTokens": {
       "type": "integer"
+    },
+    "DiscordLoggingConfig": {
+      "$ref": "#/definitions/DiscordLoggingConfig"
     }
   }
 }

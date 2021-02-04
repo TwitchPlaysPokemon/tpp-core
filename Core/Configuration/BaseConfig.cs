@@ -21,5 +21,8 @@ namespace Core.Configuration
         /* currency amounts for brand new users (new entries in the database) */
         public int StartingPokeyen { get; init; } = 100;
         public int StartingTokens { get; init; } = 0;
+
+        /* Required information to post log messages to discord. Logging to discord is disabled if null. */
+        public DiscordLoggingConfig? DiscordLoggingConfig { get; init; } = null;
     }
 }
