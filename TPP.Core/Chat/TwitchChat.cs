@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -10,7 +9,6 @@ using TPP.Core.Configuration;
 using TPP.Persistence.Models;
 using TPP.Persistence.Repos;
 using TwitchLib.Client;
-using TwitchLib.Client.Enums;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Extensions;
 using TwitchLib.Client.Models;
@@ -22,7 +20,6 @@ namespace TPP.Core.Chat
     public sealed class TwitchChat : IChat, IChatModeChanger
     {
         public event EventHandler<MessageEventArgs> IncomingMessage = null!;
-        public event EventHandler<string> IncomingUnhandledIrcLine = null!;
 
         /// Twitch Messaging Interface (TMI, the somewhat IRC-compatible protocol twitch uses) maximum message length.
         /// This limit is in characters, not bytes. See https://discuss.dev.twitch.tv/t/message-character-limit/7793/6
@@ -120,7 +117,6 @@ namespace TPP.Core.Chat
             _connected = true;
             _twitchClient.OnMessageReceived += MessageReceived;
             _twitchClient.OnWhisperReceived += WhisperReceived;
-            _twitchClient.OnSendReceiveData += AnythingElseReceived;
             _twitchClient.Connect();
             var tokenSource = new CancellationTokenSource();
             Task checkConnectivityWorker = CheckConnectivityWorker(tokenSource.Token);
@@ -172,39 +168,6 @@ namespace TPP.Core.Chat
         {
             _logger.LogDebug("<@{Username}: {Message}", e.WhisperMessage.Username, e.WhisperMessage.Message);
             await AnyMessageReceived(e.WhisperMessage, e.WhisperMessage.Message, MessageSource.Whisper);
-        }
-
-        private void AnythingElseReceived(object? sender, OnSendReceiveDataArgs e)
-        {
-            // This gives us _everything_, but we already explicitly handle messages and whispers.
-            // Therefore do a quick&dirty parse over the message to filter those out.
-            // Simplified example: "@tags :user@twitch.tv PRIVMSG #twitchplayspokemon :test"
-            if (e.Direction != SendReceiveDirection.Received) return;
-            string ircLine = e.Data;
-            if (ircLine.StartsWith("PING"))
-            {
-                IncomingUnhandledIrcLine?.Invoke(this, ircLine);
-                return;
-            }
-            if (ircLine.StartsWith("PONG")) return;
-            string[] splitTagsMetaMessage = Regex.Split(ircLine, @"(?:^| ):");
-            if (splitTagsMetaMessage.Length < 2)
-            {
-                _logger.LogWarning("received unparsable irc line (colon delimiter): {IrcLine}", ircLine);
-                return;
-            }
-            string[] splitHostCommandChannel = splitTagsMetaMessage[1].Split(' ', count: 3);
-            if (splitHostCommandChannel.Length < 3)
-            {
-                _logger.LogWarning("received unparsable irc line (space delimiter): {IrcLine}", ircLine);
-                return;
-            }
-            string command = splitHostCommandChannel[1];
-            if (command == "PRIVMSG" || command == "WHISPER")
-            {
-                return;
-            }
-            IncomingUnhandledIrcLine?.Invoke(this, ircLine);
         }
 
         private async Task AnyMessageReceived(
