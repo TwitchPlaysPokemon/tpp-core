@@ -32,7 +32,6 @@ namespace TPP.Core.Modes
             TwitchChat twitchChat = new TwitchChat(loggerFactory, SystemClock.Instance, baseConfig.Chat, repos.UserRepo);
             _chat = twitchChat;
             _chat.IncomingMessage += MessageReceived;
-            _chat.IncomingUnhandledIrcLine += UnhandledIrcLineReceived;
             _commandResponder = new CommandResponder(_chat);
 
             _commandProcessor = Setups.SetUpCommandProcessor(
@@ -46,12 +45,6 @@ namespace TPP.Core.Modes
 
         private async void MessageReceived(object? sender, MessageEventArgs e) =>
             await ProcessIncomingMessage(e.Message);
-
-        private async void UnhandledIrcLineReceived(object? sender, string unhandledIrcLine)
-        {
-            if (_forwardUnprocessedMessages)
-                await _messagequeueRepo.EnqueueMessage(unhandledIrcLine);
-        }
 
         private async Task ProcessIncomingMessage(Message message)
         {
@@ -104,7 +97,6 @@ namespace TPP.Core.Modes
         {
             _chat.Dispose();
             _chat.IncomingMessage -= MessageReceived;
-            _chat.IncomingUnhandledIrcLine -= UnhandledIrcLineReceived;
         }
     }
 }
