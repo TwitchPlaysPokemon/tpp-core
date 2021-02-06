@@ -60,7 +60,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             _argsParser.AddArgumentParser(new UserParser(_userRepoMock.Object));
             _argsParser.AddArgumentParser(new HexColorParser());
             _argsParser.AddArgumentParser(new StringParser());
-            _argsParser.AddArgumentParser(new IntParser());
+            _argsParser.AddArgumentParser(new NonnegativeIntParser());
         }
 
         [Test]
