@@ -13,14 +13,20 @@ namespace TPP.Core.Tests.Overlay
     [Category("IntegrationTest"), Timeout(10_000)]
     public class WebsocketBroadcastServerTest
     {
-        private const int Port = 53427;
+        private int _port = 53427;
 
-        private static WebsocketBroadcastServer CreateServer() =>
-            new(NullLogger<WebsocketBroadcastServer>.Instance, "localhost", Port);
+        private WebsocketBroadcastServer CreateServer() =>
+            new(NullLogger<WebsocketBroadcastServer>.Instance, "localhost", _port);
 
-        private static async Task<WebsocketMessageStreamClient> CreateClient()
+        [SetUp]
+        public void ChangePort()
         {
-            var url = new Uri($"ws://localhost:{Port}");
+            _port++;
+        }
+
+        private async Task<WebsocketMessageStreamClient> CreateClient()
+        {
+            var url = new Uri($"ws://localhost:{_port}");
             var wsClient = new WebsocketMessageStreamClient();
             await wsClient.Connect(url, CancellationToken.None);
             return wsClient;
