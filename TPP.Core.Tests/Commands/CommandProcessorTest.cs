@@ -46,13 +46,13 @@ namespace TPP.Core.Tests.Commands
             var commandProcessor = new CommandProcessor(loggerMock.Object, _commandLoggerMock.Object, new ArgsParser());
             commandProcessor.InstallCommand(new Command("slow", async context =>
             {
-                await Task.Delay(TimeSpan.FromMilliseconds(300));
+                await Task.Delay(TimeSpan.FromMilliseconds(1050));
                 return new CommandResult();
             }));
 
             await commandProcessor.Process("slow", _noArgs, MockMessage("bla"));
 
-            string warningTextRegex = @"^Command 'slow' took \d+ms to finish! " +
+            string warningTextRegex = @"^Command 'slow' took unusually long \(\d+ms\) to finish! " +
                                       $@"User: {Regex.Escape(_mockUser.ToString())}, Original text: bla$";
             loggerMock.VerifyLog(logger => logger.LogWarning(It.IsRegex(warningTextRegex)));
         }
