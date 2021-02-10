@@ -212,8 +212,6 @@ namespace TPP.Core.Commands.Definitions
             ["listbadgesnotforsale"] = "List all the badges you have that are not for sale.",
             ["listbadgesnotonsale"] = "List all the badges you have that are not for sale.",
             ["giftbadge"] = "Gift a badge you own to another user with no price. Arguments: <pokemon> <number of badges>(Optional) <username>",
-            ["pokedex"] = "Show how many different species of badge a user owns. Argument: <username> (optional)",
-            ["dex"] = "Show how many different species of badge a user owns. Argument: <username> (optional)",
             ["transmute"] = "Transform 3 or more badges into a (usually) rarer badge. Costs one token. Arguments: <several Pokemon>(at least 3) t1",
 
             // misc
