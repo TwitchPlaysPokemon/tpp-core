@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
+using TPP.Common;
 using TPP.Core.Configuration;
 using TPP.Persistence.Models;
 using TPP.Persistence.Repos;
@@ -180,7 +181,7 @@ namespace TPP.Core.Chat
                 id: twitchLibMessage.UserId,
                 twitchDisplayName: twitchLibMessage.DisplayName,
                 simpleName: twitchLibMessage.Username,
-                color: string.IsNullOrEmpty(colorHex) ? null : colorHex.TrimStart('#'),
+                color: string.IsNullOrEmpty(colorHex) ? null : HexColor.FromWithHash(colorHex),
                 fromMessage: true,
                 updatedAt: _clock.GetCurrentInstant()
             ));

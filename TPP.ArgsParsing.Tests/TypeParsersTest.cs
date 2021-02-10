@@ -83,12 +83,12 @@ namespace TPP.ArgsParsing.Tests
             var argsParser = new ArgsParser();
             argsParser.AddArgumentParser(new HexColorParser());
 
-            Assert.AreEqual("#ABCDEF", (string)await argsParser
-                .Parse<HexColor>(args: ImmutableList.Create("#abcdef")));
-            Assert.AreEqual("#ABCDEF", (string)await argsParser
-                .Parse<HexColor>(args: ImmutableList.Create("abcdef")));
-            Assert.AreEqual("#0F9D5A", (string)await argsParser
-                .Parse<HexColor>(args: ImmutableList.Create("#0f9D5a")));
+            Assert.AreEqual("#ABCDEF", (await argsParser
+                .Parse<HexColor>(args: ImmutableList.Create("#abcdef"))).StringWithHash);
+            Assert.AreEqual("#ABCDEF", (await argsParser
+                .Parse<HexColor>(args: ImmutableList.Create("abcdef"))).StringWithHash);
+            Assert.AreEqual("#0F9D5A", (await argsParser
+                .Parse<HexColor>(args: ImmutableList.Create("#0f9D5a"))).StringWithHash);
 
             var ex1 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
                 .Parse<HexColor>(ImmutableList.Create("blabla")));

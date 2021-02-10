@@ -80,8 +80,11 @@ namespace TPP.Persistence.MongoDB.Repos
             UpdateDefinition<User> update = Builders<User>.Update
                 .Set(u => u.TwitchDisplayName, userInfo.TwitchDisplayName)
                 .Set(u => u.SimpleName, userInfo.SimpleName)
-                .Set(u => u.Color, userInfo.Color)
                 .Set(u => u.LastActiveAt, userInfo.UpdatedAt);
+            if (userInfo.Color != null)
+            {
+                update = update.Set(u => u.Color, userInfo.Color.StringWithoutHash);
+            }
             if (userInfo.FromMessage)
             {
                 update = update.Set(u => u.LastMessageAt, userInfo.UpdatedAt);
@@ -104,7 +107,7 @@ namespace TPP.Persistence.MongoDB.Repos
                 name: userInfo.SimpleName,
                 twitchDisplayName: userInfo.TwitchDisplayName,
                 simpleName: userInfo.SimpleName,
-                color: userInfo.Color,
+                color: userInfo.Color?.StringWithoutHash,
                 firstActiveAt: userInfo.UpdatedAt,
                 lastActiveAt: userInfo.UpdatedAt,
                 lastMessageAt: userInfo.FromMessage ? userInfo.UpdatedAt : (Instant?)null,
