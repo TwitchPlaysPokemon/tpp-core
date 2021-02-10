@@ -22,19 +22,19 @@ namespace TPP.ArgsParsing.Tests
             var argsParser = new ArgsParser();
             argsParser.AddArgumentParser(new AnyOrderParser(argsParser));
             argsParser.AddArgumentParser(new StringParser());
-            argsParser.AddArgumentParser(new IntParser());
+            argsParser.AddArgumentParser(new SignedIntParser());
 
             var args1 = ImmutableList.Create("123", "foo");
             var args2 = ImmutableList.Create("foo", "123");
-            (int int1, string string1) = await argsParser.Parse<AnyOrder<int, string>>(args1);
-            (int int2, string string2) = await argsParser.Parse<AnyOrder<int, string>>(args2);
-            Assert.AreEqual(123, int1);
-            Assert.AreEqual(123, int2);
+            (SignedInt int1, string string1) = await argsParser.Parse<AnyOrder<SignedInt, string>>(args1);
+            (SignedInt int2, string string2) = await argsParser.Parse<AnyOrder<SignedInt, string>>(args2);
+            Assert.AreEqual(123, (int)int1);
+            Assert.AreEqual(123, (int)int2);
             Assert.AreEqual("foo", string1);
             Assert.AreEqual("foo", string2);
 
             var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<AnyOrder<int, string>>(ImmutableList.Create("foo", "bar")));
+                .Parse<AnyOrder<SignedInt, string>>(ImmutableList.Create("foo", "bar")));
             Assert.AreEqual(2, ex.Failures.Count);
             Assert.AreEqual("did not recognize 'foo' as a number, or did not recognize 'bar' as a number", ex.Message);
         }
@@ -45,12 +45,12 @@ namespace TPP.ArgsParsing.Tests
             var argsParser = new ArgsParser();
             argsParser.AddArgumentParser(new AnyOrderParser(argsParser));
             argsParser.AddArgumentParser(new OptionalParser(argsParser));
-            argsParser.AddArgumentParser(new IntParser());
+            argsParser.AddArgumentParser(new SignedIntParser());
             argsParser.AddArgumentParser(new StringParser());
 
             // this used to cause a stack overflow in the any order parser
-            (Optional<int> optionalInt, Optional<string> optionalString) = await argsParser
-                .Parse<AnyOrder<Optional<int>, Optional<string>>>(ImmutableList<string>.Empty);
+            (Optional<SignedInt> optionalInt, Optional<string> optionalString) = await argsParser
+                .Parse<AnyOrder<Optional<SignedInt>, Optional<string>>>(ImmutableList<string>.Empty);
             Assert.False(optionalInt.IsPresent);
             Assert.False(optionalString.IsPresent);
         }
@@ -109,25 +109,27 @@ namespace TPP.ArgsParsing.Tests
             var argsParser = new ArgsParser();
             argsParser.AddArgumentParser(new OneOfParser(argsParser));
             argsParser.AddArgumentParser(new StringParser());
-            argsParser.AddArgumentParser(new IntParser());
+            argsParser.AddArgumentParser(new SignedIntParser());
             argsParser.AddArgumentParser(new InstantParser());
 
-            OneOf<int, string> result1 = await argsParser.Parse<OneOf<int, string>>(ImmutableList.Create("123"));
-            OneOf<int, string> result2 = await argsParser.Parse<OneOf<int, string>>(ImmutableList.Create("foo"));
+            OneOf<SignedInt, string> result1 =
+                await argsParser.Parse<OneOf<SignedInt, string>>(ImmutableList.Create("123"));
+            OneOf<SignedInt, string> result2 =
+                await argsParser.Parse<OneOf<SignedInt, string>>(ImmutableList.Create("foo"));
             Assert.IsTrue(result1.Item1.IsPresent);
             Assert.IsFalse(result1.Item2.IsPresent);
-            Assert.AreEqual(123, result1.Item1.Value);
+            Assert.AreEqual(123, (int)result1.Item1.Value);
             Assert.IsFalse(result2.Item1.IsPresent);
             Assert.IsTrue(result2.Item2.IsPresent);
             Assert.AreEqual("foo", result2.Item2.Value);
 
             var exUnrecognized = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<OneOf<int, Instant>>(ImmutableList.Create("foo")));
+                .Parse<OneOf<SignedInt, Instant>>(ImmutableList.Create("foo")));
             Assert.AreEqual(2, exUnrecognized.Failures.Count);
             const string errorText = "did not recognize 'foo' as a number, or did not recognize 'foo' as a UTC-instant";
             Assert.AreEqual(errorText, exUnrecognized.Message);
             var exTooManyArgs = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<OneOf<int, int>>(ImmutableList.Create("123", "234")));
+                .Parse<OneOf<SignedInt, SignedInt>>(ImmutableList.Create("123", "234")));
             Assert.AreEqual("too many arguments", exTooManyArgs.Message);
         }
 
@@ -137,14 +139,14 @@ namespace TPP.ArgsParsing.Tests
             var argsParser = new ArgsParser();
             argsParser.AddArgumentParser(new OptionalParser(argsParser));
             argsParser.AddArgumentParser(new StringParser());
-            argsParser.AddArgumentParser(new IntParser());
+            argsParser.AddArgumentParser(new SignedIntParser());
 
-            var result1 = await argsParser.Parse<Optional<int>>(args: ImmutableList.Create("123"));
-            var result2 = await argsParser.Parse<Optional<int>>(args: ImmutableList<string>.Empty);
-            (Optional<int> result3, string _) = await argsParser
-                .Parse<Optional<int>, string>(args: ImmutableList.Create("foo"));
+            var result1 = await argsParser.Parse<Optional<SignedInt>>(args: ImmutableList.Create("123"));
+            var result2 = await argsParser.Parse<Optional<SignedInt>>(args: ImmutableList<string>.Empty);
+            (Optional<SignedInt> result3, string _) = await argsParser
+                .Parse<Optional<SignedInt>, string>(args: ImmutableList.Create("foo"));
             Assert.IsTrue(result1.IsPresent);
-            Assert.AreEqual(123, result1.Value);
+            Assert.AreEqual(123, (int)result1.Value);
             Assert.IsFalse(result2.IsPresent);
             Assert.IsFalse(result3.IsPresent);
         }
