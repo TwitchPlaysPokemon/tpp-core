@@ -59,9 +59,9 @@ namespace TPP.ArgsParsing.TypeParsers
         }
     }
 
-    public class NonnegativeIntParser : IntParser<NonnegativeInt>
+    public class NonNegativeIntParser : IntParser<NonNegativeInt>
     {
-        public NonnegativeIntParser() : base(0, int.MaxValue)
+        public NonNegativeIntParser() : base(0, int.MaxValue)
         {
         }
     }

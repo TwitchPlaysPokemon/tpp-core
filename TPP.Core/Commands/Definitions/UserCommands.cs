@@ -184,7 +184,7 @@ namespace TPP.Core.Commands.Definitions
         public async Task<CommandResult> SelectEmblem(CommandContext context)
         {
             User user = context.Message.User;
-            int emblem = await context.ParseArgs<NonnegativeInt>();
+            int emblem = await context.ParseArgs<NonNegativeInt>();
             if (!user.ParticipationEmblems.Contains(emblem))
             {
                 return new CommandResult { Response = "you don't own that participation badge" };

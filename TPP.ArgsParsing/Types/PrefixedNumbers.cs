@@ -21,7 +21,7 @@ namespace TPP.ArgsParsing.Types
     public class SignedInt : ImplicitNumber // may be negative
     {
     }
-    public class NonnegativeInt : ImplicitNumber // is always >= 0
+    public class NonNegativeInt : ImplicitNumber // is always >= 0
     {
     }
     public class PositiveInt : ImplicitNumber // is always >= 1
