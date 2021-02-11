@@ -56,6 +56,7 @@ namespace TPP.Common
             [47] = "Sirius",
             [48] = "Rising Ruby",
             [49] = "Vega",
+            [50] = "Chatty Crystal",
         };
 
         public static string FormatEmblem(int emblemNum)
