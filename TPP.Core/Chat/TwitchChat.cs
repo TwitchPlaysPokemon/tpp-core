@@ -72,6 +72,8 @@ namespace TPP.Core.Chat
                 whisperCommandIdentifier: '\0');
 
             _twitchClient.OnConnected += Connected;
+            _twitchClient.OnMessageReceived += MessageReceived;
+            _twitchClient.OnWhisperReceived += WhisperReceived;
         }
 
         private void Connected(object? sender, OnConnectedArgs e) => _twitchClient.JoinChannel(_ircChannel);
@@ -119,8 +121,6 @@ namespace TPP.Core.Chat
                 throw new InvalidOperationException("Can only ever connect once per chat instance.");
             }
             _connected = true;
-            _twitchClient.OnMessageReceived += MessageReceived;
-            _twitchClient.OnWhisperReceived += WhisperReceived;
             _twitchClient.Connect();
             var tokenSource = new CancellationTokenSource();
             Task checkConnectivityWorker = CheckConnectivityWorker(tokenSource.Token);
