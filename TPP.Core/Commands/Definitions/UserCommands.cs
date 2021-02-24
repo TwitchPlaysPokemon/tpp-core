@@ -105,8 +105,7 @@ namespace TPP.Core.Commands.Definitions
                 return new CommandResult
                 { Response = $"glow color is still locked, use '{UnlockGlowCommandName}' to unlock (costs T1)" };
             }
-            string color = await context.ParseArgs<HexColor>();
-            color = color.TrimStart('#');
+            string color = (await context.ParseArgs<HexColor>()).StringWithoutHash;
             await _userRepo.SetGlowColor(user, color);
             return new CommandResult { Response = $"glow color set to #{color}" };
         }
