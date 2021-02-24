@@ -70,7 +70,13 @@ namespace TPP.Core.Chat
                 // disable TwitchLib's command features, we do that ourselves
                 chatCommandIdentifier: '\0',
                 whisperCommandIdentifier: '\0');
+
+            _twitchClient.OnConnected += Connected;
+            _twitchClient.OnMessageReceived += MessageReceived;
+            _twitchClient.OnWhisperReceived += WhisperReceived;
         }
+
+        private void Connected(object? sender, OnConnectedArgs e) => _twitchClient.JoinChannel(_ircChannel);
 
         public async Task SendMessage(string message)
         {
@@ -115,8 +121,6 @@ namespace TPP.Core.Chat
                 throw new InvalidOperationException("Can only ever connect once per chat instance.");
             }
             _connected = true;
-            _twitchClient.OnMessageReceived += MessageReceived;
-            _twitchClient.OnWhisperReceived += WhisperReceived;
             _twitchClient.Connect();
             var tokenSource = new CancellationTokenSource();
             Task checkConnectivityWorker = CheckConnectivityWorker(tokenSource.Token);
@@ -195,6 +199,7 @@ namespace TPP.Core.Chat
                 _connectivityWorkerCleanup?.Invoke();
                 _twitchClient.Disconnect();
             }
+            _twitchClient.OnConnected -= Connected;
             _twitchClient.OnMessageReceived -= MessageReceived;
             _twitchClient.OnWhisperReceived -= WhisperReceived;
             _logger.LogDebug("twitch chat is now fully shut down");
