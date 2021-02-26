@@ -18,7 +18,7 @@ using TwitchLib.Communication.Models;
 
 namespace TPP.Core.Chat
 {
-    public sealed class TwitchChat : IChat, IChatModeChanger
+    public sealed class TwitchChat : IChat
     {
         public event EventHandler<MessageEventArgs> IncomingMessage = null!;
 
