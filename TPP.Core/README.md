@@ -15,9 +15,13 @@ It will tell you what file you need and how to create it.
 ```
 dotnet run -- testconfig
 ```
-You need to customize a few configurations:
-- `Chat.Username` and `Chat.Password` contain the credentials of some Twitch account that will be the chat bot.
-   You can obtain an oauth token from [here](https://twitchapps.com/tmi/)
+For local testing, you need to remove all but the `console` entry from the `Chat.Connections` config.
+You will be able to use the console as a simulated chat.
+
+If you want to connect to an actual Twitch chat you need to customize a few configurations:
+- In the `twitch` entry of the `Chat.Connections` list, `Username` and `Password` contain the
+  credentials of some Twitch account that will be the chat bot.
+  You can obtain an oauth token from [here](https://twitchapps.com/tmi/).
 - Add your name to `Chat.OperatorNames` to be able to do stuff requiring elevated privileges,
   for example issuing the `!stop` command.
 - No chat messages are actually being sent by default.
@@ -26,6 +30,15 @@ You need to customize a few configurations:
   You may also add your own name to `Chat.SuppressionOverrides` to be able to receive whispers.
 
 All unchanged entries can be deleted. Missing configurations revert to their default value.
+A minimal configuration may look like this:
+```json
+{
+  "$schema": "./config.schema.json",
+  "Chat": {
+    "Connections": [{"Type": "console"}]
+  }
+}
+```
 
 Ensure that you have a properly configured MongoDB server running.
 See the [TPP.Persistence.MongoDB](../TPP.Persistence.MongoDB) project for instructions.
