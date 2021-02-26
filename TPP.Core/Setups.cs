@@ -52,7 +52,8 @@ namespace TPP.Core
             Databases databases,
             StopToken stopToken,
             ChatConfig chatConfig,
-            TwitchChat chat)
+            IMessageSender messageSender,
+            IChatModeChanger chatModeChanger)
         {
             var commandProcessor = new CommandProcessor(
                 loggerFactory.CreateLogger<CommandProcessor>(),
@@ -67,9 +68,9 @@ namespace TPP.Core
                 new BadgeCommands(databases.BadgeRepo, databases.UserRepo).Commands,
                 new OperatorCommands(
                     stopToken, chatConfig.OperatorNames, databases.PokeyenBank, databases.TokensBank,
-                    messageSender: chat
+                    messageSender: messageSender
                 ).Commands,
-                new ModeratorCommands(chatConfig.ModeratorNames, chatConfig.OperatorNames, chat).Commands,
+                new ModeratorCommands(chatConfig.ModeratorNames, chatConfig.OperatorNames, chatModeChanger).Commands,
                 new MiscCommands().Commands,
             }.SelectMany(cmds => cmds).Concat(new[]
             {

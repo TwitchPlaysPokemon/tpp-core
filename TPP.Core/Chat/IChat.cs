@@ -24,6 +24,8 @@ namespace TPP.Core.Chat
 
     public interface IChat : IMessageSender, IChatModeChanger, IDisposable
     {
+        string Name { get; }
+
         event EventHandler<MessageEventArgs> IncomingMessage;
 
         /// Establishes the connection.

@@ -15,11 +15,13 @@ using TwitchLib.Client.Extensions;
 using TwitchLib.Client.Models;
 using TwitchLib.Communication.Clients;
 using TwitchLib.Communication.Models;
+using static TPP.Core.Configuration.ConnectionConfig.Twitch;
 
 namespace TPP.Core.Chat
 {
     public sealed class TwitchChat : IChat
     {
+        public string Name { get; }
         public event EventHandler<MessageEventArgs> IncomingMessage = null!;
 
         /// Twitch Messaging Interface (TMI, the somewhat IRC-compatible protocol twitch uses) maximum message length.
@@ -36,7 +38,7 @@ namespace TPP.Core.Chat
         private readonly ILogger<TwitchChat> _logger;
         private readonly IClock _clock;
         private readonly string _ircChannel;
-        private readonly ImmutableHashSet<ChatConfig.SuppressionType> _suppressions;
+        private readonly ImmutableHashSet<SuppressionType> _suppressions;
         private readonly ImmutableHashSet<string> _suppressionOverrides;
         private readonly IUserRepo _userRepo;
         private readonly TwitchClient _twitchClient;
@@ -45,11 +47,13 @@ namespace TPP.Core.Chat
         private Action? _connectivityWorkerCleanup;
 
         public TwitchChat(
+            string name,
             ILoggerFactory loggerFactory,
             IClock clock,
-            ChatConfig chatConfig,
+            ConnectionConfig.Twitch chatConfig,
             IUserRepo userRepo)
         {
+            Name = name;
             _logger = loggerFactory.CreateLogger<TwitchChat>();
             _clock = clock;
             _ircChannel = chatConfig.Channel;
@@ -81,7 +85,7 @@ namespace TPP.Core.Chat
 
         public async Task SendMessage(string message)
         {
-            if (_suppressions.Contains(ChatConfig.SuppressionType.Message) &&
+            if (_suppressions.Contains(SuppressionType.Message) &&
                 !_suppressionOverrides.Contains(_ircChannel))
             {
                 _logger.LogDebug("(suppressed) >#{Channel}: {Message}", _ircChannel, message);
@@ -99,7 +103,7 @@ namespace TPP.Core.Chat
 
         public async Task SendWhisper(User target, string message)
         {
-            if (_suppressions.Contains(ChatConfig.SuppressionType.Whisper) &&
+            if (_suppressions.Contains(SuppressionType.Whisper) &&
                 !_suppressionOverrides.Contains(target.SimpleName))
             {
                 _logger.LogDebug("(suppressed) >@{Username}: {Message}", target.SimpleName, message);
@@ -208,7 +212,7 @@ namespace TPP.Core.Chat
 
         public async Task EnableEmoteOnly()
         {
-            if (_suppressions.Contains(ChatConfig.SuppressionType.Command) &&
+            if (_suppressions.Contains(SuppressionType.Command) &&
                 !_suppressionOverrides.Contains(_ircChannel))
             {
                 _logger.LogDebug($"(suppressed) enabling emote only mode in #{_ircChannel}");
@@ -221,7 +225,7 @@ namespace TPP.Core.Chat
 
         public async Task DisableEmoteOnly()
         {
-            if (_suppressions.Contains(ChatConfig.SuppressionType.Command) &&
+            if (_suppressions.Contains(SuppressionType.Command) &&
                 !_suppressionOverrides.Contains(_ircChannel))
             {
                 _logger.LogDebug($"(suppressed) disabling emote only mode in #{_ircChannel}");
