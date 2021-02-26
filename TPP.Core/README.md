@@ -1,7 +1,7 @@
 ﻿This is the core executable project that ties all components together.
 
 You can set yourself up and run it to connect to twitch chat
-and execute a bunch of basic commands, like `!reddit` or `!stop`.
+and execute a bunch of basic commands, like `!reddit` or `!stopnew`.
 More elaborate features are still under active development.
 
 ## run the project
@@ -23,7 +23,7 @@ If you want to connect to an actual Twitch chat you need to customize a few conf
   credentials of some Twitch account that will be the chat bot.
   You can obtain an oauth token from [here](https://twitchapps.com/tmi/).
 - Add your name to `Chat.OperatorNames` to be able to do stuff requiring elevated privileges,
-  for example issuing the `!stop` command.
+  for example issuing the `!stopnew` command.
 - No chat messages are actually being sent by default.
   To change this, set `Chat.Channel` to some unpopulated twitch channel, preferably the bot's
   own channel, and add the channel name to `Chat.SuppressionOverrides`.
