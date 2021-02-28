@@ -24,10 +24,10 @@ namespace TPP.Core.Modes
         private readonly IMessagelogRepo _messagelogRepo;
         private readonly IClock _clock;
 
-        public ModeBase(ILoggerFactory loggerFactory, BaseConfig baseConfig, StopToken stopToken)
+        public ModeBase(
+            ILoggerFactory loggerFactory, Setups.Databases repos, BaseConfig baseConfig, StopToken stopToken)
         {
             PokedexData pokedexData = PokedexData.Load();
-            Setups.Databases repos = Setups.SetUpRepositories(baseConfig);
             ArgsParser argsParser = Setups.SetUpArgsParser(repos.UserRepo, pokedexData);
 
             var chats = new Dictionary<string, IChat>();

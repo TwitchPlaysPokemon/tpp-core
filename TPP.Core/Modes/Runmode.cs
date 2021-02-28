@@ -18,7 +18,8 @@ namespace TPP.Core.Modes
             _runmodeConfig = runmodeConfig;
             _logger = loggerFactory.CreateLogger<Runmode>();
             _stopToken = new StopToken();
-            _modeBase = new ModeBase(loggerFactory, baseConfig, _stopToken);
+            Setups.Databases repos = Setups.SetUpRepositories(baseConfig);
+            _modeBase = new ModeBase(loggerFactory, repos, baseConfig, _stopToken);
         }
 
         public async Task Run()
