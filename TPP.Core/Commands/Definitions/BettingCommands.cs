@@ -9,16 +9,16 @@ namespace TPP.Core.Commands.Definitions
 {
     public class BettingCommands : ICommandCollection
     {
-        private readonly Func<IBettingShop<User>?> _bettingShopProvider;
+        private readonly Func<IBettingPeriod<User>?> _bettingPeriodProvider;
 
         /// <summary>
         /// Command collection for all betting related commands.
         /// </summary>
-        /// <param name="bettingShopProvider">Provides the current betting shop,
-        /// which may be null if betting isn't betting is not available at that moment.</param>
-        public BettingCommands(Func<IBettingShop<User>?> bettingShopProvider)
+        /// <param name="bettingPeriodProvider">Provides the current betting period,
+        /// which may be null if there currently is no betting period running.</param>
+        public BettingCommands(Func<IBettingPeriod<User>?> bettingPeriodProvider)
         {
-            _bettingShopProvider = bettingShopProvider;
+            _bettingPeriodProvider = bettingPeriodProvider;
         }
 
         public IEnumerable<Command> Commands => new[]
@@ -33,9 +33,11 @@ namespace TPP.Core.Commands.Definitions
         {
             if (context.Message.MessageSource != MessageSource.Chat)
                 return new CommandResult { Response = "You may only bet through chat" };
-            IBettingShop<User>? bettingShop = _bettingShopProvider();
-            if (bettingShop == null)
+            IBettingPeriod<User>? bettingPeriod = _bettingPeriodProvider();
+            if (bettingPeriod == null)
                 return new CommandResult { Response = "betting not available right now" };
+            if (!bettingPeriod.IsBettingOpen)
+                return new CommandResult { Response = "betting is already closed" };
             (var amountOptions, Side side) = await context.ParseArgs<OneOf<PositiveInt, Pokeyen, Percentage>, Side>();
             int amount;
             if (amountOptions.Item1.IsPresent)
@@ -45,7 +47,7 @@ namespace TPP.Core.Commands.Definitions
             else
                 amount = (int)Math.Ceiling(amountOptions.Item3.Value.AsRatio * context.Message.User.Pokeyen);
 
-            PlaceBetFailure? failure = await bettingShop.PlaceBet(context.Message.User, side, amount);
+            PlaceBetFailure? failure = await bettingPeriod.BettingShop.PlaceBet(context.Message.User, side, amount);
             if (failure != null)
             {
                 return new CommandResult

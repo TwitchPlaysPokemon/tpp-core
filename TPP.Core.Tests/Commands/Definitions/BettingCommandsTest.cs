@@ -52,11 +52,24 @@ namespace TPP.Core.Tests.Commands.Definitions
             }
 
             [Test]
+            public async Task deny_if_betting_closed()
+            {
+                Mock<IBettingPeriod<User>> bettingPeriodMock = new();
+                bettingPeriodMock.Setup(b => b.IsBettingOpen).Returns(false);
+                var commands = new BettingCommands(() => bettingPeriodMock.Object);
+
+                CommandResult result = await commands.Bet(new CommandContext(MockMessage(MockUser("me")),
+                    ImmutableList.Create("!bet 1 blue"), ArgsParser));
+
+                Assert.AreEqual("betting is already closed", result.Response);
+            }
+
+            [Test]
             public async Task only_allow_from_chat()
             {
                 User user = MockUser("me");
-                var bettingShopMock = new Mock<IBettingShop<User>>();
-                var commands = new BettingCommands(() => bettingShopMock.Object);
+                Mock<IBettingPeriod<User>> bettingPeriodMock = new();
+                var commands = new BettingCommands(() => bettingPeriodMock.Object);
 
                 CommandResult result = await commands.Bet(new CommandContext(
                     MockMessage(user, source: MessageSource.Whisper),
@@ -69,10 +82,13 @@ namespace TPP.Core.Tests.Commands.Definitions
             public async Task propagate_failure()
             {
                 User user = MockUser("me");
-                var bettingShopMock = new Mock<IBettingShop<User>>();
+                Mock<IBettingShop<User>> bettingShopMock = new();
+                Mock<IBettingPeriod<User>> bettingPeriodMock = new();
+                bettingPeriodMock.Setup(b => b.IsBettingOpen).Returns(true);
+                bettingPeriodMock.Setup(b => b.BettingShop).Returns(bettingShopMock.Object);
                 bettingShopMock.Setup(b => b.PlaceBet(user, Side.Blue, 100))
                     .Returns(Task.FromResult((PlaceBetFailure?)new PlaceBetFailure.InsufficientFunds(50)));
-                var commands = new BettingCommands(() => bettingShopMock.Object);
+                var commands = new BettingCommands(() => bettingPeriodMock.Object);
 
                 CommandResult result = await commands.Bet(new CommandContext(MockMessage(user),
                     ImmutableList.Create("100", "blue"), ArgsParser));
@@ -84,10 +100,13 @@ namespace TPP.Core.Tests.Commands.Definitions
             public async Task announce_in_chat()
             {
                 User user = MockUser("me");
-                var bettingShopMock = new Mock<IBettingShop<User>>();
+                Mock<IBettingPeriod<User>> bettingPeriodMock = new();
+                Mock<IBettingShop<User>> bettingShopMock = new();
+                bettingPeriodMock.Setup(b => b.IsBettingOpen).Returns(true);
+                bettingPeriodMock.Setup(b => b.BettingShop).Returns(bettingShopMock.Object);
                 bettingShopMock.Setup(b => b.PlaceBet(user, Side.Blue, 100))
                     .Returns(Task.FromResult((PlaceBetFailure?)null));
-                var commands = new BettingCommands(() => bettingShopMock.Object);
+                var commands = new BettingCommands(() => bettingPeriodMock.Object);
 
                 CommandResult result = await commands.Bet(new CommandContext(MockMessage(user),
                     ImmutableList.Create("100", "blue"), ArgsParser));
