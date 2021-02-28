@@ -220,7 +220,6 @@ namespace TPP.Core.Commands.Definitions
             ["pinball"] = "Play pinball, or use a subcommand. Details: https://pastebin.com/W4Vrwvmx",
             ["pinballodds"] = "Display the payout rate of pinball in the past timeframe (default 90 days), with a specified score on a specified table. Arguments: <time_to_go_back>(optional), <score>(optional), <table>",
             ["tutorial"] = "Start the tutorial, if it has not already triggered.",
-            ["bet"] = "Chat only: bet on PBR using Pokéyen. Arguments: <team> <amount or percent>",
             ["match"] = "Bid your own matches like this: !match <modes> <teams> t1. Modes and teams are optional.  Omit \"t1\" for a dry run.  For more info, type \"!match modes\" or \"!match teams\".",
 
             // @formatter:on

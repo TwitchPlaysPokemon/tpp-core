@@ -38,6 +38,8 @@ namespace TPP.Core
             argsParser.AddArgumentParser(new SignedPokeyenParser());
             argsParser.AddArgumentParser(new SignedTokensParser());
             argsParser.AddArgumentParser(new PkmnSpeciesParser(pokedexData.KnownSpecies, PokedexData.NormalizeName));
+            argsParser.AddArgumentParser(new PercentageParser());
+            argsParser.AddArgumentParser(new SideParser());
 
             argsParser.AddArgumentParser(new AnyOrderParser(argsParser));
             argsParser.AddArgumentParser(new OneOfParser(argsParser));
