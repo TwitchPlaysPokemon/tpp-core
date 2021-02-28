@@ -16,7 +16,8 @@ namespace TPP.Core.Modes
         {
             _logger = loggerFactory.CreateLogger<DualcoreMode>();
             _stopToken = new StopToken();
-            _modeBase = new ModeBase(loggerFactory, baseConfig, _stopToken);
+            Setups.Databases repos = Setups.SetUpRepositories(baseConfig);
+            _modeBase = new ModeBase(loggerFactory, repos, baseConfig, _stopToken);
         }
 
         public async Task Run()

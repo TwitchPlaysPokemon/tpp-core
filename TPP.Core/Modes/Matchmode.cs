@@ -9,6 +9,8 @@ using TPP.Core.Configuration;
 using TPP.Core.Overlay;
 using TPP.Core.Overlay.Events;
 using TPP.Match;
+using TPP.Persistence.Models;
+using TPP.Persistence.Repos;
 
 namespace TPP.Core.Modes
 {
@@ -22,6 +24,7 @@ namespace TPP.Core.Modes
         private readonly ModeBase _modeBase;
         private readonly WebsocketBroadcastServer _broadcastServer;
         private readonly OverlayConnection _overlayConnection;
+        private readonly IBank<User> _pokeyenBank;
 
         public Matchmode(ILoggerFactory loggerFactory, BaseConfig baseConfig, MatchmodeConfig matchmodeConfig)
         {
@@ -29,7 +32,9 @@ namespace TPP.Core.Modes
             _loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger<Matchmode>();
             _stopToken = new StopToken();
-            _modeBase = new ModeBase(loggerFactory, baseConfig, _stopToken);
+            Setups.Databases repos = Setups.SetUpRepositories(baseConfig);
+            _pokeyenBank = repos.PokeyenBank;
+            _modeBase = new ModeBase(loggerFactory, repos, baseConfig, _stopToken);
 
             _broadcastServer = new WebsocketBroadcastServer(
                 loggerFactory.CreateLogger<WebsocketBroadcastServer>(), "localhost", 5001);
