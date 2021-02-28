@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
+using TPP.Core.Commands;
 using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
 using TPP.Core.Overlay;
@@ -26,6 +28,8 @@ namespace TPP.Core.Modes
         private readonly OverlayConnection _overlayConnection;
         private readonly IBank<User> _pokeyenBank;
 
+        private IBettingPeriod<User>? _bettingPeriod = null;
+
         public Matchmode(ILoggerFactory loggerFactory, BaseConfig baseConfig, MatchmodeConfig matchmodeConfig)
         {
             _matchmodeConfig = matchmodeConfig;
@@ -35,6 +39,10 @@ namespace TPP.Core.Modes
             Setups.Databases repos = Setups.SetUpRepositories(baseConfig);
             _pokeyenBank = repos.PokeyenBank;
             _modeBase = new ModeBase(loggerFactory, repos, baseConfig, _stopToken);
+
+            var bettingCommands = new BettingCommands(() => _bettingPeriod);
+            foreach (Command command in bettingCommands.Commands)
+                _modeBase.InstallAdditionalCommand(command);
 
             _broadcastServer = new WebsocketBroadcastServer(
                 loggerFactory.CreateLogger<WebsocketBroadcastServer>(), "localhost", 5001);
@@ -72,6 +80,21 @@ namespace TPP.Core.Modes
                 Red = ImmutableList.Create(MatchTesting.TestVenonatForOverlay),
             };
             await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
+
+            const int matchId = -1; // TODO
+            IBettingShop<User> bettingShop = new DefaultBettingShop<User>(
+                async user => await _pokeyenBank.GetAvailableMoney(user));
+            bettingShop.BetPlaced += async (_, args) =>
+                await _overlayConnection.Send(new MatchPokeyenBetUpdateEvent
+                {
+                    MatchId = matchId,
+                    DefaultAction = "",
+                    NewBet = new Bet { Amount = args.Amount, Team = args.Side, BetBonus = 0 },
+                    NewBetUser = args.User,
+                    Odds = bettingShop.GetOdds()
+                }, cancellationToken);
+            _bettingPeriod = new BettingPeriod<User>(_pokeyenBank, bettingShop);
+            _bettingPeriod.Start();
 
             IMatchCycle match = new CoinflipMatchCycle(_loggerFactory.CreateLogger<CoinflipMatchCycle>());
             Task setupTask = match.SetUp(new MatchInfo(teams.Blue, teams.Red), cancellationToken);
@@ -117,11 +140,24 @@ namespace TPP.Core.Modes
 
             await Task.Delay(_matchmodeConfig.WarningDuration.ToTimeSpan(), cancellationToken);
             await setupTask;
+            _bettingPeriod.Close();
             Task<MatchResult> performTask = match.Perform(cancellationToken);
             await _overlayConnection.Send(new MatchPerformingEvent { Teams = teams }, cancellationToken);
 
             MatchResult result = await performTask;
             await _overlayConnection.Send(new MatchOverEvent { MatchResult = result }, cancellationToken);
+
+            // TODO log matches
+            Dictionary<User, long> changes = await _bettingPeriod.Resolve(matchId, result, cancellationToken);
+            await _overlayConnection.Send(
+                new MatchResultsEvent
+                {
+                    PokeyenResults = new PokeyenResults
+                    {
+                        Transactions = changes.ToImmutableDictionary(kvp => kvp.Key.Id,
+                            kvp => new Transaction { Change = kvp.Value, NewBalance = kvp.Key.Pokeyen })
+                    }
+                }, cancellationToken);
 
             await Task.Delay(_matchmodeConfig.ResultDuration.ToTimeSpan(), cancellationToken);
             await _overlayConnection.Send(new ResultsFinishedEvent(), cancellationToken);
