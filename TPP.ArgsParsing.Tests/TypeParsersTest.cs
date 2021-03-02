@@ -56,6 +56,35 @@ namespace TPP.ArgsParsing.Tests
         }
 
         [Test]
+        public async Task TestAnyOrderSpareArgs()
+        {
+            var argsParser = new ArgsParser();
+            argsParser.AddArgumentParser(new AnyOrderParser(argsParser));
+            argsParser.AddArgumentParser(new SignedIntParser());
+            argsParser.AddArgumentParser(new StringParser());
+
+            ((SignedInt num1, string str), SignedInt num2) = await argsParser
+                .Parse<AnyOrder<SignedInt, string>, SignedInt>(ImmutableList.Create("1", "a", "2"));
+            Assert.AreEqual(1, (int)num1);
+            Assert.AreEqual("a", str);
+            Assert.AreEqual(2, (int)num2);
+        }
+
+        [Test]
+        public async Task TestAnyOrderTypeConsumingMultipleArgs()
+        {
+            var argsParser = new ArgsParser();
+            argsParser.AddArgumentParser(new AnyOrderParser(argsParser));
+            argsParser.AddArgumentParser(new SignedIntParser());
+            argsParser.AddArgumentParser(new InstantParser());
+
+            (SignedInt num, Instant instant) = await argsParser
+                .Parse<AnyOrder<SignedInt, Instant>>(ImmutableList.Create("1", "2000-01-01", "12:00:00Z"));
+            Assert.AreEqual(1, (int)num);
+            Assert.AreEqual(Instant.FromUtc(2000, 1, 1, 12, 0), instant);
+        }
+
+        [Test]
         public async Task TestInstantParser()
         {
             var argsParser = new ArgsParser();
