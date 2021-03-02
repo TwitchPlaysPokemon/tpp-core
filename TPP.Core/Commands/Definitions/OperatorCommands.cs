@@ -110,7 +110,9 @@ namespace TPP.Core.Commands.Definitions
             if (isSelf)
             {
                 return new CommandResult
-                    { Response = $"Your {currencyName} balance was adjusted by {delta:+#;-#}. Reason: {reason}" };
+                {
+                    Response = $"Your {currencyName} balance was adjusted by {delta:+#;-#}. Reason: {reason}"
+                };
             }
             else
             {
