@@ -14,5 +14,9 @@ namespace TPP.Persistence.Repos
         public Task<User> SetGlowColor(User user, string? glowColor);
         public Task<User> SetGlowColorUnlocked(User user, bool unlocked);
         public Task<User> SetDisplayName(User user, string displayName);
+
+        /// Unselects the specified species as the presented badge if it is the currently equipped species.
+        /// Used for resetting the equipped badge after a user lost all of that species' badges.
+        public Task<User> UnselectBadgeIfSpeciesSelected(string userId, PkmnSpecies species);
     }
 }

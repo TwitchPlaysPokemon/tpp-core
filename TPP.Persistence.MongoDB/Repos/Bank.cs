@@ -126,7 +126,8 @@ namespace TPP.Persistence.MongoDB.Repos
                 change: transaction.Change,
                 createdAt: _clock.GetCurrentInstant(),
                 type: transaction.Type,
-                additionalData: transaction.AdditionalData
+                // don't trust the input not to be modified, make a copy first:
+                additionalData: new Dictionary<string, object?>(transaction.AdditionalData)
             );
             await _transactionLogCollection.InsertOneAsync(session, transactionLog, cancellationToken: token);
             Debug.Assert(transactionLog.Id.Length > 0, "The MongoDB driver injected a generated ID");
