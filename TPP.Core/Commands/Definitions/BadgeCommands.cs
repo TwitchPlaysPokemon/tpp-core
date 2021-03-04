@@ -131,7 +131,7 @@ namespace TPP.Core.Commands.Definitions
             {
                 Response = isSelf
                     ? $"You have collected {numUniqueSpecies} distinct Pokémon badge(s)"
-                    : $"{user} has collected {numUniqueSpecies} distinct Pokémon badge(s)"
+                    : $"{user.Name} has collected {numUniqueSpecies} distinct Pokémon badge(s)"
             };
         }
     }
