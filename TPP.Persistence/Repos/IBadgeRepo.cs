@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using NodaTime;
 using TPP.Common;
 using TPP.Persistence.Models;
 
@@ -34,9 +35,16 @@ namespace TPP.Persistence.Repos
         }
     }
 
+    public interface IBadgeStatsRepo
+    {
+        public Task RenewBadgeStats(IImmutableSet<PkmnSpecies>? onlyTheseSpecies = null);
+        public Task<ImmutableSortedDictionary<PkmnSpecies, BadgeStat>> GetBadgeStats();
+    }
+
     public interface IBadgeRepo
     {
-        public Task<Badge> AddBadge(string? userId, PkmnSpecies species, Badge.BadgeSource source);
+        public Task<Badge> AddBadge(
+            string? userId, PkmnSpecies species, Badge.BadgeSource source, Instant? createdAt = null);
         public Task<List<Badge>> FindByUser(string? userId);
         public Task<List<Badge>> FindByUserAndSpecies(string? userId, PkmnSpecies species);
         public Task<long> CountByUserAndSpecies(string? userId, PkmnSpecies species);

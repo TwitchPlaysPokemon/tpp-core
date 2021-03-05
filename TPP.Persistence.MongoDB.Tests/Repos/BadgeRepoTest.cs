@@ -265,5 +265,128 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
                 Assert.AreEqual(badge1, firstBadge);
             }
         }
+
+        [TestFixture]
+        private class BadgeStats : MongoTestBase
+        {
+            [Test]
+            public async Task ignore_lapsed_for_rarity_counts()
+            {
+                /*
+                 *                UPDATE   NOW
+                 * -20     -10      0       10
+                 *  |-------|-------|-------|
+                 *      |-----transition----|
+                 */
+                Mock<IClock> clockMock = new();
+                Duration transition = Duration.FromSeconds(25);
+                Instant tBeforeUpdateLapsed = Instant.FromUnixTimeSeconds(-20);
+                Instant tBeforeUpdateConsidered = Instant.FromUnixTimeSeconds(-10);
+                Instant tUpdate = Instant.FromUnixTimeSeconds(0);
+                Instant tNow = Instant.FromUnixTimeSeconds(10);
+                clockMock.Setup(c => c.GetCurrentInstant()).Returns(tNow);
+
+                BadgeRepo badgeRepo = new(CreateTemporaryDatabase(), Mock.Of<IMongoBadgeLogRepo>(),
+                    clockMock.Object, lastRarityUpdate: tUpdate, rarityCalculationTransition: transition);
+
+                PkmnSpecies species = PkmnSpecies.OfId("1-testlapsed");
+                await badgeRepo.AddBadge("user", species, Badge.BadgeSource.Pinball, tBeforeUpdateLapsed);
+                await badgeRepo.AddBadge("user", species, Badge.BadgeSource.Pinball, tBeforeUpdateConsidered);
+                await badgeRepo.AddBadge("user", species, Badge.BadgeSource.Pinball, tUpdate);
+                await badgeRepo.AddBadge("user", species, Badge.BadgeSource.Pinball, tNow);
+
+                await badgeRepo.RenewBadgeStats(onlyTheseSpecies: ImmutableHashSet.Create(species));
+                ImmutableSortedDictionary<PkmnSpecies, BadgeStat> stats = await badgeRepo.GetBadgeStats();
+                BadgeStat stat = stats[species];
+                Assert.AreEqual((4, 4, 3, 3),
+                    (stat.Count, stat.CountGenerated, stat.RarityCount, stat.RarityCountGenerated));
+            }
+
+            [Test]
+            public async Task ignore_destroyed_for_regular_count()
+            {
+                BadgeRepo badgeRepo = new(CreateTemporaryDatabase(), Mock.Of<IMongoBadgeLogRepo>(),
+                    Mock.Of<IClock>());
+
+                PkmnSpecies species = PkmnSpecies.OfId("1-testdestroyed");
+                await badgeRepo.AddBadge("user", species, Badge.BadgeSource.Pinball);
+                // second badge has no owner
+                await badgeRepo.AddBadge(null, species, Badge.BadgeSource.Pinball);
+
+                await badgeRepo.RenewBadgeStats(onlyTheseSpecies: ImmutableHashSet.Create(species));
+                ImmutableSortedDictionary<PkmnSpecies, BadgeStat> stats = await badgeRepo.GetBadgeStats();
+                BadgeStat stat = stats[species];
+                Assert.AreEqual((1, 2, 1, 2),
+                    (stat.Count, stat.CountGenerated, stat.RarityCount, stat.RarityCountGenerated));
+            }
+
+            [Test]
+            public async Task ignore_unnatural_sources_for_generated_count()
+            {
+                BadgeRepo badgeRepo = new BadgeRepo(CreateTemporaryDatabase(), Mock.Of<IMongoBadgeLogRepo>(),
+                    Mock.Of<IClock>());
+
+                PkmnSpecies species = PkmnSpecies.OfId("1-testunnatural");
+                await badgeRepo.AddBadge("user", species, Badge.BadgeSource.Pinball);
+                // second badge has source 'transmutation', which is not a natural source
+                await badgeRepo.AddBadge("user", species, Badge.BadgeSource.Transmutation);
+
+                await badgeRepo.RenewBadgeStats(onlyTheseSpecies: ImmutableHashSet.Create(species));
+                ImmutableSortedDictionary<PkmnSpecies, BadgeStat> stats = await badgeRepo.GetBadgeStats();
+                BadgeStat stat = stats[species];
+                Assert.AreEqual((2, 1, 2, 1),
+                    (stat.Count, stat.CountGenerated, stat.RarityCount, stat.RarityCountGenerated));
+            }
+
+            [Test]
+            public async Task incorporate_source_and_existence_in_rarity()
+            {
+                BadgeRepo badgeRepo = new(CreateTemporaryDatabase(), Mock.Of<IMongoBadgeLogRepo>(),
+                    Mock.Of<IClock>());
+
+                PkmnSpecies species1 = PkmnSpecies.OfId("1-testrarity");
+                PkmnSpecies species2 = PkmnSpecies.OfId("2-testrarity");
+                PkmnSpecies species3 = PkmnSpecies.OfId("3-testrarity");
+
+                await badgeRepo.AddBadge("user", species1, Badge.BadgeSource.Pinball);
+                await badgeRepo.AddBadge("user", species1, Badge.BadgeSource.Transmutation);
+
+                await badgeRepo.AddBadge("user", species2, Badge.BadgeSource.Pinball);
+                await badgeRepo.AddBadge("user", species2, Badge.BadgeSource.Transmutation);
+                await badgeRepo.AddBadge("user", species2, Badge.BadgeSource.Transmutation);
+                await badgeRepo.AddBadge(null, species2, Badge.BadgeSource.Transmutation);
+
+                await badgeRepo.AddBadge(null, species3, Badge.BadgeSource.Pinball);
+                await badgeRepo.AddBadge("user", species3, Badge.BadgeSource.Pinball);
+                await badgeRepo.AddBadge("user", species3, Badge.BadgeSource.Transmutation);
+
+                await badgeRepo.RenewBadgeStats();
+                ImmutableSortedDictionary<PkmnSpecies, BadgeStat> stats = await badgeRepo.GetBadgeStats();
+                Assert.AreEqual(3, stats.Count);
+
+                {
+                    // species 1
+                    BadgeStat stat = stats[species1];
+                    Assert.AreEqual((2, 1), (stat.RarityCount, stat.RarityCountGenerated));
+                    // 1 out of all 4 badges ever generated (4x pinball), weighted at 80%,
+                    // plus 2 out of all 7 currently existing badges (3x pinball, 4x transmutation), weighted at 20%.
+                    Assert.AreEqual(0.8d * (1 / 4d) + 0.2d * (2 / 7d), stat.Rarity);
+                }
+                {
+                    // species 2
+                    BadgeStat stat = stats[species2];
+                    Assert.AreEqual((3, 1), (stat.RarityCount, stat.RarityCountGenerated));
+                    // almost same as first species: has 3/7 instead of 2/7 existing badges
+                    Assert.AreEqual(0.8d * (1 / 4d) + 0.2d * (3 / 7d), stat.Rarity);
+                }
+                {
+                    // species 3
+                    BadgeStat stat = stats[species3];
+                    Assert.AreEqual((2, 2), (stat.RarityCount, stat.RarityCountGenerated));
+                    // almost same as first species: has 2/4 instead of 1/4 generated badges
+                    Assert.AreEqual(0.8d * (2 / 4d) + 0.2d * (2 / 7d), stat.Rarity);
+                }
+            }
+        }
     }
 }
