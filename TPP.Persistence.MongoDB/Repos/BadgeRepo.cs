@@ -36,8 +36,10 @@ namespace TPP.Persistence.MongoDB.Repos
                 cm.MapProperty(b => b.Species).SetElementName("species");
                 cm.MapProperty(b => b.Source).SetElementName("source");
                 cm.MapProperty(b => b.CreatedAt).SetElementName("created_at");
-                cm.MapProperty(b => b.SellPrice).SetElementName("sell_price");
-                cm.MapProperty(b => b.SellingSince).SetElementName("selling_since");
+                cm.MapProperty(b => b.SellPrice).SetElementName("sell_price")
+                    .SetIgnoreIfNull(true);
+                cm.MapProperty(b => b.SellingSince).SetElementName("selling_since")
+                    .SetIgnoreIfNull(true);
             });
         }
 
