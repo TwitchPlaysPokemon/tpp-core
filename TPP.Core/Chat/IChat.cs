@@ -16,8 +16,16 @@ namespace TPP.Core.Chat
         Task SendWhisper(User target, string message);
     }
 
-    public interface IChat : IMessageSender, IDisposable
+    public interface IChatModeChanger
     {
+        public Task EnableEmoteOnly();
+        public Task DisableEmoteOnly();
+    }
+
+    public interface IChat : IMessageSender, IChatModeChanger, IDisposable
+    {
+        string Name { get; }
+
         event EventHandler<MessageEventArgs> IncomingMessage;
 
         /// Establishes the connection.

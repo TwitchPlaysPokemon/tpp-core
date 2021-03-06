@@ -7,24 +7,6 @@
       ],
       "additionalProperties": false,
       "properties": {
-        "Channel": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "Username": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "Password": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
         "OperatorNames": {
           "type": [
             "array",
@@ -49,34 +31,37 @@
             ]
           }
         },
-        "Suppressions": {
+        "Connections": {
           "type": [
             "array",
             "null"
           ],
           "items": {
-            "type": "string",
-            "enum": [
-              "Whisper",
-              "Message",
-              "Command"
-            ]
-          }
-        },
-        "SuppressionOverrides": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "$ref": "#/definitions/ConnectionConfig"
           }
         },
         "ForwardUnprocessedMessages": {
           "type": "boolean"
+        }
+      }
+    },
+    "ConnectionConfig": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "Type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "Name": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },

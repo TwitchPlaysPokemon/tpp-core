@@ -4,7 +4,7 @@ namespace TPP.Core
 {
     public interface IMode
     {
-        /// Run the mode until it shuts down naturally, e.g. through an operator issuing !stop
+        /// Run the mode until it shuts down naturally, e.g. through an operator issuing !stopnew
         Task Run();
 
         /// Immediately shut down the mode.
