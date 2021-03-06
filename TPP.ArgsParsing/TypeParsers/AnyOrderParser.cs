@@ -53,12 +53,11 @@ namespace TPP.ArgsParsing.TypeParsers
             IImmutableList<string> args,
             Type[] genericTypes)
         {
-            List<string> argList = args.Take(genericTypes.Length).ToList();
             var failures = new List<Failure>();
-            foreach (var argsPermutation in Permutations(argList))
+            foreach (IList<int> permutationIndexes in Permutations(Enumerable.Range(0, genericTypes.Length).ToList()))
             {
                 ArgsParseResult<List<object>> parseResult = await _argsParser
-                    .ParseRaw(argsPermutation.ToImmutableList(), genericTypes);
+                    .ParseRaw(args, permutationIndexes.Select(i => genericTypes[i]));
                 if (parseResult.SuccessResult == null)
                 {
                     Debug.Assert(parseResult.Failures.Any());
@@ -81,9 +80,15 @@ namespace TPP.ArgsParsing.TypeParsers
                 {
                     throw new InvalidOperationException($"{type} needs a constructor with {items.Count} parameters.");
                 }
+                // If our permutation is [2,0,1] and our result is [c,a,b], we need to restore the
+                // arguments' original order [a,b,c] before passing them to the AnyOrder constructor.
+                object?[] itemsUnshuffled = permutationIndexes.Zip(items)
+                    .OrderBy(tpl => tpl.First)
+                    .Select(tpl => tpl.Second)
+                    .ToArray();
                 return ArgsParseResult<AnyOrder>.Success(
                     parseResult.Failures,
-                    (AnyOrder)constructor.Invoke(items.ToArray()),
+                    (AnyOrder)constructor.Invoke(itemsUnshuffled),
                     parseResult.SuccessResult.Value.RemainingArgs);
             }
             Debug.Assert(failures.Any());
