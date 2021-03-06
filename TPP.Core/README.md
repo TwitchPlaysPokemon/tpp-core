@@ -18,16 +18,17 @@ dotnet run -- testconfig
 For local testing, you need to remove all but the `console` entry from the `Chat.Connections` config.
 You will be able to use the console as a simulated chat.
 
-If you want to connect to an actual Twitch chat you need to customize a few configurations:
-- In the `twitch` entry of the `Chat.Connections` list, `Username` and `Password` contain the
+If you want to connect to an actual Twitch chat you need to keep the `twitch` entry of the
+`Chat.Connections` list and change a few configurations:
+- In the `twitch` entry, `Username` and `Password` contain the
   credentials of some Twitch account that will be the chat bot.
   You can obtain an oauth token from [here](https://twitchapps.com/tmi/).
+- No chat messages are actually being sent by default.
+  To change this, in the `twitch` entry set `Channel` to some unpopulated twitch channel,
+  preferably the bot's own channel, and add the channel name to `SuppressionOverrides`.
+  You may also add your own name to `SuppressionOverrides` to be able to receive whispers.
 - Add your name to `Chat.OperatorNames` to be able to do stuff requiring elevated privileges,
   for example issuing the `!stopnew` command.
-- No chat messages are actually being sent by default.
-  To change this, set `Chat.Channel` to some unpopulated twitch channel, preferably the bot's
-  own channel, and add the channel name to `Chat.SuppressionOverrides`.
-  You may also add your own name to `Chat.SuppressionOverrides` to be able to receive whispers.
 
 All unchanged entries can be deleted. Missing configurations revert to their default value.
 A minimal configuration may look like this:
