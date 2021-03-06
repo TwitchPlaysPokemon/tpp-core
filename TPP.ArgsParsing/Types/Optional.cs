@@ -40,6 +40,11 @@ namespace TPP.ArgsParsing.Types
             return IsPresent ? Value : fallback;
         }
 
+        public Optional<T2> Map<T2>(Func<T, T2> mapFunc) =>
+            IsPresent
+                ? new Optional<T2>(true, mapFunc(Value))
+                : new Optional<T2>(false, default!);
+
         public override string ToString()
             => IsPresent ? Value?.ToString() ?? "<null>" : "<none>";
     }

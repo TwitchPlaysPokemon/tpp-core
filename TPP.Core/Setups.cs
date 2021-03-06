@@ -65,10 +65,10 @@ namespace TPP.Core
                 new StaticResponseCommands().Commands,
                 new UserCommands(
                     databases.UserRepo, pokeyenBank: databases.PokeyenBank, tokenBank: databases.TokensBank).Commands,
-                new BadgeCommands(databases.BadgeRepo, databases.UserRepo).Commands,
+                new BadgeCommands(databases.BadgeRepo, databases.UserRepo, messageSender).Commands,
                 new OperatorCommands(
                     stopToken, chatConfig.OperatorNames, databases.PokeyenBank, databases.TokensBank,
-                    messageSender: messageSender
+                    messageSender: messageSender, databases.BadgeRepo
                 ).Commands,
                 new ModeratorCommands(chatConfig.ModeratorNames, chatConfig.OperatorNames, chatModeChanger).Commands,
                 new MiscCommands().Commands,
@@ -95,6 +95,7 @@ namespace TPP.Core
 
         public static Databases SetUpRepositories(BaseConfig baseConfig)
         {
+            IClock clock = SystemClock.Instance;
             CustomSerializers.RegisterAll();
             IMongoClient mongoClient = new MongoClient(baseConfig.MongoDbConnectionUri);
             IMongoDatabase mongoDatabase = mongoClient.GetDatabase(baseConfig.MongoDbDatabaseName);
@@ -103,22 +104,24 @@ namespace TPP.Core
                 database: mongoDatabase,
                 startingPokeyen: baseConfig.StartingPokeyen,
                 startingTokens: baseConfig.StartingTokens);
-            IBadgeRepo badgeRepo = new BadgeRepo(
-                database: mongoDatabase);
+            IMongoBadgeLogRepo badgeLogRepo = new BadgeLogRepo(mongoDatabase);
+            IBadgeRepo badgeRepo = new BadgeRepo(mongoDatabase, badgeLogRepo, clock);
+            badgeRepo.UserLostBadgeSpecies += async (_, args) =>
+                await userRepo.UnselectBadgeIfSpeciesSelected(args.UserId, args.Species);
             IBank<User> pokeyenBank = new Bank<User>(
                 database: mongoDatabase,
                 currencyCollectionName: UserRepo.CollectionName,
                 transactionLogCollectionName: "pokeyentransactions",
                 u => u.Pokeyen,
                 u => u.Id,
-                clock: SystemClock.Instance);
+                clock: clock);
             IBank<User> tokenBank = new Bank<User>(
                 database: mongoDatabase,
                 currencyCollectionName: UserRepo.CollectionName,
                 transactionLogCollectionName: "tokentransactions",
                 u => u.Tokens,
                 u => u.Id,
-                clock: SystemClock.Instance);
+                clock: clock);
             tokenBank.AddReservedMoneyChecker(
                 new PersistedReservedMoneyCheckers(mongoDatabase).AllDatabaseReservedTokens);
             return new Databases
@@ -127,7 +130,7 @@ namespace TPP.Core
                 BadgeRepo: badgeRepo,
                 PokeyenBank: pokeyenBank,
                 TokensBank: tokenBank,
-                CommandLogger: new CommandLogger(mongoDatabase, SystemClock.Instance),
+                CommandLogger: new CommandLogger(mongoDatabase, clock),
                 MessagequeueRepo: new MessagequeueRepo(mongoDatabase),
                 MessagelogRepo: new MessagelogRepo(mongoDatabaseMessagelog)
             );

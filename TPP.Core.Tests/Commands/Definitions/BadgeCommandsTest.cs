@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using Moq;
 using NodaTime;
@@ -8,6 +9,7 @@ using NUnit.Framework;
 using TPP.ArgsParsing;
 using TPP.ArgsParsing.TypeParsers;
 using TPP.Common;
+using TPP.Core.Chat;
 using TPP.Core.Commands;
 using TPP.Core.Commands.Definitions;
 using TPP.Persistence.Models;
@@ -29,6 +31,7 @@ namespace TPP.Core.Tests.Commands.Definitions
 
         private Mock<IBadgeRepo> _badgeRepoMock = null!;
         private Mock<IUserRepo> _userRepoMock = null!;
+        private Mock<IMessageSender> _messageSender = null!;
         private ArgsParser _argsParser = null!;
 
         private BadgeCommands _badgeCommands = null!;
@@ -38,10 +41,13 @@ namespace TPP.Core.Tests.Commands.Definitions
         {
             _badgeRepoMock = new Mock<IBadgeRepo>();
             _userRepoMock = new Mock<IUserRepo>();
-            _badgeCommands = new BadgeCommands(_badgeRepoMock.Object, _userRepoMock.Object);
+            _messageSender = new Mock<IMessageSender>();
+            _badgeCommands = new BadgeCommands(_badgeRepoMock.Object, _userRepoMock.Object, _messageSender.Object);
             _argsParser = new ArgsParser();
             _argsParser.AddArgumentParser(new OptionalParser(_argsParser));
             _argsParser.AddArgumentParser(new UserParser(_userRepoMock.Object));
+            _argsParser.AddArgumentParser(new AnyOrderParser(_argsParser));
+            _argsParser.AddArgumentParser(new PositiveIntParser());
         }
 
         [Test]
@@ -217,6 +223,57 @@ namespace TPP.Core.Tests.Commands.Definitions
                 ImmutableList<string>.Empty, _argsParser));
 
             Assert.AreEqual("You have collected 3 distinct Pokémon badge(s)", result.Response);
+        }
+
+        [Test]
+        public async Task TestGiftBadgeSuccessful()
+        {
+            PkmnSpecies species = PkmnSpecies.RegisterName("1", "species");
+            _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
+            User user = MockUser("MockUser");
+            User recipient = MockUser("Recipient");
+            _userRepoMock.Setup(repo => repo.FindBySimpleName("recipient")).Returns(Task.FromResult((User?)recipient));
+            Badge badge1 = new("badge1", user.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue);
+            Badge badge2 = new("badge2", user.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue);
+            Badge badge3 = new("badge3", user.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue);
+            _badgeRepoMock.Setup(repo => repo.FindByUserAndSpecies(user.Id, species))
+                .Returns(Task.FromResult(new List<Badge> { badge1, badge2, badge3, }));
+
+            CommandResult result = await _badgeCommands.GiftBadge(new CommandContext(MockMessage(user),
+                ImmutableList.Create("recipient", "species", "2"), _argsParser));
+
+            Assert.AreEqual("has gifted 2 #001 species badges to Recipient!", result.Response);
+            Assert.AreEqual(ResponseTarget.Chat, result.ResponseTarget);
+            IDictionary<string, object?> data = new Dictionary<string, object?> { ["gifter"] = user.Id };
+            _badgeRepoMock.Verify(repo => repo.TransferBadges(
+                It.Is<IImmutableList<Badge>>(list => list.SequenceEqual(ImmutableList.Create(badge1, badge2))),
+                recipient.Id,
+                "gift",
+                It.Is<IDictionary<string, object?>>(dict => dict.DictionaryEqual(data))));
+        }
+
+        [Test]
+        public async Task TestGiftBadgeNotOwned()
+        {
+            PkmnSpecies species = PkmnSpecies.RegisterName("1", "species");
+            _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
+            User user = MockUser("MockUser");
+            User recipient = MockUser("Recipient");
+            _userRepoMock.Setup(repo => repo.FindBySimpleName("recipient")).Returns(Task.FromResult((User?)recipient));
+            _badgeRepoMock.Setup(repo => repo.FindByUserAndSpecies(user.Id, species))
+                .Returns(Task.FromResult(new List<Badge>()));
+
+            CommandResult result = await _badgeCommands.GiftBadge(new CommandContext(MockMessage(user),
+                ImmutableList.Create("recipient", "species"), _argsParser));
+
+            Assert.AreEqual("You tried to gift 1 #001 species badges, but you only have 0.", result.Response);
+            Assert.AreEqual(ResponseTarget.Source, result.ResponseTarget);
+            _badgeRepoMock.Verify(repo => repo.TransferBadges(
+                    It.IsAny<IImmutableList<Badge>>(),
+                    It.IsAny<string?>(),
+                    It.IsAny<string>(),
+                    It.IsAny<IDictionary<string, object?>>()),
+                Times.Never);
         }
     }
 }

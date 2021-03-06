@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using TPP.ArgsParsing.Types;
+using TPP.Common;
 using TPP.Core.Chat;
 using TPP.Persistence.Models;
 using TPP.Persistence.Repos;
@@ -21,19 +22,22 @@ namespace TPP.Core.Commands.Definitions
         private readonly IBank<User> _pokeyenBank;
         private readonly IBank<User> _tokensBank;
         private readonly IMessageSender _messageSender;
+        private readonly IBadgeRepo _badgeRepo;
 
         public OperatorCommands(
             StopToken stopToken,
             IEnumerable<string> operatorNames,
             IBank<User> pokeyenBank,
             IBank<User> tokensBank,
-            IMessageSender messageSender)
+            IMessageSender messageSender,
+            IBadgeRepo badgeRepo)
         {
             _stopToken = stopToken;
             _operatorNamesLower = operatorNames.Select(s => s.ToLowerInvariant()).ToImmutableHashSet();
             _pokeyenBank = pokeyenBank;
             _tokensBank = tokensBank;
             _messageSender = messageSender;
+            _badgeRepo = badgeRepo;
         }
 
         public IEnumerable<Command> Commands => new[]
@@ -54,6 +58,11 @@ namespace TPP.Core.Commands.Definitions
                 Aliases = new[] { "adjusttokens" },
                 Description = "Operators only: Add or remove tokens from an user. " +
                               "Arguments: t<amount>(can be negative) <user> <reason>"
+            },
+            new Command("transferbadge", TransferBadge)
+            {
+                Description = "Operators only: Transfer badges from one user to another user. " +
+                              "Arguments: <gifter> <recipient> <pokemon> <number of badges>(Optional) <reason>"
             },
         }.Select(cmd => cmd.WithCondition(
             canExecute: ctx => IsOperator(ctx.Message.User),
@@ -101,7 +110,9 @@ namespace TPP.Core.Commands.Definitions
             if (isSelf)
             {
                 return new CommandResult
-                { Response = $"Your {currencyName} balance was adjusted by {delta:+#;-#}. Reason: {reason}" };
+                {
+                    Response = $"Your {currencyName} balance was adjusted by {delta:+#;-#}. Reason: {reason}"
+                };
             }
             else
             {
@@ -112,8 +123,51 @@ namespace TPP.Core.Commands.Definitions
                 await _messageSender.SendWhisper(user,
                     $"{context.Message.User.Name} adjusted your {currencyName} balance by {delta:+#;-#}. Reason: {reason}");
                 return new CommandResult
-                { Response = $"{user.Name}'s {currencyName} balance was adjusted by {delta:+#;-#}. Reason: {reason}" };
+                {
+                    Response = $"{user.Name}'s {currencyName} balance was adjusted by {delta:+#;-#}. Reason: {reason}"
+                };
             }
+        }
+
+        public async Task<CommandResult> TransferBadge(CommandContext context)
+        {
+            (User gifter, (User recipient, PkmnSpecies species, Optional<PositiveInt> amountOpt), string reason) =
+                await context.ParseArgs<User, AnyOrder<User, PkmnSpecies, Optional<PositiveInt>>, string>();
+            int amount = amountOpt.Map(i => i.Number).OrElse(1);
+
+            if (gifter == context.Message.User)
+                return new CommandResult { Response = "Use the regular gift command if you're the gifter" };
+
+            if (recipient == gifter)
+                return new CommandResult { Response = "Gifter cannot be equal to recipient" };
+
+            List<Badge> badges = await _badgeRepo.FindByUserAndSpecies(gifter.Id, species);
+            if (badges.Count < amount)
+                return new CommandResult
+                {
+                    Response =
+                        $"You tried to transfer {amount} {species} badges, but the gifter only has {badges.Count}."
+                };
+
+            IImmutableList<Badge> badgesToGift = badges.Take(amount).ToImmutableList();
+            var data = new Dictionary<string, object?>
+            {
+                ["gifter"] = gifter.Id,
+                ["responsible_user"] = context.Message.User.Id,
+                ["reason"] = reason
+            };
+            await _badgeRepo.TransferBadges(badgesToGift, recipient.Id, BadgeLogType.TransferGiftRemote, data);
+
+            await _messageSender.SendWhisper(recipient, amount > 1
+                ? $"{context.Message.User.Name} transferred {amount} {species} badges from {gifter.Name} to you. Reason: {reason}"
+                : $"{context.Message.User.Name} transferred a {species} badge from {gifter.Name} to you. Reason: {reason}");
+            return new CommandResult
+            {
+                Response = amount > 1
+                    ? $"transferred {amount} {species} badges from {gifter.Name} to {recipient.Name}. Reason: {reason}"
+                    : $"transferred a {species} badge from {gifter.Name} to {recipient.Name}. Reason: {reason}",
+                ResponseTarget = ResponseTarget.Chat
+            };
         }
     }
 }

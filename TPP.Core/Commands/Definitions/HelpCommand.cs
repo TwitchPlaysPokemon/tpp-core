@@ -211,7 +211,6 @@ namespace TPP.Core.Commands.Definitions
             ["cancelsellbadge"] = "Cancel trying to sell a species of badges. Argument: <Pokemon>",
             ["listbadgesnotforsale"] = "List all the badges you have that are not for sale.",
             ["listbadgesnotonsale"] = "List all the badges you have that are not for sale.",
-            ["giftbadge"] = "Gift a badge you own to another user with no price. Arguments: <pokemon> <number of badges>(Optional) <username>",
             ["transmute"] = "Transform 3 or more badges into a (usually) rarer badge. Costs one token. Arguments: <several Pokemon>(at least 3) t1",
 
             // misc

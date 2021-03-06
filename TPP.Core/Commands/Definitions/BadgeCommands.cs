@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using TPP.ArgsParsing.Types;
 using TPP.Common;
+using TPP.Core.Chat;
 using TPP.Persistence.Models;
 using TPP.Persistence.Repos;
 
@@ -37,16 +38,28 @@ namespace TPP.Core.Commands.Definitions
                 Aliases = new[] { "dex" },
                 Description = "Show how many different species of badge a user owns. Argument: <username> (optional)"
             },
+
+            new Command("giftbadge", GiftBadge)
+            {
+                Description =
+                    "Gift a badge you own to another user with no price. Arguments: <pokemon> <number of badges>(Optional) <username>"
+            },
         };
 
         private readonly IBadgeRepo _badgeRepo;
         private readonly IUserRepo _userRepo;
+        private readonly IMessageSender _messageSender;
         private readonly HashSet<PkmnSpecies>? _whitelist;
 
-        public BadgeCommands(IBadgeRepo badgeRepo, IUserRepo userRepo, HashSet<PkmnSpecies>? whitelist = null)
+        public BadgeCommands(
+            IBadgeRepo badgeRepo,
+            IUserRepo userRepo,
+            IMessageSender messageSender,
+            HashSet<PkmnSpecies>? whitelist = null)
         {
             _badgeRepo = badgeRepo;
             _userRepo = userRepo;
+            _messageSender = messageSender;
             _whitelist = whitelist;
         }
 
@@ -132,6 +145,39 @@ namespace TPP.Core.Commands.Definitions
                 Response = isSelf
                     ? $"You have collected {numUniqueSpecies} distinct Pokémon badge(s)"
                     : $"{user.Name} has collected {numUniqueSpecies} distinct Pokémon badge(s)"
+            };
+        }
+
+        public async Task<CommandResult> GiftBadge(CommandContext context)
+        {
+            User gifter = context.Message.User;
+            (User recipient, PkmnSpecies species, Optional<PositiveInt> amountOpt) =
+                await context.ParseArgs<AnyOrder<User, PkmnSpecies, Optional<PositiveInt>>>();
+            int amount = amountOpt.Map(i => i.Number).OrElse(1);
+
+            if (recipient == gifter)
+                return new CommandResult { Response = "You cannot gift to yourself" };
+
+            List<Badge> badges = await _badgeRepo.FindByUserAndSpecies(gifter.Id, species);
+            if (badges.Count < amount)
+                return new CommandResult
+                {
+                    Response = $"You tried to gift {amount} {species} badges, but you only have {badges.Count}."
+                };
+
+            IImmutableList<Badge> badgesToGift = badges.Take(amount).ToImmutableList();
+            var data = new Dictionary<string, object?> { ["gifter"] = gifter.Id };
+            await _badgeRepo.TransferBadges(badgesToGift, recipient.Id, BadgeLogType.TransferGift, data);
+
+            await _messageSender.SendWhisper(recipient, amount > 1
+                ? $"You have been gifted {amount} {species} badges from {gifter.Name}!"
+                : $"You have been gifted a {species} badge from {gifter.Name}!");
+            return new CommandResult
+            {
+                Response = amount > 1
+                    ? $"has gifted {amount} {species} badges to {recipient.Name}!"
+                    : $"has gifted a {species} badge to {recipient.Name}!",
+                ResponseTarget = ResponseTarget.Chat
             };
         }
     }

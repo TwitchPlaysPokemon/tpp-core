@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using Moq;
 using NodaTime;
@@ -33,6 +34,7 @@ namespace TPP.Core.Tests.Commands.Definitions
         private Mock<IBank<User>> _pokeyenBankMock = null!;
         private Mock<IBank<User>> _tokensBankMock = null!;
         private Mock<IMessageSender> _messageSenderMock = null!;
+        private Mock<IBadgeRepo> _badgeRepoMock = null!;
 
         [SetUp]
         public void SetUp()
@@ -45,9 +47,11 @@ namespace TPP.Core.Tests.Commands.Definitions
             _argsParser.AddArgumentParser(new AnyOrderParser(_argsParser));
             _argsParser.AddArgumentParser(new OptionalParser(_argsParser));
             _argsParser.AddArgumentParser(new UserParser(_userRepoMock.Object));
+            _argsParser.AddArgumentParser(new PositiveIntParser());
             _pokeyenBankMock = new Mock<IBank<User>>();
             _tokensBankMock = new Mock<IBank<User>>();
             _messageSenderMock = new Mock<IMessageSender>();
+            _badgeRepoMock = new Mock<IBadgeRepo>();
         }
 
         private static bool AreTransactionsEqual(Transaction<User> tx1, Transaction<User> tx2)
@@ -65,7 +69,7 @@ namespace TPP.Core.Tests.Commands.Definitions
                 new StopToken(),
                 operatorNames: new[] { user.SimpleName },
                 _tokensBankMock.Object, _tokensBankMock.Object,
-                _messageSenderMock.Object);
+                _messageSenderMock.Object, _badgeRepoMock.Object);
 
             {
                 CommandResult result = await operatorCommands.AdjustTokens(new CommandContext(MockMessage(user),
@@ -102,7 +106,7 @@ namespace TPP.Core.Tests.Commands.Definitions
                 new StopToken(),
                 operatorNames: new[] { userSelf.SimpleName },
                 _tokensBankMock.Object, _tokensBankMock.Object,
-                _messageSenderMock.Object);
+                _messageSenderMock.Object, _badgeRepoMock.Object);
 
             {
                 CommandResult result = await operatorCommands.AdjustTokens(new CommandContext(MockMessage(userSelf),
@@ -135,6 +139,77 @@ namespace TPP.Core.Tests.Commands.Definitions
             _tokensBankMock.VerifyNoOtherCalls();
             _pokeyenBankMock.VerifyNoOtherCalls();
             _messageSenderMock.VerifyNoOtherCalls();
+        }
+
+        [Test]
+        public async Task TestTransferBadgeSuccessful()
+        {
+            PkmnSpecies species = PkmnSpecies.RegisterName("1", "species");
+            _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
+            User userSelf = MockUser("MockUserSelf");
+            User gifter = MockUser("Gifter");
+            User recipient = MockUser("Recipient");
+            OperatorCommands operatorCommands = new(
+                new StopToken(),
+                operatorNames: new[] { userSelf.SimpleName },
+                _tokensBankMock.Object, _tokensBankMock.Object,
+                _messageSenderMock.Object, _badgeRepoMock.Object);
+            _userRepoMock.Setup(repo => repo.FindBySimpleName("gifter")).Returns(Task.FromResult((User?)gifter));
+            _userRepoMock.Setup(repo => repo.FindBySimpleName("recipient")).Returns(Task.FromResult((User?)recipient));
+            Badge badge1 = new("badge1", gifter.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue);
+            Badge badge2 = new("badge2", gifter.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue);
+            Badge badge3 = new("badge3", gifter.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue);
+            _badgeRepoMock.Setup(repo => repo.FindByUserAndSpecies(gifter.Id, species))
+                .Returns(Task.FromResult(new List<Badge> { badge1, badge2, badge3, }));
+
+            CommandResult result = await operatorCommands.TransferBadge(new CommandContext(MockMessage(userSelf),
+                ImmutableList.Create("gifter", "recipient", "species", "2", "reason"), _argsParser));
+
+            Assert.AreEqual("transferred 2 #001 species badges from Gifter to Recipient. Reason: reason",
+                result.Response);
+            Assert.AreEqual(ResponseTarget.Chat, result.ResponseTarget);
+            IDictionary<string, object?> data = new Dictionary<string, object?>
+            {
+                ["gifter"] = gifter.Id,
+                ["responsible_user"] = userSelf.Id,
+                ["reason"] = "reason",
+            };
+            _badgeRepoMock.Verify(repo => repo.TransferBadges(
+                It.Is<IImmutableList<Badge>>(list => list.SequenceEqual(ImmutableList.Create(badge1, badge2))),
+                recipient.Id,
+                "gift_remote",
+                It.Is<IDictionary<string, object?>>(dict => dict.DictionaryEqual(data))));
+        }
+
+        [Test]
+        public async Task TestGiftBadgeNotOwned()
+        {
+            PkmnSpecies species = PkmnSpecies.RegisterName("1", "species");
+            _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
+            User userSelf = MockUser("MockUserSelf");
+            User gifter = MockUser("Gifter");
+            User recipient = MockUser("Recipient");
+            OperatorCommands operatorCommands = new(
+                new StopToken(),
+                operatorNames: new[] { userSelf.SimpleName },
+                _tokensBankMock.Object, _tokensBankMock.Object,
+                _messageSenderMock.Object, _badgeRepoMock.Object);
+            _userRepoMock.Setup(repo => repo.FindBySimpleName("gifter")).Returns(Task.FromResult((User?)gifter));
+            _userRepoMock.Setup(repo => repo.FindBySimpleName("recipient")).Returns(Task.FromResult((User?)recipient));
+            _badgeRepoMock.Setup(repo => repo.FindByUserAndSpecies(gifter.Id, species))
+                .Returns(Task.FromResult(new List<Badge>()));
+
+            CommandResult result = await operatorCommands.TransferBadge(new CommandContext(MockMessage(userSelf),
+                ImmutableList.Create("gifter", "recipient", "species", "reason"), _argsParser));
+
+            Assert.AreEqual("You tried to transfer 1 #001 species badges, but the gifter only has 0.", result.Response);
+            Assert.AreEqual(ResponseTarget.Source, result.ResponseTarget);
+            _badgeRepoMock.Verify(repo => repo.TransferBadges(
+                    It.IsAny<IImmutableList<Badge>>(),
+                    It.IsAny<string?>(),
+                    It.IsAny<string>(),
+                    It.IsAny<IDictionary<string, object?>>()),
+                Times.Never);
         }
     }
 }
