@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -67,8 +66,6 @@ namespace TPP.Core.Commands.Definitions
         {
             (Optional<PkmnSpecies> optionalSpecies, Optional<User> optionalUser) =
                 await context.ParseArgs<Optional<PkmnSpecies>, Optional<User>>();
-            Console.WriteLine($"species present: {optionalSpecies.IsPresent}");
-            Console.WriteLine($"user present: {optionalUser.IsPresent}");
             bool isSelf = !optionalUser.IsPresent;
             User user = isSelf ? context.Message.User : optionalUser.Value;
             if (optionalSpecies.IsPresent)
