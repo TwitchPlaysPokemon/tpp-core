@@ -156,11 +156,11 @@ namespace TPP.Persistence.MongoDB.Repos
         public Task<User> SetDisplayName(User user, string displayName) =>
             UpdateField(user, u => u.Name, displayName);
 
-        public async Task<User> UnselectBadgeIfSpeciesSelected(string userId, PkmnSpecies species) =>
+        public async Task<bool> UnselectBadgeIfSpeciesSelected(string userId, PkmnSpecies species) =>
             await Collection.FindOneAndUpdateAsync<User>(
                 filter: u => u.Id == userId && u.SelectedBadge == species,
                 update: Builders<User>.Update.Set(u => u.SelectedBadge, null),
                 options: new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After, IsUpsert = false })
-            ?? throw new ArgumentException($"user for ID {userId} does not exist");
+            != null;
     }
 }

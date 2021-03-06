@@ -17,6 +17,7 @@ namespace TPP.Persistence.Repos
 
         /// Unselects the specified species as the presented badge if it is the currently equipped species.
         /// Used for resetting the equipped badge after a user lost all of that species' badges.
-        public Task<User> UnselectBadgeIfSpeciesSelected(string userId, PkmnSpecies species);
+        /// Returns true if the badge was unequipped, otherwise false.
+        public Task<bool> UnselectBadgeIfSpeciesSelected(string userId, PkmnSpecies species);
     }
 }
