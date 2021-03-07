@@ -155,13 +155,13 @@ namespace TPP.Core.Commands.Definitions
             {
                 string mode = mode_.ToString();
                 ImmutableSortedDictionary<PkmnSpecies, int> numBadgesPerSpecies =
-                    await _badgeRepo.CountByUserPerSpecies(user.Id);
+                    await _badgeRepo.CountByUserPerSpecies( user.Id );
 
                 if( mode.Equals( "missing" ))
                 {
                     IEnumerable<PkmnSpecies> missingList = PokedexData.Load().KnownSpecies.Except( numBadgesPerSpecies.Keys );
                     // Seems like PokedexData is not sorted. So we have to sort the list.
-                    IEnumerable<string> badgesFormatted = missingList.OrderBy( entry => entry.Id ).Select( entry => $"{entry}");
+                    IEnumerable<string> badgesFormatted = missingList.OrderBy( entry => entry.Id ).Select( entry => $"{entry}" );
                     return new CommandResult
                     {
                         Response = isSelf
@@ -192,6 +192,140 @@ namespace TPP.Core.Commands.Definitions
                                 : $"{user.Name} is owning duplicates of the following badge(s): {string.Join(", ", badgesFormatted)}",
                             ResponseTarget = ResponseTarget.WhisperIfLong
                         };
+                    }
+                }
+                else if( mode.Equals( "intersectMeMissingOtherDupe" ) || mode.Equals( "intersectOtherDupeMeMissing") )
+                {
+                    if( isSelf )
+                    {
+                        return new CommandResult
+                        {
+                            Response = $"Don't call {mode} with your own username BrokeBack"
+                        };
+                    }
+                    else
+                    {
+                        var dupeList = numBadgesPerSpecies.Where( kvp => kvp.Value > 1 );
+                        ImmutableSortedDictionary<PkmnSpecies, int> myNumBadgesPerSpecies =
+                            await _badgeRepo.CountByUserPerSpecies(context.Message.User.Id);
+
+                        var intersectList = dupeList.Except( myNumBadgesPerSpecies );
+                        if( !intersectList.Any() )
+                        {
+                            return new CommandResult
+                            {
+                                Response = $"{user.Name} does not own any duplicate Pokémon badges you are missing"
+                            };
+                        }
+                        else
+                        {
+                            IEnumerable<string> badgesFormatted = intersectList.Select( kvp => $"{kvp.Key}" );
+                            return new CommandResult
+                            {
+                                Response = $"{user.Name} is owning missing duplicates of the following badge(s): {string.Join(", ", badgesFormatted)}",
+                                ResponseTarget = ResponseTarget.WhisperIfLong
+                            };
+                        }
+                    }
+                }
+                else if( mode.Equals( "intersectMeMissingOtherBadges" ) || mode.Equals( "intersectOtherBadgesMeMissing") )
+                {
+                    if( isSelf )
+                    {
+                        return new CommandResult
+                        {
+                            Response = $"Don't call {mode} with your own username BrokeBack"
+                        };
+                    }
+                    else
+                    {
+                        ImmutableSortedDictionary<PkmnSpecies, int> myNumBadgesPerSpecies =
+                            await _badgeRepo.CountByUserPerSpecies(context.Message.User.Id);
+
+                        var intersectList = numBadgesPerSpecies.Except( myNumBadgesPerSpecies );
+                        if( !intersectList.Any() )
+                        {
+                            return new CommandResult
+                            {
+                                Response = $"{user.Name} does not own any Pokémon badges you are missing"
+                            };
+                        }
+                        else
+                        {
+                            IEnumerable<string> badgesFormatted = intersectList.Select( kvp => $"{kvp.Key}" );
+                            return new CommandResult
+                            {
+                                Response = $"{user.Name} is owning the following missing badge(s): {string.Join(", ", badgesFormatted)}",
+                                ResponseTarget = ResponseTarget.WhisperIfLong
+                            };
+                        }
+                    }
+                }
+                else if( mode.Equals( "intersectMyBadgesOtherMissing" ) || mode.Equals( "intersectOtherMissingMyBadges") )
+                {
+                    if( isSelf )
+                    {
+                        return new CommandResult
+                        {
+                            Response = $"Don't call {mode} with your own username BrokeBack"
+                        };
+                    }
+                    else
+                    {
+                        ImmutableSortedDictionary<PkmnSpecies, int> myNumBadgesPerSpecies =
+                            await _badgeRepo.CountByUserPerSpecies(context.Message.User.Id);
+
+                        var intersectList = myNumBadgesPerSpecies.Except( numBadgesPerSpecies );
+                        if( !intersectList.Any() )
+                        {
+                            return new CommandResult
+                            {
+                                Response = $"You do not own any Pokémon badges {user.Name} is missing"
+                            };
+                        }
+                        else
+                        {
+                            IEnumerable<string> badgesFormatted = intersectList.Select( kvp => $"{kvp.Key}" );
+                            return new CommandResult
+                            {
+                                Response = $"You are owning the following Pokémon badge(s) {user.Name} is missing: {string.Join(", ", badgesFormatted)}",
+                                ResponseTarget = ResponseTarget.WhisperIfLong
+                            };
+                        }
+                    }
+                }
+                else if( mode.Equals( "intersectMyDupesOtherMissing" ) || mode.Equals( "intersectOtherMissingMyDupes") )
+                {
+                    if( isSelf )
+                    {
+                        return new CommandResult
+                        {
+                            Response = $"Don't call {mode} with your own username BrokeBack"
+                        };
+                    }
+                    else
+                    {
+                        ImmutableSortedDictionary<PkmnSpecies, int> myNumBadgesPerSpecies =
+                            await _badgeRepo.CountByUserPerSpecies(context.Message.User.Id);
+                        var dupeList = myNumBadgesPerSpecies.Where( kvp => kvp.Value > 1 );
+
+                        var intersectList = dupeList.Except( numBadgesPerSpecies );
+                        if( !intersectList.Any() )
+                        {
+                            return new CommandResult
+                            {
+                                Response = $"You do not own any duplicate Pokémon badges {user.Name} is missing"
+                            };
+                        }
+                        else
+                        {
+                            IEnumerable<string> badgesFormatted = intersectList.Select( kvp => $"{kvp.Key}" );
+                            return new CommandResult
+                            {
+                                Response = $"You are owning the following duplicate Pokémon badge(s) {user.Name} is missing: {string.Join(", ", badgesFormatted)}",
+                                ResponseTarget = ResponseTarget.WhisperIfLong
+                            };
+                        }
                     }
                 }
                 else
