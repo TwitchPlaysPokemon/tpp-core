@@ -34,7 +34,6 @@ namespace TPP.Persistence.Models
         public Instant FirstActiveAt { get; init; }
         public Instant LastActiveAt { get; init; }
         // public Instant? FollowedAt { get; init; }
-        // public Instant? SubscriptionUpdatedAt { get; init; }
         // public Instant? LastBetAt { get; init; }
         public Instant? LastMessageAt { get; init; }
 
@@ -53,17 +52,18 @@ namespace TPP.Persistence.Models
 
         // public bool Active { get; init; }
         // public bool Follower { get; init; }
-        // public bool Subscriber { get; init; }
-        // public bool Turbo { get; init; }
         // public List<string> Badges { get; init; } // twitch badges, e.g. subscriber/24
         // public Dictionary<string, string> Milestones { get; init; }
 
-        // public int MonthsSubscribed { get; init; }
+        public bool IsSubscribed { get; init; }
+        public int MonthsSubscribed { get; init; }
+        public SubscriptionTier? SubscriptionTier { get; init; }
+        public int LoyaltyLeague { get; init; }
+        public Instant? SubscriptionUpdatedAt { get; init; }
         // public int RankedPokeyen { get; init; } // wtf is this used for?
         // public int PreviousPokeyenBetRank { get; init; } // wtf is this used for?
         // public int PokeyenBetRankVersion { get; init; } // wtf is this used for?
 
-        // public int LoyaltyTier { get; init; }
         // TODO unlocked items?
 
         // public bool Imported { get; init; }
@@ -84,7 +84,12 @@ namespace TPP.Persistence.Models
             PkmnSpecies? selectedBadge = null,
             string? glowColor = null,
             bool glowColorUnlocked = false,
-            int? pokeyenBetRank = null)
+            int? pokeyenBetRank = null,
+            bool isSubscribed = false,
+            int monthsSubscribed = 0,
+            SubscriptionTier? subscriptionTier = null,
+            int loyaltyLeague = 0,
+            Instant? subscriptionUpdatedAt = null)
         {
             Id = id;
             TwitchDisplayName = twitchDisplayName;
@@ -102,6 +107,11 @@ namespace TPP.Persistence.Models
             GlowColor = glowColor;
             GlowColorUnlocked = glowColorUnlocked;
             PokeyenBetRank = pokeyenBetRank;
+            IsSubscribed = isSubscribed;
+            MonthsSubscribed = monthsSubscribed;
+            SubscriptionTier = subscriptionTier;
+            LoyaltyLeague = loyaltyLeague;
+            SubscriptionUpdatedAt = subscriptionUpdatedAt;
         }
 
         public override string ToString() => $"User({Id}/{SimpleName})";
