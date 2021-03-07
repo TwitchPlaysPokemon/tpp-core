@@ -35,6 +35,19 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             Assert.AreEqual(badgeFromDatabase, badge);
         }
 
+        [Test]
+        public async Task insert_sets_current_timestamp_as_creation_date()
+        {
+            Mock<IClock> clockMock = new();
+            Instant createdAt = Instant.FromUnixTimeSeconds(123);
+            clockMock.Setup(c => c.GetCurrentInstant()).Returns(createdAt);
+            IBadgeRepo badgeRepo = new BadgeRepo(
+                CreateTemporaryDatabase(), Mock.Of<IMongoBadgeLogRepo>(), clockMock.Object);
+
+            Badge badge = await badgeRepo.AddBadge(null, PkmnSpecies.OfId("16"), Badge.BadgeSource.ManualCreation);
+            Assert.AreEqual(createdAt, badge.CreatedAt);
+        }
+
         /// <summary>
         /// Tests that the data gets represented in the database the desired way.
         /// This ensures backwards compatibility to any existing data.
