@@ -35,7 +35,7 @@ namespace TPP.Core.Commands.Definitions
             new Command("pokedex", Pokedex)
             {
                 Aliases = new[] { "dex" },
-                Description = "Show how many different species of badge a user owns. Argument: <username> (optional)"
+                Description = "Show how many different species of badge a user owns. Argument: <username> (optional) <mode> (optional). Supported modes are dupes,missing"
             },
 
             new Command("giftbadge", GiftBadge)
@@ -134,15 +134,74 @@ namespace TPP.Core.Commands.Definitions
 
         public async Task<CommandResult> Pokedex(CommandContext context)
         {
-            User user = (await context.ParseArgs<Optional<User>>()).OrElse(context.Message.User);
+            (Optional<User> optionalUser, Optional<string> mode_) =
+                await context.ParseArgs<Optional<User>, Optional<string>>();
+            User user = optionalUser.IsPresent ? optionalUser.Value : context.Message.User;
             bool isSelf = user == context.Message.User;
-            int numUniqueSpecies = (await _badgeRepo.CountByUserPerSpecies(user.Id)).Count;
-            return new CommandResult
+
+            // Have to additionally check if the string is not empty, otherwise "!dex " would jump right into the else - branch.
+            //   Not sure if this is an actual issue when connected to twitch
+            if( !mode_.IsPresent || string.IsNullOrWhiteSpace( mode_.ToString() ) )
             {
-                Response = isSelf
-                    ? $"You have collected {numUniqueSpecies} distinct Pokémon badge(s)"
-                    : $"{user.Name} has collected {numUniqueSpecies} distinct Pokémon badge(s)"
-            };
+                int numUniqueSpecies = (await _badgeRepo.CountByUserPerSpecies(user.Id)).Count;
+                return new CommandResult
+                {
+                    Response = isSelf
+                        ? $"You have collected {numUniqueSpecies} distinct Pokémon badge(s)"
+                        : $"{user.Name} has collected {numUniqueSpecies} distinct Pokémon badge(s)"
+                };
+            }
+            else
+            {
+                string mode = mode_.ToString();
+                ImmutableSortedDictionary<PkmnSpecies, int> numBadgesPerSpecies =
+                    await _badgeRepo.CountByUserPerSpecies(user.Id);
+
+                if( mode.Equals( "missing" ))
+                {
+                    IEnumerable<PkmnSpecies> missingList = PokedexData.Load().KnownSpecies.Except( numBadgesPerSpecies.Keys );
+                    // Seems like PokedexData is not sorted. So we have to sort the list.
+                    IEnumerable<string> badgesFormatted = missingList.OrderBy( entry => entry.Id ).Select( entry => $"{entry}");
+                    return new CommandResult
+                    {
+                        Response = isSelf
+                            ? $"You are currently missing the following badge(s): {string.Join(", ", badgesFormatted)}"
+                            : $"{user.Name} is currently missing the following badge(s): {string.Join(", ", badgesFormatted)}",
+                        ResponseTarget = ResponseTarget.WhisperIfLong
+                    };
+                }
+                else if( mode.Equals( "dupes" ) )
+                {
+                    var dupeList = numBadgesPerSpecies.Where(kvp => kvp.Value > 1);
+                    if( !dupeList.Any() )
+                    {
+                        return new CommandResult
+                        {
+                            Response = isSelf
+                                ? $"You do not own any duplicate Pokémon badges"
+                                : $"{user.Name} does not own any duplicate Pokémon badges"
+                        };
+                    }
+                    else
+                    {
+                        IEnumerable<string> badgesFormatted = dupeList.Select( kvp => $"{kvp.Key}");
+                        return new CommandResult
+                        {
+                            Response = isSelf
+                                ? $"You are owning duplicates of the following badge(s): {string.Join(", ", badgesFormatted)}"
+                                : $"{user.Name} is owning duplicates of the following badge(s): {string.Join(", ", badgesFormatted)}",
+                            ResponseTarget = ResponseTarget.WhisperIfLong
+                        };
+                    }
+                }
+                else
+                {
+                    return new CommandResult
+                    {
+                        Response =  $"Unsupported mode '{mode}'. Current modes supported: missing, dupes"
+                    };
+                }
+            }
         }
 
         public async Task<CommandResult> GiftBadge(CommandContext context)
