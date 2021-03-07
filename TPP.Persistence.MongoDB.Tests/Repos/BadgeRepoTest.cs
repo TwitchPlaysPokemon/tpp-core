@@ -13,7 +13,6 @@ using TPP.Persistence.Repos;
 
 namespace TPP.Persistence.MongoDB.Tests.Repos
 {
-    [Category("IntegrationTest")]
     [Parallelizable(ParallelScope.All)]
     public class BadgeRepoTest : MongoTestBase
     {
