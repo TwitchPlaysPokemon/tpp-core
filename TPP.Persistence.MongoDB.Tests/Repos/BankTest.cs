@@ -27,7 +27,6 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
         public Instant GetCurrentInstant() => FixedCurrentInstant;
     }
 
-    [Category("IntegrationTest")]
     [Parallelizable(ParallelScope.All)]
     public class BankTest : MongoTestBase
     {
