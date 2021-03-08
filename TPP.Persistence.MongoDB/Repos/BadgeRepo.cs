@@ -63,14 +63,15 @@ namespace TPP.Persistence.MongoDB.Repos
             });
         }
 
-        public async Task<Badge> AddBadge(string? userId, PkmnSpecies species, Badge.BadgeSource source)
+        public async Task<Badge> AddBadge(
+            string? userId, PkmnSpecies species, Badge.BadgeSource source, Instant? createdAt = null)
         {
             var badge = new Badge(
                 id: string.Empty,
                 userId: userId,
                 species: species,
                 source: source,
-                createdAt: Instant.FromUnixTimeSeconds(0)
+                createdAt: createdAt ?? _clock.GetCurrentInstant()
             );
             await Collection.InsertOneAsync(badge);
             Debug.Assert(badge.Id.Length > 0, "The MongoDB driver injected a generated ID");
