@@ -1,4 +1,4 @@
-﻿name: regen-json-schema
+﻿name: json-schema
 
 on: [pull_request]
 
