@@ -1,6 +1,6 @@
-﻿name: regen-json-schema
+﻿name: json-schema
 
-on: [push]
+on: [pull_request]
 
 jobs:
   build:
@@ -22,11 +22,4 @@ jobs:
           git add config.matchmode.schema.json
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git diff-index --quiet HEAD || git commit -m "update core config json schemas"
-          git pull --rebase
-          cd ..
-      - name: Push changed core config json schemas
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref }}
+          git diff-index --quiet HEAD || { echo 'Please update the json schemas by running `dotnet run -- regenjsonschemas`'; exit 1; }
