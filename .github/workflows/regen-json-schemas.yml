@@ -1,6 +1,6 @@
 ﻿name: regen-json-schema
 
-on: [push]
+on: [pull_request]
 
 jobs:
   build:
