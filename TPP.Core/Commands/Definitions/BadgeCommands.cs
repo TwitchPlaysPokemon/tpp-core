@@ -12,6 +12,13 @@ namespace TPP.Core.Commands.Definitions
 {
     public class BadgeCommands : ICommandCollection
     {
+        // using an enum didn't work out, because no "-" characters allowed in enums. So go with const strings instead, or change modes to camel-case
+        private const string PokedexModeComplementFrom      = "complement-from";
+        private const string PokedexModeComplementFromDupes = "complement-from-dupes";
+        private const string PokedexModeMissing             = "missing";
+        private const string PokedexModeDupes               = "dupes";
+        private const string PokedexModeModes               = "modes";
+
         public IEnumerable<Command> Commands => new[]
         {
             new Command("badges", Badges)
@@ -35,7 +42,7 @@ namespace TPP.Core.Commands.Definitions
             new Command("pokedex", Pokedex)
             {
                 Aliases = new[] { "dex" },
-                Description = "Show how many different species of badge a user owns. Argument: <username> (optional) <mode> (optional). Supported modes are dupes,missing"
+                Description = "Show how many different species of badge a user owns. Argument: <username> (optional) <mode> (optional). For more info, type \"!dex modes\""
             },
 
             new Command("giftbadge", GiftBadge)
@@ -134,8 +141,8 @@ namespace TPP.Core.Commands.Definitions
 
         public async Task<CommandResult> Pokedex(CommandContext context)
         {
-            (Optional<User> optionalUser, Optional<string> mode_) =
-                await context.ParseArgs<Optional<User>, Optional<string>>();
+            (Optional<User> optionalUser, Optional<string> mode_, Optional<User> optionalUser2) =
+                await context.ParseArgs<Optional<User>, Optional<string>,Optional<User>>();
             User user = optionalUser.IsPresent ? optionalUser.Value : context.Message.User;
             bool isSelf = user == context.Message.User;
 
@@ -157,7 +164,7 @@ namespace TPP.Core.Commands.Definitions
                 ImmutableSortedDictionary<PkmnSpecies, int> numBadgesPerSpecies =
                     await _badgeRepo.CountByUserPerSpecies( user.Id );
 
-                if( mode.Equals( "missing" ))
+                if( mode.Equals( PokedexModeMissing ))
                 {
                     IEnumerable<PkmnSpecies> missingList = PokedexData.Load().KnownSpecies.Except( numBadgesPerSpecies.Keys );
                     // Seems like PokedexData is not sorted. So we have to sort the list.
@@ -170,7 +177,7 @@ namespace TPP.Core.Commands.Definitions
                         ResponseTarget = ResponseTarget.WhisperIfLong
                     };
                 }
-                else if( mode.Equals( "dupes" ) )
+                else if( mode.Equals( PokedexModeDupes ) )
                 {
                     var dupeList = numBadgesPerSpecies.Where(kvp => kvp.Value > 1);
                     if( !dupeList.Any() )
@@ -184,7 +191,7 @@ namespace TPP.Core.Commands.Definitions
                     }
                     else
                     {
-                        IEnumerable<string> badgesFormatted = dupeList.Select( kvp => $"{kvp.Key}");
+                        IEnumerable<string> badgesFormatted = dupeList.Select( kvp => $"{kvp.Key}" );
                         return new CommandResult
                         {
                             Response = isSelf
@@ -194,27 +201,27 @@ namespace TPP.Core.Commands.Definitions
                         };
                     }
                 }
-                else if( mode.Equals( "intersectMeMissingOtherDupe" ) || mode.Equals( "intersectOtherDupeMeMissing") )
+                else if( mode.Equals( PokedexModeComplementFromDupes ) )
                 {
-                    if( isSelf )
+                    if( !optionalUser2.IsPresent )
                     {
                         return new CommandResult
                         {
-                            Response = $"Don't call {mode} with your own username BrokeBack"
+                            Response = $"Mode {PokedexModeComplementFromDupes} requires a second user argument"
                         };
                     }
                     else
                     {
                         var dupeList = numBadgesPerSpecies.Where( kvp => kvp.Value > 1 );
                         ImmutableSortedDictionary<PkmnSpecies, int> myNumBadgesPerSpecies =
-                            await _badgeRepo.CountByUserPerSpecies(context.Message.User.Id);
+                            await _badgeRepo.CountByUserPerSpecies(optionalUser2.Value.Id);
 
                         var intersectList = dupeList.Except( myNumBadgesPerSpecies );
                         if( !intersectList.Any() )
                         {
                             return new CommandResult
                             {
-                                Response = $"{user.Name} does not own any duplicate Pokémon badges you are missing"
+                                Response = $"{user.Name} does not own any duplicate Pokémon badges {optionalUser2.Value.Name} is missing"
                             };
                         }
                         else
@@ -228,26 +235,26 @@ namespace TPP.Core.Commands.Definitions
                         }
                     }
                 }
-                else if( mode.Equals( "intersectMeMissingOtherBadges" ) || mode.Equals( "intersectOtherBadgesMeMissing") )
+                else if( mode.Equals( PokedexModeComplementFrom ) )
                 {
-                    if( isSelf )
+                    if( !optionalUser2.IsPresent )
                     {
                         return new CommandResult
                         {
-                            Response = $"Don't call {mode} with your own username BrokeBack"
+                            Response = $"Mode {PokedexModeComplementFromDupes} requires a second user argument"
                         };
                     }
                     else
                     {
                         ImmutableSortedDictionary<PkmnSpecies, int> myNumBadgesPerSpecies =
-                            await _badgeRepo.CountByUserPerSpecies(context.Message.User.Id);
+                            await _badgeRepo.CountByUserPerSpecies(optionalUser2.Value.Id);
 
                         var intersectList = numBadgesPerSpecies.Except( myNumBadgesPerSpecies );
                         if( !intersectList.Any() )
                         {
                             return new CommandResult
                             {
-                                Response = $"{user.Name} does not own any Pokémon badges you are missing"
+                                Response = $"{user.Name} does not own any Pokémon badges {optionalUser2.Value.Name} is missing"
                             };
                         }
                         else
@@ -261,78 +268,20 @@ namespace TPP.Core.Commands.Definitions
                         }
                     }
                 }
-                else if( mode.Equals( "intersectMyBadgesOtherMissing" ) || mode.Equals( "intersectOtherMissingMyBadges") )
+                else if( mode.Equals( PokedexModeModes ) )
                 {
-                    if( isSelf )
+                    return new CommandResult
                     {
-                        return new CommandResult
-                        {
-                            Response = $"Don't call {mode} with your own username BrokeBack"
-                        };
-                    }
-                    else
-                    {
-                        ImmutableSortedDictionary<PkmnSpecies, int> myNumBadgesPerSpecies =
-                            await _badgeRepo.CountByUserPerSpecies(context.Message.User.Id);
-
-                        var intersectList = myNumBadgesPerSpecies.Except( numBadgesPerSpecies );
-                        if( !intersectList.Any() )
-                        {
-                            return new CommandResult
-                            {
-                                Response = $"You do not own any Pokémon badges {user.Name} is missing"
-                            };
-                        }
-                        else
-                        {
-                            IEnumerable<string> badgesFormatted = intersectList.Select( kvp => $"{kvp.Key}" );
-                            return new CommandResult
-                            {
-                                Response = $"You are owning the following Pokémon badge(s) {user.Name} is missing: {string.Join(", ", badgesFormatted)}",
-                                ResponseTarget = ResponseTarget.WhisperIfLong
-                            };
-                        }
-                    }
-                }
-                else if( mode.Equals( "intersectMyDupesOtherMissing" ) || mode.Equals( "intersectOtherMissingMyDupes") )
-                {
-                    if( isSelf )
-                    {
-                        return new CommandResult
-                        {
-                            Response = $"Don't call {mode} with your own username BrokeBack"
-                        };
-                    }
-                    else
-                    {
-                        ImmutableSortedDictionary<PkmnSpecies, int> myNumBadgesPerSpecies =
-                            await _badgeRepo.CountByUserPerSpecies(context.Message.User.Id);
-                        var dupeList = myNumBadgesPerSpecies.Where( kvp => kvp.Value > 1 );
-
-                        var intersectList = dupeList.Except( numBadgesPerSpecies );
-                        if( !intersectList.Any() )
-                        {
-                            return new CommandResult
-                            {
-                                Response = $"You do not own any duplicate Pokémon badges {user.Name} is missing"
-                            };
-                        }
-                        else
-                        {
-                            IEnumerable<string> badgesFormatted = intersectList.Select( kvp => $"{kvp.Key}" );
-                            return new CommandResult
-                            {
-                                Response = $"You are owning the following duplicate Pokémon badge(s) {user.Name} is missing: {string.Join(", ", badgesFormatted)}",
-                                ResponseTarget = ResponseTarget.WhisperIfLong
-                            };
-                        }
-                    }
+                        Response =  $"Supported modes are \"{PokedexModeDupes}\": Show duplicate badges, \"{PokedexModeMissing}\": Show missing badges, "
+                        + "\"" + PokedexModeComplementFrom + "\": Compares missing badges from User A with owned badges from User B, "
+                        + "\"" + PokedexModeComplementFromDupes + "\": Compares missing badges from User A with owned duplicate badges from User B"
+                    };
                 }
                 else
                 {
                     return new CommandResult
                     {
-                        Response =  $"Unsupported mode '{mode}'. Current modes supported: missing, dupes"
+                        Response =  $"Unsupported mode '{mode}'. Current modes supported: {PokedexModeModes}, {PokedexModeDupes}, {PokedexModeMissing}, {PokedexModeComplementFromDupes}, {PokedexModeComplementFrom}"
                     };
                 }
             }
