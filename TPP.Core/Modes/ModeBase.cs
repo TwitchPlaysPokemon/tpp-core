@@ -63,7 +63,8 @@ namespace TPP.Core.Modes
             await _messagelogRepo.LogChat(
                 message.User.Id, message.RawIrcMessage, message.MessageText, _clock.GetCurrentInstant());
 
-            string[] parts = message.MessageText.Split(" ");
+            List<string> parts = message.MessageText.Split(" ")
+                .Where(s => !string.IsNullOrEmpty(s)).ToList();
             string? firstPart = parts.FirstOrDefault();
             string? commandName = firstPart switch
             {
