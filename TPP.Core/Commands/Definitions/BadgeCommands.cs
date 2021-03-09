@@ -56,20 +56,20 @@ namespace TPP.Core.Commands.Definitions
         private readonly IUserRepo _userRepo;
         private readonly IMessageSender _messageSender;
         private readonly HashSet<PkmnSpecies>? _whitelist;
-        private readonly PokedexData _pokedexData;
+        private readonly IImmutableSet<TPP.Common.PkmnSpecies> _KnownSpecies;
 
         public BadgeCommands(
             IBadgeRepo badgeRepo,
             IUserRepo userRepo,
             IMessageSender messageSender,
-            PokedexData pokedexData,
+            IImmutableSet<TPP.Common.PkmnSpecies> KnownSpecies,
             HashSet<PkmnSpecies>? whitelist = null
         )
         {
             _badgeRepo = badgeRepo;
             _userRepo = userRepo;
             _messageSender = messageSender;
-            _pokedexData = pokedexData;
+            _KnownSpecies = KnownSpecies;
             _whitelist = whitelist;
         }
 
@@ -167,7 +167,7 @@ namespace TPP.Core.Commands.Definitions
 
             if (mode.Equals(PokedexModeMissing))
             {
-                IEnumerable<PkmnSpecies> missingList = _pokedexData.KnownSpecies.Except(numBadgesPerSpecies.Keys);
+                IEnumerable<PkmnSpecies> missingList = _KnownSpecies.Except(numBadgesPerSpecies.Keys);
                 // Seems like PokedexData is not sorted. So we have to sort the list.
                 IEnumerable<string> badgesFormatted = missingList.OrderBy(entry => entry.Id).Select(entry => $"{entry}");
                 return new CommandResult

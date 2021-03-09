@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
@@ -54,7 +55,7 @@ namespace TPP.Core
             ChatConfig chatConfig,
             IMessageSender messageSender,
             IChatModeChanger chatModeChanger,
-            PokedexData pokedexData)
+            IImmutableSet<TPP.Common.PkmnSpecies> KnownSpecies)
         {
             var commandProcessor = new CommandProcessor(
                 loggerFactory.CreateLogger<CommandProcessor>(),
@@ -66,7 +67,7 @@ namespace TPP.Core
                 new StaticResponseCommands().Commands,
                 new UserCommands(
                     databases.UserRepo, pokeyenBank: databases.PokeyenBank, tokenBank: databases.TokensBank).Commands,
-                new BadgeCommands(databases.BadgeRepo, databases.UserRepo, messageSender, pokedexData ).Commands,
+                new BadgeCommands(databases.BadgeRepo, databases.UserRepo, messageSender, KnownSpecies ).Commands,
                 new OperatorCommands(
                     stopToken, chatConfig.OperatorNames, databases.PokeyenBank, databases.TokensBank,
                     messageSender: messageSender, databases.BadgeRepo
