@@ -1,4 +1,6 @@
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
+using NodaTime;
 
 namespace TPP.Persistence.MongoDB.Serializers
 {
@@ -18,6 +20,11 @@ namespace TPP.Persistence.MongoDB.Serializers
             BsonSerializer.RegisterSerializer(PkmnSpeciesSerializer.Instance);
             BsonSerializer.RegisterSerializer(InstantSerializer.Instance);
             BsonSerializer.RegisterSerializer(NullableInstantSerializer.Instance);
+
+            // TODO workaround for https://jira.mongodb.org/browse/CSHARP-3449
+            // Remove this custom bson mapper once the mongodb linq driver is able to use the serializers for converting
+            // types to bson. That can be checked by removing this line and seeing if the badge repo tests pass.
+            BsonTypeMapper.RegisterCustomTypeMapper(typeof(Instant), InstantBsonTypeMapper.Instance);
         }
     }
 }
