@@ -111,6 +111,7 @@ namespace TPP.Persistence.MongoDB.Repos
             );
             await Collection.InsertOneAsync(badge);
             Debug.Assert(badge.Id.Length > 0, "The MongoDB driver injected a generated ID");
+            await RenewBadgeStats(onlyTheseSpecies: ImmutableHashSet.Create(species));
             return badge;
         }
 
