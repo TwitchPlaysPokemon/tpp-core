@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Driver;
@@ -204,40 +203,20 @@ namespace TPP.Persistence.MongoDB.Repos
             IAggregateFluent<Badge> pipeline = Collection.Aggregate();
             if (onlyTheseSpecies != null)
                 pipeline = pipeline.Match(stat => onlyTheseSpecies.Contains(stat.Species));
-            // TODO workaround for https://jira.mongodb.org/browse/CSHARP-3449
-            // Using LINQ causes the badge source enum value to be implicitly converted to its ordinal value,
-            // which causes the comparisons against the "source" field to never match and give wrong results.
-            // Remove this JSON blob and uncomment the code below once there is a solution for that.
-            List<BsonDocument> stats = await pipeline.Group(@"
-            {
-                ""_id"": ""$species"",
-                ""count"": {""$sum"": {
-                    ""$cond"": [{""$ne"": [""$user"", null]}, 1, 0]
-                }},
-                ""count_generated"": {""$sum"": {
-                    ""$cond"": [{""$eq"": [""$source"", ""pinball""]}, 1, 0]
-                }},
-                ""rarity_count"": {""$sum"": {
-                    ""$cond"": [{""$and"": [{""$ne"": [""$user"", null]},
-                                            {""$gte"": [""$created_at"", ISODate(""" + startTime + @""")]}]}, 1, 0]
-                }},
-                ""rarity_count_generated"": {""$sum"": {
-                    ""$cond"": [{""$and"": [{""$eq"": [""$source"", ""pinball""]},
-                                            {""$gte"": [""$created_at"", ISODate(""" + startTime + @""")]}]}, 1, 0]
-                }}
-            }").ToListAsync();
-            // var stats = await pipeline
-            //     .Group(b => b.Species, group => new
-            //     {
-            //         Species = group.Key,
-            //         Count = group.Count(b => b.UserId != null),
-            //         CountGenerated = group.Count(b => b.Source == Badge.BadgeSource.ManualCreation),
-            //         RarityCount = group.Count(b => b.UserId != null && b.CreatedAt >= startTime),
-            //         RarityCountGenerated =
-            //             group.Count(b => b.Source == Badge.BadgeSource.ManualDistribution && b.CreatedAt >= startTime),
-            //     })
-            //     .SortBy(stat => stat.Species)
-            //     .ToListAsync();
+            var stats = await pipeline
+                .Group(b => b.Species, group => new
+                {
+                    Species = group.Key,
+                    Count = group.Count(b => b.UserId != null),
+                    // TODO workaround for https://jira.mongodb.org/browse/CSHARP-3449 - remove Equals() with == once that bug is fixed
+                    CountGenerated = group.Count(b => b.Source.Equals("pinball")),
+                    RarityCount = group.Count(b => b.UserId != null && b.CreatedAt >= startTime),
+                    RarityCountGenerated =
+                        // TODO workaround for https://jira.mongodb.org/browse/CSHARP-3449 - remove Equals() with == once that bug is fixed
+                        group.Count(b => b.Source.Equals("pinball") && b.CreatedAt >= startTime),
+                })
+                .SortBy(stat => stat.Species)
+                .ToListAsync();
 
             long totalGenerated = await Collection.CountDocumentsAsync(b =>
                 b.Source == Badge.BadgeSource.Pinball && b.CreatedAt >= startTime);
@@ -247,20 +226,18 @@ namespace TPP.Persistence.MongoDB.Repos
             if (stats.Count == 0) return;
             await CollectionStats.BulkWriteAsync(stats.Select(stat =>
                 {
-                    double rarityGenerated = stat["rarity_count_generated"].AsInt32 /*stat.RarityCountGenerated*/ /
-                                             (double)totalGenerated;
-                    double rarityExisting = stat["rarity_count"].AsInt32 /*stat.RarityCount*/ / (double)totalExisting;
+                    double rarityGenerated = stat.RarityCountGenerated / (double)totalGenerated;
+                    double rarityExisting = stat.RarityCount / (double)totalExisting;
                     double rarity = rarityGenerated * (1 - CountExistingFactor) + rarityExisting * CountExistingFactor;
                     BadgeStat statEntity = new(
-                        Species: PkmnSpecies.OfId(stat["_id"].AsString) /*stat.Species*/,
-                        Count: stat["count"].AsInt32 /*stat.Count*/,
-                        CountGenerated: stat["count_generated"].AsInt32 /*stat.CountGenerated*/,
-                        RarityCount: stat["rarity_count"].AsInt32 /*stat.RarityCount*/,
-                        RarityCountGenerated: stat["rarity_count_generated"].AsInt32 /*stat.RarityCountGenerated*/,
+                        Species: stat.Species,
+                        Count: stat.Count,
+                        CountGenerated: stat.CountGenerated,
+                        RarityCount: stat.RarityCount,
+                        RarityCountGenerated: stat.RarityCountGenerated,
                         Rarity: rarity);
                     return new ReplaceOneModel<BadgeStat>(
-                        Builders<BadgeStat>.Filter.Where(b =>
-                            b.Species == PkmnSpecies.OfId(stat["_id"].AsString) /*stat.Species*/),
+                        Builders<BadgeStat>.Filter.Where(b => b.Species == stat.Species),
                         statEntity)
                     {
                         IsUpsert = true
