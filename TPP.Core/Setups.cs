@@ -53,7 +53,8 @@ namespace TPP.Core
             StopToken stopToken,
             ChatConfig chatConfig,
             IMessageSender messageSender,
-            IChatModeChanger chatModeChanger)
+            IChatModeChanger chatModeChanger,
+            PokedexData pokedexData)
         {
             var commandProcessor = new CommandProcessor(
                 loggerFactory.CreateLogger<CommandProcessor>(),
@@ -65,7 +66,7 @@ namespace TPP.Core
                 new StaticResponseCommands().Commands,
                 new UserCommands(
                     databases.UserRepo, pokeyenBank: databases.PokeyenBank, tokenBank: databases.TokensBank).Commands,
-                new BadgeCommands(databases.BadgeRepo, databases.UserRepo, messageSender).Commands,
+                new BadgeCommands(databases.BadgeRepo, databases.UserRepo, messageSender, pokedexData ).Commands,
                 new OperatorCommands(
                     stopToken, chatConfig.OperatorNames, databases.PokeyenBank, databases.TokensBank,
                     messageSender: messageSender, databases.BadgeRepo
