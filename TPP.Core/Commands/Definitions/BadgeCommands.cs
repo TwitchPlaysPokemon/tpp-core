@@ -168,8 +168,7 @@ namespace TPP.Core.Commands.Definitions
             if (mode.Equals(PokedexModeMissing))
             {
                 IEnumerable<PkmnSpecies> missingList = _knownSpecies.Except(numBadgesPerSpecies.Keys);
-                // Seems like PokedexData is not sorted. So we have to sort the list.
-                IEnumerable<string> badgesFormatted = missingList.OrderBy(entry => entry.Id).Select(entry => $"{entry}");
+                IEnumerable<string> badgesFormatted = missingList.Select(entry => $"{entry}");
                 return new CommandResult
                 {
                     Response = isSelf
