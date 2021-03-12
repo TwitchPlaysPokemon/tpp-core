@@ -194,7 +194,7 @@ namespace TPP.Core.Commands.Definitions
                 {
                     Response = isSelf
                         ? $"You are owning duplicates of the following badge(s): {string.Join(", ", badgesFormatted)}"
-                        : $"{user.Name} is owning duplicates of the following badge(s): {string.Join(", ", badgesFormatted)}",
+                        : $"{user.Name} owns duplicates of the following badge(s): {string.Join(", ", badgesFormatted)}",
                     ResponseTarget = ResponseTarget.WhisperIfLong
                 };
             }
@@ -222,7 +222,7 @@ namespace TPP.Core.Commands.Definitions
                 IEnumerable<string> badgesFormatted = differenceList.Select(entry => $"{entry}");
                 return new CommandResult
                 {
-                    Response = $"{optionalCompareUser.Value.Name} is owning the following duplicate badge(s) {user.Name} is missing: {string.Join(", ", badgesFormatted)}",
+                    Response = $"{optionalCompareUser.Value.Name} owns the following duplicate badge(s) {user.Name} is missing: {string.Join(", ", badgesFormatted)}",
                     ResponseTarget = ResponseTarget.WhisperIfLong
                 };
             }
@@ -249,7 +249,7 @@ namespace TPP.Core.Commands.Definitions
                 IEnumerable<string> badgesFormatted = differenceList.Select(entry => $"{entry}");
                 return new CommandResult
                 {
-                    Response = $"{optionalCompareUser.Value.Name} is owning the following badge(s) {user.Name} is missing: {string.Join(", ", badgesFormatted)}",
+                    Response = $"{optionalCompareUser.Value.Name} owns the following badge(s) {user.Name} is missing: {string.Join(", ", badgesFormatted)}",
                     ResponseTarget = ResponseTarget.WhisperIfLong
                 };
             }
