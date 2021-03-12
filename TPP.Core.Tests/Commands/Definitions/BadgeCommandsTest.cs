@@ -32,7 +32,7 @@ namespace TPP.Core.Tests.Commands.Definitions
         private Mock<IBadgeRepo> _badgeRepoMock = null!;
         private Mock<IUserRepo> _userRepoMock = null!;
         private Mock<IMessageSender> _messageSender = null!;
-        private Mock<IImmutableSet<TPP.Common.PkmnSpecies>> _pokedexData = null!;
+        private Mock<IImmutableSet<PkmnSpecies>> _pokedexData = null!;
         private ArgsParser _argsParser = null!;
 
         private BadgeCommands _badgeCommands = null!;
@@ -43,7 +43,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             _badgeRepoMock = new Mock<IBadgeRepo>();
             _userRepoMock = new Mock<IUserRepo>();
             _messageSender = new Mock<IMessageSender>();
-            _pokedexData = new Mock<IImmutableSet<TPP.Common.PkmnSpecies>>();
+            _pokedexData = new Mock<IImmutableSet<PkmnSpecies>>();
             _badgeCommands = new BadgeCommands(_badgeRepoMock.Object, _userRepoMock.Object, _messageSender.Object, _pokedexData.Object);
             _argsParser = new ArgsParser();
             _argsParser.AddArgumentParser(new OptionalParser(_argsParser));

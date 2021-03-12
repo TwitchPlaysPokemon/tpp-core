@@ -56,20 +56,20 @@ namespace TPP.Core.Commands.Definitions
         private readonly IUserRepo _userRepo;
         private readonly IMessageSender _messageSender;
         private readonly HashSet<PkmnSpecies>? _whitelist;
-        private readonly IImmutableSet<TPP.Common.PkmnSpecies> _KnownSpecies;
+        private readonly IImmutableSet<PkmnSpecies> _knownSpecies;
 
         public BadgeCommands(
             IBadgeRepo badgeRepo,
             IUserRepo userRepo,
             IMessageSender messageSender,
-            IImmutableSet<TPP.Common.PkmnSpecies> KnownSpecies,
+            IImmutableSet<PkmnSpecies> knownSpecies,
             HashSet<PkmnSpecies>? whitelist = null
         )
         {
             _badgeRepo = badgeRepo;
             _userRepo = userRepo;
             _messageSender = messageSender;
-            _KnownSpecies = KnownSpecies;
+            _knownSpecies = knownSpecies;
             _whitelist = whitelist;
         }
 
@@ -167,7 +167,7 @@ namespace TPP.Core.Commands.Definitions
 
             if (mode.Equals(PokedexModeMissing))
             {
-                IEnumerable<PkmnSpecies> missingList = _KnownSpecies.Except(numBadgesPerSpecies.Keys);
+                IEnumerable<PkmnSpecies> missingList = _knownSpecies.Except(numBadgesPerSpecies.Keys);
                 // Seems like PokedexData is not sorted. So we have to sort the list.
                 IEnumerable<string> badgesFormatted = missingList.OrderBy(entry => entry.Id).Select(entry => $"{entry}");
                 return new CommandResult
@@ -220,7 +220,7 @@ namespace TPP.Core.Commands.Definitions
                         Response = $"{optionalCompareUser.Value.Name} does not own any duplicate Pokémon badges {user.Name} is missing"
                     };
                 }
-                IEnumerable<string> badgesFormatted = differenceList.Select(kvp => $"{kvp}");
+                IEnumerable<string> badgesFormatted = differenceList.Select(entry => $"{entry}");
                 return new CommandResult
                 {
                     Response = $"{optionalCompareUser.Value.Name} is owning the following duplicate badge(s) {user.Name} is missing: {string.Join(", ", badgesFormatted)}",
@@ -247,7 +247,7 @@ namespace TPP.Core.Commands.Definitions
                         Response = $"{optionalCompareUser.Value.Name} does not own any Pokémon badges {user.Name} is missing"
                     };
                 }
-                IEnumerable<string> badgesFormatted = differenceList.Select(kvp => $"{kvp}");
+                IEnumerable<string> badgesFormatted = differenceList.Select(entry => $"{entry}");
                 return new CommandResult
                 {
                     Response = $"{optionalCompareUser.Value.Name} is owning the following badge(s) {user.Name} is missing: {string.Join(", ", badgesFormatted)}",

@@ -55,7 +55,7 @@ namespace TPP.Core
             ChatConfig chatConfig,
             IMessageSender messageSender,
             IChatModeChanger chatModeChanger,
-            IImmutableSet<TPP.Common.PkmnSpecies> KnownSpecies)
+            IImmutableSet<Common.PkmnSpecies> knownSpecies)
         {
             var commandProcessor = new CommandProcessor(
                 loggerFactory.CreateLogger<CommandProcessor>(),
@@ -67,7 +67,7 @@ namespace TPP.Core
                 new StaticResponseCommands().Commands,
                 new UserCommands(
                     databases.UserRepo, pokeyenBank: databases.PokeyenBank, tokenBank: databases.TokensBank).Commands,
-                new BadgeCommands(databases.BadgeRepo, databases.UserRepo, messageSender, KnownSpecies ).Commands,
+                new BadgeCommands(databases.BadgeRepo, databases.UserRepo, messageSender, knownSpecies ).Commands,
                 new OperatorCommands(
                     stopToken, chatConfig.OperatorNames, databases.PokeyenBank, databases.TokensBank,
                     messageSender: messageSender, databases.BadgeRepo
