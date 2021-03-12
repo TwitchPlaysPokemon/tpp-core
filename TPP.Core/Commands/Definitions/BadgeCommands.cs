@@ -147,7 +147,7 @@ namespace TPP.Core.Commands.Definitions
         {
             (Optional<User> optionalUser, Optional<string> optionalMode, Optional<User> optionalCompareUser) =
                 await context.ParseArgs<Optional<User>, Optional<string>, Optional<User>>();
-            User user = optionalUser.IsPresent ? optionalUser.Value : context.Message.User;
+            User user = optionalUser.OrElse(context.Message.User);
             bool isSelf = user == context.Message.User;
 
             if (!optionalMode.IsPresent)
@@ -210,9 +210,9 @@ namespace TPP.Core.Commands.Definitions
                 }
                 ImmutableSortedDictionary<PkmnSpecies, int> compareUser =
                     await _badgeRepo.CountByUserPerSpecies(optionalCompareUser.Value.Id);
-                var compareUserDupeList = compareUser.Where(kvp => kvp.Value > 1).ToImmutableSortedDictionary();
+                var compareUserDupeList = compareUser.Where(kvp => kvp.Value > 1).Select(kvp => kvp.Key);
 
-                var differenceList = compareUserDupeList.Keys.Except(numBadgesPerSpecies.Keys).ToList();
+                var differenceList = compareUserDupeList.Except(numBadgesPerSpecies.Keys).ToList();
                 if (!differenceList.Any())
                 {
                     return new CommandResult
