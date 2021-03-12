@@ -11,7 +11,7 @@ namespace TPP.Core
 {
     public class PokedexData
     {
-        public IImmutableSet<PkmnSpecies> KnownSpecies { get; }
+        public ImmutableSortedSet<PkmnSpecies> KnownSpecies { get; }
 
         private static readonly (string, string)[] NameNormalizations =
         {
@@ -58,7 +58,7 @@ namespace TPP.Core
 
         private PokedexData()
         {
-            KnownSpecies = LoadSpeciesNames().ToImmutableHashSet();
+            KnownSpecies = LoadSpeciesNames().ToImmutableSortedSet();
         }
 
         /// Construct an instance with all the pokedex data loaded,
