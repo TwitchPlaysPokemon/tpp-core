@@ -76,7 +76,7 @@ namespace TPP.Core.Commands.Definitions
         public async Task<CommandResult> Badges(CommandContext context)
         {
             (Optional<PkmnSpecies> optionalSpecies, Optional<User> optionalUser) =
-                await context.ParseArgs<Optional<PkmnSpecies>, Optional<User>>();
+                await context.ParseArgs<AnyOrder<Optional<PkmnSpecies>, Optional<User>>>();
             bool isSelf = !optionalUser.IsPresent;
             User user = isSelf ? context.Message.User : optionalUser.Value;
             if (optionalSpecies.IsPresent)

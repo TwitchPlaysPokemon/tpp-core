@@ -56,6 +56,24 @@ namespace TPP.ArgsParsing.Tests
         }
 
         [Test]
+        public async Task TestAnyOrderLongestFirst()
+        {
+            var argsParser = new ArgsParser();
+            argsParser.AddArgumentParser(new AnyOrderParser(argsParser));
+            argsParser.AddArgumentParser(new OptionalParser(argsParser));
+            argsParser.AddArgumentParser(new SignedIntParser());
+            argsParser.AddArgumentParser(new StringParser());
+
+            // this used to fail because the optional made the first permutation fit with remaining arguments,
+            // instead of continuing to try all permutations and return the one consuming the most arguments.
+            (Optional<SignedInt> optionalInt, string str) = await argsParser
+                .Parse<AnyOrder<Optional<SignedInt>, string>>(ImmutableList.Create("abc", "123"));
+            Assert.True(optionalInt.IsPresent);
+            Assert.AreEqual(123, (int)optionalInt.Value);
+            Assert.AreEqual("abc", str);
+        }
+
+        [Test]
         public async Task TestAnyOrderSpareArgs()
         {
             var argsParser = new ArgsParser();
