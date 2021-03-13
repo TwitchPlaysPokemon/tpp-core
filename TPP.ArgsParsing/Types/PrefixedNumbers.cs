@@ -4,6 +4,7 @@ namespace TPP.ArgsParsing.Types
     {
         public int Number { get; internal init; }
         public static implicit operator int(ImplicitNumber n) => n.Number;
+        public override string ToString() => Number.ToString();
     }
 
     public class Pokeyen : ImplicitNumber

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Moq;
@@ -8,6 +9,7 @@ using NodaTime;
 using NUnit.Framework;
 using TPP.ArgsParsing;
 using TPP.ArgsParsing.TypeParsers;
+using TPP.Core.Chat;
 using TPP.Core.Commands;
 using TPP.Core.Commands.Definitions;
 using TPP.Persistence.Models;
@@ -41,6 +43,7 @@ namespace TPP.Core.Tests.Commands.Definitions
         private Mock<IUserRepo> _userRepoMock = null!;
         private Mock<IBank<User>> _pokeyenBankMock = null!;
         private Mock<IBank<User>> _tokenBankMock = null!;
+        private Mock<IMessageSender> _messageSenderMock = null!;
         private ArgsParser _argsParser = null!;
 
         private UserCommands _userCommands = null!;
@@ -51,16 +54,20 @@ namespace TPP.Core.Tests.Commands.Definitions
             _userRepoMock = new Mock<IUserRepo>();
             _pokeyenBankMock = new Mock<IBank<User>>();
             _tokenBankMock = new Mock<IBank<User>>();
+            _messageSenderMock = new Mock<IMessageSender>();
             _userCommands = new UserCommands(
                 userRepo: _userRepoMock.Object,
                 pokeyenBank: _pokeyenBankMock.Object,
-                tokenBank: _tokenBankMock.Object);
+                tokenBank: _tokenBankMock.Object,
+                messageSender: _messageSenderMock.Object);
             _argsParser = new ArgsParser();
             _argsParser.AddArgumentParser(new OptionalParser(_argsParser));
             _argsParser.AddArgumentParser(new UserParser(_userRepoMock.Object));
             _argsParser.AddArgumentParser(new HexColorParser());
             _argsParser.AddArgumentParser(new StringParser());
             _argsParser.AddArgumentParser(new NonNegativeIntParser());
+            _argsParser.AddArgumentParser(new AnyOrderParser(_argsParser));
+            _argsParser.AddArgumentParser(new TokensParser());
         }
 
         [Test]
@@ -276,6 +283,47 @@ namespace TPP.Core.Tests.Commands.Definitions
 
             Assert.AreEqual("color of participation badge #2 (Crystal) successfully equipped", result.Response);
             _userRepoMock.Verify(u => u.SetSelectedEmblem(user, 2), Times.Once);
+        }
+
+        [Test]
+        public async Task TestDonateTokens()
+        {
+            User userSelf = MockUser("Self");
+            User userRecipient = MockUser("Recipient");
+            _userRepoMock.Setup(r => r.FindBySimpleName(userRecipient.SimpleName))
+                .Returns(Task.FromResult((User?)userRecipient));
+            _tokenBankMock.Setup(b => b.GetAvailableMoney(userSelf)).Returns(Task.FromResult(1L));
+            List<IEnumerable<Transaction<User>>> txInvocations = new();
+            _tokenBankMock.Setup(b => b.PerformTransactions(Capture.In(txInvocations), It.IsAny<CancellationToken>()));
+
+            CommandResult result = await _userCommands.Donate(new CommandContext(MockMessage(userSelf),
+                ImmutableList.Create("T1", "Recipient"), _argsParser));
+
+            Assert.AreEqual("has donated T1 to @Recipient!", result.Response);
+            List<Transaction<User>> txs = txInvocations.SelectMany(t => t).ToList();
+            CollectionAssert.AreEquivalent(new List<Transaction<User>>
+            {
+                new(userSelf, -1, "donation_give"),
+                new(userRecipient, 1, "donation_recieve"),
+            }, txs);
+        }
+
+        [Test]
+        public async Task TestDonateTokensInsufficientFunds()
+        {
+            User userSelf = MockUser("Self");
+            User userRecipient = MockUser("Recipient");
+            _userRepoMock.Setup(r => r.FindBySimpleName(userRecipient.SimpleName))
+                .Returns(Task.FromResult((User?)userRecipient));
+            _tokenBankMock.Setup(b => b.GetAvailableMoney(userSelf)).Returns(Task.FromResult(1L));
+
+            CommandResult result = await _userCommands.Donate(new CommandContext(MockMessage(userSelf),
+                ImmutableList.Create("T2", "Recipient"), _argsParser));
+
+            Assert.AreEqual("You are trying to donate T2 but you only have T1.", result.Response);
+            _tokenBankMock.Verify(b =>
+                b.PerformTransactions(It.IsAny<IEnumerable<Transaction<User>>>(), It.IsAny<CancellationToken>()),
+                Times.Never);
         }
     }
 }

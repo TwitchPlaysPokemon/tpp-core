@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using TPP.ArgsParsing.Types;
 using TPP.Common;
+using TPP.Core.Chat;
 using TPP.Persistence.Models;
 using TPP.Persistence.Repos;
 
@@ -19,57 +20,62 @@ namespace TPP.Core.Commands.Definitions
                 Aliases = new[] { "pokeyen", "tokens", "currency", "money", "rank" },
                 Description = "Show a user's pokeyen and tokens. Argument: <username> (optional)"
             },
-
             new Command("setglow", SetGlow)
             {
                 Aliases = new[] { "setsecondarycolor", "setsecondarycolour" },
                 Description = "Change the color of the glow around your name as it appears on stream. " +
                               "Argument: #<hexcolor>"
             },
-
             new Command("removeglow", RemoveGlow)
             {
                 Aliases = new[] { "removesecondarycolor", "removesecondarycolour" },
                 Description = "Remove the glow around your name as it appears on stream."
             },
-
             new Command(UnlockGlowCommandName, UnlockGlow)
             {
                 Aliases = new[] { "unlocksecondarycolor", "unlocksecondarycolour" },
                 Description = "Unlock the ability to change the color of your glow around your name " +
                               "as it appears on stream. Costs 1 token."
             },
-
             new Command("displayname", SetDisplayName)
             {
                 Description = "Set the capitalization of your display name as it appears on stream. " +
                               "Only needed by users with special characters in their display name. " +
                               "Argument: <new name>"
             },
-
             new Command("emblems", CheckEmblems)
             {
                 Aliases = new[] { "participation" },
                 Description = "Show a user's run participation record. Argument: <username> (optional)"
             },
-
             new Command("selectemblem", SelectEmblem)
             {
                 Aliases = new[] { "chooseemblem", "selectparticipationbadge", "chooseparticipationbadge" },
                 Description = "Select which run's emblem color to show on stream next to your name. " +
                               "Argument: <run number>"
             },
+            new Command("donate", Donate)
+            {
+                Aliases = new[] { "gifttokens" },
+                Description = "Donate another user tokens. Arguments: <user to donate to> <amount of tokens>"
+            },
         };
 
         private readonly IUserRepo _userRepo;
         private readonly IBank<User> _pokeyenBank;
         private readonly IBank<User> _tokenBank;
+        private readonly IMessageSender _messageSender;
 
-        public UserCommands(IUserRepo userRepo, IBank<User> pokeyenBank, IBank<User> tokenBank)
+        public UserCommands(
+            IUserRepo userRepo,
+            IBank<User> pokeyenBank,
+            IBank<User> tokenBank,
+            IMessageSender messageSender)
         {
             _userRepo = userRepo;
             _pokeyenBank = pokeyenBank;
             _tokenBank = tokenBank;
+            _messageSender = messageSender;
         }
 
         public async Task<CommandResult> CheckBalance(CommandContext context)
@@ -191,6 +197,36 @@ namespace TPP.Core.Commands.Definitions
             await _userRepo.SetSelectedEmblem(user, emblem);
             return new CommandResult
             { Response = $"color of participation badge {Emblems.FormatEmblem(emblem)} successfully equipped" };
+        }
+
+        public async Task<CommandResult> Donate(CommandContext context)
+        {
+            User gifter = context.Message.User;
+            (User recipient, Tokens tokens) = await context.ParseArgs<AnyOrder<User, Tokens>>();
+            if (recipient == gifter)
+                return new CommandResult { Response = "You can't donate to yourself." };
+            if (tokens <= 0)
+                return new CommandResult { Response = "You must donate at least T1." };
+
+            long availableTokens = await _tokenBank.GetAvailableMoney(gifter);
+            if (availableTokens < tokens)
+                return new CommandResult
+                {
+                    Response = $"You are trying to donate T{tokens} but you only have T{availableTokens}."
+                };
+
+            await _tokenBank.PerformTransactions(new[]
+            {
+                new Transaction<User>(gifter, -tokens, TransactionType.DonationGive),
+                new Transaction<User>(recipient, tokens, TransactionType.DonationReceive)
+            });
+
+            await _messageSender.SendWhisper(recipient, $"You have been donated T{tokens} from {gifter.Name}!");
+            return new CommandResult
+            {
+                Response = $"has donated T{tokens} to @{recipient.Name}!",
+                ResponseTarget = ResponseTarget.Chat
+            };
         }
     }
 }

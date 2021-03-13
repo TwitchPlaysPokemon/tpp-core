@@ -214,8 +214,6 @@ namespace TPP.Core.Commands.Definitions
             ["transmute"] = "Transform 3 or more badges into a (usually) rarer badge. Costs one token. Arguments: <several Pokémon>(at least 3) t1",
 
             // misc
-            ["donate"] = "Donate another user tokens. Arguments: <user to donate to> <amount of tokens>",
-            ["gifttokens"] = "Donate another user tokens. Arguments: <user to donate to> <amount of tokens>",
             ["storm"] = "Distribute your tokens randomly among players inputting on the sidegame. Argument: t<number of tokens>",
             ["bribe"] = "Place a token bribe on an input on sidegame. These will be distributed to a random person on that input at the end of the next sidegame input. Arguments: <input> t<tokens>",
             ["bribes"] = "See current bribes.",

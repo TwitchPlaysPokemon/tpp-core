@@ -66,8 +66,10 @@ namespace TPP.Core
                 new EasterEggCommands().Commands,
                 new StaticResponseCommands().Commands,
                 new UserCommands(
-                    databases.UserRepo, pokeyenBank: databases.PokeyenBank, tokenBank: databases.TokensBank).Commands,
-                new BadgeCommands(databases.BadgeRepo, databases.UserRepo, messageSender, knownSpecies ).Commands,
+                    databases.UserRepo, pokeyenBank: databases.PokeyenBank, tokenBank: databases.TokensBank,
+                    messageSender
+                ).Commands,
+                new BadgeCommands(databases.BadgeRepo, databases.UserRepo, messageSender, knownSpecies).Commands,
                 new OperatorCommands(
                     stopToken, chatConfig.OperatorNames, databases.PokeyenBank, databases.TokensBank,
                     messageSender: messageSender, databases.BadgeRepo
