@@ -138,6 +138,9 @@ namespace TPP.Core.Commands.Definitions
             string reason = string.Join(' ', reasonParts.Values);
             int amount = amountOpt.Map(i => i.Number).OrElse(1);
 
+            if (string.IsNullOrEmpty(reason))
+                return new CommandResult { Response = "Must provide a reason" };
+
             if (gifter == context.Message.User)
                 return new CommandResult { Response = "Use the regular gift command if you're the gifter" };
 

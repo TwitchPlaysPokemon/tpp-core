@@ -184,6 +184,34 @@ namespace TPP.Core.Tests.Commands.Definitions
         }
 
         [Test]
+        public async Task TestTransferBadgeOmitReason()
+        {
+            PkmnSpecies species = PkmnSpecies.RegisterName("1", "species");
+            _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
+            User userSelf = MockUser("MockUserSelf");
+            User gifter = MockUser("Gifter");
+            User recipient = MockUser("Recipient");
+            OperatorCommands operatorCommands = new(
+                new StopToken(),
+                operatorNames: new[] { userSelf.SimpleName },
+                _tokensBankMock.Object, _tokensBankMock.Object,
+                _messageSenderMock.Object, _badgeRepoMock.Object);
+            _userRepoMock.Setup(repo => repo.FindBySimpleName("gifter")).Returns(Task.FromResult((User?)gifter));
+            _userRepoMock.Setup(repo => repo.FindBySimpleName("recipient")).Returns(Task.FromResult((User?)recipient));
+
+            CommandResult result = await operatorCommands.TransferBadge(new CommandContext(MockMessage(userSelf),
+                ImmutableList.Create("gifter", "recipient", "species", "2"), _argsParser));
+
+            Assert.AreEqual("Must provide a reason", result.Response);
+            _badgeRepoMock.Verify(repo => repo.TransferBadges(
+                    It.IsAny<IImmutableList<Badge>>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<IDictionary<string, object?>>()),
+                Times.Never);
+        }
+
+        [Test]
         public async Task TestGiftBadgeNotOwned()
         {
             PkmnSpecies species = PkmnSpecies.RegisterName("1", "species");
