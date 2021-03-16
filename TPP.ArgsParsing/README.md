@@ -29,3 +29,27 @@ but can be extended by deriving from [BaseArgumentParser](IArgumentParser.cs)
 and adding that parser to your `ArgsParser`-instance.
 
 Take a look at the [tests](../TPP.ArgsParsing.Tests) for more in-depth usage examples.
+
+# built-in types
+
+Parser implementations for the following types are included in this project (their names are `<type>Parser` by convention):
+
+| type | description | code example |
+| ---- | ----------- | ------- |
+| `HexColor` | 6 hexadecimal digits optionally prefixed with `#` | `HexColor color = await argsParser.Parse<HexColor>(ImmutableList.Create("#ff0000"))` |
+| `Instant` | UTC instants in ISO-8601 format | `Instant instant = await argsParser.Parse<Instant>(ImmutableList.Create("2014-02-12T15:30:00Z"))` |
+| `SignedInt` | an unrestricted integer | `int number = await argsParser.Parse<SignedInt>(ImmutableList.Create("-42"))` |
+| `NonNegativeInt` | an integer >= 0 | `int number = await argsParser.Parse<NonNegativeInt>(ImmutableList.Create("0"))` |
+| `PositiveInt` | an integer > 0 | `int number = await argsParser.Parse<PositiveInt>(ImmutableList.Create("42"))` |
+| `PkmnSpecies` | a pokemon species | `PkmnSpecies species = await argsParser.Parse<PkmnSpecies>(ImmutableList.Create("Pikachu"))` |
+| `Pokeyen` | a `P`-prefixed nonnegative amount of pokeyen | `int pokeyen = await argsParser.Parse<Pokeyen>(ImmutableList.Create("42"))` |
+| `SignedPokeyen` | a `P`-prefixed unrestricted amount of pokeyen | `int pokeyen = await argsParser.Parse<SignedPokeyen>(ImmutableList.Create("-42"))` |
+| `Tokens` | a `T`-prefixed nonnegative amount of tokens | `int tokens = await argsParser.Parse<Tokens>(ImmutableList.Create("42"))` |
+| `SignedTokens` | a `T`-prefixed unrestricted amount of tokens | `int tokens = await argsParser.Parse<SignedTokens>(ImmutableList.Create("-42"))` |
+| `string` | the raw input argument | `string arg = await argsParser.Parse<string>(ImmutableList.Create("foo"))` |
+| `TimeSpan` | a time span in the format `<weeks>w<days>d<hours>h<minutes>m<seconds>s` | `TimeSpan timeSpan = await argsParser.Parse<TimeSpan>(ImmutableList.Create("2m30s"))` |
+| `User` | an existing TPP user | `User user = await argsParser.Parse<User>(ImmutableList.Create("tppsimulator"))` |
+| `AnyOrder<T1, T2, ...>` | a set of other types in any order | `(int number, string str) = await argsParser.Parse<AnyOrder<PositiveInt, string>>(ImmutableList.Create("abc", "123"))` |
+| `ManyOf<T>` | a list of some type | `ImmutableList<PkmnSpecies> species = await argsParser.Parse<ManyOf<PkmnSpecies>>(ImmutableList.Create("Pikachu", "Pidgey"))` |
+| `OneOf<T1, T2, ...>` | a set of other types of which only one must be given | `OneOf<string, PositiveInt> oneOf = await argsParser.Parse<OneOf<string, PositiveInt>>(ImmutableList.Create("foo"))` |
+| `Optional<T1>` | a type that may be absent | `Optional<string> stringOpt = await argsParser.Parse<Optional<string>>(ImmutableList.Create<string>())` |
