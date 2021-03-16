@@ -46,6 +46,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             _argsParser.AddArgumentParser(new SignedTokensParser());
             _argsParser.AddArgumentParser(new AnyOrderParser(_argsParser));
             _argsParser.AddArgumentParser(new OptionalParser(_argsParser));
+            _argsParser.AddArgumentParser(new ManyOfParser(_argsParser));
             _argsParser.AddArgumentParser(new UserParser(_userRepoMock.Object));
             _argsParser.AddArgumentParser(new PositiveIntParser());
             _pokeyenBankMock = new Mock<IBank<User>>();
@@ -73,8 +74,8 @@ namespace TPP.Core.Tests.Commands.Definitions
 
             {
                 CommandResult result = await operatorCommands.AdjustTokens(new CommandContext(MockMessage(user),
-                    ImmutableList.Create(user.Name, "T123", "because"), _argsParser));
-                Assert.AreEqual("Your token balance was adjusted by +123. Reason: because", result.Response);
+                    ImmutableList.Create(user.Name, "T123", "because", "reason"), _argsParser));
+                Assert.AreEqual("Your token balance was adjusted by +123. Reason: because reason", result.Response);
 
                 var transaction = new Transaction<User>(user, 123, "manual_adjustment",
                     new Dictionary<string, object?> { ["responsible_user"] = user.Id });
@@ -110,15 +111,16 @@ namespace TPP.Core.Tests.Commands.Definitions
 
             {
                 CommandResult result = await operatorCommands.AdjustTokens(new CommandContext(MockMessage(userSelf),
-                    ImmutableList.Create(userOther.Name, "T123", "because"), _argsParser));
-                Assert.AreEqual("MockUserOther's token balance was adjusted by +123. Reason: because", result.Response);
+                    ImmutableList.Create(userOther.Name, "T123", "because", "reason"), _argsParser));
+                Assert.AreEqual("MockUserOther's token balance was adjusted by +123. Reason: because reason",
+                    result.Response);
 
                 var transaction = new Transaction<User>(userOther, 123, "manual_adjustment",
                     new Dictionary<string, object?> { ["responsible_user"] = userSelf.Id });
                 _tokensBankMock.Verify(b => b.PerformTransaction(
                     It.Is<Transaction<User>>(tx => AreTransactionsEqual(tx, transaction)), default), Times.Once);
 
-                const string notification = "MockUserSelf adjusted your token balance by +123. Reason: because";
+                const string notification = "MockUserSelf adjusted your token balance by +123. Reason: because reason";
                 _messageSenderMock.Verify(m => m.SendWhisper(userOther,
                     notification), Times.Once);
             }
@@ -163,16 +165,16 @@ namespace TPP.Core.Tests.Commands.Definitions
                 .Returns(Task.FromResult(new List<Badge> { badge1, badge2, badge3, }));
 
             CommandResult result = await operatorCommands.TransferBadge(new CommandContext(MockMessage(userSelf),
-                ImmutableList.Create("gifter", "recipient", "species", "2", "reason"), _argsParser));
+                ImmutableList.Create("gifter", "recipient", "species", "2", "because", "reason"), _argsParser));
 
-            Assert.AreEqual("transferred 2 #001 species badges from Gifter to Recipient. Reason: reason",
+            Assert.AreEqual("transferred 2 #001 species badges from Gifter to Recipient. Reason: because reason",
                 result.Response);
             Assert.AreEqual(ResponseTarget.Chat, result.ResponseTarget);
             IDictionary<string, object?> data = new Dictionary<string, object?>
             {
                 ["gifter"] = gifter.Id,
                 ["responsible_user"] = userSelf.Id,
-                ["reason"] = "reason",
+                ["reason"] = "because reason",
             };
             _badgeRepoMock.Verify(repo => repo.TransferBadges(
                 It.Is<IImmutableList<Badge>>(list => list.SequenceEqual(ImmutableList.Create(badge1, badge2))),
