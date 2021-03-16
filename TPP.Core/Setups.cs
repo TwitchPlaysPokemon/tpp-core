@@ -42,6 +42,7 @@ namespace TPP.Core
             argsParser.AddArgumentParser(new AnyOrderParser(argsParser));
             argsParser.AddArgumentParser(new OneOfParser(argsParser));
             argsParser.AddArgumentParser(new OptionalParser(argsParser));
+            argsParser.AddArgumentParser(new ManyOfParser(argsParser));
 
             argsParser.AddArgumentParser(new UserParser(userRepo));
             return argsParser;
