@@ -211,5 +211,26 @@ namespace TPP.Core.Tests.Commands.Definitions
                     It.IsAny<IDictionary<string, object?>>()),
                 Times.Never);
         }
+
+        [Test]
+        public async Task TestCreateBadge()
+        {
+            PkmnSpecies species = PkmnSpecies.RegisterName("1", "Species");
+            _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
+            User user = MockUser("MockUser");
+            User recipient = MockUser("Recipient");
+            OperatorCommands operatorCommands = new(new StopToken(), operatorNames: new[] { user.SimpleName },
+                _tokensBankMock.Object, _tokensBankMock.Object, _messageSenderMock.Object, _badgeRepoMock.Object);
+            _userRepoMock.Setup(repo => repo.FindBySimpleName("recipient")).Returns(Task.FromResult((User?)recipient));
+
+            CommandResult result = await operatorCommands.CreateBadge(new CommandContext(MockMessage(user),
+                ImmutableList.Create("recipient", "species", "123"), _argsParser));
+
+            Assert.AreEqual("123 badges of species #001 Species created for user Recipient.", result.Response);
+            Assert.AreEqual(ResponseTarget.Source, result.ResponseTarget);
+            _badgeRepoMock.Verify(repo =>
+                    repo.AddBadge(recipient.Id, species, Badge.BadgeSource.ManualCreation, null),
+                Times.Exactly(123));
+        }
     }
 }

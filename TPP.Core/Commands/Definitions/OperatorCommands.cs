@@ -64,6 +64,11 @@ namespace TPP.Core.Commands.Definitions
                 Description = "Operators only: Transfer badges from one user to another user. " +
                               "Arguments: <gifter> <recipient> <pokemon> <number of badges>(Optional) <reason>"
             },
+            new Command("createbadge", CreateBadge)
+            {
+                Description = "Operators only: Create a badge for a user. " +
+                              "Arguments: <recipient> <pokemon> <number of badges>(Optional)"
+            },
         }.Select(cmd => cmd.WithCondition(
             canExecute: ctx => IsOperator(ctx.Message.User),
             ersatzResult: new CommandResult { Response = "Only operators can use that command" }));
@@ -167,6 +172,23 @@ namespace TPP.Core.Commands.Definitions
                     ? $"transferred {amount} {species} badges from {gifter.Name} to {recipient.Name}. Reason: {reason}"
                     : $"transferred a {species} badge from {gifter.Name} to {recipient.Name}. Reason: {reason}",
                 ResponseTarget = ResponseTarget.Chat
+            };
+        }
+
+        public async Task<CommandResult> CreateBadge(CommandContext context)
+        {
+            (User recipient, PkmnSpecies species, Optional<PositiveInt> amountOpt) =
+                await context.ParseArgs<AnyOrder<User, PkmnSpecies, Optional<PositiveInt>>>();
+            int amount = amountOpt.Map(i => i.Number).OrElse(1);
+
+            for (int i = 0; i < amount; i++)
+                await _badgeRepo.AddBadge(recipient.Id, species, Badge.BadgeSource.ManualCreation);
+
+            return new CommandResult
+            {
+                Response = amount > 1
+                    ? $"{amount} badges of species {species} created for user {recipient.Name}."
+                    : $"Badge of species {species} created for user {recipient.Name}."
             };
         }
     }
