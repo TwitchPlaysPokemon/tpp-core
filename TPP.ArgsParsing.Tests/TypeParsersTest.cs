@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Moq;
@@ -383,6 +384,26 @@ namespace TPP.ArgsParsing.Tests
             var exUserPrefixed = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
                 .Parse<User>(args: ImmutableList.Create("@some_unknown_name")));
             Assert.AreEqual("did not recognize a user with the name 'some_unknown_name'", exUserPrefixed.Message);
+        }
+
+        [Test]
+        public async Task TestManyOfParser()
+        {
+            var argsParser = new ArgsParser();
+            argsParser.AddArgumentParser(new PositiveIntParser());
+            argsParser.AddArgumentParser(new ManyOfParser(argsParser));
+
+            ImmutableList<PositiveInt> threeInts = await argsParser
+                .Parse<ManyOf<PositiveInt>>(ImmutableList.Create("1", "3", "2"));
+            CollectionAssert.AreEqual(new[] { 1, 3, 2 }, threeInts.Select(i => i.Number));
+
+            ImmutableList<PositiveInt> zeroInts = await argsParser
+                .Parse<ManyOf<PositiveInt>>(ImmutableList.Create<string>());
+            CollectionAssert.AreEqual(Array.Empty<int>(), zeroInts.Select(i => i.Number));
+
+            ArgsParseFailure failure = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<ManyOf<PositiveInt>>(ImmutableList.Create<string>("1", "c", "2")));
+            Assert.AreEqual("did not recognize 'c' as a number", failure.Message);
         }
     }
 }
