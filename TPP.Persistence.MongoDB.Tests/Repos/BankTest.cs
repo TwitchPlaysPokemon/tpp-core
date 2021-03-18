@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
@@ -65,12 +66,12 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
         }
 
         [Test]
-        public async Task fails_transaction_if_user_object_data_is_stale()
+        public async Task fails_transaction_if_user_object_data_is_stale_and_higher()
         {
             (IBank<TestUser> bank, IMongoCollection<TestUser> usersCollection) = CreateDbObjects(new MockClock());
             var user = new TestUser { Money = 10 };
             await usersCollection.InsertOneAsync(user);
-            user.Money = 5; // object is stale, amount does not match database
+            user.Money = 15; // amount in the database is unexpectedly lower than this
 
             var transaction = new Transaction<TestUser>(user, 1, "test");
             InvalidOperationException failure = Assert.ThrowsAsync<InvalidOperationException>(
@@ -78,12 +79,12 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
 
             Assert.AreEqual(
                 "Tried to perform transaction with stale user data: " +
-                $"old balance 5 plus change 1 does not equal new balance 11 for user {user}",
+                $"old balance 15 plus change 1 does not equal new balance 11 for user {user}",
                 failure.Message);
 
             TestUser userAfter = await usersCollection.Find(u => u.Id == user.Id).FirstAsync();
             Assert.AreEqual(10, userAfter.Money);
-            Assert.AreEqual(5, user.Money); // no new balance was injected
+            Assert.AreEqual(15, user.Money); // no new balance was injected
         }
 
         [Test]
@@ -218,6 +219,22 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             Assert.AreEqual(instant, log.CreatedAt);
             Assert.IsNull(log.Type);
             Assert.AreEqual(new Dictionary<string, object?> { ["match"] = 35510 }, log.AdditionalData);
+        }
+
+        [Test]
+        public async Task can_handle_concurrent_transactions()
+        {
+            (IBank<TestUser> bank, IMongoCollection<TestUser> usersCollection) = CreateDbObjects(new MockClock());
+            var user = new TestUser { Money = 10 };
+            await usersCollection.InsertOneAsync(user);
+            const int numTransactions = 100;
+
+            TransactionLog[] transactionLogs = await Task.WhenAll(Enumerable.Range(0, numTransactions)
+                .Select(i => bank.PerformTransaction(new Transaction<TestUser>(user, 1, "test-" + i))));
+
+            Assert.AreEqual(numTransactions, transactionLogs.Length);
+            TestUser userAfterwards = await usersCollection.Find(u => u.Id == user.Id).FirstAsync();
+            Assert.AreEqual(10 + numTransactions, userAfterwards.Money);
         }
     }
 }
