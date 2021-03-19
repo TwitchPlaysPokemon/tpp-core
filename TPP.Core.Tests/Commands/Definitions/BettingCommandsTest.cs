@@ -75,7 +75,7 @@ namespace TPP.Core.Tests.Commands.Definitions
                     MockMessage(user, source: MessageSource.Whisper),
                     ImmutableList.Create("100", "blue"), ArgsParser));
 
-                Assert.AreEqual("You may only bet through chat", result.Response);
+                Assert.AreEqual("you may only bet through chat", result.Response);
             }
 
             [Test]

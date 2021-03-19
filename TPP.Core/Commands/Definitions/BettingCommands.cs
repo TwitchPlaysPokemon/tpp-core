@@ -32,7 +32,7 @@ namespace TPP.Core.Commands.Definitions
         public async Task<CommandResult> Bet(CommandContext context)
         {
             if (context.Message.MessageSource != MessageSource.Chat)
-                return new CommandResult { Response = "You may only bet through chat" };
+                return new CommandResult { Response = "you may only bet through chat" };
             IBettingPeriod<User>? bettingPeriod = _bettingPeriodProvider();
             if (bettingPeriod == null)
                 return new CommandResult { Response = "betting not available right now" };
@@ -45,7 +45,7 @@ namespace TPP.Core.Commands.Definitions
             else if (amountOptions.Item2.IsPresent)
                 amount = amountOptions.Item2.Value;
             else
-                amount = (int)Math.Ceiling(amountOptions.Item3.Value.AsRatio * context.Message.User.Pokeyen);
+                amount = (int)Math.Ceiling(amountOptions.Item3.Value.AsDecimal * context.Message.User.Pokeyen);
 
             PlaceBetFailure? failure = await bettingPeriod.BettingShop.PlaceBet(context.Message.User, side, amount);
             if (failure != null)

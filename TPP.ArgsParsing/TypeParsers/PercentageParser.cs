@@ -31,7 +31,7 @@ namespace TPP.ArgsParsing.TypeParsers
             catch (FormatException)
             {
                 return Task.FromResult(ArgsParseResult<Percentage>.Failure(
-                    $"did not recognize '{doubleStr}' as a floating point number"));
+                    $"did not recognize '{doubleStr}' as a decimal"));
             }
             catch (OverflowException)
             {

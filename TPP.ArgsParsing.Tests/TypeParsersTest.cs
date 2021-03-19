@@ -209,19 +209,19 @@ namespace TPP.ArgsParsing.Tests
             Percentage percentageExactly100 = await argsParser.Parse<Percentage>(ImmutableList.Create("100%"));
             Percentage percentageZero = await argsParser.Parse<Percentage>(ImmutableList.Create("0%"));
             Assert.AreEqual(1234.5678, percentageOver100.AsPercent);
-            Assert.AreEqual(12.345678, percentageOver100.AsRatio);
+            Assert.AreEqual(12.345678, percentageOver100.AsDecimal);
             Assert.AreEqual(100.0, percentageExactly100.AsPercent);
-            Assert.AreEqual(1.0, percentageExactly100.AsRatio);
+            Assert.AreEqual(1.0, percentageExactly100.AsDecimal);
             Assert.AreEqual(0.0, percentageZero.AsPercent);
-            Assert.AreEqual(0.0, percentageZero.AsRatio);
+            Assert.AreEqual(0.0, percentageZero.AsDecimal);
 
-            ArgsParseFailure failureNoFloat = Assert.ThrowsAsync<ArgsParseFailure>(() =>
+            ArgsParseFailure failureNoNumber = Assert.ThrowsAsync<ArgsParseFailure>(() =>
                 argsParser.Parse<Percentage>(ImmutableList.Create("abc%")));
             ArgsParseFailure failureNoPercentSign = Assert.ThrowsAsync<ArgsParseFailure>(() =>
                 argsParser.Parse<Percentage>(ImmutableList.Create("1.23")));
             ArgsParseFailure failureNegative = Assert.ThrowsAsync<ArgsParseFailure>(() =>
                 argsParser.Parse<Percentage>(ImmutableList.Create("-5%")));
-            Assert.AreEqual("did not recognize 'abc' as a floating point number", failureNoFloat.Message);
+            Assert.AreEqual("did not recognize 'abc' as a decimal", failureNoNumber.Message);
             Assert.AreEqual("percentages must end in '%'", failureNoPercentSign.Message);
             Assert.AreEqual("percentage cannot be negative", failureNegative.Message);
         }
