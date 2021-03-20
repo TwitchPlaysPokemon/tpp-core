@@ -361,14 +361,18 @@ namespace TPP.ArgsParsing.Tests
         public async Task TestUserParser()
         {
             const string username = "some_name";
+            const string displayName = "名前";
             var origUser = new User(
-                id: "1234567890", name: username, twitchDisplayName: username.ToUpper(), simpleName: username,
+                id: "1234567890", name: username, twitchDisplayName: displayName, simpleName: username,
                 color: null,
                 firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
                 lastMessageAt: null, pokeyen: 0, tokens: 0);
             var userRepoMock = new Mock<IUserRepo>();
             userRepoMock
                 .Setup(r => r.FindBySimpleName(username))
+                .ReturnsAsync(origUser);
+            userRepoMock
+                .Setup(r => r.FindByDisplayName(displayName))
                 .ReturnsAsync(origUser);
             var argsParser = new ArgsParser();
             argsParser.AddArgumentParser(new UserParser(userRepoMock.Object));
@@ -377,6 +381,8 @@ namespace TPP.ArgsParsing.Tests
             Assert.AreEqual(origUser, resultUser);
             var resultUserPrefixed = await argsParser.Parse<User>(args: ImmutableList.Create('@' + username));
             Assert.AreEqual(origUser, resultUserPrefixed);
+            var resultUserDisplayName = await argsParser.Parse<User>(args: ImmutableList.Create(displayName));
+            Assert.AreEqual(origUser, resultUserDisplayName);
 
             var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
                 .Parse<User>(args: ImmutableList.Create("some_unknown_name")));
@@ -384,6 +390,9 @@ namespace TPP.ArgsParsing.Tests
             var exUserPrefixed = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
                 .Parse<User>(args: ImmutableList.Create("@some_unknown_name")));
             Assert.AreEqual("did not recognize a user with the name 'some_unknown_name'", exUserPrefixed.Message);
+            var exDisplayName = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<User>(args: ImmutableList.Create("なまえ")));
+            Assert.AreEqual("did not recognize a user with the name 'なまえ'", exDisplayName.Message);
         }
 
         [Test]
