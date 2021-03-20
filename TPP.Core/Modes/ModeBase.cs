@@ -31,7 +31,8 @@ namespace TPP.Core.Modes
             ArgsParser argsParser = Setups.SetUpArgsParser(repos.UserRepo, pokedexData);
 
             var chats = new Dictionary<string, IChat>();
-            var chatFactory = new ChatFactory(loggerFactory, SystemClock.Instance, repos.UserRepo);
+            var chatFactory = new ChatFactory(loggerFactory, SystemClock.Instance,
+                repos.UserRepo, repos.TokensBank, repos.SubscriptionLogRepo);
             foreach (ConnectionConfig connectorConfig in baseConfig.Chat.Connections)
             {
                 IChat chat = chatFactory.Create(connectorConfig);

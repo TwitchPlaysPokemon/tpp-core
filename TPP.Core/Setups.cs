@@ -95,7 +95,8 @@ namespace TPP.Core
             IBank<User> TokensBank,
             ICommandLogger CommandLogger,
             IMessagequeueRepo MessagequeueRepo,
-            IMessagelogRepo MessagelogRepo
+            IMessagelogRepo MessagelogRepo,
+            ISubscriptionLogRepo SubscriptionLogRepo
         );
 
         public static Databases SetUpRepositories(BaseConfig baseConfig)
@@ -137,7 +138,8 @@ namespace TPP.Core
                 TokensBank: tokenBank,
                 CommandLogger: new CommandLogger(mongoDatabase, clock),
                 MessagequeueRepo: new MessagequeueRepo(mongoDatabase),
-                MessagelogRepo: new MessagelogRepo(mongoDatabaseMessagelog)
+                MessagelogRepo: new MessagelogRepo(mongoDatabaseMessagelog),
+                SubscriptionLogRepo: new SubscriptionLogRepo(mongoDatabase)
             );
         }
     }
