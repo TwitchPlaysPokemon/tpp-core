@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using static TPP.Core.Commands.CommandUtils;
 
@@ -36,7 +35,7 @@ namespace TPP.Core.Commands.Definitions
 
         private static Task<CommandResult> W(CommandContext context)
         {
-            string cmdName = context.Args.FirstOrDefault() ?? "command";
+            string cmdName = context.Args.Count > 1 ? context.Args[1] : "command";
             return Task.FromResult(new CommandResult
             {
                 Response = context.Message.MessageSource switch
