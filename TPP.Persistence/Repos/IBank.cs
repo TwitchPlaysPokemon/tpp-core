@@ -28,6 +28,8 @@ namespace TPP.Persistence.Repos
         public const string ManualAdjustment = "manual_adjustment";
         public const string DonationGive = "donation_give";
         public const string DonationReceive = "donation_recieve"; // typo kept for backwards-compatibility for now
+        public const string Subscription = "subscription";
+        public const string SubscriptionGift = "subscription gift";
 
         // collect all the types being used here instead of scattering string literals across the codebase
     }
@@ -59,7 +61,7 @@ namespace TPP.Persistence.Repos
             T user,
             long change,
             string type,
-            IDictionary<string, object?>? additionalData = default)
+            IDictionary<string, object?>? additionalData = null)
         {
             User = user;
             Change = change;
