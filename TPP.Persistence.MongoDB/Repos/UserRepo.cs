@@ -134,6 +134,9 @@ namespace TPP.Persistence.MongoDB.Repos
         public async Task<User?> FindBySimpleName(string simpleName) =>
             await Collection.Find(u => u.SimpleName == simpleName).FirstOrDefaultAsync();
 
+        public async Task<User?> FindByDisplayName(string displayName) =>
+            await Collection.Find(u => u.TwitchDisplayName == displayName).FirstOrDefaultAsync();
+
         private async Task<User> UpdateField<T>(User user, Expression<Func<User, T>> field, T value) =>
             await Collection.FindOneAndUpdateAsync<User>(
                 filter: u => u.Id == user.Id,
