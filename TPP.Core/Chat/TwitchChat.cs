@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using NodaTime;
 using TPP.Common;
 using TPP.Core.Configuration;
+using TPP.Core.Overlay.Events;
 using TPP.Persistence.Models;
 using TPP.Persistence.Repos;
 using TwitchLib.Client;
@@ -133,6 +134,13 @@ namespace TPP.Core.Chat
             string response = BuildSubResponse(subResult, null, false);
             await SendWhisper(e.Subscriber, response);
 
+            var evt = new NewSubscriber
+            {
+                User = e.Subscriber,
+                Emotes = ImmutableList<EmoteInfo>.Empty, // TODO emotes
+                SubMessage = e.Message,
+                ShareSub = true,
+            };
             // TODO send to overlay
         }
 
@@ -162,6 +170,13 @@ namespace TPP.Core.Chat
             if (!e.IsAnonymous)
                 await SendWhisper(e.Gifter, subGiftResponse); // don't respond to the "AnAnonymousGifter" user
 
+            var evt = new NewSubscriber
+            {
+                User = e.SubscriptionInfo.Subscriber,
+                Emotes = ImmutableList<EmoteInfo>.Empty, // TODO emotes
+                SubMessage = e.SubscriptionInfo.Message,
+                ShareSub = false,
+            };
             // TODO send to overlay
         }
 
