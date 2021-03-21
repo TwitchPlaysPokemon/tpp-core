@@ -31,10 +31,7 @@ namespace TPP.Core.Modes
             _stopToken = new StopToken();
             _modeBase = new ModeBase(loggerFactory, baseConfig, _stopToken);
 
-            _broadcastServer = new WebsocketBroadcastServer(
-                loggerFactory.CreateLogger<WebsocketBroadcastServer>(), "localhost", 5001);
-            _overlayConnection =
-                new OverlayConnection(loggerFactory.CreateLogger<OverlayConnection>(), _broadcastServer);
+            (_broadcastServer, _overlayConnection) = Setups.SetUpOverlayServer(loggerFactory);
         }
 
         public async Task Run()

@@ -10,6 +10,7 @@ using TPP.Core.Chat;
 using TPP.Core.Commands;
 using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
+using TPP.Core.Overlay;
 using TPP.Persistence.Models;
 using TPP.Persistence.MongoDB;
 using TPP.Persistence.MongoDB.Repos;
@@ -139,6 +140,16 @@ namespace TPP.Core
                 MessagequeueRepo: new MessagequeueRepo(mongoDatabase),
                 MessagelogRepo: new MessagelogRepo(mongoDatabaseMessagelog)
             );
+        }
+
+        public static (WebsocketBroadcastServer, OverlayConnection) SetUpOverlayServer(ILoggerFactory loggerFactory)
+        {
+            (string wsHost, int wsPort) = ("localhost", 5001);
+            WebsocketBroadcastServer broadcastServer = new(
+                loggerFactory.CreateLogger<WebsocketBroadcastServer>(), wsHost, wsPort);
+            OverlayConnection overlayConnection = new(
+                loggerFactory.CreateLogger<OverlayConnection>(), broadcastServer);
+            return (broadcastServer, overlayConnection);
         }
     }
 }
