@@ -70,9 +70,8 @@ namespace TPP.Core
             SubscriptionInfo subscriptionInfo = new(
                 user, int.Parse(subscriptionMessage.MsgParamMonths), StreakMonths: 1, tier,
                 subscriptionMessage.MsgParamSubPlanName, _clock.GetCurrentInstant(),
-                Message: null, gifter, subscriptionMessage.IsAnonymous);
-            SubscriptionGiftInfo subscriptionGiftInfo = new(gifter, tier, subscriptionMessage.IsAnonymous);
-            Subscribed?.Invoke(this, subscriptionInfo);
+                Message: null);
+            SubscriptionGiftInfo subscriptionGiftInfo = new(subscriptionInfo, gifter, subscriptionMessage.IsAnonymous);
             SubscriptionGifted?.Invoke(this, subscriptionGiftInfo);
         }
 
@@ -100,8 +99,7 @@ namespace TPP.Core
             if (!int.TryParse(subscriptionMessage.MsgParamStreakMonths, out int streakMonths)) streakMonths = 1;
             return new SubscriptionInfo(
                 user, int.Parse(subscriptionMessage.MsgParamCumulativeMonths), streakMonths, tier,
-                subscriptionMessage.SubscriptionPlanName, _clock.GetCurrentInstant(),
-                message, Gifter: null, IsAnonymous: false);
+                subscriptionMessage.SubscriptionPlanName, _clock.GetCurrentInstant(), message);
         }
 
         public void Dispose()

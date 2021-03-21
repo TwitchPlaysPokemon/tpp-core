@@ -10,7 +10,10 @@ using TPP.Persistence.Repos;
 
 namespace TPP.Core
 {
-    /// Information on a user receiving a subscription (either by subscribing by themselves or getting a gift sub).
+    /// <summary>
+    /// Information on a user subscription directly (not via a gift).
+    /// Gifted subscriptions are using <see cref="SubscriptionGiftInfo"/> instead.
+    /// </summary>
     public record SubscriptionInfo(
         User Subscriber,
         int NumMonths,
@@ -18,18 +21,10 @@ namespace TPP.Core
         SubscriptionTier Tier,
         string PlanName,
         Instant SubscriptionAt,
-        string? Message,
-        User? Gifter,
-        bool IsAnonymous);
+        string? Message);
 
-    /// <summary>
-    /// Information on a user gifting a subscription to another user.
-    /// The subscription itself is described as a separate <see cref="SubscriptionInfo"/> object.
-    /// </summary>
-    public record SubscriptionGiftInfo(
-        User Gifter,
-        SubscriptionTier Tier,
-        bool IsAnonymous);
+    /// Information on a user subscribing through a gifted subscription.
+    public record SubscriptionGiftInfo(SubscriptionInfo SubscriptionInfo, User Gifter, bool IsAnonymous);
 
     public interface ISubscriptionProcessor
     {
@@ -46,8 +41,6 @@ namespace TPP.Core
                 int OldLoyaltyLeague,
                 int NewLoyaltyLeague,
                 int CumulativeMonths,
-                User? Gifter,
-                bool IsAnonymous,
                 bool SubCountCorrected) : SubResult;
             public sealed record SameMonth(int Month) : SubResult;
         }
@@ -61,13 +54,15 @@ namespace TPP.Core
             }
 
             /// The gifter successfully received a token reward
-            public sealed record Ok(int DeltaTokens, bool IsAnonymous) : SubGiftResult;
+            public sealed record Ok(int GifterTokens) : SubGiftResult;
             /// The gifter is linked to the gift recipient and has not received a token reward
-            public sealed record LinkedAccount(User LinkedUser) : SubGiftResult;
+            public sealed record LinkedAccount : SubGiftResult;
+            /// The subscription was deemed a duplicate and the gifter has not received a token reward
+            public sealed record SameMonth(int Month) : SubGiftResult;
         }
 
         Task<SubResult> ProcessSubscription(SubscriptionInfo subscriptionInfo);
-        Task<SubGiftResult> ProcessSubscriptionGift(SubscriptionGiftInfo subscriptionGiftInfo);
+        Task<(SubResult, SubGiftResult)> ProcessSubscriptionGift(SubscriptionGiftInfo subscriptionGiftInfo);
     }
 
     public class SubscriptionProcessor : ISubscriptionProcessor
@@ -166,25 +161,30 @@ namespace TPP.Core
                 OldLoyaltyLeague: oldLoyaltyLeague,
                 NewLoyaltyLeague: newLoyaltyLeague,
                 CumulativeMonths: subscriptionInfo.NumMonths,
-                Gifter: subscriptionInfo.Gifter,
-                IsAnonymous: subscriptionInfo.IsAnonymous,
                 SubCountCorrected: subCountCorrected);
         }
 
-        public async Task<ISubscriptionProcessor.SubGiftResult> ProcessSubscriptionGift(
+        public async Task<(ISubscriptionProcessor.SubResult, ISubscriptionProcessor.SubGiftResult)> ProcessSubscriptionGift(
             SubscriptionGiftInfo subscriptionGiftInfo)
         {
-            // TODO check linked accounts
+            ISubscriptionProcessor.SubResult subResult =
+                await ProcessSubscription(subscriptionGiftInfo.SubscriptionInfo);
+            bool isLinkedAccount = false; // TODO check linked accounts
+            if (isLinkedAccount)
+                return (subResult, new ISubscriptionProcessor.SubGiftResult.LinkedAccount());
+
+            if (subResult is ISubscriptionProcessor.SubResult.SameMonth { Month: var month })
+                return (subResult, new ISubscriptionProcessor.SubGiftResult.SameMonth(month));
 
             const int tokensPerRank = 10;
-            int rewardTokens = subscriptionGiftInfo.Tier.ToRank() * tokensPerRank;
+            int rewardTokens = subscriptionGiftInfo.SubscriptionInfo.Tier.ToRank() * tokensPerRank;
             TransactionLog transactionLog = await _tokenBank.PerformTransaction(new Transaction<User>(
                 subscriptionGiftInfo.Gifter,
                 rewardTokens,
                 TransactionType.SubscriptionGift
             ));
 
-            return new ISubscriptionProcessor.SubGiftResult.Ok(rewardTokens, subscriptionGiftInfo.IsAnonymous);
+            return (subResult, new ISubscriptionProcessor.SubGiftResult.Ok(rewardTokens));
         }
     }
 }
