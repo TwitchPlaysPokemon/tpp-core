@@ -151,13 +151,14 @@ namespace TPP.Core.Modes
             long subscriberMinimumPokeyen = _matchmodeConfig.SubscriberMinimumPokeyen;
 
             List<User> poorUsers = await _userRepo.FindByPokeyenUnder(Math.Max(minimumPokeyen, subscriberMinimumPokeyen));
+            List<Transaction<User>> transactions = new List<Transaction<User>>();
             foreach (User u in poorUsers)
             {
                 long pokeyen = u.Pokeyen;
                 if(u.IsSubscribed && pokeyen < subscriberMinimumPokeyen)
                 {
                     long amountToGive = subscriberMinimumPokeyen - pokeyen;
-                    await _pokeyenBank.PerformTransaction(new Transaction<User>(u, amountToGive, TPP.Persistence.Repos.TransactionType.Welfare));
+                    transactions.Add(new Transaction<User>(u, amountToGive, TPP.Persistence.Repos.TransactionType.Welfare));
                     // TODO whisper users informing them they have been given money
                     _logger.LogDebug(String.Format("Subscriber {0} had their balance reset to P{1} (+P{2})", u.SimpleName, subscriberMinimumPokeyen, amountToGive));
 
@@ -165,11 +166,12 @@ namespace TPP.Core.Modes
                 else if (!u.IsSubscribed && u.Pokeyen < minimumPokeyen)
                 {
                     long amountToGive = minimumPokeyen - pokeyen;
-                    await _pokeyenBank.PerformTransaction(new Transaction<User>(u, amountToGive, TPP.Persistence.Repos.TransactionType.Welfare));
+                    transactions.Add(new Transaction<User>(u, amountToGive, TPP.Persistence.Repos.TransactionType.Welfare));
                     // TODO whisper users informing them they have been given money
                     _logger.LogDebug(String.Format("User {0} had their balance reset to P{1} (+P{2})", u.SimpleName, minimumPokeyen, amountToGive));
-                }
+                } 
             }
+            await _pokeyenBank.PerformTransactions(transactions);
         }
     }
 }
