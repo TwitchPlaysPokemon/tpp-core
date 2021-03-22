@@ -30,6 +30,7 @@ namespace TPP.Persistence.Repos
         public const string DonationReceive = "donation_recieve"; // typo kept for backwards-compatibility for now
         public const string Subscription = "subscription";
         public const string SubscriptionGift = "subscription gift";
+        public const string Welfare = "welfare";
 
         // collect all the types being used here instead of scattering string literals across the codebase
     }

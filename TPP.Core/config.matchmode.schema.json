@@ -1,4 +1,4 @@
-﻿{
+{
   "type": "object",
   "properties": {
     "$schema": {
@@ -15,6 +15,12 @@
     },
     "ResultDuration": {
       "type": "string"
+    },
+    "MinimumPokeyen": {
+      "type": "integer"
+    },
+    "SubscriberMinimumPokeyen": {
+      "type": "integer"
     }
   }
 }
