@@ -77,7 +77,7 @@ namespace TPP.Core.Modes
             };
             await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
 
-            ResetBalances(); //ensure everyone has money to bet before the betting period
+            await ResetBalances(); //ensure everyone has money to bet before the betting period
 
             IMatchCycle match = new CoinflipMatchCycle(_loggerFactory.CreateLogger<CoinflipMatchCycle>());
             Task setupTask = match.SetUp(new MatchInfo(teams.Blue, teams.Red), cancellationToken);
@@ -144,7 +144,7 @@ namespace TPP.Core.Modes
             _modeBase.Dispose();
         }
 
-        public async void ResetBalances()
+        public async Task ResetBalances()
         {
             _logger.LogInformation("Resetting Balances");
             long minimumPokeyen = _matchmodeConfig.MinimumPokeyen;
