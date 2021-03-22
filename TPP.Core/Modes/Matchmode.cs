@@ -146,7 +146,7 @@ namespace TPP.Core.Modes
 
         public async Task ResetBalances()
         {
-            _logger.LogInformation("Resetting Balances");
+            _logger.LogDebug("Resetting Balances");
             long minimumPokeyen = _matchmodeConfig.MinimumPokeyen;
             long subscriberMinimumPokeyen = _matchmodeConfig.SubscriberMinimumPokeyen;
 
@@ -159,7 +159,7 @@ namespace TPP.Core.Modes
                     long amountToGive = subscriberMinimumPokeyen - pokeyen;
                     await _pokeyenBank.PerformTransaction(new Transaction<User>(u, amountToGive, TPP.Persistence.Repos.TransactionType.Welfare));
                     // TODO whisper users informing them they have been given money
-                    _logger.LogInformation(String.Format("Subscriber {0} had their balance reset to P{1} (+P{2})", u.SimpleName, subscriberMinimumPokeyen, amountToGive));
+                    _logger.LogDebug(String.Format("Subscriber {0} had their balance reset to P{1} (+P{2})", u.SimpleName, subscriberMinimumPokeyen, amountToGive));
 
                 }
                 else if (!u.IsSubscribed && u.Pokeyen < minimumPokeyen)
@@ -167,7 +167,7 @@ namespace TPP.Core.Modes
                     long amountToGive = minimumPokeyen - pokeyen;
                     await _pokeyenBank.PerformTransaction(new Transaction<User>(u, amountToGive, TPP.Persistence.Repos.TransactionType.Welfare));
                     // TODO whisper users informing them they have been given money
-                    _logger.LogInformation(String.Format("User {0} had their balance reset to P{1} (+P{2})", u.SimpleName, minimumPokeyen, amountToGive));
+                    _logger.LogDebug(String.Format("User {0} had their balance reset to P{1} (+P{2})", u.SimpleName, minimumPokeyen, amountToGive));
                 }
             }
         }
