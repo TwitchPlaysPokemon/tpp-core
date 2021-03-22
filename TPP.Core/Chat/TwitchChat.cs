@@ -137,7 +137,7 @@ namespace TPP.Core.Chat
             var evt = new NewSubscriber
             {
                 User = e.Subscriber,
-                Emotes = ImmutableList<EmoteInfo>.Empty, // TODO emotes
+                Emotes = e.Emotes.Select(EmoteInfo.FromOccurence).ToImmutableList(),
                 SubMessage = e.Message,
                 ShareSub = true,
             };
@@ -173,7 +173,7 @@ namespace TPP.Core.Chat
             var evt = new NewSubscriber
             {
                 User = e.SubscriptionInfo.Subscriber,
-                Emotes = ImmutableList<EmoteInfo>.Empty, // TODO emotes
+                Emotes = e.SubscriptionInfo.Emotes.Select(EmoteInfo.FromOccurence).ToImmutableList(),
                 SubMessage = e.SubscriptionInfo.Message,
                 ShareSub = false,
             };

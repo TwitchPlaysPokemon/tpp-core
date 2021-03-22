@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,6 +11,8 @@ using TPP.Persistence.Repos;
 
 namespace TPP.Core
 {
+    public record EmoteOccurrence(string Id, string Code, int StartIndex, int EndIndex);
+
     /// <summary>
     /// Information on a user subscription directly (not via a gift).
     /// Gifted subscriptions are using <see cref="SubscriptionGiftInfo"/> instead.
@@ -21,7 +24,8 @@ namespace TPP.Core
         SubscriptionTier Tier,
         string PlanName,
         Instant SubscriptionAt,
-        string? Message);
+        string? Message,
+        IImmutableList<EmoteOccurrence> Emotes);
 
     /// Information on a user subscribing through a gifted subscription.
     public record SubscriptionGiftInfo(SubscriptionInfo SubscriptionInfo, User Gifter, bool IsAnonymous);

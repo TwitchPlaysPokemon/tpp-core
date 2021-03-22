@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using NodaTime;
 using TPP.Common;
@@ -70,7 +72,7 @@ namespace TPP.Core
             SubscriptionInfo subscriptionInfo = new(
                 user, int.Parse(subscriptionMessage.MsgParamMonths), StreakMonths: 1, tier,
                 subscriptionMessage.MsgParamSubPlanName, _clock.GetCurrentInstant(),
-                Message: null);
+                Message: null, ParseEmotes(e.GiftedSubscription.Emotes));
             SubscriptionGiftInfo subscriptionGiftInfo = new(subscriptionInfo, gifter, subscriptionMessage.IsAnonymous);
             SubscriptionGifted?.Invoke(this, subscriptionGiftInfo);
         }
@@ -99,8 +101,14 @@ namespace TPP.Core
             if (!int.TryParse(subscriptionMessage.MsgParamStreakMonths, out int streakMonths)) streakMonths = 1;
             return new SubscriptionInfo(
                 user, int.Parse(subscriptionMessage.MsgParamCumulativeMonths), streakMonths, tier,
-                subscriptionMessage.SubscriptionPlanName, _clock.GetCurrentInstant(), message);
+                subscriptionMessage.SubscriptionPlanName, _clock.GetCurrentInstant(), message,
+                ParseEmotes(subscriptionMessage.EmoteSet));
         }
+
+        private static IImmutableList<EmoteOccurrence> ParseEmotes(string emoteString) =>
+            new EmoteSet(emoteString, string.Empty).Emotes
+                .Select(e => new EmoteOccurrence(e.Id, e.Name, e.StartIndex, e.EndIndex))
+                .ToImmutableList();
 
         public void Dispose()
         {
