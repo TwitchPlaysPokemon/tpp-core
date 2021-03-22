@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 using Moq;
@@ -44,7 +45,7 @@ namespace TPP.Core.Tests
             ISubscriptionProcessor.SubResult subResult = await subscriptionProcessor.ProcessSubscription(
                 new SubscriptionInfo(
                     user, NumMonths: 3, StreakMonths: 2, subscriptionTier, PlanName: "Tier 2",
-                    subscribedAt, Message: "HeyGuys"));
+                    subscribedAt, Message: "HeyGuys", ImmutableList<EmoteOccurrence>.Empty));
 
             // THEN
             const int expectedTokens = 10 + (2 * 4) + 10 + (2 * 5); // per rank: 10 base tokens + 2 tokens per league
@@ -99,7 +100,7 @@ namespace TPP.Core.Tests
             ISubscriptionProcessor.SubResult subResult = await subscriptionProcessor.ProcessSubscription(
                 new SubscriptionInfo(
                     user, NumMonths: 2, StreakMonths: 2, SubscriptionTier.Tier1, PlanName: "Sub Plan Name",
-                    Instant.MinValue, Message: "Repeated"));
+                    Instant.MinValue, Message: "Repeated", ImmutableList<EmoteOccurrence>.Empty));
 
             // THEN
             // negative result
@@ -136,7 +137,7 @@ namespace TPP.Core.Tests
             ISubscriptionProcessor.SubResult subResult = await subscriptionProcessor.ProcessSubscription(
                 new SubscriptionInfo(
                     user, NumMonths: 2, StreakMonths: 2, SubscriptionTier.Tier3, PlanName: "Sub Plan Name",
-                    subscribedAt, Message: "Repeated"));
+                    subscribedAt, Message: "Repeated", ImmutableList<EmoteOccurrence>.Empty));
 
             // THEN
             const int expectedTokens = 14 + 16 + 18 + 20; // Tier 1 -> Tier 3: 4 loyalty completions difference
@@ -184,8 +185,8 @@ namespace TPP.Core.Tests
             userRepoMock.Setup(r => r.SetSubscriptionInfo(recipient, It.IsAny<int>(), It.IsAny<SubscriptionTier>(),
                 It.IsAny<int>(), It.IsAny<Instant>())).ReturnsAsync(recipient);
 
-            SubscriptionInfo subscriptionInfo =
-                new(recipient, 1, 0, SubscriptionTier.Tier3, "Sub Plan Name", Instant.MinValue, "sub message");
+            SubscriptionInfo subscriptionInfo = new(recipient, 1, 0, SubscriptionTier.Tier3, "Sub Plan Name",
+                Instant.MinValue, "sub message", ImmutableList<EmoteOccurrence>.Empty);
             (ISubscriptionProcessor.SubResult subResult, ISubscriptionProcessor.SubGiftResult subGiftResult) =
                 await subscriptionProcessor.ProcessSubscriptionGift(
                     new SubscriptionGiftInfo(subscriptionInfo, gifter, false));
@@ -232,8 +233,8 @@ namespace TPP.Core.Tests
             ISubscriptionProcessor subscriptionProcessor = new SubscriptionProcessor(
                 bankMock.Object, userRepoMock.Object, Mock.Of<ISubscriptionLogRepo>());
 
-            SubscriptionInfo subscriptionInfo = new(
-                recipient, NumMonths: 1, StreakMonths: 0, tier, "Sub Plan Name", Instant.MinValue, "sub message");
+            SubscriptionInfo subscriptionInfo = new(recipient, NumMonths: 1, StreakMonths: 0, tier, "Sub Plan Name",
+                Instant.MinValue, "sub message", ImmutableList<EmoteOccurrence>.Empty);
             (ISubscriptionProcessor.SubResult subResult, ISubscriptionProcessor.SubGiftResult subGiftResult) =
                 await subscriptionProcessor.ProcessSubscriptionGift(
                     new SubscriptionGiftInfo(subscriptionInfo, gifter, false));
