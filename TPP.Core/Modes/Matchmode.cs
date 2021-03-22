@@ -158,7 +158,7 @@ namespace TPP.Core.Modes
                 if(u.IsSubscribed && pokeyen < subscriberMinimumPokeyen)
                 {
                     long amountToGive = subscriberMinimumPokeyen - pokeyen;
-                    transactions.Add(new Transaction<User>(u, amountToGive, TPP.Persistence.Repos.TransactionType.Welfare));
+                    transactions.Add(new Transaction<User>(u, amountToGive, TransactionType.Welfare));
                     // TODO whisper users informing them they have been given money
                     _logger.LogDebug(String.Format("Subscriber {0} had their balance reset to P{1} (+P{2})", u.SimpleName, subscriberMinimumPokeyen, amountToGive));
 
@@ -166,7 +166,7 @@ namespace TPP.Core.Modes
                 else if (!u.IsSubscribed && u.Pokeyen < minimumPokeyen)
                 {
                     long amountToGive = minimumPokeyen - pokeyen;
-                    transactions.Add(new Transaction<User>(u, amountToGive, TPP.Persistence.Repos.TransactionType.Welfare));
+                    transactions.Add(new Transaction<User>(u, amountToGive, TransactionType.Welfare));
                     // TODO whisper users informing them they have been given money
                     _logger.LogDebug(String.Format("User {0} had their balance reset to P{1} (+P{2})", u.SimpleName, minimumPokeyen, amountToGive));
                 } 
