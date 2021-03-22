@@ -144,7 +144,7 @@ namespace TPP.Core.Modes
             _modeBase.Dispose();
         }
 
-        public async Task ResetBalances()
+        private async Task ResetBalances()
         {
             _logger.LogDebug("Resetting Balances");
             long minimumPokeyen = _matchmodeConfig.MinimumPokeyen;
