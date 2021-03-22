@@ -153,7 +153,7 @@ namespace TPP.Core.Modes
             List<User> poorUsers = await _userRepo.FindByPokeyenUnder(Math.Max(minimumPokeyen, subscriberMinimumPokeyen));
             foreach (User u in poorUsers)
             {
-                long pokeyen = await _pokeyenBank.GetAvailableMoney(u);
+                long pokeyen = u.Pokeyen;
                 if(u.IsSubscribed && pokeyen < subscriberMinimumPokeyen)
                 {
                     long amountToGive = subscriberMinimumPokeyen - pokeyen;
