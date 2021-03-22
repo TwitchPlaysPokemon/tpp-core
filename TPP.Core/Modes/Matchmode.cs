@@ -150,7 +150,7 @@ namespace TPP.Core.Modes
             long minimumPokeyen = _matchmodeConfig.MinimumPokeyen;
             long subscriberMinimumPokeyen = _matchmodeConfig.SubscriberMinimumPokeyen;
 
-            List<User> poorUsers = await _userRepo.FindByPokeyenUnder(Math.Max(minimumPokeyen, subscriberMinimumPokeyen));
+            List<User> poorUsers = await _userRepo.FindAllByPokeyenUnder(Math.Max(minimumPokeyen, subscriberMinimumPokeyen));
             List<Transaction<User>> transactions = new List<Transaction<User>>();
             foreach (User u in poorUsers)
             {
