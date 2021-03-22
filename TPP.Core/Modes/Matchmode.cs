@@ -144,13 +144,13 @@ namespace TPP.Core.Modes
             _modeBase.Dispose();
         }
 
-        public async void ResetBalances()
+        public async Task ResetBalances()
         {
             _logger.LogInformation("Resetting Balances");
             long minimumPokeyen = _matchmodeConfig.MinimumPokeyen;
             long subscriberMinimumPokeyen = _matchmodeConfig.SubscriberMinimumPokeyen;
 
-            List<User> poorUsers = await _userRepo.ListAllUnderPokeyen(Math.Max(minimumPokeyen, subscriberMinimumPokeyen));
+            List<User> poorUsers = await _userRepo.FindByPokeyenUnder(Math.Max(minimumPokeyen, subscriberMinimumPokeyen));
             foreach (User u in poorUsers)
             {
                 long pokeyen = await _pokeyenBank.GetAvailableMoney(u);

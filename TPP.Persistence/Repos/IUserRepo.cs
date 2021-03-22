@@ -11,7 +11,7 @@ namespace TPP.Persistence.Repos
         public Task<User> RecordUser(UserInfo userInfo);
         public Task<User?> FindBySimpleName(string simpleName);
         public Task<User?> FindByDisplayName(string displayName);
-        public Task<List<User>> ListAllUnderPokeyen(long yen);
+        public Task<List<User>> FindByPokeyenUnder(long yen);
         public Task<User> SetSelectedBadge(User user, PkmnSpecies? badge);
         public Task<User> SetSelectedEmblem(User user, int? emblem);
         public Task<User> SetGlowColor(User user, string? glowColor);
