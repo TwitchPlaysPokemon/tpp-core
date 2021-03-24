@@ -48,7 +48,9 @@ namespace TPP.Core.Tests.Commands.Definitions
             _argsParser.AddArgumentParser(new OptionalParser(_argsParser));
             _argsParser.AddArgumentParser(new UserParser(_userRepoMock.Object));
             _argsParser.AddArgumentParser(new AnyOrderParser(_argsParser));
+            _argsParser.AddArgumentParser(new ManyOfParser(_argsParser));
             _argsParser.AddArgumentParser(new PositiveIntParser());
+            _argsParser.AddArgumentParser(new TokensParser());
         }
 
         [TestFixture]
@@ -305,6 +307,27 @@ namespace TPP.Core.Tests.Commands.Definitions
                     It.IsAny<string>(),
                     It.IsAny<IDictionary<string, object?>>()),
                 Times.Never);
+        }
+
+        [Test]
+        public async Task TestTransmuteTodo()
+        {
+            PkmnSpecies species = PkmnSpecies.RegisterName("1", "species");
+            _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
+            User user = MockUser("MockUser");
+            _badgeRepoMock.Setup(repo => repo.FindByUserAndSpecies(user.Id, species))
+                .Returns(Task.FromResult(new List<Badge>()));
+
+            {
+                CommandResult result = await _badgeCommands.Transmute(new CommandContext(MockMessage(user),
+                    ImmutableList.Create("T1", "species", "species"), _argsParser));
+                Assert.AreEqual("paid 1 to transmute these badges: #001 species, #001 species", result.Response);
+            }
+            {
+                CommandResult result = await _badgeCommands.Transmute(new CommandContext(MockMessage(user),
+                    ImmutableList.Create("species", "species", "T1"), _argsParser));
+                Assert.AreEqual("paid 1 to transmute these badges: #001 species, #001 species", result.Response);
+            }
         }
     }
 }

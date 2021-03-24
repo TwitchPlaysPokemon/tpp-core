@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -54,6 +55,12 @@ namespace TPP.Core.Commands.Definitions
             {
                 Description =
                     "Gift a badge you own to another user with no price. Arguments: <pokemon> <number of badges>(Optional) <username>"
+            },
+
+            new Command("transmute", Transmute)
+            {
+                Description = "Transform 3 or more badges into a (usually) rarer badge. Costs one token. " +
+                              "Arguments: <several Pokemon>(at least 3) t1"
             },
         };
 
@@ -333,6 +340,21 @@ namespace TPP.Core.Commands.Definitions
                     ? $"has gifted {amount} {species} badges to {recipient.Name}!"
                     : $"has gifted a {species} badge to {recipient.Name}!",
                 ResponseTarget = ResponseTarget.Chat
+            };
+        }
+
+        public async Task<CommandResult> Transmute(CommandContext context)
+        {
+            (Tokens tokensWrp, ManyOf<PkmnSpecies> speciesWrp) =
+                await context.ParseArgs<AnyOrder<Tokens, ManyOf<PkmnSpecies>>>();
+            int tokens = tokensWrp.Number;
+            ImmutableList<PkmnSpecies> species = speciesWrp.Values;
+            Console.WriteLine(tokens);
+            Console.WriteLine(species);
+            // TODO felk
+            return new CommandResult
+            {
+                Response = $"paid {tokens} to transmute these badges: {string.Join(", ", species)}"
             };
         }
     }
