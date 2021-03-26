@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -22,6 +23,7 @@ namespace TPP.Core.Moderation
 
         public void AddPoints(int points, string reason)
         {
+            PruneDecayed();
             _points.Add(new GivenPoints(points, reason, _clock.GetCurrentInstant()));
         }
 
@@ -33,13 +35,13 @@ namespace TPP.Core.Moderation
 
         public int GetCurrentPoints()
         {
-            PruneDecayed();
             if (_points.Count == 0) return 0;
 
             Instant now = _clock.GetCurrentInstant();
             Instant decayingSince = _points[0].GivenAt;
             double pointsDecayed = (now - decayingSince).TotalSeconds * _decayPerSecond;
-            return (int)(_points.Sum(p => p.Points) - pointsDecayed);
+            int pointsMaybeNegative = (int)(_points.Sum(p => p.Points) - pointsDecayed);
+            return Math.Max(0, pointsMaybeNegative);
         }
 
         public IImmutableList<(int, string)> GetTopViolations()
@@ -55,24 +57,7 @@ namespace TPP.Core.Moderation
 
         private void PruneDecayed()
         {
-            if (_points.Count == 0) return;
-
-            int firstNonDecayedIndex = 0;
-            Instant expiresAt = _points[0].GivenAt;
-            for (int i = 0; i < _points.Count; i++)
-            {
-                Instant nextStart = i + 1 < _points.Count
-                    ? _points[i + 1].GivenAt
-                    : _clock.GetCurrentInstant();
-                Duration expireDuration = Duration.FromSeconds(_points[i].Points / (double)_decayPerSecond);
-                expiresAt += expireDuration;
-                if (nextStart >= expiresAt)
-                {
-                    firstNonDecayedIndex = i + 1;
-                    expiresAt = nextStart;
-                }
-            }
-            _points.RemoveRange(0, firstNonDecayedIndex);
+            if (GetCurrentPoints() == 0) _points.Clear();
         }
     }
 }
