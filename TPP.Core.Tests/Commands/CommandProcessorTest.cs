@@ -102,6 +102,16 @@ namespace TPP.Core.Tests.Commands
         }
 
         [Test]
+        public async Task TestRestrictedCommand()
+        {
+            var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock.Object, new ArgsParser());
+            commandProcessor.InstallCommand(new Command("operatorcommand", CommandUtils.StaticResponse("Operators only ;)"), UserGroup.Operator));
+
+            CommandResult? result = await commandProcessor.Process("operatorcommand", _noArgs, MockMessage());
+            Assert.AreEqual("You do not have permission to use this command.", result?.Response);
+        }
+
+        [Test]
         public void InstallConflictName()
         {
             var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock.Object, new ArgsParser());

@@ -25,15 +25,18 @@ namespace TPP.Core.Commands
         private readonly ICommandLogger _commandLogger;
         private readonly ArgsParser _argsParser;
         private readonly Dictionary<string, Command> _commands = new Dictionary<string, Command>();
+        private readonly IImmutableList<String>? _operatorNames;
 
         public CommandProcessor(
             ILogger<CommandProcessor> logger,
             ICommandLogger commandLogger,
-            ArgsParser argsParser)
+            ArgsParser argsParser,
+            IImmutableList<String>? operatorNames = null)
         {
             _logger = logger;
             _commandLogger = commandLogger;
             _argsParser = argsParser;
+            _operatorNames = operatorNames;
         }
 
         public void InstallCommand(Command command)
@@ -77,12 +80,20 @@ namespace TPP.Core.Commands
                 _logger.LogDebug("unknown command '{Command}'", commandName);
                 return null;
             }
+            
             var stopwatch = new Stopwatch();
             stopwatch.Start();
             CommandResult result;
+            
             try
             {
-                result = await command.Execution(new CommandContext(message, args, _argsParser));
+                bool restricted = command.RequiredRank != UserGroup.None;
+                bool isOperator = _operatorNames != null ? _operatorNames.Contains(message.User.SimpleName) : false;
+                if (restricted && (!isOperator || ((UserGroup)message.User.UserGroup & command.RequiredRank) > UserGroup.None))
+                    result = new CommandResult { Response = "You do not have permission to use this command."};
+                else
+                    result = await command.Execution(new CommandContext(message, args, _argsParser));
+                    
                 await _commandLogger.Log(message.User.Id, commandName, args, result.Response);
             }
             catch (ArgsParseFailure ex)

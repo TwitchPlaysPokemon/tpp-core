@@ -7,6 +7,7 @@ using TPP.Common;
 using TPP.Core.Chat;
 using TPP.Persistence.Models;
 using TPP.Persistence.Repos;
+using static TPP.Core.Commands.UserGroup;
 
 namespace TPP.Core.Commands.Definitions
 {
@@ -18,62 +19,88 @@ namespace TPP.Core.Commands.Definitions
     public class OperatorCommands : ICommandCollection
     {
         private readonly StopToken _stopToken;
-        private readonly ImmutableHashSet<string> _operatorNamesLower;
         private readonly IBank<User> _pokeyenBank;
         private readonly IBank<User> _tokensBank;
         private readonly IMessageSender _messageSender;
         private readonly IBadgeRepo _badgeRepo;
+        private readonly IUserRepo _userRepo;
 
         public OperatorCommands(
             StopToken stopToken,
-            IEnumerable<string> operatorNames,
             IBank<User> pokeyenBank,
             IBank<User> tokensBank,
             IMessageSender messageSender,
-            IBadgeRepo badgeRepo)
+            IBadgeRepo badgeRepo,
+            IUserRepo userRepo)
         {
             _stopToken = stopToken;
-            _operatorNamesLower = operatorNames.Select(s => s.ToLowerInvariant()).ToImmutableHashSet();
             _pokeyenBank = pokeyenBank;
             _tokensBank = tokensBank;
             _messageSender = messageSender;
             _badgeRepo = badgeRepo;
+            _userRepo = userRepo;
         }
 
         public IEnumerable<Command> Commands => new[]
         {
-            new Command("stopnew", Stop)
+            new Command("stopnew", Stop, UserGroup.Operator)
             {
                 Description = "Operators only: Stop the core, or cancel a previously issued stop command. " +
                               "Argument: cancel(optional)"
             },
-            new Command("pokeyenadjust", AdjustPokeyen)
+            new Command("pokeyenadjust", AdjustPokeyen, UserGroup.Operator)
             {
                 Aliases = new[] { "adjustpokeyen" },
                 Description = "Operators only: Add or remove pokeyen from an user. " +
                               "Arguments: p<amount>(can be negative) <user> <reason>"
             },
-            new Command("tokensadjust", AdjustTokens)
+            new Command("tokensadjust", AdjustTokens, UserGroup.Operator)
             {
                 Aliases = new[] { "adjusttokens" },
                 Description = "Operators only: Add or remove tokens from an user. " +
                               "Arguments: t<amount>(can be negative) <user> <reason>"
             },
-            new Command("transferbadge", TransferBadge)
+            new Command("transferbadge", TransferBadge, UserGroup.Operator)
             {
                 Description = "Operators only: Transfer badges from one user to another user. " +
                               "Arguments: <gifter> <recipient> <pokemon> <number of badges>(Optional) <reason>"
             },
-            new Command("createbadge", CreateBadge)
+            new Command("createbadge", CreateBadge, UserGroup.Operator)
             {
                 Description = "Operators only: Create a badge for a user. " +
                               "Arguments: <recipient> <pokemon> <number of badges>(Optional)"
             },
-        }.Select(cmd => cmd.WithCondition(
-            canExecute: ctx => IsOperator(ctx.Message.User),
-            ersatzResult: new CommandResult { Response = "Only operators can use that command" }));
-
-        private bool IsOperator(User user) => _operatorNamesLower.Contains(user.SimpleName);
+            new Command("setoperator", setOperator, UserGroup.Operator)
+            {
+                Aliases = new [] { "op", "operator"},
+                Description = "Operators only: Give other users operator status. Removes other roles. " +
+                              "Arguments: <user> <user> ..."
+            },
+            new Command("setmoderator", setModerator, UserGroup.Operator)
+            {
+                Aliases = new [] { "mod", "moderator"},
+                Description = "Operators only: Give other users moderator status. Removes other roles. " +
+                              "Arguments: <user> <user> ..."
+            },
+            new Command("settrusted", setTrusted, UserGroup.Operator)
+            {
+                Aliases = new [] { "trust", "trusted" },
+                Description = "Operator only: Give other users trusted status. Removes modteam roles. " +
+                              "Arguments: <user> <user> ..."
+            },
+            new Command("setmusicteam", setMusicTeam, UserGroup.Operator)
+            {
+                Aliases = new [] { "musicteam" },
+                Description = "Operator only: Give other users music team status. Removes modteam roles. " +
+                              "Arguments: <user> <user> ..."
+            },
+            new Command("removeroles", removeRoles, UserGroup.Operator)
+            {
+                Aliases = new [] { "demote" },
+                Description = "Operator only: Remove all roles from other users. " +
+                              "Arguments: <user> <user> ..."
+            }
+        };
 
         private Task<CommandResult> Stop(CommandContext context)
         {
@@ -195,6 +222,87 @@ namespace TPP.Core.Commands.Definitions
                 Response = amount > 1
                     ? $"{amount} badges of species {species} created for user {recipient.Name}."
                     : $"Badge of species {species} created for user {recipient.Name}."
+            };
+        }
+
+        public async Task<CommandResult> setOperator(CommandContext context)
+        {
+            ManyOf<User> toPromote = await context.ParseArgs<ManyOf<User>>();
+
+            foreach (User u in toPromote.Values)
+            {
+                // operator has all permissions, so other roles are not preserved.
+                await _userRepo.SetUserGroup(u, (byte)UserGroup.Operator);
+            }
+
+            return new CommandResult
+            {
+                Response = toPromote.Values.IsEmpty ? "No users found." : "User(s) have been given operator status."
+            };
+        }
+
+        public async Task<CommandResult> setModerator(CommandContext context)
+        {
+            ManyOf<User> toPromote = await context.ParseArgs<ManyOf<User>>();
+
+            foreach (User u in toPromote.Values)
+            {
+                // assumes moderator includes permissions of all other groups excluding operator, and therefore the groups don't need to be preserved
+                await _userRepo.SetUserGroup(u, (byte)UserGroup.Moderator);
+            }
+
+            return new CommandResult
+            {
+                Response = toPromote.Values.IsEmpty ? "No users found." : "User(s) have been given moderator status."
+            };
+        }
+
+        public async Task<CommandResult> setTrusted(CommandContext context)
+        {
+            ManyOf<User> toPromote = await context.ParseArgs<ManyOf<User>>();
+
+            foreach (User u in toPromote.Values)
+            {
+                UserGroup newGroup = (UserGroup)u.UserGroup | UserGroup.Trusted; // add trusted
+                newGroup -= UserGroup.ModTeam & (UserGroup)u.UserGroup; // strip moderator and operator ranks if they are present
+                await _userRepo.SetUserGroup(u, (byte)newGroup);
+            }
+
+            return new CommandResult
+            {
+                Response = toPromote.Values.IsEmpty ? "No users found." : "User(s) have been given trusted status."
+            };
+        }
+
+        public async Task<CommandResult> setMusicTeam(CommandContext context)
+        {
+            ManyOf<User> toPromote = await context.ParseArgs<ManyOf<User>>();
+
+            foreach (User u in toPromote.Values)
+            {
+                UserGroup newGroup = (UserGroup)u.UserGroup | UserGroup.MusicTeam; // add music team
+                newGroup -= UserGroup.ModTeam & (UserGroup)u.UserGroup; // strip moderator and operator ranks if they are present
+                await _userRepo.SetUserGroup(u, (byte)newGroup);
+            }
+
+            return new CommandResult
+            {
+                Response = toPromote.Values.IsEmpty ? "No users found." : "User(s) have been given music team status."
+            };
+        }
+
+        public async Task<CommandResult> removeRoles(CommandContext context)
+        {
+            ManyOf<User> toDemote = await context.ParseArgs<ManyOf<User>>();
+
+            foreach (User u in toDemote.Values)
+            {
+                await _userRepo.SetUserGroup(u, (byte)UserGroup.None);
+            }
+
+            return new CommandResult
+            {
+                Response = toDemote.Values.IsEmpty ? "No users found." : "User(s) have been stripped of all roles."
             };
         }
     }

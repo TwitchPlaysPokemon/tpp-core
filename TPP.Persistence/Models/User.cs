@@ -51,6 +51,8 @@ namespace TPP.Persistence.Models
 
         public int? PokeyenBetRank { get; init; }
 
+        public byte UserGroup { get; init; }
+
         // public bool Active { get; init; }
         // public bool Follower { get; init; }
         // public bool Subscriber { get; init; }
@@ -84,7 +86,8 @@ namespace TPP.Persistence.Models
             PkmnSpecies? selectedBadge = null,
             string? glowColor = null,
             bool glowColorUnlocked = false,
-            int? pokeyenBetRank = null)
+            int? pokeyenBetRank = null,
+            byte usergroup=0)
         {
             Id = id;
             TwitchDisplayName = twitchDisplayName;
@@ -102,6 +105,7 @@ namespace TPP.Persistence.Models
             GlowColor = glowColor;
             GlowColorUnlocked = glowColorUnlocked;
             PokeyenBetRank = pokeyenBetRank;
+            UserGroup = usergroup;
         }
 
         public override string ToString() => $"User({Id}/{SimpleName})";

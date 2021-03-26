@@ -44,6 +44,7 @@ namespace TPP.Persistence.MongoDB.Repos
                 cm.MapProperty(u => u.GlowColor).SetElementName("secondary_color");
                 cm.MapProperty(u => u.GlowColorUnlocked).SetElementName("secondary_color_unlocked");
                 cm.MapProperty(u => u.PokeyenBetRank).SetElementName("pokeyen_bet_rank");
+                cm.MapProperty(u => u.UserGroup).SetElementName("user_group");
             });
         }
 
@@ -104,6 +105,8 @@ namespace TPP.Persistence.MongoDB.Repos
             }
 
             // user doesn't exist yet!
+            
+
 
             user = new User(
                 id: userInfo.Id,
@@ -159,6 +162,9 @@ namespace TPP.Persistence.MongoDB.Repos
 
         public Task<User> SetDisplayName(User user, string displayName) =>
             UpdateField(user, u => u.Name, displayName);
+
+        public Task<User> SetUserGroup(User user, byte userGroup) =>
+            UpdateField(user, u => u.UserGroup, userGroup);
 
         public async Task<bool> UnselectBadgeIfSpeciesSelected(string userId, PkmnSpecies species) =>
             await Collection.FindOneAndUpdateAsync<User>(

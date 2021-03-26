@@ -26,6 +26,14 @@ namespace TPP.Core.Tests.Commands.Definitions
             lastMessageAt: null, pokeyen: 0, tokens: 0,
             selectedBadge: selectedBadge);
 
+        private static User MockOperator(string name, PkmnSpecies? selectedBadge = null) => new User(
+            id: Guid.NewGuid().ToString(),
+            name: name, twitchDisplayName: "☺" + name, simpleName: name.ToLower(), color: null,
+            firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
+            lastMessageAt: null, pokeyen: 0, tokens: 0,
+            selectedBadge: selectedBadge,
+            usergroup : (byte)UserGroup.Operator);
+
         private static Message MockMessage(User user, string text = "") =>
             new(user, text, MessageSource.Chat, string.Empty);
 
@@ -64,13 +72,13 @@ namespace TPP.Core.Tests.Commands.Definitions
         [Test]
         public async Task adjust_tokens_self()
         {
-            User user = MockUser("MockUser");
+            User user = MockOperator("MockOperator");
             _userRepoMock.Setup(u => u.FindBySimpleName(user.SimpleName)).ReturnsAsync(user);
             OperatorCommands operatorCommands = new OperatorCommands(
                 new StopToken(),
-                operatorNames: new[] { user.SimpleName },
                 _tokensBankMock.Object, _tokensBankMock.Object,
-                _messageSenderMock.Object, _badgeRepoMock.Object);
+                _messageSenderMock.Object, _badgeRepoMock.Object,
+                _userRepoMock.Object);
 
             {
                 CommandResult result = await operatorCommands.AdjustTokens(new CommandContext(MockMessage(user),
@@ -100,14 +108,14 @@ namespace TPP.Core.Tests.Commands.Definitions
         [Test]
         public async Task adjust_tokens_someone_else()
         {
-            User userSelf = MockUser("MockUserSelf");
+            User userSelf = MockOperator("MockUserSelf");
             User userOther = MockUser("MockUserOther");
             _userRepoMock.Setup(u => u.FindBySimpleName(userOther.SimpleName)).ReturnsAsync(userOther);
             OperatorCommands operatorCommands = new OperatorCommands(
                 new StopToken(),
-                operatorNames: new[] { userSelf.SimpleName },
                 _tokensBankMock.Object, _tokensBankMock.Object,
-                _messageSenderMock.Object, _badgeRepoMock.Object);
+                _messageSenderMock.Object, _badgeRepoMock.Object,
+                _userRepoMock.Object);
 
             {
                 CommandResult result = await operatorCommands.AdjustTokens(new CommandContext(MockMessage(userSelf),
@@ -148,14 +156,14 @@ namespace TPP.Core.Tests.Commands.Definitions
         {
             PkmnSpecies species = PkmnSpecies.RegisterName("1", "species");
             _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
-            User userSelf = MockUser("MockUserSelf");
+            User userSelf = MockOperator("MockUserSelf");
             User gifter = MockUser("Gifter");
             User recipient = MockUser("Recipient");
             OperatorCommands operatorCommands = new(
                 new StopToken(),
-                operatorNames: new[] { userSelf.SimpleName },
                 _tokensBankMock.Object, _tokensBankMock.Object,
-                _messageSenderMock.Object, _badgeRepoMock.Object);
+                _messageSenderMock.Object, _badgeRepoMock.Object,
+                _userRepoMock.Object);
             _userRepoMock.Setup(repo => repo.FindBySimpleName("gifter")).Returns(Task.FromResult((User?)gifter));
             _userRepoMock.Setup(repo => repo.FindBySimpleName("recipient")).Returns(Task.FromResult((User?)recipient));
             Badge badge1 = new("badge1", gifter.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue);
@@ -188,14 +196,14 @@ namespace TPP.Core.Tests.Commands.Definitions
         {
             PkmnSpecies species = PkmnSpecies.RegisterName("1", "species");
             _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
-            User userSelf = MockUser("MockUserSelf");
+            User userSelf = MockOperator("MockUserSelf");
             User gifter = MockUser("Gifter");
             User recipient = MockUser("Recipient");
             OperatorCommands operatorCommands = new(
                 new StopToken(),
-                operatorNames: new[] { userSelf.SimpleName },
                 _tokensBankMock.Object, _tokensBankMock.Object,
-                _messageSenderMock.Object, _badgeRepoMock.Object);
+                _messageSenderMock.Object, _badgeRepoMock.Object,
+                _userRepoMock.Object);
             _userRepoMock.Setup(repo => repo.FindBySimpleName("gifter")).Returns(Task.FromResult((User?)gifter));
             _userRepoMock.Setup(repo => repo.FindBySimpleName("recipient")).Returns(Task.FromResult((User?)recipient));
 
@@ -216,14 +224,14 @@ namespace TPP.Core.Tests.Commands.Definitions
         {
             PkmnSpecies species = PkmnSpecies.RegisterName("1", "species");
             _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
-            User userSelf = MockUser("MockUserSelf");
+            User userSelf = MockOperator("MockUserSelf");
             User gifter = MockUser("Gifter");
             User recipient = MockUser("Recipient");
             OperatorCommands operatorCommands = new(
                 new StopToken(),
-                operatorNames: new[] { userSelf.SimpleName },
                 _tokensBankMock.Object, _tokensBankMock.Object,
-                _messageSenderMock.Object, _badgeRepoMock.Object);
+                _messageSenderMock.Object, _badgeRepoMock.Object,
+                _userRepoMock.Object);
             _userRepoMock.Setup(repo => repo.FindBySimpleName("gifter")).Returns(Task.FromResult((User?)gifter));
             _userRepoMock.Setup(repo => repo.FindBySimpleName("recipient")).Returns(Task.FromResult((User?)recipient));
             _badgeRepoMock.Setup(repo => repo.FindByUserAndSpecies(gifter.Id, species))
@@ -247,10 +255,12 @@ namespace TPP.Core.Tests.Commands.Definitions
         {
             PkmnSpecies species = PkmnSpecies.RegisterName("1", "Species");
             _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
-            User user = MockUser("MockUser");
+            User user = MockOperator("MockUser");
             User recipient = MockUser("Recipient");
-            OperatorCommands operatorCommands = new(new StopToken(), operatorNames: new[] { user.SimpleName },
-                _tokensBankMock.Object, _tokensBankMock.Object, _messageSenderMock.Object, _badgeRepoMock.Object);
+            OperatorCommands operatorCommands = new(new StopToken(),
+                _tokensBankMock.Object, _tokensBankMock.Object,
+                _messageSenderMock.Object, _badgeRepoMock.Object,
+                _userRepoMock.Object);
             _userRepoMock.Setup(repo => repo.FindBySimpleName("recipient")).Returns(Task.FromResult((User?)recipient));
 
             CommandResult result = await operatorCommands.CreateBadge(new CommandContext(MockMessage(user),
