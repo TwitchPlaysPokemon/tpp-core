@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -26,7 +27,7 @@ namespace Persistence.MongoDB.Repos
             BsonClassMap.RegisterClassMap<PollOption>(cm =>
             {
                 cm.MapIdProperty(b => b.Id).SetElementName("id");
-                cm.MapProperty(b => b.Options).SetElementName("option");
+                cm.MapProperty(b => b.Option).SetElementName("option");
                 cm.MapProperty(b => b.VoterIds).SetElementName("voters");
                 cm.MapProperty(b => b.Votes).SetElementName("votes");
             });
@@ -36,7 +37,7 @@ namespace Persistence.MongoDB.Repos
                 cm.MapIdProperty(b => b.Id)
                     .SetIdGenerator(StringObjectIdGenerator.Instance)
                     .SetSerializer(ObjectIdAsStringSerializer.Instance);
-                cm.MapProperty(b => b.PollName).SetElementName("name");
+                cm.MapProperty(b => b.PollTitle).SetElementName("title");
                 cm.MapProperty(b => b.PollCode).SetElementName("code");
                 cm.MapProperty(b => b.Voters).SetElementName("voters");
                 cm.MapProperty(b => b.PollOptions).SetElementName("options");
@@ -62,93 +63,77 @@ namespace Persistence.MongoDB.Repos
             });
         }
 
-        //public async Task<Poll> CreatePoll(string pollName, string pollCode, bool multiChoice, string[] pollOptions)
-        //{
-        //    PollOption[] pollOptionsArray = new PollOption[] { };
-
-        //    foreach (string option in pollOptions)
-        //    {
-        //        PollOption pollOpt = new PollOption(
-        //            id: pollOptionsArray.Length + 1,
-        //            options: option,
-        //            votes: 0,
-        //            voterIds: new List<string>()
-        //        );
-
-        //        var temp = pollOptionsArray.ToList();
-        //        temp.Add(pollOpt);
-        //        pollOptionsArray = temp.ToArray();
-        //    }
-
-        //    var poll = new Poll(
-        //        id: string.Empty,
-        //        pollName: pollName,
-        //        pollCode: pollCode,
-        //        voters: new List<string>(),
-        //        pollOptions: pollOptionsArray,
-        //        Instant.FromUnixTimeSeconds(0),
-        //        multiChoice: multiChoice,
-        //        alive: true
-        //    );;
-
-        //    await Collection.InsertOneAsync(poll);
-        //    Debug.Assert(poll.Id.Length > 0, "The MongoDB driver injected a generated ID");
-
-        //    Trace.WriteLine(poll.Id);
-        //    return poll;
-        //}
-
-        public async Task<Poll> Vote(string pollCode, string userId, int[] options)
+        public async Task<Poll> CreatePoll(string pollTitle, string pollCode, bool multiChoice, string[] pollOptions)
         {
+            PollOption[] pollOptionsArray = new PollOption[] { };
 
-            var filter = Builders<Poll>.Filter;
-            var update = Builders<Poll>.Update;
-
-            var pollFilter = filter.Eq(p => p.PollCode, pollCode);
-            var pollVoter = update.AddToSet("voters", userId);
-            await Collection.UpdateOneAsync(pollFilter, pollVoter);
-
-            foreach (var option in options)
+            foreach (string option in pollOptions)
             {
-                var pollOptionsIdFilter = filter.And(
-                    filter.Eq(p => p.PollCode, pollCode),
-                    filter.ElemMatch(p => p.PollOptions, o => o.Id == option));
+                PollOption pollOpt = new PollOption(
+                    id: pollOptionsArray.Length + 1,
+                    option: option,
+                    votes: 0,
+                    voterIds: new List<string>()
+                );
 
-
-                var pollOptionVoter = update.AddToSet("options.$.voters", userId);
-                var pollOptiopnVoteInc = update.Inc("options.$.votes", 1);
-
-                await Collection.UpdateOneAsync(pollOptionsIdFilter, pollOptionVoter);
-                await Collection.UpdateOneAsync(pollOptionsIdFilter, pollOptiopnVoteInc);
-
+                List<PollOption> pollOptList = pollOptionsArray.ToList();
+                pollOptList.Add(pollOpt);
+                pollOptionsArray = pollOptList.ToArray();
             }
 
-            return await Collection.Find(p => p.PollCode == pollCode).FirstAsync();
+            Poll poll = new Poll(
+                id: string.Empty,
+                pollTitle: pollTitle,
+                pollCode: pollCode,
+                voters: new List<string>(),
+                pollOptions: pollOptionsArray,
+                Instant.FromUnixTimeSeconds(0),
+                multiChoice: multiChoice,
+                alive: true
+            ); ;
+
+            await Collection.InsertOneAsync(poll);
+            Debug.Assert(poll.Id.Length > 0, "The MongoDB driver injected a generated ID");
+
+            Trace.WriteLine(poll.Id);
+            return poll;
         }
 
-        public async Task<Poll> Vote(string pollCode, string userId, string[] options)
+        public async Task<Poll> Vote(string pollCode, string userId, string[] options, bool useIntArgs)
         {
+            FilterDefinitionBuilder<Poll> filter = Builders<Poll>.Filter;
+            UpdateDefinitionBuilder<Poll> update = Builders<Poll>.Update;
 
-            var filter = Builders<Poll>.Filter;
-            var update = Builders<Poll>.Update;
-
-            var pollFilter = filter.Eq(p => p.PollCode, pollCode);
-            var pollVoter = update.AddToSet("voters", userId);
+            FilterDefinition<Poll> pollFilter = filter.Eq(p => p.PollCode, pollCode);
+            UpdateDefinition<Poll> pollVoter = update.AddToSet("voters", userId);
             await Collection.UpdateOneAsync(pollFilter, pollVoter);
 
             foreach (var option in options)
             {
-                var pollOptionsIdFilter = filter.And(
-                    filter.Eq(p => p.PollCode, pollCode),
-                    filter.ElemMatch(p => p.PollOptions, o => o.Options == option));
+                if (useIntArgs)
+                {
+                    FilterDefinition<Poll> pollOptionsIdFilter = filter.And(
+                        filter.Eq(p => p.PollCode, pollCode),
+                        filter.ElemMatch(p => p.PollOptions, o => o.Id == int.Parse(option)));
 
+                    UpdateDefinition<Poll> pollOptionVoter = update.AddToSet("options.$.voters", userId);
+                    UpdateDefinition<Poll> pollOptiopnVoteInc = update.Inc("options.$.votes", 1);
 
-                var pollOptionVoter = update.AddToSet("options.$.voters", userId);
-                var pollOptiopnVoteInc = update.Inc("options.$.votes", 1);
+                    await Collection.UpdateOneAsync(pollOptionsIdFilter, pollOptionVoter);
+                    await Collection.UpdateOneAsync(pollOptionsIdFilter, pollOptiopnVoteInc);
+                }
+                else
+                {
+                    FilterDefinition<Poll> pollOptionsIdFilter = filter.And(
+                        filter.Eq(p => p.PollCode, pollCode),
+                        filter.ElemMatch(p => p.PollOptions, o => o.Option == option));
 
-                await Collection.UpdateOneAsync(pollOptionsIdFilter, pollOptionVoter);
-                await Collection.UpdateOneAsync(pollOptionsIdFilter, pollOptiopnVoteInc);
+                    UpdateDefinition<Poll> pollOptionVoter = update.AddToSet("options.$.voters", userId);
+                    UpdateDefinition<Poll> pollOptiopnVoteInc = update.Inc("options.$.votes", 1);
 
+                    await Collection.UpdateOneAsync(pollOptionsIdFilter, pollOptionVoter);
+                    await Collection.UpdateOneAsync(pollOptionsIdFilter, pollOptiopnVoteInc);
+                }
             }
 
             return await Collection.Find(p => p.PollCode == pollCode).FirstAsync();
@@ -172,51 +157,36 @@ namespace Persistence.MongoDB.Repos
                 .Find(p => (p.PollCode == pollCode) && p.Alive)
                 .AnyAsync();
 
-        public async Task<bool> IsVoteValid(string pollCode, string[] votes)
+        public async Task<bool> IsVoteValid(string pollCode, string[] votes, bool useIntArgs)
         {
             var isValid = true;
-            var filter = Builders<Poll>.Filter;
-            var pollFilter = filter.Eq(p => p.PollCode, pollCode);
+            FilterDefinitionBuilder<Poll> filter = Builders<Poll>.Filter;
+            FilterDefinition<Poll> pollFilter = filter.Eq(p => p.PollCode, pollCode);
 
-            foreach (var vote in votes)
+            foreach (string vote in votes)
             {
                 if (isValid)
                 {
-                    var pollOptionsIdFilter = filter.And(
-                        filter.Eq(p => p.PollCode, pollCode),
-                        filter.ElemMatch(p => p.PollOptions, o => o.Options == vote));
+                    if (useIntArgs)
+                    {
+                        FilterDefinition<Poll> pollOptionsIdFilter = filter.And(
+                            filter.Eq(p => p.PollCode, pollCode),
+                            filter.ElemMatch(p => p.PollOptions, o => o.Id == int.Parse(vote)));
 
-                    isValid = await Collection.Find(pollOptionsIdFilter).AnyAsync();
+                        isValid = await Collection.Find(pollOptionsIdFilter).AnyAsync();
+                    }
+                    else
+                    {
+                        FilterDefinition<Poll> pollOptionsIdFilter = filter.And(
+                            filter.Eq(p => p.PollCode, pollCode),
+                            filter.ElemMatch(p => p.PollOptions, o => o.Option == vote));
+
+                        isValid = await Collection.Find(pollOptionsIdFilter).AnyAsync();
+                    }
                 }
             }
 
             return isValid;
         }
-
-        public async Task<bool> IsVoteValid(string pollCode, int[] votes)
-        {
-            var isValid = true;
-            var filter = Builders<Poll>.Filter;
-            var pollFilter = filter.Eq(p => p.PollCode, pollCode);
-
-            foreach (var vote in votes)
-            {
-                if (isValid)
-                {
-                    var pollOptionsIdFilter = filter.And(
-                        filter.Eq(p => p.PollCode, pollCode),
-                        filter.ElemMatch(p => p.PollOptions, o => o.Id == vote));
-
-                    isValid = await Collection.Find(pollOptionsIdFilter).AnyAsync();
-                }
-            }
-
-            return isValid;
-        }
-
-        //public async Task<string> GetPollInfo(string pollCode)
-        //{
-
-        //}
     }
 }

@@ -14,18 +14,6 @@ namespace Core.Commands.Definitions
     {
         public IEnumerable<Command> Commands => new[]
         {
-            //new Command("poll", StartPoll)
-            //{
-            //    Aliases = new[] {"poll"},
-            //    Description = "Starts a poll with single choice. Argument: <PollName> <PollCode> <Option1> <Option2> <OptionX> (optional)"
-            //},
-
-            //new Command("multipoll", StartMultiPoll)
-            //{
-            //    Aliases = new[] {"multipoll"},
-            //    Description = "Starts a poll with multiple choice. Argument: <PollName> <PollCode> <Option1> <Option2> <OptionX> (optional)"
-            //},
-
             new Command("vote", Vote)
             {
                 Aliases = new[] {"vote"},
@@ -42,32 +30,31 @@ namespace Core.Commands.Definitions
         }
 
 
-        //public async Task<CommandResult> StartPoll(CommandContext context)
-        //{
-        //    var argSet = context.Args.Select(arg => arg.ToUpperInvariant()).ToArray();
-        //    if (argSet.Length < 4) return new CommandResult { Response = "too few arguments" };
+        public async Task<CommandResult> StartPoll(CommandContext context)
+        {
+            var argSet = context.Args.Select(arg => arg.ToUpperInvariant()).ToArray();
+            if (argSet.Length < 4) return new CommandResult { Response = "too few arguments" };
 
-        //    string pollName = argSet[0];
-        //    string pollCode = argSet[1];
-        //    var options = argSet.Skip(2).ToArray();
+            string pollName = argSet[0];
+            string pollCode = argSet[1];
+            var options = argSet.Skip(2).ToArray();
 
-        //    await _pollRepo.CreatePoll(pollName, pollCode, false, options);
-        //    return new CommandResult { Response = "Single option poll created" };
-        //}
+            await _pollRepo.CreatePoll(pollName, pollCode, false, options);
+            return new CommandResult { Response = "Single option poll created" };
+        }
 
+        public async Task<CommandResult> StartMultiPoll(CommandContext context)
+        {
+            var argSet = context.Args.Select(arg => arg.ToUpperInvariant()).ToArray();
+            if (argSet.Length < 4) return new CommandResult { Response = "too few arguments" };
 
-        //public async Task<CommandResult> StartMultiPoll(CommandContext context)
-        //{
-        //    var argSet = context.Args.Select(arg => arg.ToUpperInvariant()).ToArray();
-        //    if (argSet.Length < 4) return new CommandResult { Response = "too few arguments" };
+            string pollName = argSet[0];
+            string pollCode = argSet[1];
+            var options = argSet.Skip(2).ToArray();
 
-        //    string pollName = argSet[0];
-        //    string pollCode = argSet[1];
-        //    var options = argSet.Skip(2).ToArray();
-
-        //    await _pollRepo.CreatePoll(pollName, pollCode, true, options);
-        //    return new CommandResult { Response = "Multi option poll created" };
-        //}
+            await _pollRepo.CreatePoll(pollName, pollCode, true, options);
+            return new CommandResult { Response = "Multi option poll created" };
+        }
 
 
         public async Task<CommandResult> Vote(CommandContext context)
@@ -90,11 +77,10 @@ namespace Core.Commands.Definitions
             if (!isPollValid) return new CommandResult { Response = $"Poll \"{pollName}\" has ended or could not be found." };
             argSet = argSet.Skip(1).ToArray();
             bool useIntArgSet = false;
-            int[] intArgSet = { };
 
             try
             {
-                intArgSet = Array.ConvertAll(argSet, int.Parse);
+                Array.ConvertAll(argSet, int.Parse);
                 useIntArgSet = true;
             }
             catch
@@ -108,10 +94,7 @@ namespace Core.Commands.Definitions
             //
             //Validate votes
             bool isVoteValid = false;
-            if (useIntArgSet)
-                isVoteValid = await _pollRepo.IsVoteValid(pollName, intArgSet);
-            else
-                isVoteValid = await _pollRepo.IsVoteValid(pollName, argSet);
+            isVoteValid = await _pollRepo.IsVoteValid(pollName, argSet, useIntArgSet);
 
             if (!isVoteValid) return new CommandResult { Response = $"Invalid option included for poll: \"{pollName}\"." };
 
@@ -122,10 +105,8 @@ namespace Core.Commands.Definitions
 
             //
             //Vote
-            if (useIntArgSet)
-                await _pollRepo.Vote(pollName, context.Message.User.Id, intArgSet);
-            else
-                await _pollRepo.Vote(pollName, context.Message.User.Id, argSet);
+            await _pollRepo.Vote(pollName, context.Message.User.Id, argSet, useIntArgSet);
+
 
             return new CommandResult { Response = "voted!" };
         }

@@ -10,17 +10,17 @@ namespace Persistence.Models
     // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
     public class PollOption : PropertyEquatable<PollOption>
     {
-        public int Id { get; private set; }
-        public string? Options { get; private set; }
-        public int Votes { get; private set; }
-        public List<string>? VoterIds { get; private set; }
+        public int Id { get; init; }
+        public string? Option { get; init; }
+        public int Votes { get; init; }
+        public List<string>? VoterIds { get; init; }
 
         protected override object EqualityId => Id;
 
-        public PollOption(int id, string options, int votes, List<string> voterIds)
+        public PollOption(int id, string option, int votes, List<string> voterIds)
         {
             Id = id;
-            Options = options;
+            Option = option;
             Votes = votes;
             VoterIds = voterIds;
         }
@@ -28,50 +28,42 @@ namespace Persistence.Models
 
     public class Poll : PropertyEquatable<Poll>
     {
-        public string Id { get; private set; }
+        public string Id { get; init; }
         protected override object EqualityId => Id;
-
-        public string PollName { get; private set; }
 
         /// <summary>
         /// The subject this poll is about.
         /// </summary>
-        public string PollCode { get; private set; }
+        public string PollTitle { get; init; }
 
-        //public struct PollOption
-        //{
-        //    public int Id;
-        //    public string Option;
-        //    public int Votes;
-        //    public List<string> VoterIds;
-        //};
+        /// <summary>
+        /// The capitalized 4-letter code used to publicly identify this poll.
+        /// </summary>
+        public string PollCode { get; init; }
 
-        public List<string> Voters { get; private set; }
+        public List<string> Voters { get; init; }
 
         /// <summary>
         /// The list of options and their respective votes.
         /// </summary>
-        public PollOption[] PollOptions { get; private set; }
+        public PollOption[] PollOptions { get; init; }
 
-        /// <summary>
-        /// Instant this poll was created at.
-        /// </summary>
-        public Instant CreatedAt { get; private set; }
+        public Instant CreatedAt { get; init; }
 
         /// <summary>
         /// Specifies whether the poll is allowed more than one choice. Limited to one if false.
         /// </summary>
-        public bool MultiChoice { get; private set; }
+        public bool MultiChoice { get; init; }
 
         /// <summary>
         /// Sets if this poll is active. If false, will block any more voters.
         /// </summary>
-        public bool Alive { get; private set; }
+        public bool Alive { get; init; }
 
-        public Poll(string id, string pollName, string pollCode, List<string> voters, PollOption[] pollOptions, Instant createdAt, bool multiChoice, bool alive)
+        public Poll(string id, string pollTitle, string pollCode, List<string> voters, PollOption[] pollOptions, Instant createdAt, bool multiChoice, bool alive)
         {
             Id = id;
-            PollName = pollName;
+            PollTitle = pollTitle;
             PollCode = pollCode;
             Voters = voters;
             PollOptions = pollOptions;
