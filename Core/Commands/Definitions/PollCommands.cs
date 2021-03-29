@@ -44,16 +44,6 @@ namespace Core.Commands.Definitions
             if (!isPollValid)
                 return new CommandResult { Response = $"Poll \"{pollName}\" has ended or could not be found." };
             argSet = argSet.Skip(1).ToArray();
-            bool useIntArgSet = false;
-
-            try
-            {
-                Array.ConvertAll(argSet, int.Parse);
-                useIntArgSet = true;
-            }
-            catch
-            {
-            }
 
             //
             //Don't allow a user to vote twice
@@ -62,8 +52,7 @@ namespace Core.Commands.Definitions
 
             //
             //Validate votes
-            bool isVoteValid = false;
-            isVoteValid = await _pollRepo.IsVoteValid(pollName, argSet, useIntArgSet);
+            bool isVoteValid = await _pollRepo.IsVoteValid(pollName, Array.ConvertAll(argSet, int.Parse));
 
             if (!isVoteValid)
                 return new CommandResult { Response = $"Invalid option included for poll: \"{pollName}\"." };
@@ -76,7 +65,7 @@ namespace Core.Commands.Definitions
 
             //
             //Vote
-            await _pollRepo.Vote(pollName, context.Message.User.Id, argSet, useIntArgSet);
+            await _pollRepo.Vote(pollName, context.Message.User.Id, Array.ConvertAll(argSet, int.Parse));
 
 
             return new CommandResult { Response = "voted!" };
