@@ -10,6 +10,7 @@ using TPP.Core.Chat;
 using TPP.Core.Commands;
 using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
+using TPP.Core.Overlay;
 using TPP.Persistence.Models;
 using TPP.Persistence.MongoDB;
 using TPP.Persistence.MongoDB.Repos;
@@ -77,7 +78,9 @@ namespace TPP.Core
                     stopToken, chatConfig.OperatorNames, databases.PokeyenBank, databases.TokensBank,
                     messageSender: messageSender, databases.BadgeRepo
                 ).Commands,
-                new ModeratorCommands(chatConfig.ModeratorNames, chatConfig.OperatorNames, chatModeChanger).Commands,
+                new ModeratorCommands(
+                    chatConfig.ModeratorNames, chatConfig.OperatorNames, chatModeChanger, databases.LinkedAccountRepo
+                ).Commands,
                 new MiscCommands().Commands,
             }.SelectMany(cmds => cmds).Concat(new[]
             {
@@ -97,7 +100,8 @@ namespace TPP.Core
             IBank<User> TokensBank,
             ICommandLogger CommandLogger,
             IMessagequeueRepo MessagequeueRepo,
-            IMessagelogRepo MessagelogRepo
+            IMessagelogRepo MessagelogRepo,
+            ILinkedAccountRepo LinkedAccountRepo
         );
 
         public static Databases SetUpRepositories(BaseConfig baseConfig)
@@ -107,7 +111,7 @@ namespace TPP.Core
             IMongoClient mongoClient = new MongoClient(baseConfig.MongoDbConnectionUri);
             IMongoDatabase mongoDatabase = mongoClient.GetDatabase(baseConfig.MongoDbDatabaseName);
             IMongoDatabase mongoDatabaseMessagelog = mongoClient.GetDatabase(baseConfig.MongoDbDatabaseNameMessagelog);
-            IUserRepo userRepo = new UserRepo(
+            UserRepo userRepo = new(
                 database: mongoDatabase,
                 startingPokeyen: baseConfig.StartingPokeyen,
                 startingTokens: baseConfig.StartingTokens);
@@ -139,8 +143,19 @@ namespace TPP.Core
                 TokensBank: tokenBank,
                 CommandLogger: new CommandLogger(mongoDatabase, clock),
                 MessagequeueRepo: new MessagequeueRepo(mongoDatabase),
-                MessagelogRepo: new MessagelogRepo(mongoDatabaseMessagelog)
+                MessagelogRepo: new MessagelogRepo(mongoDatabaseMessagelog),
+                LinkedAccountRepo: new LinkedAccountRepo(mongoDatabase, userRepo.Collection)
             );
+        }
+
+        public static (WebsocketBroadcastServer, OverlayConnection) SetUpOverlayServer(ILoggerFactory loggerFactory)
+        {
+            (string wsHost, int wsPort) = ("localhost", 5001);
+            WebsocketBroadcastServer broadcastServer = new(
+                loggerFactory.CreateLogger<WebsocketBroadcastServer>(), wsHost, wsPort);
+            OverlayConnection overlayConnection = new(
+                loggerFactory.CreateLogger<OverlayConnection>(), broadcastServer);
+            return (broadcastServer, overlayConnection);
         }
     }
 }

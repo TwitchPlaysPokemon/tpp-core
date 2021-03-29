@@ -44,10 +44,7 @@ namespace TPP.Core.Modes
             foreach (Command command in bettingCommands.Commands)
                 _modeBase.InstallAdditionalCommand(command);
 
-            _broadcastServer = new WebsocketBroadcastServer(
-                loggerFactory.CreateLogger<WebsocketBroadcastServer>(), "localhost", 5001);
-            _overlayConnection =
-                new OverlayConnection(loggerFactory.CreateLogger<OverlayConnection>(), _broadcastServer);
+            (_broadcastServer, _overlayConnection) = Setups.SetUpOverlayServer(loggerFactory);
         }
 
         public async Task Run()
