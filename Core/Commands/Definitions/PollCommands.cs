@@ -1,11 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using ArgsParsing.Types;
-using Common;
-using Persistence.Models;
 using Persistence.Repos;
 
 namespace Core.Commands.Definitions
@@ -16,11 +12,10 @@ namespace Core.Commands.Definitions
         {
             new Command("vote", Vote)
             {
-                Aliases = new[] {"vote"},
+                Aliases = new[] { "vote" },
                 Description = "Vote on a poll. Argument: <PollCode> <Option1> <OptionX> (optional if multi-choice poll)"
             }
         };
-
 
         private readonly IPollRepo _pollRepo;
 
@@ -28,34 +23,6 @@ namespace Core.Commands.Definitions
         {
             _pollRepo = pollRepo;
         }
-
-
-        public async Task<CommandResult> StartPoll(CommandContext context)
-        {
-            var argSet = context.Args.Select(arg => arg.ToUpperInvariant()).ToArray();
-            if (argSet.Length < 4) return new CommandResult { Response = "too few arguments" };
-
-            string pollName = argSet[0];
-            string pollCode = argSet[1];
-            var options = argSet.Skip(2).ToArray();
-
-            await _pollRepo.CreatePoll(pollName, pollCode, false, options);
-            return new CommandResult { Response = "Single option poll created" };
-        }
-
-        public async Task<CommandResult> StartMultiPoll(CommandContext context)
-        {
-            var argSet = context.Args.Select(arg => arg.ToUpperInvariant()).ToArray();
-            if (argSet.Length < 4) return new CommandResult { Response = "too few arguments" };
-
-            string pollName = argSet[0];
-            string pollCode = argSet[1];
-            var options = argSet.Skip(2).ToArray();
-
-            await _pollRepo.CreatePoll(pollName, pollCode, true, options);
-            return new CommandResult { Response = "Multi option poll created" };
-        }
-
 
         public async Task<CommandResult> Vote(CommandContext context)
         {
@@ -74,7 +41,8 @@ namespace Core.Commands.Definitions
 
             //Validate poll
             bool isPollValid = await _pollRepo.IsPollValid(pollName);
-            if (!isPollValid) return new CommandResult { Response = $"Poll \"{pollName}\" has ended or could not be found." };
+            if (!isPollValid)
+                return new CommandResult { Response = $"Poll \"{pollName}\" has ended or could not be found." };
             argSet = argSet.Skip(1).ToArray();
             bool useIntArgSet = false;
 
@@ -84,7 +52,8 @@ namespace Core.Commands.Definitions
                 useIntArgSet = true;
             }
             catch
-            { }
+            {
+            }
 
             //
             //Don't allow a user to vote twice
@@ -96,12 +65,14 @@ namespace Core.Commands.Definitions
             bool isVoteValid = false;
             isVoteValid = await _pollRepo.IsVoteValid(pollName, argSet, useIntArgSet);
 
-            if (!isVoteValid) return new CommandResult { Response = $"Invalid option included for poll: \"{pollName}\"." };
+            if (!isVoteValid)
+                return new CommandResult { Response = $"Invalid option included for poll: \"{pollName}\"." };
 
             //
             //Only allow multiple votes if is set to multi - option poll
             bool isMulti = await _pollRepo.IsMulti(pollName);
-            if (argSet.Length > 1 && !isMulti) return new CommandResult { Response = $"Poll \"{pollName}\" is not a multi-choice poll." };
+            if (argSet.Length > 1 && !isMulti)
+                return new CommandResult { Response = $"Poll \"{pollName}\" is not a multi-choice poll." };
 
             //
             //Vote
