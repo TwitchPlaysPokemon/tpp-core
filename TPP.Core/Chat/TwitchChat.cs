@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using NodaTime;
 using TPP.Common;
 using TPP.Core.Configuration;
+using TPP.Core.Overlay;
 using TPP.Core.Overlay.Events;
 using TPP.Persistence.Models;
 using TPP.Persistence.Repos;
@@ -45,6 +46,7 @@ namespace TPP.Core.Chat
         private readonly ISubscriptionProcessor _subscriptionProcessor;
         private readonly TwitchClient _twitchClient;
         private readonly TwitchLibSubscriptionWatcher _subscriptionWatcher;
+        private readonly OverlayConnection _overlayConnection;
 
         private bool _connected = false;
         private Action? _connectivityWorkerCleanup;
@@ -55,7 +57,8 @@ namespace TPP.Core.Chat
             IClock clock,
             ConnectionConfig.Twitch chatConfig,
             IUserRepo userRepo,
-            ISubscriptionProcessor subscriptionProcessor)
+            ISubscriptionProcessor subscriptionProcessor,
+            OverlayConnection overlayConnection)
         {
             Name = name;
             _logger = loggerFactory.CreateLogger<TwitchChat>();
@@ -66,6 +69,7 @@ namespace TPP.Core.Chat
                 .Select(s => s.ToLowerInvariant()).ToImmutableHashSet();
             _userRepo = userRepo;
             _subscriptionProcessor = subscriptionProcessor;
+            _overlayConnection = overlayConnection;
 
             _twitchClient = new TwitchClient(
                 client: new WebSocketClient(new ClientOptions()),
@@ -134,14 +138,13 @@ namespace TPP.Core.Chat
             string response = BuildSubResponse(subResult, null, false);
             await SendWhisper(e.Subscriber, response);
 
-            var evt = new NewSubscriber
+            await _overlayConnection.Send(new NewSubscriber
             {
                 User = e.Subscriber,
                 Emotes = e.Emotes.Select(EmoteInfo.FromOccurence).ToImmutableList(),
                 SubMessage = e.Message,
                 ShareSub = true,
-            };
-            // TODO send to overlay
+            }, CancellationToken.None);
         }
 
         private async void OnSubscriptionGifted(object? sender, SubscriptionGiftInfo e)
@@ -170,14 +173,13 @@ namespace TPP.Core.Chat
             if (!e.IsAnonymous)
                 await SendWhisper(e.Gifter, subGiftResponse); // don't respond to the "AnAnonymousGifter" user
 
-            var evt = new NewSubscriber
+            await _overlayConnection.Send(new NewSubscriber
             {
                 User = e.SubscriptionInfo.Subscriber,
                 Emotes = e.SubscriptionInfo.Emotes.Select(EmoteInfo.FromOccurence).ToImmutableList(),
                 SubMessage = e.SubscriptionInfo.Message,
                 ShareSub = false,
-            };
-            // TODO send to overlay
+            }, CancellationToken.None);
         }
 
         public async Task SendMessage(string message)

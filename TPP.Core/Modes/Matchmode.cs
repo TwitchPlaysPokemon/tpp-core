@@ -38,13 +38,13 @@ namespace TPP.Core.Modes
             _stopToken = new StopToken();
             Setups.Databases repos = Setups.SetUpRepositories(baseConfig);
             _pokeyenBank = repos.PokeyenBank;
-            _modeBase = new ModeBase(loggerFactory, repos, baseConfig, _stopToken);
+            (_broadcastServer, _overlayConnection) = Setups.SetUpOverlayServer(loggerFactory);
+
+            _modeBase = new ModeBase(loggerFactory, repos, baseConfig, _stopToken, _overlayConnection);
 
             var bettingCommands = new BettingCommands(() => _bettingPeriod);
             foreach (Command command in bettingCommands.Commands)
                 _modeBase.InstallAdditionalCommand(command);
-
-            (_broadcastServer, _overlayConnection) = Setups.SetUpOverlayServer(loggerFactory);
         }
 
         public async Task Run()
