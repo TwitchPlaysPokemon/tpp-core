@@ -76,7 +76,9 @@ namespace TPP.Core
                     stopToken, chatConfig.OperatorNames, databases.PokeyenBank, databases.TokensBank,
                     messageSender: messageSender, databases.BadgeRepo
                 ).Commands,
-                new ModeratorCommands(chatConfig.ModeratorNames, chatConfig.OperatorNames, chatModeChanger).Commands,
+                new ModeratorCommands(
+                    chatConfig.ModeratorNames, chatConfig.OperatorNames, chatModeChanger, databases.LinkedAccountRepo
+                ).Commands,
                 new MiscCommands().Commands,
             }.SelectMany(cmds => cmds).Concat(new[]
             {
@@ -96,7 +98,8 @@ namespace TPP.Core
             IBank<User> TokensBank,
             ICommandLogger CommandLogger,
             IMessagequeueRepo MessagequeueRepo,
-            IMessagelogRepo MessagelogRepo
+            IMessagelogRepo MessagelogRepo,
+            ILinkedAccountRepo LinkedAccountRepo
         );
 
         public static Databases SetUpRepositories(BaseConfig baseConfig)
@@ -106,7 +109,7 @@ namespace TPP.Core
             IMongoClient mongoClient = new MongoClient(baseConfig.MongoDbConnectionUri);
             IMongoDatabase mongoDatabase = mongoClient.GetDatabase(baseConfig.MongoDbDatabaseName);
             IMongoDatabase mongoDatabaseMessagelog = mongoClient.GetDatabase(baseConfig.MongoDbDatabaseNameMessagelog);
-            IUserRepo userRepo = new UserRepo(
+            UserRepo userRepo = new(
                 database: mongoDatabase,
                 startingPokeyen: baseConfig.StartingPokeyen,
                 startingTokens: baseConfig.StartingTokens);
@@ -138,7 +141,8 @@ namespace TPP.Core
                 TokensBank: tokenBank,
                 CommandLogger: new CommandLogger(mongoDatabase, clock),
                 MessagequeueRepo: new MessagequeueRepo(mongoDatabase),
-                MessagelogRepo: new MessagelogRepo(mongoDatabaseMessagelog)
+                MessagelogRepo: new MessagelogRepo(mongoDatabaseMessagelog),
+                LinkedAccountRepo: new LinkedAccountRepo(mongoDatabase, userRepo.Collection)
             );
         }
 
