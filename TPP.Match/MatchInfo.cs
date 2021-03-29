@@ -1,9 +1,15 @@
 using System.Collections.Immutable;
+using System.Runtime.Serialization;
 using TPP.Common.PkmnModels;
 
 namespace TPP.Match
 {
-    public enum Side { Blue, Red }
+    [DataContract]
+    public enum Side
+    {
+        [EnumMember(Value = "blue")] Blue,
+        [EnumMember(Value = "red")] Red,
+    }
 
     public record MatchResult(Side? Winner);
 
