@@ -1,0 +1,25 @@
+﻿name: json-schema
+
+on: [pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup .NET 5
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+      - uses: actions/checkout@v2
+      - name: Regenerate core config json schemas
+        run: |
+          cd TPP.Core
+          dotnet run -- regenjsonschemas
+          git add config.schema.json
+          git add config.runmode.schema.json
+          git add config.matchmode.schema.json
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git diff-index --quiet HEAD || { echo 'Please update the json schemas by running `dotnet run -- regenjsonschemas`'; exit 1; }

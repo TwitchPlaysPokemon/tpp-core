@@ -1,0 +1,144 @@
+﻿{
+  "definitions": {
+    "ChatConfig": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "OperatorNames": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "ModeratorNames": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "Connections": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/ConnectionConfig"
+          }
+        },
+        "ForwardUnprocessedMessages": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ConnectionConfig": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "Type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "Name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "DiscordLoggingConfig": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "WebhookId": {
+          "type": "integer"
+        },
+        "WebhookToken": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "MinLogLevel": {
+          "type": "string",
+          "enum": [
+            "Verbose",
+            "Debug",
+            "Information",
+            "Warning",
+            "Error",
+            "Fatal"
+          ]
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "LogPath": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "MongoDbConnectionUri": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "MongoDbDatabaseName": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "MongoDbDatabaseNameMessagelog": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Chat": {
+      "$ref": "#/definitions/ChatConfig"
+    },
+    "StartingPokeyen": {
+      "type": "integer"
+    },
+    "StartingTokens": {
+      "type": "integer"
+    },
+    "DiscordLoggingConfig": {
+      "$ref": "#/definitions/DiscordLoggingConfig"
+    }
+  }
+}
