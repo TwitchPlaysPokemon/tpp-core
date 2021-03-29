@@ -42,6 +42,11 @@ namespace TPP.Common
         /// </summary>
         public readonly string Name;
 
+        /// <summary>
+        /// Whether the species is not from the official national pokedex but a custom pokedex, and hence a "fakemon".
+        /// </summary>
+        public readonly bool IsFakemon;
+
         private readonly string _sortKey;
         private readonly string _displayText;
 
@@ -62,11 +67,11 @@ namespace TPP.Common
                     $"The id '{id}' is invalid. " +
                     "It needs to be a number (for national pokedex) or have the format '<number>-<pokedex>'");
             }
-            bool isCustomDex = parts.Length > 1;
-            _sortKey = isCustomDex
+            IsFakemon = parts.Length > 1;
+            _sortKey = IsFakemon
                 ? $"{parts[1]}{intPart:00000}"
                 : $"_{intPart:00000}"; // prefix with '_' to keep the national dex at the alphanumerical top
-            _displayText = isCustomDex
+            _displayText = IsFakemon
                 ? $"#{intPart:000}-{parts[1]} {name}"
                 : $"#{intPart:000} {name}";
         }
