@@ -35,7 +35,7 @@ namespace TPP.Core.Tests
             Mock<IUserRepo> userRepoMock = new();
             Mock<ISubscriptionLogRepo> subscriptionLogRepoMock = new();
             ISubscriptionProcessor subscriptionProcessor = new SubscriptionProcessor(
-                bankMock.Object, userRepoMock.Object, subscriptionLogRepoMock.Object);
+                bankMock.Object, userRepoMock.Object, subscriptionLogRepoMock.Object, Mock.Of<ILinkedAccountRepo>());
 
             userRepoMock.Setup(r => r.SetIsSubscribed(user, It.IsAny<bool>())).ReturnsAsync(user);
             userRepoMock.Setup(r => r.SetSubscriptionInfo(user, It.IsAny<int>(), It.IsAny<SubscriptionTier>(),
@@ -94,7 +94,7 @@ namespace TPP.Core.Tests
             Mock<IUserRepo> userRepoMock = new();
             Mock<ISubscriptionLogRepo> subscriptionLogRepoMock = new();
             ISubscriptionProcessor subscriptionProcessor = new SubscriptionProcessor(
-                bankMock.Object, userRepoMock.Object, subscriptionLogRepoMock.Object);
+                bankMock.Object, userRepoMock.Object, subscriptionLogRepoMock.Object, Mock.Of<ILinkedAccountRepo>());
 
             // WHEN
             ISubscriptionProcessor.SubResult subResult = await subscriptionProcessor.ProcessSubscription(
@@ -127,7 +127,7 @@ namespace TPP.Core.Tests
             Mock<IUserRepo> userRepoMock = new();
             Mock<ISubscriptionLogRepo> subscriptionLogRepoMock = new();
             ISubscriptionProcessor subscriptionProcessor = new SubscriptionProcessor(
-                bankMock.Object, userRepoMock.Object, subscriptionLogRepoMock.Object);
+                bankMock.Object, userRepoMock.Object, subscriptionLogRepoMock.Object, Mock.Of<ILinkedAccountRepo>());
 
             userRepoMock.Setup(r => r.SetIsSubscribed(user, It.IsAny<bool>())).ReturnsAsync(user);
             userRepoMock.Setup(r => r.SetSubscriptionInfo(user, It.IsAny<int>(), It.IsAny<SubscriptionTier>(),
@@ -180,7 +180,7 @@ namespace TPP.Core.Tests
             Mock<IBank<User>> bankMock = new();
             Mock<IUserRepo> userRepoMock = new();
             ISubscriptionProcessor subscriptionProcessor = new SubscriptionProcessor(
-                bankMock.Object, userRepoMock.Object, Mock.Of<ISubscriptionLogRepo>());
+                bankMock.Object, userRepoMock.Object, Mock.Of<ISubscriptionLogRepo>(), Mock.Of<ILinkedAccountRepo>());
             userRepoMock.Setup(r => r.SetIsSubscribed(recipient, It.IsAny<bool>())).ReturnsAsync(recipient);
             userRepoMock.Setup(r => r.SetSubscriptionInfo(recipient, It.IsAny<int>(), It.IsAny<SubscriptionTier>(),
                 It.IsAny<int>(), It.IsAny<Instant>())).ReturnsAsync(recipient);
@@ -231,7 +231,7 @@ namespace TPP.Core.Tests
             Mock<IBank<User>> bankMock = new();
             Mock<IUserRepo> userRepoMock = new();
             ISubscriptionProcessor subscriptionProcessor = new SubscriptionProcessor(
-                bankMock.Object, userRepoMock.Object, Mock.Of<ISubscriptionLogRepo>());
+                bankMock.Object, userRepoMock.Object, Mock.Of<ISubscriptionLogRepo>(), Mock.Of<ILinkedAccountRepo>());
 
             SubscriptionInfo subscriptionInfo = new(recipient, NumMonths: 1, StreakMonths: 0, tier, "Sub Plan Name",
                 Instant.MinValue, "sub message", ImmutableList<EmoteOccurrence>.Empty);

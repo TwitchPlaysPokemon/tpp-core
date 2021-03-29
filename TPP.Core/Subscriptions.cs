@@ -74,13 +74,16 @@ namespace TPP.Core
         private readonly IBank<User> _tokenBank;
         private readonly IUserRepo _userRepo;
         private readonly ISubscriptionLogRepo _subscriptionLogRepo;
+        private readonly ILinkedAccountRepo _linkedAccountRepo;
 
         public SubscriptionProcessor(
-            IBank<User> tokenBank, IUserRepo userRepo, ISubscriptionLogRepo subscriptionLogRepo)
+            IBank<User> tokenBank, IUserRepo userRepo, ISubscriptionLogRepo subscriptionLogRepo,
+            ILinkedAccountRepo linkedAccountRepo)
         {
             _tokenBank = tokenBank;
             _userRepo = userRepo;
             _subscriptionLogRepo = subscriptionLogRepo;
+            _linkedAccountRepo = linkedAccountRepo;
         }
 
         public async Task<ISubscriptionProcessor.SubResult> ProcessSubscription(SubscriptionInfo subscriptionInfo)
@@ -173,7 +176,10 @@ namespace TPP.Core
         {
             ISubscriptionProcessor.SubResult subResult =
                 await ProcessSubscription(subscriptionGiftInfo.SubscriptionInfo);
-            bool isLinkedAccount = false; // TODO check linked accounts
+            bool isLinkedAccount = await _linkedAccountRepo.AreLinked(
+                subscriptionGiftInfo.Gifter.Id,
+                subscriptionGiftInfo.SubscriptionInfo.Subscriber.Id);
+
             if (isLinkedAccount)
                 return (subResult, new ISubscriptionProcessor.SubGiftResult.LinkedAccount());
 
