@@ -94,9 +94,16 @@ namespace TPP.Core.Chat
             Console.Out.WriteLine("You can combine both, e.g. '#someone >balance'");
         }
 
-        public Task EnableEmoteOnly() => Task.CompletedTask;
-        public Task DisableEmoteOnly() => Task.CompletedTask;
-        public Task DeleteMessage(string messageId) => Task.CompletedTask;
-        public Task Timeout(User user, string? message, Duration duration) => Task.CompletedTask;
+        private static Task PrintAction(string message)
+        {
+            Console.Out.WriteLine($"=== {message} ===");
+            return Task.CompletedTask;
+        }
+
+        public Task EnableEmoteOnly() => PrintAction("enable emote only");
+        public Task DisableEmoteOnly() => PrintAction("disable emote only");
+        public Task DeleteMessage(string messageId) => PrintAction($"delete message with id {messageId}");
+        public Task Timeout(User user, string? message, Duration duration) =>
+            PrintAction($"time out {user.Name} for {duration}");
     }
 }

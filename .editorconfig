@@ -32,6 +32,7 @@ resharper_redundant_default_member_initializer_highlighting = do_not_show
 
 # use own judgment for what declarations to group together tightly
 blank_lines_around_field = 0
+blank_lines_around_invocable = 0
 blank_lines_around_property = 0
 blank_lines_around_auto_property = 0
 blank_lines_around_type = 0
