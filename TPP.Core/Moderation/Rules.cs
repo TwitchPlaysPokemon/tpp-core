@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using F23.StringSimilarity;
 using NodaTime;
 using TPP.Core.Utils;
+using static System.Globalization.UnicodeCategory;
 
 namespace TPP.Core.Moderation
 {
@@ -86,8 +87,7 @@ namespace TPP.Core.Moderation
         public string Id => "copypasta";
 
         private static readonly NormalizedLevenshtein NormLevenshtein = new();
-        private readonly int _copypastaPoints;
-        private readonly float _messageLengthMultiplier;
+        private readonly float _pointsPerCopypastaChar;
         private readonly TtlQueue<string> _recentMessages;
         private readonly int _minMessageLength;
         private readonly double _minSimilarity;
@@ -95,15 +95,13 @@ namespace TPP.Core.Moderation
         public CopypastaRule(
             IClock clock,
             Duration? recentMessagesTtl = null,
-            int copypastaPoints = 100,
-            float messageLengthMultiplier = 0.01f,
+            float pointsPerCopypastaChar = 1,
             int minMessageLength = 60,
             double minSimilarity = 0.75)
         {
             Duration ttl = recentMessagesTtl ?? Duration.FromMinutes(2);
             _recentMessages = new TtlQueue<string>(ttl, clock);
-            _copypastaPoints = copypastaPoints;
-            _messageLengthMultiplier = messageLengthMultiplier;
+            _pointsPerCopypastaChar = pointsPerCopypastaChar;
             _minMessageLength = minMessageLength;
             _minSimilarity = minSimilarity;
         }
@@ -120,7 +118,7 @@ namespace TPP.Core.Moderation
         public RuleResult Check(Message message) =>
             IsCopypasta(message.MessageText)
                 ? new RuleResult.GivePoints(
-                    (int)(_copypastaPoints * _messageLengthMultiplier * message.MessageText.Length),
+                    (int)(_pointsPerCopypastaChar * message.MessageText.Length),
                     "participating in copypasta")
                 : new RuleResult.Nothing();
     }
@@ -131,19 +129,16 @@ namespace TPP.Core.Moderation
     {
         public string Id => "unicode-char-category";
 
-        private readonly int _badnessPointsMultiplier;
-        private readonly float _messageLengthMultiplier;
+        private readonly float _pointsPerBadChar;
         private readonly double _minBadness;
         private readonly int _minMessageLength;
 
         public UnicodeCharacterCategoryRule(
-            int badnessPointsMultiplier = 200,
-            float messageLengthMultiplier = 0.01f,
+            int pointsPerBadChar = 2,
             double minBadness = 0.3,
             int minMessageLength = 60)
         {
-            _badnessPointsMultiplier = badnessPointsMultiplier;
-            _messageLengthMultiplier = messageLengthMultiplier;
+            _pointsPerBadChar = pointsPerBadChar;
             _minBadness = minBadness;
             _minMessageLength = minMessageLength;
         }
@@ -157,9 +152,7 @@ namespace TPP.Core.Moderation
             foreach (char c in message.MessageText.Normalize(NormalizationForm.FormD))
             {
                 UnicodeCategory category = CharUnicodeInfo.GetUnicodeCategory(c);
-                if (category == UnicodeCategory.LowercaseLetter ||
-                    category == UnicodeCategory.UppercaseLetter ||
-                    category == UnicodeCategory.DecimalDigitNumber)
+                if (c == ' ' || category is LowercaseLetter or UppercaseLetter or DecimalDigitNumber)
                     numGood++;
                 else
                     numBad++;
@@ -170,7 +163,7 @@ namespace TPP.Core.Moderation
             if (badness > _minBadness)
             {
                 return new RuleResult.GivePoints(
-                    (int)(_badnessPointsMultiplier * badness * _messageLengthMultiplier * total),
+                    (int)(_pointsPerBadChar * numBad),
                     "suspiciously excessive usage of special characters");
             }
             return new RuleResult.Nothing();

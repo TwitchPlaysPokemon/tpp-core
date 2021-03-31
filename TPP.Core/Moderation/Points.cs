@@ -44,14 +44,17 @@ namespace TPP.Core.Moderation
             return Math.Max(0, pointsMaybeNegative);
         }
 
-        public IImmutableList<(int, string)> GetTopViolations()
+        public record Violation(string Reason, int Points);
+
+        public IImmutableList<Violation> GetTopViolations()
         {
             PruneDecayed();
             return _points
-                .Select(p => (p.Points, p.Reason))
-                .GroupBy(tpl => tpl.Item2)
-                .Select(group => (group.Sum(tpl => tpl.Item1), group.Key))
-                .OrderBy(tpl => -tpl.Item1)
+                .Select(p => new Violation(p.Reason, p.Points))
+                // de-duplicate violations for the same reason by summing their points
+                .GroupBy(violation => violation.Reason)
+                .Select(group => new Violation(group.Key, group.Sum(violation => violation.Points)))
+                .OrderByDescending(violation => violation.Points)
                 .ToImmutableList();
         }
 

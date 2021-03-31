@@ -89,7 +89,7 @@ namespace TPP.Core.Tests.Moderation
             [Test]
             public void detects_zalgo()
             {
-                UnicodeCharacterCategoryRule rule = new(badnessPointsMultiplier: 200);
+                UnicodeCharacterCategoryRule rule = new(pointsPerBadChar: 2);
                 RuleResult result = rule.Check(TextMessage(
                     "A҉̳͎̘̮͚̖ ̮̘̮͉̭̕m̕a̸̻̺̗n̙͉̹̣̝̜̰ ͍̩̰̬͇i̷̺͇͈̼̝s͇ s̰͇͎̱̼̥t̵̪̳̖͔̟ị̣̥̫͓̤̭̕l̯̣̹ḽ̸͓ i̥̱̬͚n̤͍ ̥̮̭͎͔͞c̷̼͇̦̪̤̜̖r͎͎̟̱͙i̵͓̖̫̱̫̘̦t͔͕̠̻i͓̱̙̯c͈̭̣a͏l̠̳̝͟ ̭̳͖̤̭̯c҉o҉͈͈̠̙͔ͅn̨̗͖͈̝͇̜d̯̠͇͜ͅi̟͚͉͇̣t̴̜̫͇͉i̠͎̮̯̙͍̤o̧̺̹̝̫̰̯̻n̻͈͚͚̪̗̦ ̧͈͍̟̝̠͚̞a҉̩̻͈f̶t̗̞͙̭e̱͖̳̪͖ͅr͕ ̣s̝w̖̰̤͍̱̳͞a͕̪ͅl̳̫̬͕̞͡l̗̘ọ̵̺͖͍̗͍̺w̻̰̙̕ͅi̻͈͍̙͚̙͇n̲͈̩̝̠̺g̝̻͝ ͍̝̰̻̖̺͘$̶̫2͕̹̫̘5̶0̴̦,͚̖00̡̺͚̭̩͉0̙̪͠ ̠͉͓̭͖͚inͅ ̡͖̩͚̖͉̺̖l͖̞͍̼̟a͖̞̜r͈̘͖̺̬̼g̻̦̭̩̪e̼̠͍̩̤̬ ̸̦ͅb̞̱i͍̮̯l̟̳̺͘l̴͕͕̙̘s͏̭̫̤̝͓͇̘.̺ ͇̰̹̹̙̗̥N҉̟̼̘̘o̵͍̹̰̻̼̱ ̳͚̥̻͚c̮h̷̠̰̞̣̦͙a̷̮̮̘͈̪̘n͔̞͜ge̱͈̮͝s̱͓̣͉͔ ̗͖e̫̗̰̗̜x̗͖͉̗͚͍̼p̪̜̺̦͓͍̯e̝̰͚̕ct̺̞͇͔e̲͍̝d̥̬̮͉.̥̠̜̹̠"));
                 Assert.IsInstanceOf<RuleResult.GivePoints>(result);
@@ -99,7 +99,7 @@ namespace TPP.Core.Tests.Moderation
             [Test]
             public void detects_ascii_art()
             {
-                UnicodeCharacterCategoryRule rule = new(badnessPointsMultiplier: 200);
+                UnicodeCharacterCategoryRule rule = new(pointsPerBadChar: 2);
                 RuleResult result = rule.Check(TextMessage(
                     "⣿⣿⣿⣿⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠛⠻⣿⣿⣿⣿⣿⣿ ⣿⣿⣿⣿⣿⣦⠀⠀⠀⠀⠀⠀⠀⠀⢀⣤⣄⡀⠀⢻⣿⣿⣿⣿⣿ ⣿⣿⣿⣿⣿⣿⣇⠀⠀⠀⠀⠀⠀⠀⠸⣿⣿⣿⠃⢰⣿⣿⣿⣿⣿ ⣿⣿⣿⣿⣿⣿⣿⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣼⣿⣿⣿⣿⣿ ⣿⣿⣿⣿⣿⣿⣿⣿⡆⠀⠀⠀⠀⠀⠀⢶⣶⣶⣾⣿⣿⣿⣿⣿⣿ ⣿⣿⣿⣿⣿⣿⣿⣿⣧⠀⢠⡀⠐⠀⠀⠀⠻⢿⣿⣿⣿⣿⣿⣿⣿ ⣿⣿⣿⣿⣿⣿⣿⣿⣿⡄⢸⣷⡄⠀⠣⣄⡀⠀⠉⠛⢿⣿⣿⣿⣿ ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣇⠀⣿⣿⣦⠀⠹⣿⣷⣶⣦⣼⣿⣿⣿⣿ ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣼⣿⣿⣿⣷⣄⣸⣿⣿⣿⣿⣿⣿⣿⣿ ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿ ⣿⣿⡿⢛⡙⢻⠛⣉⢻⣉⢈⣹⣿⣿⠟⣉⢻⡏⢛⠙⣉⢻⣿⣿⣿ ⣿⣿⣇⠻⠃⣾⠸⠟⣸⣿⠈⣿⣿⣿⡀⠴⠞⡇⣾⡄⣿⠘⣿⣿⣿ ⣿⣿⣟⠛⣃⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣿⣿⣿⣿⣿ ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿"));
                 Assert.IsInstanceOf<RuleResult.GivePoints>(result);
@@ -107,9 +107,11 @@ namespace TPP.Core.Tests.Moderation
             }
 
             [Test]
+            // TODO felk
+            [Ignore("handling spaces was removed from the UnicodeCharacterCategoryRule and should be moved to its own rule")]
             public void detects_all_space_spam()
             {
-                UnicodeCharacterCategoryRule rule = new(badnessPointsMultiplier: 200);
+                UnicodeCharacterCategoryRule rule = new(pointsPerBadChar: 2);
                 RuleResult result = rule.Check(TextMessage(
                     "P A R T Y L I K E I T S T E N P M P A R T Y L I K E I T S T E N P M"));
                 Assert.IsInstanceOf<RuleResult.GivePoints>(result);
