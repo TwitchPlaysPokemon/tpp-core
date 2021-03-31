@@ -19,6 +19,8 @@ namespace TPP.Persistence.MongoDB.Repos
 
         public readonly IMongoCollection<Poll> Collection;
 
+        private readonly IClock _clock;
+
         static PollRepo()
         {
             BsonClassMap.RegisterClassMap<PollOption>(cm =>
@@ -44,10 +46,11 @@ namespace TPP.Persistence.MongoDB.Repos
             });
         }
 
-        public PollRepo(IMongoDatabase database)
+        public PollRepo(IMongoDatabase database, IClock clock)
         {
             database.CreateCollectionIfNotExists(CollectionName).Wait();
             Collection = database.GetCollection<Poll>(CollectionName);
+            _clock = clock;
             InitIndexes();
         }
 
@@ -77,7 +80,7 @@ namespace TPP.Persistence.MongoDB.Repos
                 pollCode: pollCode,
                 voters: new List<string>(),
                 pollOptions: pollOptionsObjects,
-                Instant.FromUnixTimeSeconds(0), // TODO
+                _clock.GetCurrentInstant(),
                 multiChoice: multiChoice,
                 alive: true
             );

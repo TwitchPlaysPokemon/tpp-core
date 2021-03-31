@@ -122,8 +122,6 @@ namespace TPP.Core
             IBadgeRepo badgeRepo = new BadgeRepo(mongoDatabase, badgeLogRepo, clock);
             badgeRepo.UserLostBadgeSpecies += async (_, args) =>
                 await userRepo.UnselectBadgeIfSpeciesSelected(args.UserId, args.Species);
-            IPollRepo pollRepo = new PollRepo(
-                database: mongoDatabase);
             IBank<User> pokeyenBank = new Bank<User>(
                 database: mongoDatabase,
                 currencyCollectionName: UserRepo.CollectionName,
@@ -144,7 +142,7 @@ namespace TPP.Core
             (
                 UserRepo: userRepo,
                 BadgeRepo: badgeRepo,
-                PollRepo: pollRepo,
+                PollRepo: new PollRepo(mongoDatabase, clock),
                 PokeyenBank: pokeyenBank,
                 TokensBank: tokenBank,
                 CommandLogger: new CommandLogger(mongoDatabase, clock),
