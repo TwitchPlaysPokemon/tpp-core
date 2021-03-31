@@ -4,13 +4,13 @@ using System.Threading.Tasks;
 using MongoDB.Driver;
 using NodaTime;
 using NUnit.Framework;
+using TPP.Common;
 using TPP.Persistence.Models;
 using TPP.Persistence.MongoDB.Repos;
 using TPP.Persistence.Repos;
 
 namespace TPP.Persistence.MongoDB.Tests.Repos
 {
-    [Category("IntegrationTest")]
     [Parallelizable(ParallelScope.All)]
     public class UserRepoTest : MongoTestBase
     {
@@ -38,9 +38,11 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
 
             // when
             User userBefore = await userRepo.RecordUser(new UserInfo(
-                userId, twitchDisplayName: displayNameBefore, simpleName: usernameBefore, color: "foo"));
+                userId, twitchDisplayName: displayNameBefore, simpleName: usernameBefore,
+                HexColor.FromWithHash("#123456")));
             User userAfter = await userRepo.RecordUser(new UserInfo(
-                userId, twitchDisplayName: displayNameAfter, simpleName: usernameAfter, color: "bar"));
+                userId, twitchDisplayName: displayNameAfter, simpleName: usernameAfter,
+                HexColor.FromWithHash("#abcdef")));
 
             // then
             Assert.AreEqual(1, await userRepo.Collection.CountDocumentsAsync(FilterDefinition<User>.Empty));
@@ -50,8 +52,8 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             Assert.AreEqual(displayNameAfter, userAfter.TwitchDisplayName);
             Assert.AreEqual(usernameBefore, userBefore.SimpleName);
             Assert.AreEqual(usernameAfter, userAfter.SimpleName);
-            Assert.AreEqual("foo", userBefore.Color);
-            Assert.AreEqual("bar", userAfter.Color);
+            Assert.AreEqual("123456", userBefore.Color);
+            Assert.AreEqual("abcdef", userAfter.Color);
         }
 
         /// <summary>

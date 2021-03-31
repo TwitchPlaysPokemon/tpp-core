@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using TPP.ArgsParsing.Types;
+using TPP.Common;
 
 namespace TPP.ArgsParsing.TypeParsers
 {
@@ -13,16 +13,17 @@ namespace TPP.ArgsParsing.TypeParsers
     /// </summary>
     public class HexColorParser : BaseArgumentParser<HexColor>
     {
-        private readonly Regex _regex = new Regex(@"^#?[0-9a-f]{6}$",
-            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex Regex = new(@"^#?[0-9a-f]{6}$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         public override Task<ArgsParseResult<HexColor>> Parse(IImmutableList<string> args, Type[] genericTypes)
         {
-            Match colorMatch = _regex.Match(args[0]);
+            Match colorMatch = Regex.Match(args[0]);
             if (colorMatch.Success)
             {
                 string colorUpper = colorMatch.Value.ToUpper();
-                HexColor color = new(colorUpper.StartsWith('#') ? colorUpper : '#' + colorUpper);
+                HexColor color = colorUpper.StartsWith('#')
+                    ? HexColor.FromWithHash(colorUpper)
+                    : HexColor.FromWithoutHash(colorUpper);
                 return Task.FromResult(ArgsParseResult<HexColor>.Success(color, args.Skip(1).ToImmutableList()));
             }
             else

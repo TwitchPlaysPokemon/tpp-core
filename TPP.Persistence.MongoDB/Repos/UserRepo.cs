@@ -70,6 +70,7 @@ namespace TPP.Persistence.MongoDB.Repos
             Collection.Indexes.CreateMany(new[]
             {
                 new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.SimpleName)),
+                new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.TwitchDisplayName)),
                 new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.Pokeyen)),
                 new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.Tokens)),
             });
@@ -80,17 +81,22 @@ namespace TPP.Persistence.MongoDB.Repos
             UpdateDefinition<User> update = Builders<User>.Update
                 .Set(u => u.TwitchDisplayName, userInfo.TwitchDisplayName)
                 .Set(u => u.SimpleName, userInfo.SimpleName)
-                .Set(u => u.Color, userInfo.Color)
                 .Set(u => u.LastActiveAt, userInfo.UpdatedAt);
+            if (userInfo.Color != null)
+            {
+                update = update.Set(u => u.Color, userInfo.Color.StringWithoutHash);
+            }
             if (userInfo.FromMessage)
             {
                 update = update.Set(u => u.LastMessageAt, userInfo.UpdatedAt);
             }
+
             async Task<User?> UpdateExistingUser() => await Collection.FindOneAndUpdateAsync<User>(
                 filter: u => u.Id == userInfo.Id,
                 update: update,
                 options: new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After, IsUpsert = false }
             );
+
             User? user = await UpdateExistingUser();
             if (user != null)
             {
@@ -104,7 +110,7 @@ namespace TPP.Persistence.MongoDB.Repos
                 name: userInfo.SimpleName,
                 twitchDisplayName: userInfo.TwitchDisplayName,
                 simpleName: userInfo.SimpleName,
-                color: userInfo.Color,
+                color: userInfo.Color?.StringWithoutHash,
                 firstActiveAt: userInfo.UpdatedAt,
                 lastActiveAt: userInfo.UpdatedAt,
                 lastMessageAt: userInfo.FromMessage ? userInfo.UpdatedAt : (Instant?)null,
@@ -129,6 +135,9 @@ namespace TPP.Persistence.MongoDB.Repos
         public async Task<User?> FindBySimpleName(string simpleName) =>
             await Collection.Find(u => u.SimpleName == simpleName).FirstOrDefaultAsync();
 
+        public async Task<User?> FindByDisplayName(string displayName) =>
+            await Collection.Find(u => u.TwitchDisplayName == displayName).FirstOrDefaultAsync();
+
         private async Task<User> UpdateField<T>(User user, Expression<Func<User, T>> field, T value) =>
             await Collection.FindOneAndUpdateAsync<User>(
                 filter: u => u.Id == user.Id,
@@ -150,5 +159,12 @@ namespace TPP.Persistence.MongoDB.Repos
 
         public Task<User> SetDisplayName(User user, string displayName) =>
             UpdateField(user, u => u.Name, displayName);
+
+        public async Task<bool> UnselectBadgeIfSpeciesSelected(string userId, PkmnSpecies species) =>
+            await Collection.FindOneAndUpdateAsync<User>(
+                filter: u => u.Id == userId && u.SelectedBadge == species,
+                update: Builders<User>.Update.Set(u => u.SelectedBadge, null),
+                options: new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After, IsUpsert = false })
+            != null;
     }
 }

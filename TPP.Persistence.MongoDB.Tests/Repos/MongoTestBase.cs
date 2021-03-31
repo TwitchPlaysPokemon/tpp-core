@@ -15,6 +15,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
     /// Provides a CreateTemporaryDatabase method for obtaining a unique IMongoDatabase.
     /// Databases created that way get cleaned up while the test class is being torn down.
     /// </summary>
+    [Category("IntegrationTest")]
     public abstract class MongoTestBase
     {
         private const string ReplicaSetName = "rs0";

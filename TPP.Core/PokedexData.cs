@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -9,9 +10,15 @@ using TPP.Common;
 
 namespace TPP.Core
 {
+    public enum Generation
+    {
+        Gen1 = 1, Gen2, Gen3, Gen4, Gen5, Gen6, Gen7, Gen8,
+        GenFake = 1000
+    }
+
     public class PokedexData
     {
-        public IImmutableSet<PkmnSpecies> KnownSpecies { get; }
+        public ImmutableSortedSet<PkmnSpecies> KnownSpecies { get; }
 
         private static readonly (string, string)[] NameNormalizations =
         {
@@ -58,7 +65,7 @@ namespace TPP.Core
 
         private PokedexData()
         {
-            KnownSpecies = LoadSpeciesNames().ToImmutableHashSet();
+            KnownSpecies = LoadSpeciesNames().ToImmutableSortedSet();
         }
 
         /// Construct an instance with all the pokedex data loaded,
@@ -80,5 +87,32 @@ namespace TPP.Core
                 yield return PkmnSpecies.RegisterName(id: parts[0], name: parts[1]);
             }
         }
+
+        private static readonly ImmutableSortedDictionary<Generation, int> GenMaxIds = new Dictionary<Generation, int>
+        {
+            [Generation.Gen1] = 151, // Mew
+            [Generation.Gen2] = 251, // Celebi
+            [Generation.Gen3] = 386, // Deoxys
+            [Generation.Gen4] = 493, // Arceus
+            [Generation.Gen5] = 649, // Genesect
+            [Generation.Gen6] = 721, // Volcanion
+            [Generation.Gen7] = 807, // Zeraora
+            [Generation.Gen8] = 898, // Calyrex
+        }.ToImmutableSortedDictionary();
+
+        public static Generation GetGeneration(PkmnSpecies species)
+        {
+            if (species.IsFakemon) return Generation.GenFake;
+            int natId = int.Parse(species.Id);
+            foreach ((Generation gen, int maxDexNum) in GenMaxIds)
+                if (maxDexNum >= natId)
+                    return gen;
+            throw new ArgumentException($"{species}'s national pokedex number {natId} is invalid", nameof(species));
+        }
+    }
+
+    public static class PkmnSpeciesExtensions
+    {
+        public static Generation GetGeneration(this PkmnSpecies species) => PokedexData.GetGeneration(species);
     }
 }
