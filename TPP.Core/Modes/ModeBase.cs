@@ -20,11 +20,11 @@ namespace TPP.Core.Modes
         private readonly IImmutableDictionary<string, IChat> _chats;
         private readonly IImmutableDictionary<string, ICommandResponder> _commandResponders;
         private readonly IImmutableDictionary<string, CommandProcessor> _commandProcessors;
+        private readonly IImmutableDictionary<string, IModerator> _moderators;
         private readonly IMessagequeueRepo _messagequeueRepo;
         private readonly bool _forwardUnprocessedMessages;
         private readonly IMessagelogRepo _messagelogRepo;
         private readonly IClock _clock;
-        private readonly IModerator _moderator;
 
         public ModeBase(
             ILoggerFactory loggerFactory, Setups.Databases repos, BaseConfig baseConfig, StopToken stopToken)
@@ -50,7 +50,8 @@ namespace TPP.Core.Modes
                 c => (ICommandResponder)new CommandResponder(c));
             _commandProcessors = _chats.Values.ToImmutableDictionary(
                 c => c.Name,
-                c => Setups.SetUpCommandProcessor(loggerFactory, argsParser, repos, stopToken, baseConfig.Chat, c, c, pokedexData.KnownSpecies));
+                c => Setups.SetUpCommandProcessor(loggerFactory, argsParser, repos, stopToken, baseConfig.Chat, c, c,
+                    pokedexData.KnownSpecies));
 
             _messagequeueRepo = repos.MessagequeueRepo;
             _messagelogRepo = repos.MessagelogRepo;
@@ -64,7 +65,9 @@ namespace TPP.Core.Modes
                 new CopypastaRule(clock),
                 new UnicodeCharacterCategoryRule());
             ILogger<Moderator> moderatorLogger = loggerFactory.CreateLogger<Moderator>();
-            _moderator = new Moderator(moderatorLogger, twitchChat, rules, repos.ModLogRepo, clock);
+            _moderators = _chats.Values.ToImmutableDictionary(
+                c => c.Name,
+                c => (IModerator)new Moderator(moderatorLogger, c, rules, repos.ModLogRepo, clock));
         }
 
         public void InstallAdditionalCommand(Command command)
@@ -83,7 +86,7 @@ namespace TPP.Core.Modes
 
             bool isOk = message.Details.IsStaff
                         || message.MessageSource != MessageSource.Chat
-                        || await _moderator.Check(message);
+                        || await _moderators[chat.Name].Check(message);
             if (!isOk)
             {
                 return;

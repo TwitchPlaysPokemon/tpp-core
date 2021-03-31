@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using NodaTime;
 using TPP.Core.Configuration;
 using TPP.Persistence.Models;
 using TPP.Persistence.Repos;
@@ -95,5 +96,7 @@ namespace TPP.Core.Chat
 
         public Task EnableEmoteOnly() => Task.CompletedTask;
         public Task DisableEmoteOnly() => Task.CompletedTask;
+        public Task DeleteMessage(string messageId) => Task.CompletedTask;
+        public Task Timeout(User user, string? message, Duration duration) => Task.CompletedTask;
     }
 }

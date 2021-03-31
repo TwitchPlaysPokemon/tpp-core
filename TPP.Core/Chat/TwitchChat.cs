@@ -7,7 +7,6 @@ using Microsoft.Extensions.Logging;
 using NodaTime;
 using TPP.Common;
 using TPP.Core.Configuration;
-using TPP.Core.Moderation;
 using TPP.Persistence.Models;
 using TPP.Persistence.Repos;
 using TwitchLib.Client;
@@ -20,7 +19,7 @@ using static TPP.Core.Configuration.ConnectionConfig.Twitch;
 
 namespace TPP.Core.Chat
 {
-    public sealed class TwitchChat : IChat, IExecutor
+    public sealed class TwitchChat : IChat
     {
         public string Name { get; }
         public event EventHandler<MessageEventArgs> IncomingMessage = null!;
@@ -256,7 +255,7 @@ namespace TPP.Core.Chat
 
         public async Task DeleteMessage(string messageId)
         {
-            if (_suppressions.Contains(ChatConfig.SuppressionType.Command) &&
+            if (_suppressions.Contains(SuppressionType.Command) &&
                 !_suppressionOverrides.Contains(_ircChannel))
             {
                 _logger.LogDebug($"(suppressed) deleting message {messageId} in #{_ircChannel}");
@@ -269,7 +268,7 @@ namespace TPP.Core.Chat
 
         public async Task Timeout(User user, string? message, Duration duration)
         {
-            if (_suppressions.Contains(ChatConfig.SuppressionType.Command) &&
+            if (_suppressions.Contains(SuppressionType.Command) &&
                 !(_suppressionOverrides.Contains(_ircChannel) && _suppressionOverrides.Contains(user.SimpleName)))
             {
                 _logger.LogDebug($"(suppressed) time out {user} for {duration} in #{_ircChannel}: {message}");
