@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -59,31 +60,24 @@ namespace TPP.Persistence.MongoDB.Repos
             });
         }
 
-        public async Task<Poll> CreatePoll(string pollTitle, string pollCode, bool multiChoice, string[] pollOptions)
+        public async Task<Poll> CreatePoll(
+            string pollTitle, string pollCode, bool multiChoice, IImmutableList<string> pollOptions)
         {
-            PollOption[] pollOptionsArray = new PollOption[] { };
-
-            foreach (string option in pollOptions)
-            {
-                PollOption pollOpt = new PollOption(
-                    id: pollOptionsArray.Length + 1,
+            List<PollOption> pollOptionsObjects = pollOptions
+                .Select((option, index) => new PollOption(
+                    id: index + 1,
                     option: option,
                     votes: 0,
                     voterIds: new List<string>()
-                );
+                )).ToList();
 
-                List<PollOption> pollOptList = pollOptionsArray.ToList();
-                pollOptList.Add(pollOpt);
-                pollOptionsArray = pollOptList.ToArray();
-            }
-
-            Poll poll = new Poll(
+            Poll poll = new(
                 id: string.Empty,
                 pollTitle: pollTitle,
                 pollCode: pollCode,
                 voters: new List<string>(),
-                pollOptions: pollOptionsArray,
-                Instant.FromUnixTimeSeconds(0),
+                pollOptions: pollOptionsObjects,
+                Instant.FromUnixTimeSeconds(0), // TODO
                 multiChoice: multiChoice,
                 alive: true
             );
@@ -91,71 +85,45 @@ namespace TPP.Persistence.MongoDB.Repos
             await Collection.InsertOneAsync(poll);
             Debug.Assert(poll.Id.Length > 0, "The MongoDB driver injected a generated ID");
 
-            Trace.WriteLine(poll.Id);
             return poll;
         }
 
-        public async Task<Poll> Vote(string pollCode, string userId, int[] options)
+        public async Task<VoteFailure?> Vote(string pollCode, string userId, IImmutableList<int> options)
         {
-            FilterDefinitionBuilder<Poll> filter = Builders<Poll>.Filter;
-            UpdateDefinitionBuilder<Poll> update = Builders<Poll>.Update;
+            Poll? poll = await FindPoll(pollCode);
+            if (poll == null)
+                return new VoteFailure.PollNotFound(pollCode);
+            if (!poll.Alive)
+                return new VoteFailure.PollNotAlive();
+            if (poll.Voters.Contains(userId))
+                return new VoteFailure.AlreadyVoted();
+            if (options.Count > 1 && !poll.MultiChoice)
+                return new VoteFailure.NotMultipleChoice();
 
-            FilterDefinition<Poll> pollFilter = filter.Eq(p => p.PollCode, pollCode);
-            UpdateDefinition<Poll> pollVoter = update.AddToSet("voters", userId);
-            await Collection.UpdateOneAsync(pollFilter, pollVoter);
+            await Collection.UpdateOneAsync(
+                p => p.PollCode == pollCode,
+                Builders<Poll>.Update.AddToSet(p => p.Voters, userId));
+
+            ImmutableList<int> invalidOptions = options.Except(poll.PollOptions.Select(p => p.Id)).ToImmutableList();
+            if (invalidOptions.Any())
+                return new VoteFailure.InvalidOptions(invalidOptions);
+
+            // the MongoDB C# driver's representation for '$', see also https://docs.mongodb.com/manual/reference/operator/update/positional/
+            const int positionalOperator = -1;
 
             foreach (int option in options)
             {
-                FilterDefinition<Poll> pollOptionsIdFilter = filter.And(
-                    filter.Eq(p => p.PollCode, pollCode),
-                    filter.ElemMatch(p => p.PollOptions, o => o.Id == option));
-
-                UpdateDefinition<Poll> pollOptionVoter = update.AddToSet("options.$.voters", userId);
-                UpdateDefinition<Poll> pollOptiopnVoteInc = update.Inc("options.$.votes", 1);
-
-                await Collection.UpdateOneAsync(pollOptionsIdFilter, pollOptionVoter);
-                await Collection.UpdateOneAsync(pollOptionsIdFilter, pollOptiopnVoteInc);
+                await Collection.UpdateOneAsync(
+                    p => p.PollCode == pollCode && p.PollOptions.Any(o => o.Id == option),
+                    Builders<Poll>.Update
+                        .AddToSet(p => p.PollOptions[positionalOperator].VoterIds, userId)
+                        .Inc(p => p.PollOptions[positionalOperator].Votes, 1));
             }
 
-            return await Collection.Find(p => p.PollCode == pollCode).FirstAsync();
+            return null;
         }
 
-        public async Task<bool> IsMulti(string pollCode) =>
-            await
-                Collection
-                    .Find(p => (p.PollCode == pollCode) && p.MultiChoice)
-                    .AnyAsync();
-
-        public async Task<bool> HasVoted(string pollCode, string userId) =>
-            await
-                Collection
-                    .Find(p => (p.PollCode == pollCode && p.Voters.Contains(userId)))
-                    .AnyAsync();
-
-        public async Task<bool> IsPollValid(string pollCode) =>
-            await
-                Collection
-                    .Find(p => (p.PollCode == pollCode) && p.Alive)
-                    .AnyAsync();
-
-        public async Task<bool> IsVoteValid(string pollCode, int[] votes)
-        {
-            var isValid = true;
-            FilterDefinitionBuilder<Poll> filter = Builders<Poll>.Filter;
-
-            foreach (int vote in votes)
-            {
-                if (isValid)
-                {
-                    FilterDefinition<Poll> pollOptionsIdFilter = filter.And(
-                        filter.Eq(p => p.PollCode, pollCode),
-                        filter.ElemMatch(p => p.PollOptions, o => o.Id == vote));
-
-                    isValid = await Collection.Find(pollOptionsIdFilter).AnyAsync();
-                }
-            }
-
-            return isValid;
-        }
+        public async Task<Poll?> FindPoll(string pollCode) =>
+            await Collection.Find(p => p.PollCode == pollCode).FirstOrDefaultAsync();
     }
 }

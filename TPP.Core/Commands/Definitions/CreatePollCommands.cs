@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
+using TPP.ArgsParsing.Types;
 using TPP.Persistence.Repos;
 
 namespace TPP.Core.Commands.Definitions
@@ -33,27 +33,19 @@ namespace TPP.Core.Commands.Definitions
 
         public async Task<CommandResult> StartPoll(CommandContext context)
         {
-            var argSet = context.Args.Select(arg => arg.ToUpperInvariant()).ToArray();
-            if (argSet.Length < 4) return new CommandResult { Response = "too few arguments" };
+            (string pollName, string pollCode, ManyOf<string> options) = await context.ParseArgs<string, string, ManyOf<string>>();
+            if (options.Values.Count < 2) return new CommandResult { Response = "must specify at least 2 options" };
 
-            string pollName = argSet[0];
-            string pollCode = argSet[1];
-            var options = argSet.Skip(2).ToArray();
-
-            await _pollRepo.CreatePoll(pollName, pollCode, false, options);
+            await _pollRepo.CreatePoll(pollName, pollCode, false, options.Values);
             return new CommandResult { Response = "Single option poll created" };
         }
 
         public async Task<CommandResult> StartMultiPoll(CommandContext context)
         {
-            var argSet = context.Args.Select(arg => arg.ToUpperInvariant()).ToArray();
-            if (argSet.Length < 4) return new CommandResult { Response = "too few arguments" };
+            (string pollName, string pollCode, ManyOf<string> options) = await context.ParseArgs<string, string, ManyOf<string>>();
+            if (options.Values.Count < 2) return new CommandResult { Response = "must specify at least 2 options" };
 
-            string pollName = argSet[0];
-            string pollCode = argSet[1];
-            var options = argSet.Skip(2).ToArray();
-
-            await _pollRepo.CreatePoll(pollName, pollCode, true, options);
+            await _pollRepo.CreatePoll(pollName, pollCode, true, options.Values);
             return new CommandResult { Response = "Multi option poll created" };
         }
     }

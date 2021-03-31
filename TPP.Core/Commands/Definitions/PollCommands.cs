@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using TPP.ArgsParsing.Types;
+using TPP.Persistence.Models;
 using TPP.Persistence.Repos;
 
 namespace TPP.Core.Commands.Definitions
@@ -32,43 +35,42 @@ namespace TPP.Core.Commands.Definitions
             //!vote IDENTIFIER Option2 Option4
             //!vote IDENTIFIER 2 4
 
+            (string pollCode, ManyOf<string> voteStrs) = await context.ParseArgs<string, ManyOf<string>>();
+            ImmutableList<string> votes = voteStrs.Values;
 
-            //Validate args
-            var argSet = context.Args.Select(arg => arg.ToUpperInvariant()).ToArray();
-            if (argSet.Length < 2) return new CommandResult { Response = "too few arguments" };
+            Poll? poll = await _pollRepo.FindPoll(pollCode);
+            if (poll == null)
+                return new CommandResult { Response = $"No poll with the code '{pollCode}' was found." };
 
-            string pollName = argSet[0];
+            List<int> selectedOptions = new();
+            foreach (string voteStr in votes)
+            {
+                PollOption? option = null;
+                if (int.TryParse(voteStr, out int voteInt))
+                    option = poll.PollOptions.FirstOrDefault(o => o.Id == voteInt);
+                option ??= poll.PollOptions.FirstOrDefault(o => o.Option == voteStr);
+                if (option == null)
+                    return new CommandResult
+                        { Response = $"Invalid option '{voteStr}' included for poll '{pollCode}'." };
+                selectedOptions.Add(option.Id);
+            }
 
-            //Validate poll
-            bool isPollValid = await _pollRepo.IsPollValid(pollName);
-            if (!isPollValid)
-                return new CommandResult { Response = $"Poll \"{pollName}\" has ended or could not be found." };
-            argSet = argSet.Skip(1).ToArray();
-
-            //
-            //Don't allow a user to vote twice
-            bool hasVoted = await _pollRepo.HasVoted(pollName, context.Message.User.Id);
-            if (hasVoted) return new CommandResult { Response = $"You have already voted on poll \"{pollName}\"." };
-
-            //
-            //Validate votes
-            bool isVoteValid = await _pollRepo.IsVoteValid(pollName, Array.ConvertAll(argSet, int.Parse));
-
-            if (!isVoteValid)
-                return new CommandResult { Response = $"Invalid option included for poll: \"{pollName}\"." };
-
-            //
-            //Only allow multiple votes if is set to multi - option poll
-            bool isMulti = await _pollRepo.IsMulti(pollName);
-            if (argSet.Length > 1 && !isMulti)
-                return new CommandResult { Response = $"Poll \"{pollName}\" is not a multi-choice poll." };
-
-            //
-            //Vote
-            await _pollRepo.Vote(pollName, context.Message.User.Id, Array.ConvertAll(argSet, int.Parse));
-
-
-            return new CommandResult { Response = "voted!" };
+            VoteFailure? failure = await _pollRepo.Vote(
+                pollCode, context.Message.User.Id, selectedOptions.ToImmutableList());
+            return new CommandResult
+            {
+                Response = failure switch
+                {
+                    null => "Successfully voted.",
+                    VoteFailure.PollNotFound => $"No poll with the code '{pollCode}' was found.",
+                    VoteFailure.PollNotAlive => "The poll has already ended.",
+                    VoteFailure.AlreadyVoted => "You already voted in that poll.",
+                    VoteFailure.NotMultipleChoice => "Cannot select multiple options in non-multi-choice polls.",
+                    VoteFailure.InvalidOptions { Options: var options } =>
+                        $"Invalid poll options: {string.Join(", ", options)}.",
+                    _ => throw new ArgumentOutOfRangeException(nameof(failure), "Unhandled poll voting result")
+                }
+            };
         }
     }
 }

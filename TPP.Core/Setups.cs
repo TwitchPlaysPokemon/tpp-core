@@ -74,6 +74,7 @@ namespace TPP.Core
                     messageSender
                 ).Commands,
                 new PollCommands(databases.PollRepo).Commands,
+                new CreatePollCommands(databases.PollRepo).Commands,
                 new BadgeCommands(databases.BadgeRepo, databases.UserRepo, messageSender, knownSpecies).Commands,
                 new OperatorCommands(
                     stopToken, chatConfig.OperatorNames, databases.PokeyenBank, databases.TokensBank,

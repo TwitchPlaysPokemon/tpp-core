@@ -44,7 +44,7 @@ namespace TPP.Persistence.Models
         /// <summary>
         /// The list of options and their respective votes.
         /// </summary>
-        public PollOption[] PollOptions { get; init; }
+        public List<PollOption> PollOptions { get; init; }
 
         public Instant CreatedAt { get; init; }
 
@@ -58,7 +58,7 @@ namespace TPP.Persistence.Models
         /// </summary>
         public bool Alive { get; init; }
 
-        public Poll(string id, string pollTitle, string pollCode, List<string> voters, PollOption[] pollOptions, Instant createdAt, bool multiChoice, bool alive)
+        public Poll(string id, string pollTitle, string pollCode, List<string> voters, List<PollOption> pollOptions, Instant createdAt, bool multiChoice, bool alive)
         {
             Id = id;
             PollTitle = pollTitle;
