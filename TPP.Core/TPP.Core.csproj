@@ -5,7 +5,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="docopt.net" Version="0.6.1.10" />
+        <PackageReference Include="docopt.net" Version="0.6.1.11" />
         <PackageReference Include="JsonNet.ContractResolvers" Version="1.1.0" />
         <PackageReference Include="JsonSubTypes" Version="1.8.0" />
         <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="5.0.1" />
