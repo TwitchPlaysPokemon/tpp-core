@@ -98,6 +98,7 @@ namespace TPP.Core
             [Generation.Gen6] = 721, // Volcanion
             [Generation.Gen7] = 807, // Zeraora
             [Generation.Gen8] = 898, // Calyrex
+            [Generation.GenFake] = 2006, // Pumbloom -> TODO: Until the 7 fakemons from #2000 - #2006 are dealt with, we need to define a border here
         }.ToImmutableSortedDictionary();
 
         public static Generation GetGeneration(PkmnSpecies species)
