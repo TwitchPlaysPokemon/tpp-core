@@ -24,10 +24,10 @@ namespace TPP.Core.Modes
         private readonly IMessagelogRepo _messagelogRepo;
         private readonly IClock _clock;
 
-        public ModeBase(ILoggerFactory loggerFactory, BaseConfig baseConfig, StopToken stopToken)
+        public ModeBase(
+            ILoggerFactory loggerFactory, Setups.Databases repos, BaseConfig baseConfig, StopToken stopToken)
         {
             PokedexData pokedexData = PokedexData.Load();
-            Setups.Databases repos = Setups.SetUpRepositories(baseConfig);
             ArgsParser argsParser = Setups.SetUpArgsParser(repos.UserRepo, pokedexData);
 
             var chats = new Dictionary<string, IChat>();
@@ -47,12 +47,18 @@ namespace TPP.Core.Modes
                 c => (ICommandResponder)new CommandResponder(c));
             _commandProcessors = _chats.Values.ToImmutableDictionary(
                 c => c.Name,
-                c => Setups.SetUpCommandProcessor(loggerFactory, argsParser, repos, stopToken, baseConfig.Chat, c, c));
+                c => Setups.SetUpCommandProcessor(loggerFactory, argsParser, repos, stopToken, baseConfig.Chat, c, c, pokedexData.KnownSpecies));
 
             _messagequeueRepo = repos.MessagequeueRepo;
             _messagelogRepo = repos.MessagelogRepo;
             _forwardUnprocessedMessages = baseConfig.Chat.ForwardUnprocessedMessages;
             _clock = SystemClock.Instance;
+        }
+
+        public void InstallAdditionalCommand(Command command)
+        {
+            foreach (CommandProcessor commandProcessor in _commandProcessors.Values)
+                commandProcessor.InstallCommand(command);
         }
 
         private async void MessageReceived(object? sender, MessageEventArgs e) =>
@@ -63,7 +69,8 @@ namespace TPP.Core.Modes
             await _messagelogRepo.LogChat(
                 message.User.Id, message.RawIrcMessage, message.MessageText, _clock.GetCurrentInstant());
 
-            string[] parts = message.MessageText.Split(" ");
+            List<string> parts = message.MessageText.Split(" ")
+                .Where(s => !string.IsNullOrEmpty(s)).ToList();
             string? firstPart = parts.FirstOrDefault();
             string? commandName = firstPart switch
             {

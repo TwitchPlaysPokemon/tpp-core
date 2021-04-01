@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Moq;
@@ -53,6 +54,24 @@ namespace TPP.ArgsParsing.Tests
                 .Parse<AnyOrder<Optional<SignedInt>, Optional<string>>>(ImmutableList<string>.Empty);
             Assert.False(optionalInt.IsPresent);
             Assert.False(optionalString.IsPresent);
+        }
+
+        [Test]
+        public async Task TestAnyOrderLongestFirst()
+        {
+            var argsParser = new ArgsParser();
+            argsParser.AddArgumentParser(new AnyOrderParser(argsParser));
+            argsParser.AddArgumentParser(new OptionalParser(argsParser));
+            argsParser.AddArgumentParser(new SignedIntParser());
+            argsParser.AddArgumentParser(new StringParser());
+
+            // this used to fail because the optional made the first permutation fit with remaining arguments,
+            // instead of continuing to try all permutations and return the one consuming the most arguments.
+            (Optional<SignedInt> optionalInt, string str) = await argsParser
+                .Parse<AnyOrder<Optional<SignedInt>, string>>(ImmutableList.Create("abc", "123"));
+            Assert.True(optionalInt.IsPresent);
+            Assert.AreEqual(123, (int)optionalInt.Value);
+            Assert.AreEqual("abc", str);
         }
 
         [Test]
@@ -178,6 +197,33 @@ namespace TPP.ArgsParsing.Tests
             Assert.AreEqual(123, (int)result1.Value);
             Assert.IsFalse(result2.IsPresent);
             Assert.IsFalse(result3.IsPresent);
+        }
+
+        [Test]
+        public async Task TestPercentageParser()
+        {
+            var argsParser = new ArgsParser();
+            argsParser.AddArgumentParser(new PercentageParser());
+
+            Percentage percentageOver100 = await argsParser.Parse<Percentage>(ImmutableList.Create("1234.5678%"));
+            Percentage percentageExactly100 = await argsParser.Parse<Percentage>(ImmutableList.Create("100%"));
+            Percentage percentageZero = await argsParser.Parse<Percentage>(ImmutableList.Create("0%"));
+            Assert.AreEqual(1234.5678, percentageOver100.AsPercent);
+            Assert.AreEqual(12.345678, percentageOver100.AsDecimal);
+            Assert.AreEqual(100.0, percentageExactly100.AsPercent);
+            Assert.AreEqual(1.0, percentageExactly100.AsDecimal);
+            Assert.AreEqual(0.0, percentageZero.AsPercent);
+            Assert.AreEqual(0.0, percentageZero.AsDecimal);
+
+            ArgsParseFailure failureNoNumber = Assert.ThrowsAsync<ArgsParseFailure>(() =>
+                argsParser.Parse<Percentage>(ImmutableList.Create("abc%")));
+            ArgsParseFailure failureNoPercentSign = Assert.ThrowsAsync<ArgsParseFailure>(() =>
+                argsParser.Parse<Percentage>(ImmutableList.Create("1.23")));
+            ArgsParseFailure failureNegative = Assert.ThrowsAsync<ArgsParseFailure>(() =>
+                argsParser.Parse<Percentage>(ImmutableList.Create("-5%")));
+            Assert.AreEqual("did not recognize 'abc' as a decimal", failureNoNumber.Message);
+            Assert.AreEqual("percentages must end in '%'", failureNoPercentSign.Message);
+            Assert.AreEqual("percentage cannot be negative", failureNegative.Message);
         }
 
         [Test]
@@ -342,14 +388,18 @@ namespace TPP.ArgsParsing.Tests
         public async Task TestUserParser()
         {
             const string username = "some_name";
+            const string displayName = "名前";
             var origUser = new User(
-                id: "1234567890", name: username, twitchDisplayName: username.ToUpper(), simpleName: username,
+                id: "1234567890", name: username, twitchDisplayName: displayName, simpleName: username,
                 color: null,
                 firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
                 lastMessageAt: null, pokeyen: 0, tokens: 0);
             var userRepoMock = new Mock<IUserRepo>();
             userRepoMock
                 .Setup(r => r.FindBySimpleName(username))
+                .ReturnsAsync(origUser);
+            userRepoMock
+                .Setup(r => r.FindByDisplayName(displayName))
                 .ReturnsAsync(origUser);
             var argsParser = new ArgsParser();
             argsParser.AddArgumentParser(new UserParser(userRepoMock.Object));
@@ -358,6 +408,8 @@ namespace TPP.ArgsParsing.Tests
             Assert.AreEqual(origUser, resultUser);
             var resultUserPrefixed = await argsParser.Parse<User>(args: ImmutableList.Create('@' + username));
             Assert.AreEqual(origUser, resultUserPrefixed);
+            var resultUserDisplayName = await argsParser.Parse<User>(args: ImmutableList.Create(displayName));
+            Assert.AreEqual(origUser, resultUserDisplayName);
 
             var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
                 .Parse<User>(args: ImmutableList.Create("some_unknown_name")));
@@ -365,6 +417,29 @@ namespace TPP.ArgsParsing.Tests
             var exUserPrefixed = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
                 .Parse<User>(args: ImmutableList.Create("@some_unknown_name")));
             Assert.AreEqual("did not recognize a user with the name 'some_unknown_name'", exUserPrefixed.Message);
+            var exDisplayName = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<User>(args: ImmutableList.Create("なまえ")));
+            Assert.AreEqual("did not recognize a user with the name 'なまえ'", exDisplayName.Message);
+        }
+
+        [Test]
+        public async Task TestManyOfParser()
+        {
+            var argsParser = new ArgsParser();
+            argsParser.AddArgumentParser(new PositiveIntParser());
+            argsParser.AddArgumentParser(new ManyOfParser(argsParser));
+
+            ImmutableList<PositiveInt> threeInts = await argsParser
+                .Parse<ManyOf<PositiveInt>>(ImmutableList.Create("1", "3", "2"));
+            CollectionAssert.AreEqual(new[] { 1, 3, 2 }, threeInts.Select(i => i.Number));
+
+            ImmutableList<PositiveInt> zeroInts = await argsParser
+                .Parse<ManyOf<PositiveInt>>(ImmutableList.Create<string>());
+            CollectionAssert.AreEqual(Array.Empty<int>(), zeroInts.Select(i => i.Number));
+
+            ArgsParseFailure failure = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<ManyOf<PositiveInt>>(ImmutableList.Create<string>("1", "c", "2")));
+            Assert.AreEqual("did not recognize 'c' as a number", failure.Message);
         }
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
@@ -9,6 +10,7 @@ using TPP.Core.Chat;
 using TPP.Core.Commands;
 using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
+using TPP.Core.Overlay;
 using TPP.Persistence.Models;
 using TPP.Persistence.MongoDB;
 using TPP.Persistence.MongoDB.Repos;
@@ -37,10 +39,13 @@ namespace TPP.Core
             argsParser.AddArgumentParser(new SignedPokeyenParser());
             argsParser.AddArgumentParser(new SignedTokensParser());
             argsParser.AddArgumentParser(new PkmnSpeciesParser(pokedexData.KnownSpecies, PokedexData.NormalizeName));
+            argsParser.AddArgumentParser(new PercentageParser());
+            argsParser.AddArgumentParser(new SideParser());
 
             argsParser.AddArgumentParser(new AnyOrderParser(argsParser));
             argsParser.AddArgumentParser(new OneOfParser(argsParser));
             argsParser.AddArgumentParser(new OptionalParser(argsParser));
+            argsParser.AddArgumentParser(new ManyOfParser(argsParser));
 
             argsParser.AddArgumentParser(new UserParser(userRepo));
             return argsParser;
@@ -53,7 +58,8 @@ namespace TPP.Core
             StopToken stopToken,
             ChatConfig chatConfig,
             IMessageSender messageSender,
-            IChatModeChanger chatModeChanger)
+            IChatModeChanger chatModeChanger,
+            IImmutableSet<Common.PkmnSpecies> knownSpecies)
         {
             var commandProcessor = new CommandProcessor(
                 loggerFactory.CreateLogger<CommandProcessor>(),
@@ -64,13 +70,17 @@ namespace TPP.Core
                 new EasterEggCommands().Commands,
                 new StaticResponseCommands().Commands,
                 new UserCommands(
-                    databases.UserRepo, pokeyenBank: databases.PokeyenBank, tokenBank: databases.TokensBank).Commands,
-                new BadgeCommands(databases.BadgeRepo, databases.UserRepo, messageSender).Commands,
+                    databases.UserRepo, pokeyenBank: databases.PokeyenBank, tokenBank: databases.TokensBank,
+                    messageSender
+                ).Commands,
+                new BadgeCommands(databases.BadgeRepo, databases.UserRepo, messageSender, knownSpecies).Commands,
                 new OperatorCommands(
                     stopToken, chatConfig.OperatorNames, databases.PokeyenBank, databases.TokensBank,
                     messageSender: messageSender, databases.BadgeRepo
                 ).Commands,
-                new ModeratorCommands(chatConfig.ModeratorNames, chatConfig.OperatorNames, chatModeChanger).Commands,
+                new ModeratorCommands(
+                    chatConfig.ModeratorNames, chatConfig.OperatorNames, chatModeChanger, databases.LinkedAccountRepo
+                ).Commands,
                 new MiscCommands().Commands,
             }.SelectMany(cmds => cmds).Concat(new[]
             {
@@ -90,7 +100,8 @@ namespace TPP.Core
             IBank<User> TokensBank,
             ICommandLogger CommandLogger,
             IMessagequeueRepo MessagequeueRepo,
-            IMessagelogRepo MessagelogRepo
+            IMessagelogRepo MessagelogRepo,
+            ILinkedAccountRepo LinkedAccountRepo
         );
 
         public static Databases SetUpRepositories(BaseConfig baseConfig)
@@ -100,7 +111,7 @@ namespace TPP.Core
             IMongoClient mongoClient = new MongoClient(baseConfig.MongoDbConnectionUri);
             IMongoDatabase mongoDatabase = mongoClient.GetDatabase(baseConfig.MongoDbDatabaseName);
             IMongoDatabase mongoDatabaseMessagelog = mongoClient.GetDatabase(baseConfig.MongoDbDatabaseNameMessagelog);
-            IUserRepo userRepo = new UserRepo(
+            UserRepo userRepo = new(
                 database: mongoDatabase,
                 startingPokeyen: baseConfig.StartingPokeyen,
                 startingTokens: baseConfig.StartingTokens);
@@ -132,8 +143,19 @@ namespace TPP.Core
                 TokensBank: tokenBank,
                 CommandLogger: new CommandLogger(mongoDatabase, clock),
                 MessagequeueRepo: new MessagequeueRepo(mongoDatabase),
-                MessagelogRepo: new MessagelogRepo(mongoDatabaseMessagelog)
+                MessagelogRepo: new MessagelogRepo(mongoDatabaseMessagelog),
+                LinkedAccountRepo: new LinkedAccountRepo(mongoDatabase, userRepo.Collection)
             );
+        }
+
+        public static (WebsocketBroadcastServer, OverlayConnection) SetUpOverlayServer(ILoggerFactory loggerFactory)
+        {
+            (string wsHost, int wsPort) = ("localhost", 5001);
+            WebsocketBroadcastServer broadcastServer = new(
+                loggerFactory.CreateLogger<WebsocketBroadcastServer>(), wsHost, wsPort);
+            OverlayConnection overlayConnection = new(
+                loggerFactory.CreateLogger<OverlayConnection>(), broadcastServer);
+            return (broadcastServer, overlayConnection);
         }
     }
 }
