@@ -13,16 +13,7 @@ namespace TPP.Core.Commands.Definitions
     /// <summary>
     /// Helper class to store all relevant Information for a single Region
     /// </summary>
-    public class RegionInformation
-    {
-        public Generation Generation { get; }
-        public int TotalRegionCount { get; }
-        public RegionInformation(Generation generation, int totalRegionCount)
-        {
-            Generation = generation;
-            TotalRegionCount = totalRegionCount;
-        }
-    }
+    public record RegionInformation(Generation Generation, int TotalRegionCount);
 
     public class BadgeCommands : ICommandCollection
     {
