@@ -270,13 +270,13 @@ namespace TPP.Core.Commands.Definitions
             else if (mode.Equals(PokedexModeKantoooooooo))
             {
                 ImmutableSortedDictionary<PkmnSpecies, int> ownedPokemons = (await _badgeRepo.CountByUserPerSpecies(user.Id));
-                int regionCount = ownedPokemons.Count(ownedPokemon =>
+                int userOwnedRegionCount = ownedPokemons.Count(ownedPokemon =>
                     ownedPokemon.Key.GetGeneration() == Generation.Gen1);
                 return new CommandResult
                 {
                     Response = isSelf
-                        ? $"You have collected {regionCount}/151 distinct KANTOOOOOOOOOOOOOOO OhMyDog badge(s)"
-                        : $"{user.Name} has collected {regionCount}/151 distinct KANTOOOOOOOOOOOOOOO OhMyDog badge(s)"
+                        ? $"You have collected {userOwnedRegionCount}/151 distinct KANTOOOOOOOOOOOOOOO OhMyDog badge(s)"
+                        : $"{user.Name} has collected {userOwnedRegionCount}/151 distinct KANTOOOOOOOOOOOOOOO OhMyDog badge(s)"
                 };
             }
             else if (_pokedexModeRegions.ContainsKey(mode.ToLower()))
