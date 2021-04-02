@@ -18,6 +18,20 @@ namespace TPP.Core.Commands.Definitions
         private const string PokedexModeMissing = "missing";
         private const string PokedexModeDupes = "dupes";
         private const string PokedexModeModes = "modes";
+        private const string PokedexModeKantoooooooo = "KANTOOOOOOOOOOOOOOO";
+        private readonly Dictionary<string, Generation> _pokedexModeRegions =
+            new Dictionary<string, Generation>()
+            {
+                { "kanto", Generation.Gen1 },
+                { "johto", Generation.Gen2 },
+                { "hoenn", Generation.Gen3 },
+                { "sinnoh", Generation.Gen4 },
+                { "unova", Generation.Gen5 },
+                { "kalos", Generation.Gen6 },
+                { "alola", Generation.Gen7 },
+                { "galar", Generation.Gen8 },
+                { "fakemons", Generation.GenFake }
+            };
 
         public IEnumerable<Command> Commands => new[]
         {
@@ -253,18 +267,51 @@ namespace TPP.Core.Commands.Definitions
                     ResponseTarget = ResponseTarget.WhisperIfLong
                 };
             }
+            else if (mode.Equals(PokedexModeKantoooooooo))
+            {
+                ImmutableSortedDictionary<PkmnSpecies, int> ownedPokemons = (await _badgeRepo.CountByUserPerSpecies(user.Id));
+                int regionCount = ownedPokemons.Count(ownedPokemon =>
+                    ownedPokemon.Key.GetGeneration() == Generation.Gen1);
+                return new CommandResult
+                {
+                    Response = isSelf
+                        ? $"You have collected {regionCount}/151 distinct KANTOOOOOOOOOOOOOOO OhMyDog badge(s)"
+                        : $"{user.Name} has collected {regionCount}/151 distinct KANTOOOOOOOOOOOOOOO OhMyDog badge(s)"
+                };
+            }
+            else if (_pokedexModeRegions.ContainsKey(mode.ToLower()))
+            {
+                Generation modeGeneration = _pokedexModeRegions[mode.ToLower()];
+
+                // Getting the total number of distinct Pokemon from a single generation could also be a function in class PokedexData,
+                //   by using "GenMaxIds", but I'm not sure how to get the total number of Fakemons
+                int totalRegionCount = _knownSpecies.Count(pokemon => pokemon.GetGeneration() == modeGeneration);
+                ImmutableSortedDictionary<PkmnSpecies, int> ownedPokemons = (await _badgeRepo.CountByUserPerSpecies(user.Id));
+                int userOwnedRegionCount = ownedPokemons.Count(ownedPokemon =>
+                    ownedPokemon.Key.GetGeneration() == modeGeneration);
+                return new CommandResult
+                {
+                    Response = isSelf
+                        ? $"You have collected {userOwnedRegionCount}/{totalRegionCount} "
+                          + $"distinct {System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(mode)} badge(s)"
+                        : $"{user.Name} has collected {userOwnedRegionCount}/{totalRegionCount} "
+                          + $"distinct {System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(mode)} badge(s)"
+                };
+            }
             else if (mode.Equals(PokedexModeModes))
             {
                 return new CommandResult
                 {
                     Response = $"Supported modes are '{PokedexModeDupes}': Show duplicate badges, '{PokedexModeMissing}': Show missing badges, "
                         + $"'{PokedexModeComplementFrom}' Compares missing badges from User A with owned badges from User B, "
-                        + $"'{PokedexModeComplementFromDupes}' Compares missing badges from User A with owned duplicate badges from User B"
+                        + $"'{PokedexModeComplementFromDupes}' Compares missing badges from User A with owned duplicate badges from User B, "
+                        + $"'{_pokedexModeRegions.ElementAt(0).Key}','{_pokedexModeRegions.ElementAt(1).Key}',... Shows how many badges you or the specified user owns from the specified region only"
                 };
             }
             return new CommandResult
             {
-                Response = $"Unsupported mode '{mode}'. Current modes supported: {PokedexModeModes}, {PokedexModeDupes}, {PokedexModeMissing}, {PokedexModeComplementFromDupes}, {PokedexModeComplementFrom}"
+                Response = $"Unsupported mode '{mode}'. Current modes supported: {PokedexModeModes}, {PokedexModeDupes}, {PokedexModeMissing}, {PokedexModeComplementFromDupes}, "
+                    + $"{PokedexModeComplementFrom}, {_pokedexModeRegions.ElementAt(0).Key}, {_pokedexModeRegions.ElementAt(1).Key},... "
             };
         }
 
