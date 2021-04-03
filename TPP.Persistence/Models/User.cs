@@ -40,6 +40,7 @@ namespace TPP.Persistence.Models
 
         public long Pokeyen { get; init; }
         public long Tokens { get; init; }
+        public long PokeyenHighScore { get; init; }
 
         public SortedSet<int> ParticipationEmblems { get; init; }
         public int? SelectedParticipationEmblem { get; init; }
@@ -79,6 +80,7 @@ namespace TPP.Persistence.Models
             Instant? lastMessageAt,
             long pokeyen,
             long tokens,
+            long pokeyenHighScore = 0,
             SortedSet<int>? participationEmblems = null,
             int? selectedParticipationEmblem = null,
             PkmnSpecies? selectedBadge = null,
@@ -96,6 +98,7 @@ namespace TPP.Persistence.Models
             LastMessageAt = lastMessageAt;
             Pokeyen = pokeyen;
             Tokens = tokens;
+            PokeyenHighScore = pokeyenHighScore;
             ParticipationEmblems = participationEmblems ?? new SortedSet<int>();
             SelectedParticipationEmblem = selectedParticipationEmblem;
             SelectedBadge = selectedBadge;
