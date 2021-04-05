@@ -22,7 +22,7 @@ namespace TPP.Core.Commands
         /// Replace the command execution with a different one.
         public static Command WithExecution(this Command command, Command.Execute newExecution)
         {
-            return new Command(command.Name, newExecution, command.RequiredRank)
+            return new Command(command.Name, newExecution)
             { Aliases = command.Aliases, Description = command.Description };
         }
 

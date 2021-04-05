@@ -12,18 +12,15 @@ namespace TPP.Core.Commands
         public string[] Aliases { get; init; }
         public Execute Execution { get; }
         public string? Description { get; init; }
-        public UserGroup RequiredRank { get; init; }
 
         public Command(
             string name,
-            Execute execution,
-            UserGroup requiredRank=UserGroup.None)
+            Execute execution)
         {
             Name = name;
             Execution = execution;
             Aliases = Array.Empty<string>();
             Description = null;
-            RequiredRank = requiredRank;
         }
 
         public override string ToString() => Aliases.Any()

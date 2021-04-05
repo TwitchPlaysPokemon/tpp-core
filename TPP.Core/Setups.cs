@@ -45,6 +45,7 @@ namespace TPP.Core
             argsParser.AddArgumentParser(new ManyOfParser(argsParser));
 
             argsParser.AddArgumentParser(new UserParser(userRepo));
+            argsParser.AddArgumentParser(new RoleParser());
             return argsParser;
         }
 
@@ -61,7 +62,7 @@ namespace TPP.Core
             var commandProcessor = new CommandProcessor(
                 loggerFactory.CreateLogger<CommandProcessor>(),
                 databases.CommandLogger, argsParser,
-                chatConfig.OperatorNames);
+                chatConfig.DefaultOperatorNames);
 
             IEnumerable<Command> commands = new[]
             {
@@ -73,7 +74,7 @@ namespace TPP.Core
                 ).Commands,
                 new BadgeCommands(databases.BadgeRepo, databases.UserRepo, messageSender, knownSpecies).Commands,
                 new OperatorCommands(
-                    stopToken, databases.PokeyenBank, databases.TokensBank,
+                    stopToken,chatConfig.DefaultOperatorNames, databases.PokeyenBank, databases.TokensBank,
                     messageSender: messageSender, databases.BadgeRepo, databases.UserRepo
                 ).Commands,
                 new ModeratorCommands(chatModeChanger).Commands,

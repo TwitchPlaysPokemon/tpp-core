@@ -80,20 +80,12 @@ namespace TPP.Core.Commands
                 _logger.LogDebug("unknown command '{Command}'", commandName);
                 return null;
             }
-            
             var stopwatch = new Stopwatch();
             stopwatch.Start();
             CommandResult result;
-            
             try
             {
-                bool restricted = command.RequiredRank != UserGroup.None;
-                bool isOperator = _operatorNames != null ? _operatorNames.Contains(message.User.SimpleName) : false;
-                if (restricted && (!isOperator || ((UserGroup)message.User.UserGroup & command.RequiredRank) > UserGroup.None))
-                    result = new CommandResult { Response = "You do not have permission to use this command."};
-                else
-                    result = await command.Execution(new CommandContext(message, args, _argsParser));
-                    
+                result = await command.Execution(new CommandContext(message, args, _argsParser));
                 await _commandLogger.Log(message.User.Id, commandName, args, result.Response);
             }
             catch (ArgsParseFailure ex)
