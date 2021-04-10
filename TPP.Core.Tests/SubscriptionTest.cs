@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 using Moq;
@@ -34,7 +35,7 @@ namespace TPP.Core.Tests
             Mock<IUserRepo> userRepoMock = new();
             Mock<ISubscriptionLogRepo> subscriptionLogRepoMock = new();
             ISubscriptionProcessor subscriptionProcessor = new SubscriptionProcessor(
-                bankMock.Object, userRepoMock.Object, subscriptionLogRepoMock.Object);
+                bankMock.Object, userRepoMock.Object, subscriptionLogRepoMock.Object, Mock.Of<ILinkedAccountRepo>());
 
             userRepoMock.Setup(r => r.SetIsSubscribed(user, It.IsAny<bool>())).ReturnsAsync(user);
             userRepoMock.Setup(r => r.SetSubscriptionInfo(user, It.IsAny<int>(), It.IsAny<SubscriptionTier>(),
@@ -44,7 +45,7 @@ namespace TPP.Core.Tests
             ISubscriptionProcessor.SubResult subResult = await subscriptionProcessor.ProcessSubscription(
                 new SubscriptionInfo(
                     user, NumMonths: 3, StreakMonths: 2, subscriptionTier, PlanName: "Tier 2",
-                    subscribedAt, Message: "HeyGuys", Gifter: null, IsAnonymous: false));
+                    subscribedAt, Message: "HeyGuys", ImmutableList<EmoteOccurrence>.Empty));
 
             // THEN
             const int expectedTokens = 10 + (2 * 4) + 10 + (2 * 5); // per rank: 10 base tokens + 2 tokens per league
@@ -56,7 +57,6 @@ namespace TPP.Core.Tests
             Assert.AreEqual(4, okResult.OldLoyaltyLeague);
             Assert.AreEqual(6, okResult.NewLoyaltyLeague);
             Assert.IsFalse(okResult.SubCountCorrected);
-            Assert.IsNull(okResult.Gifter);
 
             // verify tokens were awarded
             IDictionary<string, object?> expectedData = new Dictionary<string, object?>
@@ -94,13 +94,13 @@ namespace TPP.Core.Tests
             Mock<IUserRepo> userRepoMock = new();
             Mock<ISubscriptionLogRepo> subscriptionLogRepoMock = new();
             ISubscriptionProcessor subscriptionProcessor = new SubscriptionProcessor(
-                bankMock.Object, userRepoMock.Object, subscriptionLogRepoMock.Object);
+                bankMock.Object, userRepoMock.Object, subscriptionLogRepoMock.Object, Mock.Of<ILinkedAccountRepo>());
 
             // WHEN
             ISubscriptionProcessor.SubResult subResult = await subscriptionProcessor.ProcessSubscription(
                 new SubscriptionInfo(
                     user, NumMonths: 2, StreakMonths: 2, SubscriptionTier.Tier1, PlanName: "Sub Plan Name",
-                    Instant.MinValue, Message: "Repeated", Gifter: null, IsAnonymous: false));
+                    Instant.MinValue, Message: "Repeated", ImmutableList<EmoteOccurrence>.Empty));
 
             // THEN
             // negative result
@@ -127,7 +127,7 @@ namespace TPP.Core.Tests
             Mock<IUserRepo> userRepoMock = new();
             Mock<ISubscriptionLogRepo> subscriptionLogRepoMock = new();
             ISubscriptionProcessor subscriptionProcessor = new SubscriptionProcessor(
-                bankMock.Object, userRepoMock.Object, subscriptionLogRepoMock.Object);
+                bankMock.Object, userRepoMock.Object, subscriptionLogRepoMock.Object, Mock.Of<ILinkedAccountRepo>());
 
             userRepoMock.Setup(r => r.SetIsSubscribed(user, It.IsAny<bool>())).ReturnsAsync(user);
             userRepoMock.Setup(r => r.SetSubscriptionInfo(user, It.IsAny<int>(), It.IsAny<SubscriptionTier>(),
@@ -137,7 +137,7 @@ namespace TPP.Core.Tests
             ISubscriptionProcessor.SubResult subResult = await subscriptionProcessor.ProcessSubscription(
                 new SubscriptionInfo(
                     user, NumMonths: 2, StreakMonths: 2, SubscriptionTier.Tier3, PlanName: "Sub Plan Name",
-                    subscribedAt, Message: "Repeated", Gifter: null, IsAnonymous: false));
+                    subscribedAt, Message: "Repeated", ImmutableList<EmoteOccurrence>.Empty));
 
             // THEN
             const int expectedTokens = 14 + 16 + 18 + 20; // Tier 1 -> Tier 3: 4 loyalty completions difference
@@ -173,26 +173,81 @@ namespace TPP.Core.Tests
         }
 
         [Test]
-        public async Task reward_sub_gift_tokens()
+        public async Task handle_sub_gift_and_reward_gift_tokens()
         {
-            // GIVEN
-            User user = MockUser("user", monthsSubscribed: 2, SubscriptionTier.Prime, loyaltyLeague: 2);
+            User gifter = MockUser("gifter", monthsSubscribed: 2, SubscriptionTier.Prime, loyaltyLeague: 2);
+            User recipient = MockUser("recipient", monthsSubscribed: 0, subscriptionTier: null, loyaltyLeague: 0);
             Mock<IBank<User>> bankMock = new();
+            Mock<IUserRepo> userRepoMock = new();
             ISubscriptionProcessor subscriptionProcessor = new SubscriptionProcessor(
-                bankMock.Object, Mock.Of<IUserRepo>(), Mock.Of<ISubscriptionLogRepo>());
+                bankMock.Object, userRepoMock.Object, Mock.Of<ISubscriptionLogRepo>(), Mock.Of<ILinkedAccountRepo>());
+            userRepoMock.Setup(r => r.SetIsSubscribed(recipient, It.IsAny<bool>())).ReturnsAsync(recipient);
+            userRepoMock.Setup(r => r.SetSubscriptionInfo(recipient, It.IsAny<int>(), It.IsAny<SubscriptionTier>(),
+                It.IsAny<int>(), It.IsAny<Instant>())).ReturnsAsync(recipient);
 
-            ISubscriptionProcessor.SubGiftResult subGiftResult = await subscriptionProcessor.ProcessSubscriptionGift(
-                new SubscriptionGiftInfo(user, SubscriptionTier.Tier3, false));
+            SubscriptionInfo subscriptionInfo = new(recipient, 1, 0, SubscriptionTier.Tier3, "Sub Plan Name",
+                Instant.MinValue, "sub message", ImmutableList<EmoteOccurrence>.Empty);
+            (ISubscriptionProcessor.SubResult subResult, ISubscriptionProcessor.SubGiftResult subGiftResult) =
+                await subscriptionProcessor.ProcessSubscriptionGift(
+                    new SubscriptionGiftInfo(subscriptionInfo, gifter, false));
 
-            const int expectedTokens = 10 * 5; // 10 per rank. Tier 3 has rank 5 because $25 = 5 * $5
+            const int expectedGiftTokens = 10 * 5; // 10 per rank. Tier 3 has rank 5 because $25 = 5 * $5
             Assert.IsInstanceOf<ISubscriptionProcessor.SubGiftResult.Ok>(subGiftResult);
-            var okResult = (ISubscriptionProcessor.SubGiftResult.Ok)subGiftResult;
-            Assert.AreEqual(expectedTokens, okResult.DeltaTokens);
-            Assert.AreEqual(false, okResult.IsAnonymous);
-            IDictionary<string, object?> expectedData = new Dictionary<string, object?>();
+            var okGiftResult = (ISubscriptionProcessor.SubGiftResult.Ok)subGiftResult;
+            Assert.AreEqual(expectedGiftTokens, okGiftResult.GifterTokens);
+            IDictionary<string, object?> expectedGiftData = new Dictionary<string, object?>();
             bankMock.Verify(b => b.PerformTransaction(
-                new Transaction<User>(user, expectedTokens, "subscription gift", expectedData),
+                new Transaction<User>(gifter, expectedGiftTokens, "subscription gift", expectedGiftData),
                 CancellationToken.None), Times.Once);
+
+            const int expectedSubTokens = 10 + 12 + 14 + 16 + 18; // Tier 3 = 5 ranks with increasing loyalty league
+            Assert.IsInstanceOf<ISubscriptionProcessor.SubResult.Ok>(subResult);
+            var okResult = (ISubscriptionProcessor.SubResult.Ok)subResult;
+            Assert.AreEqual(1, okResult.CumulativeMonths);
+            Assert.AreEqual(expectedSubTokens, okResult.DeltaTokens);
+            Assert.AreEqual(0, okResult.OldLoyaltyLeague);
+            Assert.AreEqual(5, okResult.NewLoyaltyLeague);
+            Assert.IsFalse(okResult.SubCountCorrected);
+            IDictionary<string, object?> expectedSubData = new Dictionary<string, object?>
+            {
+                ["previous_months_subscribed"] = 0,
+                ["new_months_subscribed"] = 1,
+                ["months_difference"] = 1,
+                ["previous_loyalty_tier"] = 0,
+                ["new_loyalty_tier"] = 5,
+                ["loyalty_completions"] = 5,
+            };
+            bankMock.Verify(b => b.PerformTransaction(
+                new Transaction<User>(recipient, expectedSubTokens, "subscription", expectedSubData),
+                CancellationToken.None), Times.Once);
+        }
+
+        [Test]
+        public async Task ignore_duplicate_month_for_sub_gift()
+        {
+            User gifter = MockUser("gifter", monthsSubscribed: 2, SubscriptionTier.Prime, loyaltyLeague: 2);
+            const SubscriptionTier tier = SubscriptionTier.Tier3;
+            User recipient = MockUser("recipient", monthsSubscribed: 1, subscriptionTier: tier, loyaltyLeague: 5);
+            Mock<IBank<User>> bankMock = new();
+            Mock<IUserRepo> userRepoMock = new();
+            ISubscriptionProcessor subscriptionProcessor = new SubscriptionProcessor(
+                bankMock.Object, userRepoMock.Object, Mock.Of<ISubscriptionLogRepo>(), Mock.Of<ILinkedAccountRepo>());
+
+            SubscriptionInfo subscriptionInfo = new(recipient, NumMonths: 1, StreakMonths: 0, tier, "Sub Plan Name",
+                Instant.MinValue, "sub message", ImmutableList<EmoteOccurrence>.Empty);
+            (ISubscriptionProcessor.SubResult subResult, ISubscriptionProcessor.SubGiftResult subGiftResult) =
+                await subscriptionProcessor.ProcessSubscriptionGift(
+                    new SubscriptionGiftInfo(subscriptionInfo, gifter, false));
+
+            Assert.IsInstanceOf<ISubscriptionProcessor.SubGiftResult.SameMonth>(subGiftResult);
+            var sameMonthGiftResult = (ISubscriptionProcessor.SubGiftResult.SameMonth)subGiftResult;
+            Assert.AreEqual(1, sameMonthGiftResult.Month);
+            bankMock.VerifyNoOtherCalls();
+
+            Assert.IsInstanceOf<ISubscriptionProcessor.SubResult.SameMonth>(subResult);
+            var sameMonthSubResult = (ISubscriptionProcessor.SubResult.SameMonth)subResult;
+            Assert.AreEqual(1, sameMonthSubResult.Month);
+            bankMock.VerifyNoOtherCalls();
         }
     }
 }

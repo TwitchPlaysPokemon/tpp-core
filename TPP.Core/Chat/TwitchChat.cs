@@ -7,6 +7,8 @@ using Microsoft.Extensions.Logging;
 using NodaTime;
 using TPP.Common;
 using TPP.Core.Configuration;
+using TPP.Core.Overlay;
+using TPP.Core.Overlay.Events;
 using TPP.Persistence.Models;
 using TPP.Persistence.Repos;
 using TwitchLib.Client;
@@ -44,6 +46,7 @@ namespace TPP.Core.Chat
         private readonly ISubscriptionProcessor _subscriptionProcessor;
         private readonly TwitchClient _twitchClient;
         private readonly TwitchLibSubscriptionWatcher _subscriptionWatcher;
+        private readonly OverlayConnection _overlayConnection;
 
         private bool _connected = false;
         private Action? _connectivityWorkerCleanup;
@@ -54,7 +57,8 @@ namespace TPP.Core.Chat
             IClock clock,
             ConnectionConfig.Twitch chatConfig,
             IUserRepo userRepo,
-            ISubscriptionProcessor subscriptionProcessor)
+            ISubscriptionProcessor subscriptionProcessor,
+            OverlayConnection overlayConnection)
         {
             Name = name;
             _logger = loggerFactory.CreateLogger<TwitchChat>();
@@ -65,6 +69,7 @@ namespace TPP.Core.Chat
                 .Select(s => s.ToLowerInvariant()).ToImmutableHashSet();
             _userRepo = userRepo;
             _subscriptionProcessor = subscriptionProcessor;
+            _overlayConnection = overlayConnection;
 
             _twitchClient = new TwitchClient(
                 client: new WebSocketClient(new ClientOptions()),
@@ -90,11 +95,10 @@ namespace TPP.Core.Chat
 
         private void Connected(object? sender, OnConnectedArgs e) => _twitchClient.JoinChannel(_ircChannel);
 
-        private async void OnSubscribed(object? sender, SubscriptionInfo e)
+        private static string BuildSubResponse(
+            ISubscriptionProcessor.SubResult subResult, User? gifter, bool isAnonymous)
         {
-            ISubscriptionProcessor.SubResult subResult = await _subscriptionProcessor.ProcessSubscription(e);
-
-            static string BuildOkMessage(ISubscriptionProcessor.SubResult.Ok ok)
+            static string BuildOkMessage(ISubscriptionProcessor.SubResult.Ok ok, User? gifter, bool isAnonymous)
             {
                 string message = "";
                 if (ok.SubCountCorrected)
@@ -106,10 +110,10 @@ namespace TPP.Core.Chat
                     message += $"You reached Loyalty League {ok.NewLoyaltyLeague}! ";
                 if (ok.DeltaTokens > 0)
                     message += $"You gained T{ok.DeltaTokens} tokens! ";
-                if (ok.Gifter != null && ok.IsAnonymous)
+                if (gifter != null && isAnonymous)
                     message += "An anonymous user gifted you a subscription!";
-                else if (ok.Gifter != null && !ok.IsAnonymous)
-                    message += $"{ok.Gifter.Name} gifted you a subscription!";
+                else if (gifter != null && !isAnonymous)
+                    message += $"{gifter.Name} gifted you a subscription!";
                 else if (ok.CumulativeMonths > 1)
                     message += "Thank you for resubscribing!";
                 else
@@ -117,37 +121,65 @@ namespace TPP.Core.Chat
                 return message;
             }
 
-            string response = subResult switch
+            return subResult switch
             {
-                ISubscriptionProcessor.SubResult.Ok ok => BuildOkMessage(ok),
+                ISubscriptionProcessor.SubResult.Ok ok => BuildOkMessage(ok, gifter, isAnonymous),
                 ISubscriptionProcessor.SubResult.SameMonth sameMonth =>
                     $"We detected that you've already announced your resub for month {sameMonth.Month}, " +
                     "and received the appropriate tokens. " +
                     "If you believe this is in error, please contact a moderator so this can be corrected.",
                 _ => throw new ArgumentOutOfRangeException(nameof(subResult)),
             };
+        }
+
+        private async void OnSubscribed(object? sender, SubscriptionInfo e)
+        {
+            ISubscriptionProcessor.SubResult subResult = await _subscriptionProcessor.ProcessSubscription(e);
+            string response = BuildSubResponse(subResult, null, false);
             await SendWhisper(e.Subscriber, response);
-            // TODO send to overlay
+
+            await _overlayConnection.Send(new NewSubscriber
+            {
+                User = e.Subscriber,
+                Emotes = e.Emotes.Select(EmoteInfo.FromOccurence).ToImmutableList(),
+                SubMessage = e.Message,
+                ShareSub = true,
+            }, CancellationToken.None);
         }
 
         private async void OnSubscriptionGifted(object? sender, SubscriptionGiftInfo e)
         {
-            ISubscriptionProcessor.SubGiftResult
-                subGiftResult = await _subscriptionProcessor.ProcessSubscriptionGift(e);
-            if (e.IsAnonymous) return; // don't respond to the "AnAnonymousGifter" user
+            (ISubscriptionProcessor.SubResult subResult, ISubscriptionProcessor.SubGiftResult subGiftResult) =
+                await _subscriptionProcessor.ProcessSubscriptionGift(e);
 
-            string response = subGiftResult switch
+            string subResponse = BuildSubResponse(subResult, e.Gifter, e.IsAnonymous);
+            await SendWhisper(e.SubscriptionInfo.Subscriber, subResponse);
+
+            string subGiftResponse = subGiftResult switch
             {
-                ISubscriptionProcessor.SubGiftResult.LinkedAccount linkedAccount =>
-                    $"As you are linked to the account '{linkedAccount.LinkedUser.Name}' you have gifted to, you have not received a token bonus. " +
+                ISubscriptionProcessor.SubGiftResult.LinkedAccount =>
+                    $"As you are linked to the account '{e.SubscriptionInfo.Subscriber.Name}' you have gifted to, " +
+                    "you have not received a token bonus. " +
                     "The recipient account still gains the normal benefits however. Thanks for subscribing!",
-                ISubscriptionProcessor.SubGiftResult.Ok ok =>
-                    $"Thank you for your generosity! You received T{ok.DeltaTokens} tokens for giving a gift " +
+                ISubscriptionProcessor.SubGiftResult.SameMonth { Month: var month } =>
+                    $"We detected that this gift sub may have been a repeated message for month {month}, " +
+                    "and you have already received the appropriate tokens. " +
+                    "If you believe this is in error, please contact a moderator so this can be corrected.",
+                ISubscriptionProcessor.SubGiftResult.Ok { GifterTokens: var tokens } =>
+                    $"Thank you for your generosity! You received T{tokens} tokens for giving a gift " +
                     "subscription. The recipient has been notified and awarded their token benefits.",
                 _ => throw new ArgumentOutOfRangeException(nameof(subGiftResult))
             };
-            await SendWhisper(e.Gifter, response);
-            // TODO send to overlay
+            if (!e.IsAnonymous)
+                await SendWhisper(e.Gifter, subGiftResponse); // don't respond to the "AnAnonymousGifter" user
+
+            await _overlayConnection.Send(new NewSubscriber
+            {
+                User = e.SubscriptionInfo.Subscriber,
+                Emotes = e.SubscriptionInfo.Emotes.Select(EmoteInfo.FromOccurence).ToImmutableList(),
+                SubMessage = e.SubscriptionInfo.Message,
+                ShareSub = false,
+            }, CancellationToken.None);
         }
 
         public async Task SendMessage(string message)

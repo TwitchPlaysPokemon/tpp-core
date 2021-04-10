@@ -147,14 +147,6 @@ namespace TPP.Core.Commands.Definitions
             ["panicrestore"] = "Moderators only: Restore an earlier savestate in the current run.",
             ["panicreset"] = "Moderators only: Restore an earlier savestate in the current run.",
             ["getid"] = "Moderators only: See someones user id, or your own if none is specified. Argument: <username>(Optional)",
-            ["linkaccount"] = "Moderators only: link 2 accounts together to enforce restrictions on alt accounts. Arguments: <target user> (any number, at least 2)",
-            ["linkaccounts"] = "Moderators only: link 2 accounts together to enforce restrictions on alt accounts. Arguments: <target user> (any number, at least 2)",
-            ["unlinkaccount"] = "Moderators only: undo linkaccount for 1 or more users. Arguments: <target user(s)>(any number)",
-            ["unlinkaccounts"] = "Moderators only: undo linkaccount for 1 or more users. Arguments: <target user(s)>(any number)",
-            ["checklinkaccount"] = "Moderators only: Check the accounts linked to a user, and the last person to link/unlink them. Arguments: <target user>",
-            ["checklink"] = "Moderators only: Check the accounts linked to a user, and the last person to link/unlink them. Arguments: <target user>",
-            ["checkalt"] = "Moderators only: Check the accounts linked to a user, and the last person to link/unlink them. Arguments: <target user>",
-            ["checklinkedaccount"] = "Moderators only: Check the accounts linked to a user, and the last person to link/unlink them. Arguments: <target user>",
 
             // trusted commands
             ["announcer"] = "Trusted only: Turn the announcer on and off. Takes immediate effect, even mid-battle, and persists for subsequent matches. Argument: \"on\" or \"off\" (optional: replies with current value if omitted)",
