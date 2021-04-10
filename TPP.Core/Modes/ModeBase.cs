@@ -10,6 +10,7 @@ using TPP.Core.Chat;
 using TPP.Core.Commands;
 using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
+using TPP.Core.Overlay;
 using TPP.Persistence.Repos;
 
 namespace TPP.Core.Modes
@@ -25,13 +26,16 @@ namespace TPP.Core.Modes
         private readonly IClock _clock;
 
         public ModeBase(
-            ILoggerFactory loggerFactory, Setups.Databases repos, BaseConfig baseConfig, StopToken stopToken)
+            ILoggerFactory loggerFactory, Setups.Databases repos, BaseConfig baseConfig, StopToken stopToken,
+            OverlayConnection overlayConnection)
         {
             PokedexData pokedexData = PokedexData.Load();
             ArgsParser argsParser = Setups.SetUpArgsParser(repos.UserRepo, pokedexData);
 
             var chats = new Dictionary<string, IChat>();
-            var chatFactory = new ChatFactory(loggerFactory, SystemClock.Instance, repos.UserRepo);
+            var chatFactory = new ChatFactory(loggerFactory, SystemClock.Instance,
+                repos.UserRepo, repos.TokensBank, repos.SubscriptionLogRepo, repos.LinkedAccountRepo,
+                overlayConnection);
             foreach (ConnectionConfig connectorConfig in baseConfig.Chat.Connections)
             {
                 IChat chat = chatFactory.Create(connectorConfig);

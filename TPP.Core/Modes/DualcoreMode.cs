@@ -13,16 +13,15 @@ namespace TPP.Core.Modes
         private readonly StopToken _stopToken;
         private readonly ModeBase _modeBase;
         private readonly WebsocketBroadcastServer _broadcastServer;
-        private readonly OverlayConnection _overlayConnection;
 
         public DualcoreMode(ILoggerFactory loggerFactory, BaseConfig baseConfig)
         {
             _logger = loggerFactory.CreateLogger<DualcoreMode>();
             _stopToken = new StopToken();
             Setups.Databases repos = Setups.SetUpRepositories(baseConfig);
-            _modeBase = new ModeBase(loggerFactory, repos, baseConfig, _stopToken);
-
-            (_broadcastServer, _overlayConnection) = Setups.SetUpOverlayServer(loggerFactory);
+            OverlayConnection overlayConnection;
+            (_broadcastServer, overlayConnection) = Setups.SetUpOverlayServer(loggerFactory);
+            _modeBase = new ModeBase(loggerFactory, repos, baseConfig, _stopToken, overlayConnection);
         }
 
         public async Task Run()

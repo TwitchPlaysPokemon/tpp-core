@@ -101,7 +101,8 @@ namespace TPP.Core
             ICommandLogger CommandLogger,
             IMessagequeueRepo MessagequeueRepo,
             IMessagelogRepo MessagelogRepo,
-            ILinkedAccountRepo LinkedAccountRepo
+            ILinkedAccountRepo LinkedAccountRepo,
+            ISubscriptionLogRepo SubscriptionLogRepo
         );
 
         public static Databases SetUpRepositories(BaseConfig baseConfig)
@@ -144,7 +145,8 @@ namespace TPP.Core
                 CommandLogger: new CommandLogger(mongoDatabase, clock),
                 MessagequeueRepo: new MessagequeueRepo(mongoDatabase),
                 MessagelogRepo: new MessagelogRepo(mongoDatabaseMessagelog),
-                LinkedAccountRepo: new LinkedAccountRepo(mongoDatabase, userRepo.Collection)
+                LinkedAccountRepo: new LinkedAccountRepo(mongoDatabase, userRepo.Collection),
+                SubscriptionLogRepo: new SubscriptionLogRepo(mongoDatabase)
             );
         }
 
