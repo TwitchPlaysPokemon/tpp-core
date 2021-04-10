@@ -10,6 +10,7 @@ using TPP.Core.Chat;
 using TPP.Core.Commands;
 using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
+using TPP.Core.Overlay;
 using TPP.Persistence.Repos;
 
 namespace TPP.Core.Modes
@@ -25,14 +26,16 @@ namespace TPP.Core.Modes
         private readonly IClock _clock;
 
         public ModeBase(
-            ILoggerFactory loggerFactory, Setups.Databases repos, BaseConfig baseConfig, StopToken stopToken)
+            ILoggerFactory loggerFactory, Setups.Databases repos, BaseConfig baseConfig, StopToken stopToken,
+            OverlayConnection overlayConnection)
         {
             PokedexData pokedexData = PokedexData.Load();
             ArgsParser argsParser = Setups.SetUpArgsParser(repos.UserRepo, pokedexData);
 
             var chats = new Dictionary<string, IChat>();
             var chatFactory = new ChatFactory(loggerFactory, SystemClock.Instance,
-                repos.UserRepo, repos.TokensBank, repos.SubscriptionLogRepo);
+                repos.UserRepo, repos.TokensBank, repos.SubscriptionLogRepo, repos.LinkedAccountRepo,
+                overlayConnection);
             foreach (ConnectionConfig connectorConfig in baseConfig.Chat.Connections)
             {
                 IChat chat = chatFactory.Create(connectorConfig);
@@ -54,6 +57,12 @@ namespace TPP.Core.Modes
             _messagelogRepo = repos.MessagelogRepo;
             _forwardUnprocessedMessages = baseConfig.Chat.ForwardUnprocessedMessages;
             _clock = SystemClock.Instance;
+        }
+
+        public void InstallAdditionalCommand(Command command)
+        {
+            foreach (CommandProcessor commandProcessor in _commandProcessors.Values)
+                commandProcessor.InstallCommand(command);
         }
 
         private async void MessageReceived(object? sender, MessageEventArgs e) =>

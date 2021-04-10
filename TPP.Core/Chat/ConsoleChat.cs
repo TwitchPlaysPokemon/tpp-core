@@ -81,7 +81,7 @@ namespace TPP.Core.Chat
             Task.Run(ReadInput).ContinueWith(task =>
             {
                 if (task.IsFaulted)
-                    _logger.LogError("console read task failed", task.Exception);
+                    _logger.LogError(task.Exception, "console read task failed");
                 else
                     _logger.LogInformation("console read task finished");
             });
