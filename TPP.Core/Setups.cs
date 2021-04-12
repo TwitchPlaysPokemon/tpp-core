@@ -37,6 +37,7 @@ namespace TPP.Core
             argsParser.AddArgumentParser(new TokensParser());
             argsParser.AddArgumentParser(new SignedPokeyenParser());
             argsParser.AddArgumentParser(new SignedTokensParser());
+            argsParser.AddArgumentParser(new RoleParser());
             argsParser.AddArgumentParser(new PkmnSpeciesParser(pokedexData.KnownSpecies, PokedexData.NormalizeName));
 
             argsParser.AddArgumentParser(new AnyOrderParser(argsParser));
@@ -45,7 +46,6 @@ namespace TPP.Core
             argsParser.AddArgumentParser(new ManyOfParser(argsParser));
 
             argsParser.AddArgumentParser(new UserParser(userRepo));
-            argsParser.AddArgumentParser(new RoleParser());
             return argsParser;
         }
 
@@ -110,7 +110,8 @@ namespace TPP.Core
             IUserRepo userRepo = new UserRepo(
                 database: mongoDatabase,
                 startingPokeyen: baseConfig.StartingPokeyen,
-                startingTokens: baseConfig.StartingTokens);
+                startingTokens: baseConfig.StartingTokens,
+                defaultOperators: baseConfig.Chat.DefaultOperatorNames);
             IMongoBadgeLogRepo badgeLogRepo = new BadgeLogRepo(mongoDatabase);
             IBadgeRepo badgeRepo = new BadgeRepo(mongoDatabase, badgeLogRepo, clock);
             badgeRepo.UserLostBadgeSpecies += async (_, args) =>

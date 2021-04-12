@@ -31,8 +31,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             name: name, twitchDisplayName: "☺" + name, simpleName: name.ToLower(), color: null,
             firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
             lastMessageAt: null, pokeyen: 0, tokens: 0,
-            selectedBadge: selectedBadge,
-            usergroup: new List<Role> { Role.Operator });
+            selectedBadge: selectedBadge, roles: new HashSet<Role> { Role.Operator });
 
         private static Message MockMessage(User user, string text = "") =>
             new(user, text, MessageSource.Chat, string.Empty);
@@ -55,6 +54,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             _argsParser.AddArgumentParser(new AnyOrderParser(_argsParser));
             _argsParser.AddArgumentParser(new OptionalParser(_argsParser));
             _argsParser.AddArgumentParser(new ManyOfParser(_argsParser));
+            _argsParser.AddArgumentParser(new RoleParser());
             _argsParser.AddArgumentParser(new UserParser(_userRepoMock.Object));
             _argsParser.AddArgumentParser(new PositiveIntParser());
             _pokeyenBankMock = new Mock<IBank<User>>();

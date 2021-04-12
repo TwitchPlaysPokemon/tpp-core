@@ -29,7 +29,7 @@ namespace TPP.Core.Commands.Definitions
             }
         }.Select(cmd => cmd.WithCondition(
             canExecute: ctx => IsModerator(ctx.Message.User),
-            ersatzResult: new CommandResult { Response = "Only operators can use that command" }));
+            ersatzResult: new CommandResult { Response = "Only moderators can use that command" }));
 
         private bool IsModerator(User u)
         {

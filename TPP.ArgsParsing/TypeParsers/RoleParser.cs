@@ -19,12 +19,12 @@ namespace TPP.ArgsParsing.TypeParsers
             ArgsParseResult<Role> result;
             try
             {
-                Role parsedRole = (Role)Enum.Parse(typeof(Role), roleToParse, true);
+                Role parsedRole = (Role)Enum.Parse(typeof(Role), roleToParse, ignoreCase: true);
                 result = ArgsParseResult<Role>.Success(parsedRole, args.Skip(1).ToImmutableList());
             }
             catch (ArgumentException)
             {
-                result = ArgsParseResult<Role>.Failure(string.Format("Did not find a role named '{0}'", roleToParse));
+                result = ArgsParseResult<Role>.Failure($"Did not find a role named '{roleToParse}'");
             }
             return Task.FromResult(result);
         }

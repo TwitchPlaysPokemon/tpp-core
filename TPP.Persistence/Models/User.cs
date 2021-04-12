@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using NodaTime;
 using TPP.Common;
 
@@ -51,7 +52,7 @@ namespace TPP.Persistence.Models
 
         public int? PokeyenBetRank { get; init; }
 
-        public List<Role>? Roles { get; init; }
+        public HashSet<Role> Roles { get; init; }
 
         // public bool Active { get; init; }
         // public bool Follower { get; init; }
@@ -87,7 +88,7 @@ namespace TPP.Persistence.Models
             string? glowColor = null,
             bool glowColorUnlocked = false,
             int? pokeyenBetRank = null,
-            List<Role>? usergroup = null)
+            HashSet<Role>? roles = null)
         {
             Id = id;
             TwitchDisplayName = twitchDisplayName;
@@ -105,6 +106,7 @@ namespace TPP.Persistence.Models
             GlowColor = glowColor;
             GlowColorUnlocked = glowColorUnlocked;
             PokeyenBetRank = pokeyenBetRank;
+            Roles = roles ?? new HashSet<Role>();
         }
 
         public override string ToString() => $"User({Id}/{SimpleName})";

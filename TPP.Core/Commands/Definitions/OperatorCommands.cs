@@ -82,19 +82,13 @@ namespace TPP.Core.Commands.Definitions
             {
                 Description = "Operators only: Remove a role from a user." +
                               "Arguments: <user> <role>"
-            },
-            new Command("showroles", showRoles)
-            {
-                Aliases = new[] {"roles"},
-                Description = "Operators only: Show which roles a user has." +
-                              "Arguments: <user>"
             }
         }.Select(cmd => cmd.WithCondition(
             canExecute: ctx => IsOperator(ctx.Message.User),
             ersatzResult: new CommandResult { Response = "Only operators can use that command" }));
 
         private bool IsOperator(User user) =>
-            _operatorNamesLower.Contains(user.SimpleName) || (user.Roles == null ? false : user.Roles.Contains(Role.Operator));
+            user.Roles.Contains(Role.Operator);
 
         private Task<CommandResult> Stop(CommandContext context)
         {
@@ -224,26 +218,18 @@ namespace TPP.Core.Commands.Definitions
             (User user, Role role) = await context.ParseArgs<User, Role>();
             string response;
 
-            if (user.Roles != null)
+            HashSet<Role> roles = user.Roles;
+            bool roleAssigned = user.Roles.Add(role);
+
+            if (roleAssigned)
             {
-                if (user.Roles.Contains(role))
-                {
-                    response = string.Format("{0} already has the role {1}", user.SimpleName, role.ToString());
-                }
-                else
-                {
-                    List<Role> newGroup = user.Roles;
-                    newGroup.Add(role);
-                    await _userRepo.SetUserRoles(user, newGroup);
-                    response = string.Format("{0} now has the roles: {1}", user.SimpleName, string.Join(", ", newGroup));
-                }
+                await _userRepo.SetRoles(user, roles);
+                response = $"{user.SimpleName} now has the roles: {string.Join(", ", roles)}";
             }
             else
             {
-                await _userRepo.SetUserRoles(user, new List<Role> { role });
-                response = string.Format("{0} now has the role: {1}", user.SimpleName, role.ToString());
+                response = $"{user.SimpleName} already has the role {role.ToString()}";
             }
-
             return new CommandResult
             {
                 Response = response
@@ -255,29 +241,17 @@ namespace TPP.Core.Commands.Definitions
             (User user, Role role) = await context.ParseArgs<User, Role>();
             string response;
 
-            if (user.Roles != null)
+            HashSet<Role> roles = user.Roles;
+            bool roleRemoved = user.Roles.Remove(role);
+            if (roleRemoved)
             {
-                List<Role>? groups = user.Roles;
-                groups.Remove(role);
-                groups = groups.Count > 0 ? groups : null;
-                await _userRepo.SetUserRoles(user, groups);
-
-                response = groups != null ? string.Format("{0} now has the roles: {1}", user.SimpleName, string.Join(", ", groups)) : string.Format("{0} now has no roles", user.SimpleName);
+                await _userRepo.SetRoles(user, roles);
+                response = roles.Count > 0 ? $"{user.SimpleName} now has the roles: {string.Join(", ", roles)}" : $"{user.SimpleName} now has no roles";
             }
             else
             {
-                response = string.Format("{0} already has no roles", user.SimpleName);
+                response = user.Roles.Count > 0 ? $"{user.SimpleName} didn't have the role { role.ToString() }. {user.SimpleName}'s roles are: {string.Join(", ", user.Roles)}" : $"{user.SimpleName} has no roles";
             }
-
-            return new CommandResult
-            {
-                Response = response
-            };
-        }
-        public async Task<CommandResult> showRoles(CommandContext context)
-        {
-            User user = await context.ParseArgs<User>();
-            string response = user.Roles == null ? string.Format("{0} has no roles", user.SimpleName) : string.Format("{0} has the roles: {1}", user.SimpleName, string.Join(", ", user.Roles));
 
             return new CommandResult
             {

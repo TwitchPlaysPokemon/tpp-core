@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
 using NodaTime;
 using TPP.Common;
@@ -19,6 +21,7 @@ namespace TPP.Persistence.MongoDB.Repos
 
         private readonly long _startingPokeyen;
         private readonly long _startingTokens;
+        private readonly ImmutableHashSet<string> _defaultOperators;
 
         static UserRepo()
         {
@@ -44,17 +47,26 @@ namespace TPP.Persistence.MongoDB.Repos
                 cm.MapProperty(u => u.GlowColor).SetElementName("secondary_color");
                 cm.MapProperty(u => u.GlowColorUnlocked).SetElementName("secondary_color_unlocked");
                 cm.MapProperty(u => u.PokeyenBetRank).SetElementName("pokeyen_bet_rank");
-                cm.MapProperty(u => u.Roles).SetElementName("roles");
+                cm.MapProperty(u => u.Roles).SetElementName("roles")
+                .SetDefaultValue(new HashSet<Role>());
             });
         }
 
-        public UserRepo(IMongoDatabase database, long startingPokeyen, long startingTokens)
+        public UserRepo(IMongoDatabase database, long startingPokeyen, long startingTokens, IImmutableList<string> defaultOperators)
         {
             database.CreateCollectionIfNotExists(CollectionName).Wait();
             Collection = database.GetCollection<User>(CollectionName);
             _startingPokeyen = startingPokeyen;
             _startingTokens = startingTokens;
+            _defaultOperators = defaultOperators.ToImmutableHashSet<string>();
             InitIndexes();
+
+            foreach (string name in _defaultOperators)
+            {
+                User? user = FindBySimpleName(name.ToLower()).Result;
+                if (user != null)
+                    SetRoles(user, new HashSet<Role> { Role.Operator });
+            }
             // TODO currently pokeyen are not nullable in the user object, but in the current database some are.
             // There has been an unfinished discussion on whether nullable pokeyen are desired, e.g. to better represent
             // a balance reset, where each user with "null" would get the default amount on first load for example.
@@ -123,6 +135,8 @@ namespace TPP.Persistence.MongoDB.Repos
             try
             {
                 await Collection.InsertOneAsync(document: user);
+                if (_defaultOperators.Contains(user.SimpleName))
+                    await SetRoles(user, new HashSet<Role> { Role.Operator });
             }
             catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
             {
@@ -140,6 +154,9 @@ namespace TPP.Persistence.MongoDB.Repos
 
         public async Task<User?> FindByDisplayName(string displayName) =>
             await Collection.Find(u => u.TwitchDisplayName == displayName).FirstOrDefaultAsync();
+
+        public async Task<List<User>> FindAllByRole(Role role) =>
+            await Collection.Find(u => u.Roles.Contains(role)).ToListAsync();
 
         private async Task<User> UpdateField<T>(User user, Expression<Func<User, T>> field, T value) =>
             await Collection.FindOneAndUpdateAsync<User>(
@@ -163,8 +180,8 @@ namespace TPP.Persistence.MongoDB.Repos
         public Task<User> SetDisplayName(User user, string displayName) =>
             UpdateField(user, u => u.Name, displayName);
 
-        public Task<User> SetUserRoles(User user, List<Role>? userGroup) =>
-            UpdateField(user, u => u.Roles, userGroup);
+        public Task<User> SetRoles(User user, HashSet<Role> newRoles) =>
+            UpdateField(user, u => u.Roles, newRoles);
 
         public async Task<bool> UnselectBadgeIfSpeciesSelected(string userId, PkmnSpecies species) =>
             await Collection.FindOneAndUpdateAsync<User>(
