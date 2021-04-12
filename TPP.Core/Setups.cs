@@ -80,8 +80,7 @@ namespace TPP.Core
                     stopToken,chatConfig.DefaultOperatorNames, databases.PokeyenBank, databases.TokensBank,
                     messageSender: messageSender, databases.BadgeRepo, databases.UserRepo
                 ).Commands,
-                new ModeratorCommands(chatModeChanger, databases.LinkedAccountRepo).Commands,
-                new MiscCommands().Commands,
+                new ModeratorCommands(chatModeChanger, databases.LinkedAccountRepo).Commands
             }.SelectMany(cmds => cmds).Concat(new[]
             {
                 new HelpCommand(commandProcessor).Command
