@@ -31,6 +31,7 @@ namespace TPP.Persistence.Repos
         public const string Match = "match";
         public const string Subscription = "subscription";
         public const string SubscriptionGift = "subscription gift";
+        public const string Welfare = "welfare";
 
         // collect all the types being used here instead of scattering string literals across the codebase
     }
