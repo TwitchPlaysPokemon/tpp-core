@@ -162,6 +162,9 @@ namespace TPP.Persistence.MongoDB.Repos
         public async Task<User?> FindByDisplayName(string displayName) =>
             await Collection.Find(u => u.TwitchDisplayName == displayName).FirstOrDefaultAsync();
 
+        public async Task<List<User>> FindAllByPokeyenUnder(long yen) =>
+            await Collection.Find(u => u.Pokeyen < yen).ToListAsync();
+
         public async Task<List<User>> FindAllByRole(Role role) =>
             await Collection.Find(u => u.Roles.Contains(role)).ToListAsync();
 
