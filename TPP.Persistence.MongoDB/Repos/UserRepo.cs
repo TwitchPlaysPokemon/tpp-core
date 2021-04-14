@@ -58,7 +58,7 @@ namespace TPP.Persistence.MongoDB.Repos
                 cm.MapProperty(u => u.LoyaltyLeague).SetElementName("loyalty_tier");
                 cm.MapProperty(u => u.SubscriptionUpdatedAt).SetElementName("subscription_updated_at");
                 cm.MapProperty(u => u.Roles).SetElementName("roles")
-                .SetDefaultValue(new HashSet<Role>());
+                    .SetDefaultValue(new HashSet<Role>());
             });
         }
 
@@ -138,13 +138,12 @@ namespace TPP.Persistence.MongoDB.Repos
                 lastActiveAt: userInfo.UpdatedAt,
                 lastMessageAt: userInfo.FromMessage ? userInfo.UpdatedAt : (Instant?)null,
                 pokeyen: _startingPokeyen,
-                tokens: _startingTokens
+                tokens: _startingTokens,
+                roles: _defaultOperators.Contains(userInfo.SimpleName) ? new HashSet<Role> { Role.Operator } : null
             );
             try
             {
                 await Collection.InsertOneAsync(document: user);
-                if (_defaultOperators.Contains(user.SimpleName))
-                    await SetRoles(user, new HashSet<Role> { Role.Operator });
             }
             catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
             {

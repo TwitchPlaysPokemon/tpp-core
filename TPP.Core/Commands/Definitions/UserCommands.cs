@@ -73,7 +73,7 @@ namespace TPP.Core.Commands.Definitions
                 Aliases = new[] {"roles"},
                 Description = "Operators only: Show which roles a user has." +
                               "Arguments: <user>"
-            }
+            },
         };
 
         private readonly IUserRepo _userRepo;
@@ -274,7 +274,9 @@ namespace TPP.Core.Commands.Definitions
 
             return new CommandResult
             {
-                Response = users.Count > 0 ? $"The users with the '{role.ToString()}' role are: {string.Join(", ", users.Select(u => u.SimpleName))}" : $"There are no users with the '{role.ToString()}' role."
+                Response = users.Count > 0
+                    ? $"The users with the '{role.ToString()}' role are: {string.Join(", ", users.Select(u => u.Name))}"
+                    : $"There are no users with the '{role.ToString()}' role."
             };
         }
         public async Task<CommandResult> ShowRoles(CommandContext context)
@@ -283,7 +285,9 @@ namespace TPP.Core.Commands.Definitions
 
             return new CommandResult
             {
-                Response = user.Roles.Count > 0 ? $"{user.SimpleName} has the roles: {string.Join(", ", user.Roles)}" : $"{user.SimpleName} has no roles"
+                Response = user.Roles.Count > 0
+                    ? $"{user.Name} has the roles: {string.Join(", ", user.Roles)}"
+                    : $"{user.Name} has no roles"
             };
         }
     }
