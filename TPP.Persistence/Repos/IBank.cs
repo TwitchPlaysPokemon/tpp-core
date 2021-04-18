@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using TPP.Common;
 using TPP.Persistence.Models;
 
 namespace TPP.Persistence.Repos
@@ -25,6 +26,12 @@ namespace TPP.Persistence.Repos
     {
         public const string SecondaryColorUnlock = "secondary_color_unlock";
         public const string ManualAdjustment = "manual_adjustment";
+        public const string DonationGive = "donation_give";
+        public const string DonationReceive = "donation_recieve"; // typo kept for backwards-compatibility for now
+        public const string Match = "match";
+        public const string Subscription = "subscription";
+        public const string SubscriptionGift = "subscription gift";
+        public const string Welfare = "welfare";
 
         // collect all the types being used here instead of scattering string literals across the codebase
     }
@@ -33,7 +40,7 @@ namespace TPP.Persistence.Repos
     /// A single atomic monetary transaction that can be performed.
     /// </summary>
     /// <typeparam name="T">User object type the transaction is performed on, typically <see cref="User"/></typeparam>
-    public readonly struct Transaction<T>
+    public sealed record Transaction<T>
     {
         /// <summary>
         /// User object the transaction will be performed on.
@@ -56,7 +63,7 @@ namespace TPP.Persistence.Repos
             T user,
             long change,
             string type,
-            IDictionary<string, object?>? additionalData = default)
+            IDictionary<string, object?>? additionalData = null)
         {
             User = user;
             Change = change;
@@ -67,6 +74,18 @@ namespace TPP.Persistence.Repos
         public override string ToString()
             => $"Transaction({User}{Change:+#;-#} of type {Type} " +
                $"with data {string.Join(",", AdditionalData.Select(kv => kv.Key + "=" + kv.Value))})";
+
+        public bool Equals(Transaction<T>? other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return EqualityComparer<T>.Default.Equals(User, other.User)
+                   && Change == other.Change
+                   && Type == other.Type
+                   && AdditionalData.DictionaryEqual(other.AdditionalData); // <-- Equals() is overridden just for this
+        }
+
+        public override int GetHashCode() => HashCode.Combine(User, Change, Type, AdditionalData);
     }
 
     /// <summary>

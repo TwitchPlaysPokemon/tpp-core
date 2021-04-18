@@ -13,7 +13,6 @@ using TPP.Persistence.Repos;
 
 namespace TPP.Persistence.MongoDB.Tests.Repos
 {
-    [Category("IntegrationTest")]
     [Parallelizable(ParallelScope.All)]
     public class BadgeRepoTest : MongoTestBase
     {
@@ -33,6 +32,19 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             Assert.NotNull(badgeFromDatabase);
             Assert.AreNotSame(badgeFromDatabase, badge);
             Assert.AreEqual(badgeFromDatabase, badge);
+        }
+
+        [Test]
+        public async Task insert_sets_current_timestamp_as_creation_date()
+        {
+            Mock<IClock> clockMock = new();
+            Instant createdAt = Instant.FromUnixTimeSeconds(123);
+            clockMock.Setup(c => c.GetCurrentInstant()).Returns(createdAt);
+            IBadgeRepo badgeRepo = new BadgeRepo(
+                CreateTemporaryDatabase(), Mock.Of<IMongoBadgeLogRepo>(), clockMock.Object);
+
+            Badge badge = await badgeRepo.AddBadge(null, PkmnSpecies.OfId("16"), Badge.BadgeSource.ManualCreation);
+            Assert.AreEqual(createdAt, badge.CreatedAt);
         }
 
         /// <summary>

@@ -20,6 +20,7 @@ namespace TPP.Persistence.MongoDB.Serializers
             BsonSerializer.RegisterSerializer(PkmnSpeciesSerializer.Instance);
             BsonSerializer.RegisterSerializer(InstantSerializer.Instance);
             BsonSerializer.RegisterSerializer(NullableInstantSerializer.Instance);
+            BsonSerializer.RegisterSerializer(SubscriptionTierSerializer.Instance);
 
             // TODO workaround for https://jira.mongodb.org/browse/CSHARP-3449
             // Remove this custom bson mapper once the mongodb linq driver is able to use the serializers for converting

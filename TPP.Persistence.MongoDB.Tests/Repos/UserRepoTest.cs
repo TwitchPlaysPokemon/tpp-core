@@ -11,7 +11,6 @@ using TPP.Persistence.Repos;
 
 namespace TPP.Persistence.MongoDB.Tests.Repos
 {
-    [Category("IntegrationTest")]
     [Parallelizable(ParallelScope.All)]
     public class UserRepoTest : MongoTestBase
     {
@@ -165,7 +164,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             var userInfo = new UserInfo("123", "X", "x", null);
             await userRepo.RecordUser(userInfo);
             UpdateResult updateResult = await userRepo.Collection.UpdateOneAsync(u => u.Id == userInfo.Id,
-                    Builders<User>.Update.Unset(u => u.ParticipationEmblems));
+                Builders<User>.Update.Unset(u => u.ParticipationEmblems));
             Assert.AreEqual(1, updateResult.ModifiedCount);
 
             // when
@@ -206,6 +205,36 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             Assert.AreNotSame(userFromReading!, userFromRecording);
             Assert.AreEqual(pokeyen, userFromReading!.Pokeyen);
             Assert.AreEqual(tokens, userFromReading!.Tokens);
+        }
+
+        [Test]
+        public async Task set_is_subscribed()
+        {
+            IUserRepo userRepo = new UserRepo(CreateTemporaryDatabase(), 0, 0);
+
+            User userBeforeUpdate = await userRepo.RecordUser(new UserInfo("123", "X", "x"));
+            Assert.IsFalse(userBeforeUpdate.IsSubscribed);
+            User userAfterUpdate = await userRepo.SetIsSubscribed(userBeforeUpdate, true);
+            Assert.IsTrue(userAfterUpdate.IsSubscribed);
+        }
+
+        [Test]
+        public async Task set_subscription_info()
+        {
+            IUserRepo userRepo = new UserRepo(CreateTemporaryDatabase(), 0, 0);
+
+            User userBeforeUpdate = await userRepo.RecordUser(new UserInfo("123", "X", "x"));
+            Assert.AreEqual(0, userBeforeUpdate.MonthsSubscribed);
+            Assert.IsNull(userBeforeUpdate.SubscriptionTier);
+            Assert.AreEqual(0, userBeforeUpdate.LoyaltyLeague);
+            Assert.IsNull(userBeforeUpdate.SubscriptionUpdatedAt);
+
+            User userAfterUpdate = await userRepo.SetSubscriptionInfo(userBeforeUpdate,
+                42, SubscriptionTier.Tier2, 10, Instant.FromUnixTimeSeconds(123));
+            Assert.AreEqual(42, userAfterUpdate.MonthsSubscribed);
+            Assert.AreEqual(SubscriptionTier.Tier2, userAfterUpdate.SubscriptionTier);
+            Assert.AreEqual(10, userAfterUpdate.LoyaltyLeague);
+            Assert.AreEqual(Instant.FromUnixTimeSeconds(123), userAfterUpdate.SubscriptionUpdatedAt);
         }
     }
 }

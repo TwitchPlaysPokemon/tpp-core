@@ -54,6 +54,7 @@ namespace TPP.ArgsParsing.TypeParsers
             Type[] genericTypes)
         {
             var failures = new List<Failure>();
+            ArgsParseResult<AnyOrder>? mostSpecificSuccess = null;
             foreach (IList<int> permutationIndexes in Permutations(Enumerable.Range(0, genericTypes.Length).ToList()))
             {
                 ArgsParseResult<List<object>> parseResult = await _argsParser
@@ -62,6 +63,13 @@ namespace TPP.ArgsParsing.TypeParsers
                 {
                     Debug.Assert(parseResult.Failures.Any());
                     failures.AddRange(parseResult.Failures);
+                    continue;
+                }
+                if (mostSpecificSuccess != null &&
+                    mostSpecificSuccess.Value.SuccessResult!.Value.RemainingArgs.Count <=
+                    parseResult.SuccessResult.Value.RemainingArgs.Count)
+                {
+                    // if there already is an equally or more specific result, don't even bother processing this one
                     continue;
                 }
                 List<object> items = parseResult.SuccessResult.Value.Result;
@@ -86,11 +94,14 @@ namespace TPP.ArgsParsing.TypeParsers
                     .OrderBy(tpl => tpl.First)
                     .Select(tpl => tpl.Second)
                     .ToArray();
-                return ArgsParseResult<AnyOrder>.Success(
+                mostSpecificSuccess = ArgsParseResult<AnyOrder>.Success(
                     parseResult.Failures,
                     (AnyOrder)constructor.Invoke(itemsUnshuffled),
                     parseResult.SuccessResult.Value.RemainingArgs);
+                if (parseResult.SuccessResult.Value.RemainingArgs.Count == 0)
+                    break; // we won't get any better than this
             }
+            if (mostSpecificSuccess != null) return mostSpecificSuccess.Value;
             Debug.Assert(failures.Any());
             return ArgsParseResult<AnyOrder>.Failure(failures.ToImmutableList());
         }

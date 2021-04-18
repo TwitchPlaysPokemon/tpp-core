@@ -64,6 +64,11 @@ namespace TPP.Core.Commands.Definitions
                 Description = "Operators only: Transfer badges from one user to another user. " +
                               "Arguments: <gifter> <recipient> <pokemon> <number of badges>(Optional) <reason>"
             },
+            new Command("createbadge", CreateBadge)
+            {
+                Description = "Operators only: Create a badge for a user. " +
+                              "Arguments: <recipient> <pokemon> <number of badges>(Optional)"
+            },
         }.Select(cmd => cmd.WithCondition(
             canExecute: ctx => IsOperator(ctx.Message.User),
             ersatzResult: new CommandResult { Response = "Only operators can use that command" }));
@@ -98,8 +103,9 @@ namespace TPP.Core.Commands.Definitions
         private async Task<CommandResult> AdjustCurrency<T>(
             CommandContext context, IBank<User> bank, string currencyName) where T : ImplicitNumber
         {
-            (User user, T deltaObj, Optional<string> reason) =
-                await context.ParseArgs<AnyOrder<User, T, Optional<string>>>();
+            (User user, T deltaObj, ManyOf<string> reasonParts) =
+                await context.ParseArgs<AnyOrder<User, T, ManyOf<string>>>();
+            string reason = string.Join(' ', reasonParts.Values);
             int delta = deltaObj;
 
             var additionalData = new Dictionary<string, object?> { ["responsible_user"] = context.Message.User.Id };
@@ -116,7 +122,7 @@ namespace TPP.Core.Commands.Definitions
             }
             else
             {
-                if (!reason.IsPresent)
+                if (string.IsNullOrEmpty(reason))
                 {
                     return new CommandResult { Response = $"Must provide a reason for the {currencyName} adjustment" };
                 }
@@ -131,9 +137,14 @@ namespace TPP.Core.Commands.Definitions
 
         public async Task<CommandResult> TransferBadge(CommandContext context)
         {
-            (User gifter, (User recipient, PkmnSpecies species, Optional<PositiveInt> amountOpt), string reason) =
-                await context.ParseArgs<User, AnyOrder<User, PkmnSpecies, Optional<PositiveInt>>, string>();
+            (User gifter, (User recipient, PkmnSpecies species, Optional<PositiveInt> amountOpt),
+                    ManyOf<string> reasonParts) =
+                await context.ParseArgs<User, AnyOrder<User, PkmnSpecies, Optional<PositiveInt>>, ManyOf<string>>();
+            string reason = string.Join(' ', reasonParts.Values);
             int amount = amountOpt.Map(i => i.Number).OrElse(1);
+
+            if (string.IsNullOrEmpty(reason))
+                return new CommandResult { Response = "Must provide a reason" };
 
             if (gifter == context.Message.User)
                 return new CommandResult { Response = "Use the regular gift command if you're the gifter" };
@@ -167,6 +178,23 @@ namespace TPP.Core.Commands.Definitions
                     ? $"transferred {amount} {species} badges from {gifter.Name} to {recipient.Name}. Reason: {reason}"
                     : $"transferred a {species} badge from {gifter.Name} to {recipient.Name}. Reason: {reason}",
                 ResponseTarget = ResponseTarget.Chat
+            };
+        }
+
+        public async Task<CommandResult> CreateBadge(CommandContext context)
+        {
+            (User recipient, PkmnSpecies species, Optional<PositiveInt> amountOpt) =
+                await context.ParseArgs<AnyOrder<User, PkmnSpecies, Optional<PositiveInt>>>();
+            int amount = amountOpt.Map(i => i.Number).OrElse(1);
+
+            for (int i = 0; i < amount; i++)
+                await _badgeRepo.AddBadge(recipient.Id, species, Badge.BadgeSource.ManualCreation);
+
+            return new CommandResult
+            {
+                Response = amount > 1
+                    ? $"{amount} badges of species {species} created for user {recipient.Name}."
+                    : $"Badge of species {species} created for user {recipient.Name}."
             };
         }
     }

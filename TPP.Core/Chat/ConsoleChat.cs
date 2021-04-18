@@ -34,7 +34,7 @@ namespace TPP.Core.Chat
 
         public Task SendWhisper(User target, string message)
         {
-            Console.WriteLine($">{target}: {message}");
+            Console.WriteLine($">{target.Name}: {message}");
             return Task.CompletedTask;
         }
 
@@ -67,7 +67,11 @@ namespace TPP.Core.Chat
                     source = MessageSource.Whisper;
                 }
 
-                User user = await _userRepo.RecordUser(new UserInfo("console-" + simpleName, username, simpleName));
+                // re-use already existing users if they exist, otherwise it gets confusing when you want to impersonate
+                // an existing user and it creates a new user with the same name instead, breaking the expectation that
+                // usernames are unique.
+                User user = await _userRepo.FindBySimpleName(simpleName)
+                            ?? await _userRepo.RecordUser(new UserInfo("console-" + simpleName, username, simpleName));
                 IncomingMessage?.Invoke(this, new MessageEventArgs(new Message(user, line, source, string.Empty)));
             }
         }
@@ -77,7 +81,7 @@ namespace TPP.Core.Chat
             Task.Run(ReadInput).ContinueWith(task =>
             {
                 if (task.IsFaulted)
-                    _logger.LogError("console read task failed", task.Exception);
+                    _logger.LogError(task.Exception, "console read task failed");
                 else
                     _logger.LogInformation("console read task finished");
             });
