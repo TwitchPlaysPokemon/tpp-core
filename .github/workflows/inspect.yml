@@ -28,7 +28,7 @@ jobs:
         run: |
           changed_files=$(jq --raw-output 'join(";")' "${HOME}/files.json")
           echo "Changed files: $changed_files"
-          jb inspectcode --severity=WARNING --format=Json --output=_rs_inspections --include="$changed_files" tpp-core.sln
+          jb inspectcode --severity=WARNING --format=Json --output=_rs_inspections --include="$changed_files" tpp-core.sln || echo "ReSharper failed, likely because the filter resulted in no files being analyzed"
       - name: process resharper inspections
         run: |
           for filename in ./_rs_inspections/*.json; do
