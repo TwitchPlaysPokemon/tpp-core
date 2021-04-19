@@ -277,17 +277,9 @@ namespace TPP.Core.Commands.Definitions
             {
                 RegionInformation regionInformation = _pokedexModeRegions[mode];
                 ImmutableSortedDictionary<PkmnSpecies, int> ownedPokemons = (await _badgeRepo.CountByUserPerSpecies(user.Id));
-                int userOwnedRegionCount;
-                if (mode.Equals(PokedexModeNational))
-                {
-                    userOwnedRegionCount = ownedPokemons.Count(ownedPokemon =>
-                        ownedPokemon.Key.GetGeneration() != regionInformation.Generation);
-                }
-                else
-                {
-                    userOwnedRegionCount = ownedPokemons.Count(ownedPokemon =>
-                        ownedPokemon.Key.GetGeneration() == regionInformation.Generation);
-                }
+                int userOwnedRegionCount = mode.Equals(PokedexModeNational)
+                    ? ownedPokemons.Count(ownedPokemon => ownedPokemon.Key.GetGeneration() != regionInformation.Generation)
+                    : ownedPokemons.Count(ownedPokemon => ownedPokemon.Key.GetGeneration() == regionInformation.Generation);
                 return new CommandResult
                 {
                     Response = isSelf
