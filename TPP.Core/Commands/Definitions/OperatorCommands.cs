@@ -108,6 +108,11 @@ namespace TPP.Core.Commands.Definitions
             string reason = string.Join(' ', reasonParts.Values);
             int delta = deltaObj;
 
+            if (string.IsNullOrEmpty(reason))
+            {
+                return new CommandResult { Response = $"Must provide a reason for the {currencyName} adjustment" };
+            }
+
             var additionalData = new Dictionary<string, object?> { ["responsible_user"] = context.Message.User.Id };
             await bank.PerformTransaction(new Transaction<User>(
                 user, delta, TransactionType.ManualAdjustment, additionalData));
@@ -122,10 +127,6 @@ namespace TPP.Core.Commands.Definitions
             }
             else
             {
-                if (string.IsNullOrEmpty(reason))
-                {
-                    return new CommandResult { Response = $"Must provide a reason for the {currencyName} adjustment" };
-                }
                 await _messageSender.SendWhisper(user,
                     $"{context.Message.User.Name} adjusted your {currencyName} balance by {delta:+#;-#}. Reason: {reason}");
                 return new CommandResult
