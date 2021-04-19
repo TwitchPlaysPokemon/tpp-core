@@ -29,6 +29,5 @@ jobs:
           done
       - name: check code formatting
         run: |
-          dotnet format
-          git add .
-          git diff-index --quiet HEAD || { echo 'Please format your code using dotnet-format. See https://github.com/dotnet/format#installing-development-builds'; exit 1; }
+          dotnet format --check --report=_format_report.json
+          python .github/workflows/process_format_report.py
