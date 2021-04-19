@@ -37,5 +37,4 @@ jobs:
           fi
       - name: check code formatting
         run: |
-          dotnet format --check --report=_format_report.json
-          python .github/workflows/process_format_report.py
+          dotnet format --check --report=_format_report.json || python .github/workflows/process_format_report.py
