@@ -1,9 +1,9 @@
-name: format
+name: inspect
 
 on: [pull_request]
 
 jobs:
-  build:
+  inspect:
 
     runs-on: ubuntu-latest
 
@@ -13,13 +13,22 @@ jobs:
         with:
           dotnet-version: 5.0.x
       - uses: actions/checkout@v2
+      - name: install resharper
+        run: dotnet tool install -g JetBrains.ReSharper.GlobalTools
       - name: install dotnet-format
         # use development builds from azure for proper .NET 5 support
         run: dotnet tool install -g dotnet-format --version 5.0.152601 --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json
-      - name: Format code
+      - name: build solution before analysis
+        run: dotnet build
+      - name: run resharper
+        run: jb inspectcode --severity=WARNING --format=Json --output=_rs_inspections tpp-core.sln
+      - name: process resharper inspections
+        run: |
+          for filename in ./_rs_inspections/*.json; do
+            jq --raw-output '.problems[] | "::\(.problem_class.severity) file=\(.file),line=\(.line),col=\(.offset)::\(.description)"' "$filename"
+          done
+      - name: check code formatting
         run: |
           dotnet format
           git add .
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
           git diff-index --quiet HEAD || { echo 'Please format your code using dotnet-format. See https://github.com/dotnet/format#installing-development-builds'; exit 1; }
