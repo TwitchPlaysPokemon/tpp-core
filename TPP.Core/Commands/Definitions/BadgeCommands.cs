@@ -23,6 +23,7 @@ namespace TPP.Core.Commands.Definitions
         private const string PokedexModeMissing = "missing";
         private const string PokedexModeDupes = "dupes";
         private const string PokedexModeModes = "modes";
+        private const string PokedexModeNational = "national";
 
         public IEnumerable<Command> Commands => new[]
         {
@@ -87,7 +88,8 @@ namespace TPP.Core.Commands.Definitions
                 { "kalos", new RegionInformation(Generation.Gen6, _knownSpecies.Count(pokemon => pokemon.GetGeneration() == Generation.Gen6))},
                 { "alola", new RegionInformation(Generation.Gen7, _knownSpecies.Count(pokemon => pokemon.GetGeneration() == Generation.Gen7))},
                 { "galar", new RegionInformation(Generation.Gen8, _knownSpecies.Count(pokemon => pokemon.GetGeneration() == Generation.Gen8))},
-                { "fakemons", new RegionInformation(Generation.GenFake, _knownSpecies.Count(pokemon => pokemon.GetGeneration() == Generation.GenFake))}
+                { "fakemons", new RegionInformation(Generation.GenFake, _knownSpecies.Count(pokemon => pokemon.GetGeneration() == Generation.GenFake))},
+                { PokedexModeNational, new RegionInformation(Generation.GenFake, _knownSpecies.Count(pokemon => pokemon.GetGeneration() != Generation.GenFake))}
             };
         }
 
@@ -275,8 +277,9 @@ namespace TPP.Core.Commands.Definitions
             {
                 RegionInformation regionInformation = _pokedexModeRegions[mode];
                 ImmutableSortedDictionary<PkmnSpecies, int> ownedPokemons = (await _badgeRepo.CountByUserPerSpecies(user.Id));
-                int userOwnedRegionCount = ownedPokemons.Count(ownedPokemon =>
-                    ownedPokemon.Key.GetGeneration() == regionInformation.Generation);
+                int userOwnedRegionCount = mode.Equals(PokedexModeNational)
+                    ? ownedPokemons.Count(ownedPokemon => ownedPokemon.Key.GetGeneration() != regionInformation.Generation)
+                    : ownedPokemons.Count(ownedPokemon => ownedPokemon.Key.GetGeneration() == regionInformation.Generation);
                 return new CommandResult
                 {
                     Response = isSelf
