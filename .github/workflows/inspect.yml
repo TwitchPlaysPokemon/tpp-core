@@ -16,8 +16,7 @@ jobs:
       - name: install resharper
         run: dotnet tool install -g JetBrains.ReSharper.GlobalTools
       - name: install dotnet-format
-        # use development builds from azure for proper .NET 5 support
-        run: dotnet tool install -g dotnet-format --version 5.0.152601 --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json
+        run: dotnet tool install -g dotnet-format
       - name: build solution before analysis
         run: dotnet build
       - name: determine changed files
