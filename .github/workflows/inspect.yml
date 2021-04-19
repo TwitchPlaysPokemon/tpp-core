@@ -31,9 +31,11 @@ jobs:
           jb inspectcode --severity=WARNING --format=Json --output=_rs_inspections --include="$changed_files" tpp-core.sln || echo "ReSharper failed, likely because the filter resulted in no files being analyzed"
       - name: process resharper inspections
         run: |
-          for filename in ./_rs_inspections/*.json; do
-            jq --raw-output '.problems[] | "::\(.problem_class.severity) file=\(.file | gsub("\\\\";"/") | sub("\\$PROJECT_DIR\\$/";"")),line=\(.line),col=\(.offset)::\(.description)"' "$filename"
-          done
+          if [ -d "./_rs_inspections" ]; then
+            for filename in ./_rs_inspections/*.json; do
+              jq --raw-output '.problems[] | "::\(.problem_class.severity) file=\(.file | gsub("\\\\";"/") | sub("\\$PROJECT_DIR\\$/";"")),line=\(.line),col=\(.offset)::\(.description)"' "$filename"
+            done
+          fi
       - name: check code formatting
         run: |
           dotnet format --check --report=_format_report.json
