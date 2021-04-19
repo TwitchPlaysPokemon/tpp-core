@@ -149,18 +149,18 @@ namespace TPP.Core.Commands.Definitions
 
         public async Task<CommandResult> SelectBadge(CommandContext context)
         {
-            var species = await context.ParseArgs<PkmnSpecies>();
-            bool isOwned = await _badgeRepo.HasUserBadge(context.Message.User.Id, species);
-            if (!isOwned)
-            {
-                return new CommandResult { Response = $"{species} is not an owned badge." };
-            }
-            if (_whitelist != null && !_whitelist.Contains(species))
-            {
-                return new CommandResult { Response = $"Oi mate, you got a loicense for that there {species}?" };
-            }
-            await _userRepo.SetSelectedBadge(context.Message.User, species);
-            return new CommandResult { Response = $"{species} selected as badge." };
+        var species = await context.ParseArgs<PkmnSpecies>();
+        bool isOwned = await _badgeRepo.HasUserBadge(context.Message.User.Id, species);
+        if (!isOwned)
+        {
+            return new CommandResult { Response = $"{species} is not an owned badge." };
+        }
+        if (_whitelist != null && !_whitelist.Contains(species))
+        {
+            return new CommandResult { Response = $"Oi mate, you got a loicense for that there {species}?" };
+        }
+        await _userRepo.SetSelectedBadge(context.Message.User, species);
+        return new CommandResult { Response = $"{species} selected as badge." };
         }
 
         public async Task<CommandResult> Pokedex(CommandContext context)

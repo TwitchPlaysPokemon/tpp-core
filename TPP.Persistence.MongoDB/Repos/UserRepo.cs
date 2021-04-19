@@ -33,9 +33,7 @@ namespace TPP.Persistence.MongoDB.Repos
                 cm.MapProperty(u => u.LastActiveAt).SetElementName("last_active_at");
                 cm.MapProperty(u => u.LastMessageAt).SetElementName("last_message_at");
                 cm.MapProperty(u => u.Pokeyen).SetElementName("pokeyen");
-                cm.MapProperty(u => u.PokeyenHighScore).SetElementName("pokeyen_highscore")
-                    .SetDefaultValue(0L)
-                    .SetIgnoreIfDefault(true);
+                cm.MapProperty(u => u.PokeyenHighScore).SetElementName("pokeyen_highscore").SetDefaultValue(0L).SetIgnoreIfDefault(true);
                 cm.MapProperty(u => u.Tokens).SetElementName("tokens");
                 cm.MapProperty(u => u.ParticipationEmblems)
                     .SetElementName("participation")

@@ -153,8 +153,7 @@ namespace TPP.Inputting
         /// <param name="aliases">3-tuples of name, x-coordinate and y-coordinate</param>
         public InputParserBuilder AliasedTouchscreenInputs(params (string name, uint x, uint y)[] aliases)
         {
-            foreach ((string name, uint x, uint y) in aliases)
-            {
+            foreach ((string name, uint x, uint y) in aliases) {
                 AliasedTouchscreenInput(name, x, y);
             }
             return this;
