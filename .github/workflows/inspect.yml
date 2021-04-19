@@ -20,8 +20,15 @@ jobs:
         run: dotnet tool install -g dotnet-format --version 5.0.152601 --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json
       - name: build solution before analysis
         run: dotnet build
+      - name: determine changed files
+        uses: lots0logs/gh-action-get-changed-files@2.1.4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: run resharper
-        run: jb inspectcode --severity=WARNING --format=Json --output=_rs_inspections tpp-core.sln
+        run: |
+          changed_files=$(jq --raw-output 'join(";")' "${HOME}/files.json")
+          echo "Changed files: $changed_files"
+          jb inspectcode --severity=WARNING --format=Json --output=_rs_inspections --include="$changed_files" tpp-core.sln
       - name: process resharper inspections
         run: |
           for filename in ./_rs_inspections/*.json; do
