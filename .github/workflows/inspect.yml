@@ -25,7 +25,7 @@ jobs:
       - name: process resharper inspections
         run: |
           for filename in ./_rs_inspections/*.json; do
-            jq --raw-output '.problems[] | "::\(.problem_class.severity) file=\(.file),line=\(.line),col=\(.offset)::\(.description)"' "$filename"
+            jq --raw-output '.problems[] | "::\(.problem_class.severity) file=\(.file | sub("\\$PROJECT_DIR\\$/";"")),line=\(.line),col=\(.offset)::\(.description)"' "$filename"
           done
       - name: check code formatting
         run: |
