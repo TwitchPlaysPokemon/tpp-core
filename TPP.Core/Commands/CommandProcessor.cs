@@ -19,7 +19,7 @@ namespace TPP.Core.Commands
         /// <summary>
         /// maximum execution time for a command before a warning is logged.
         /// </summary>
-        private static readonly TimeSpan CommandWarnTimeLimit = TimeSpan.FromMilliseconds(50);
+        private static readonly TimeSpan CommandWarnTimeLimit = TimeSpan.FromMilliseconds(1000);
 
         private readonly ILogger<CommandProcessor> _logger;
         private readonly ICommandLogger _commandLogger;
@@ -100,7 +100,8 @@ namespace TPP.Core.Commands
             if (stopwatch.Elapsed >= CommandWarnTimeLimit)
             {
                 _logger.LogWarning(
-                    "Command '{Command}' took {Duration}ms to finish! User: {User}, Original text: {MessageText}",
+                    "Command '{Command}' took unusually long ({Duration}ms) to finish! " +
+                    "User: {User:l}, Original text: {MessageText}",
                     command.Name, stopwatch.ElapsedMilliseconds, message.User, message.MessageText);
             }
             return result;

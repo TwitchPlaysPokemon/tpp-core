@@ -1,4 +1,5 @@
 using NodaTime;
+using TPP.Common;
 
 namespace TPP.Persistence.Repos
 {
@@ -7,7 +8,7 @@ namespace TPP.Persistence.Repos
         public string Id { get; }
         public string TwitchDisplayName { get; }
         public string SimpleName { get; }
-        public string? Color { get; }
+        public HexColor? Color { get; }
         public bool FromMessage { get; }
         public Instant UpdatedAt { get; }
 
@@ -15,7 +16,7 @@ namespace TPP.Persistence.Repos
             string id,
             string twitchDisplayName,
             string simpleName,
-            string? color,
+            HexColor? color = null,
             bool fromMessage = false,
             Instant? updatedAt = null)
         {

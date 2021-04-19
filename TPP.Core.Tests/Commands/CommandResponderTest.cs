@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Moq;
 using NodaTime;
 using NUnit.Framework;
@@ -17,7 +18,7 @@ namespace TPP.Core.Tests.Commands
             lastMessageAt: null, pokeyen: 0, tokens: 0);
 
         [Test]
-        public void TestRespondToSource()
+        public async Task TestRespondToSource()
         {
             // given
             var messageSenderMock = new Mock<IMessageSender>();
@@ -27,9 +28,9 @@ namespace TPP.Core.Tests.Commands
             var whisperMessage = new Message(user, "message text", MessageSource.Whisper, string.Empty);
 
             // when
-            commandResponder.ProcessResponse(chatMessage,
+            await commandResponder.ProcessResponse(chatMessage,
                 new CommandResult { Response = "Chat response!", ResponseTarget = ResponseTarget.Source });
-            commandResponder.ProcessResponse(whisperMessage,
+            await commandResponder.ProcessResponse(whisperMessage,
                 new CommandResult { Response = "Whisper response!", ResponseTarget = ResponseTarget.Source });
 
             // then
@@ -38,7 +39,7 @@ namespace TPP.Core.Tests.Commands
         }
 
         [Test]
-        public void TestRespondFixed()
+        public async Task TestRespondFixed()
         {
             // given
             var messageSenderMock = new Mock<IMessageSender>();
@@ -48,13 +49,13 @@ namespace TPP.Core.Tests.Commands
             var whisperMessage = new Message(user, "message text", MessageSource.Whisper, string.Empty);
 
             // when
-            commandResponder.ProcessResponse(chatMessage,
+            await commandResponder.ProcessResponse(chatMessage,
                 new CommandResult { Response = "Chat response 1!", ResponseTarget = ResponseTarget.Chat });
-            commandResponder.ProcessResponse(whisperMessage,
+            await commandResponder.ProcessResponse(whisperMessage,
                 new CommandResult { Response = "Chat response 2!", ResponseTarget = ResponseTarget.Chat });
-            commandResponder.ProcessResponse(chatMessage,
+            await commandResponder.ProcessResponse(chatMessage,
                 new CommandResult { Response = "Whisper response 1!", ResponseTarget = ResponseTarget.Whisper });
-            commandResponder.ProcessResponse(whisperMessage,
+            await commandResponder.ProcessResponse(whisperMessage,
                 new CommandResult { Response = "Whisper response 2!", ResponseTarget = ResponseTarget.Whisper });
 
             // then
@@ -65,7 +66,7 @@ namespace TPP.Core.Tests.Commands
         }
 
         [Test]
-        public void TestWhisperIfLong()
+        public async Task TestWhisperIfLong()
         {
             // given
             var messageSenderMock = new Mock<IMessageSender>();
@@ -77,13 +78,13 @@ namespace TPP.Core.Tests.Commands
             var whisperMessageLong = new Message(user, "longer than 20 characters", MessageSource.Whisper, string.Empty);
 
             // when
-            commandResponder.ProcessResponse(chatMessageShort,
+            await commandResponder.ProcessResponse(chatMessageShort,
                 new CommandResult { Response = "Chat response!", ResponseTarget = ResponseTarget.WhisperIfLong });
-            commandResponder.ProcessResponse(chatMessageLong,
+            await commandResponder.ProcessResponse(chatMessageLong,
                 new CommandResult { Response = "Too long chat response!", ResponseTarget = ResponseTarget.WhisperIfLong });
-            commandResponder.ProcessResponse(whisperMessageShort,
+            await commandResponder.ProcessResponse(whisperMessageShort,
                 new CommandResult { Response = "Whisper response 1!", ResponseTarget = ResponseTarget.WhisperIfLong });
-            commandResponder.ProcessResponse(whisperMessageLong,
+            await commandResponder.ProcessResponse(whisperMessageLong,
                 new CommandResult { Response = "Whisper response 2!", ResponseTarget = ResponseTarget.WhisperIfLong });
 
             // then
@@ -94,7 +95,7 @@ namespace TPP.Core.Tests.Commands
         }
 
         [Test]
-        public void TestNoneIfChat()
+        public async Task TestNoneIfChat()
         {
             // given
             var messageSenderMock = new Mock<IMessageSender>();
@@ -104,9 +105,9 @@ namespace TPP.Core.Tests.Commands
             var whisperMessage = new Message(user, "message text", MessageSource.Whisper, string.Empty);
 
             // when
-            commandResponder.ProcessResponse(chatMessage,
+            await commandResponder.ProcessResponse(chatMessage,
                 new CommandResult { Response = "Chat response!", ResponseTarget = ResponseTarget.NoneIfChat });
-            commandResponder.ProcessResponse(whisperMessage,
+            await commandResponder.ProcessResponse(whisperMessage,
                 new CommandResult { Response = "Whisper response!", ResponseTarget = ResponseTarget.NoneIfChat });
 
             // then

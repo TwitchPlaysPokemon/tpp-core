@@ -46,6 +46,7 @@ Options:
 
         private static void Main(string[] argv)
         {
+            Console.OutputEncoding = Encoding.UTF8;
             IDictionary<string, ValueObject> args = new Docopt().Apply(Usage, argv, exit: true);
             string? mode = null;
             string modeConfigFilename = args["--mode-config"].ToString();

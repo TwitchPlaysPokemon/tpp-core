@@ -29,7 +29,10 @@ namespace TPP.Core.Modes
             RunmodeConfig runmodeConfig = configLoader();
             _logger = loggerFactory.CreateLogger<Runmode>();
             _stopToken = new StopToken();
-            _modeBase = new ModeBase(loggerFactory, baseConfig, _stopToken, ProcessMessage);
+            Setups.Databases repos = Setups.SetUpRepositories(baseConfig);
+            OverlayConnection overlayConnection;
+            (_broadcastServer, overlayConnection) = Setups.SetUpOverlayServer(loggerFactory);
+            _modeBase = new ModeBase(loggerFactory, repos, baseConfig, _stopToken, overlayConnection, ProcessMessage);
             _modeBase.InstallAdditionalCommand(new Command("reloadinputconfig", ctx =>
             {
                 ReloadConfig(configLoader().InputConfig);

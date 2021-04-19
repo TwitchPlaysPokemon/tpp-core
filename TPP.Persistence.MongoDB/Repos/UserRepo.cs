@@ -33,6 +33,9 @@ namespace TPP.Persistence.MongoDB.Repos
                 cm.MapProperty(u => u.LastActiveAt).SetElementName("last_active_at");
                 cm.MapProperty(u => u.LastMessageAt).SetElementName("last_message_at");
                 cm.MapProperty(u => u.Pokeyen).SetElementName("pokeyen");
+                cm.MapProperty(u => u.PokeyenHighScore).SetElementName("pokeyen_highscore")
+                    .SetDefaultValue(0L)
+                    .SetIgnoreIfDefault(true);
                 cm.MapProperty(u => u.Tokens).SetElementName("tokens");
                 cm.MapProperty(u => u.ParticipationEmblems)
                     .SetElementName("participation")
@@ -44,6 +47,14 @@ namespace TPP.Persistence.MongoDB.Repos
                 cm.MapProperty(u => u.GlowColor).SetElementName("secondary_color");
                 cm.MapProperty(u => u.GlowColorUnlocked).SetElementName("secondary_color_unlocked");
                 cm.MapProperty(u => u.PokeyenBetRank).SetElementName("pokeyen_bet_rank");
+                cm.MapProperty(u => u.IsSubscribed).SetElementName("subscriber");
+                cm.MapProperty(u => u.MonthsSubscribed).SetElementName("months_subscribed")
+                    // 0 instead of null in code, but may be omitted in the database
+                    .SetDefaultValue(0)
+                    .SetIgnoreIfDefault(true);
+                cm.MapProperty(u => u.SubscriptionTier).SetElementName("sub_plan");
+                cm.MapProperty(u => u.LoyaltyLeague).SetElementName("loyalty_tier");
+                cm.MapProperty(u => u.SubscriptionUpdatedAt).SetElementName("subscription_updated_at");
             });
         }
 
@@ -70,6 +81,7 @@ namespace TPP.Persistence.MongoDB.Repos
             Collection.Indexes.CreateMany(new[]
             {
                 new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.SimpleName)),
+                new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.TwitchDisplayName)),
                 new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.Pokeyen)),
                 new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.Tokens)),
             });
@@ -80,17 +92,22 @@ namespace TPP.Persistence.MongoDB.Repos
             UpdateDefinition<User> update = Builders<User>.Update
                 .Set(u => u.TwitchDisplayName, userInfo.TwitchDisplayName)
                 .Set(u => u.SimpleName, userInfo.SimpleName)
-                .Set(u => u.Color, userInfo.Color)
                 .Set(u => u.LastActiveAt, userInfo.UpdatedAt);
+            if (userInfo.Color != null)
+            {
+                update = update.Set(u => u.Color, userInfo.Color.StringWithoutHash);
+            }
             if (userInfo.FromMessage)
             {
                 update = update.Set(u => u.LastMessageAt, userInfo.UpdatedAt);
             }
+
             async Task<User?> UpdateExistingUser() => await Collection.FindOneAndUpdateAsync<User>(
                 filter: u => u.Id == userInfo.Id,
                 update: update,
                 options: new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After, IsUpsert = false }
             );
+
             User? user = await UpdateExistingUser();
             if (user != null)
             {
@@ -104,7 +121,7 @@ namespace TPP.Persistence.MongoDB.Repos
                 name: userInfo.SimpleName,
                 twitchDisplayName: userInfo.TwitchDisplayName,
                 simpleName: userInfo.SimpleName,
-                color: userInfo.Color,
+                color: userInfo.Color?.StringWithoutHash,
                 firstActiveAt: userInfo.UpdatedAt,
                 lastActiveAt: userInfo.UpdatedAt,
                 lastMessageAt: userInfo.FromMessage ? userInfo.UpdatedAt : (Instant?)null,
@@ -129,6 +146,12 @@ namespace TPP.Persistence.MongoDB.Repos
         public async Task<User?> FindBySimpleName(string simpleName) =>
             await Collection.Find(u => u.SimpleName == simpleName).FirstOrDefaultAsync();
 
+        public async Task<User?> FindByDisplayName(string displayName) =>
+            await Collection.Find(u => u.TwitchDisplayName == displayName).FirstOrDefaultAsync();
+
+        public async Task<List<User>> FindAllByPokeyenUnder(long yen) =>
+            await Collection.Find(u => u.Pokeyen < yen).ToListAsync();
+
         private async Task<User> UpdateField<T>(User user, Expression<Func<User, T>> field, T value) =>
             await Collection.FindOneAndUpdateAsync<User>(
                 filter: u => u.Id == user.Id,
@@ -150,5 +173,32 @@ namespace TPP.Persistence.MongoDB.Repos
 
         public Task<User> SetDisplayName(User user, string displayName) =>
             UpdateField(user, u => u.Name, displayName);
+
+        public async Task<bool> UnselectBadgeIfSpeciesSelected(string userId, PkmnSpecies species) =>
+            await Collection.FindOneAndUpdateAsync<User>(
+                filter: u => u.Id == userId && u.SelectedBadge == species,
+                update: Builders<User>.Update.Set(u => u.SelectedBadge, null),
+                options: new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After, IsUpsert = false })
+            != null;
+
+        public Task<User> SetIsSubscribed(User user, bool isSubscribed) =>
+            UpdateField(user, u => u.IsSubscribed, isSubscribed);
+
+        public async Task<User> SetSubscriptionInfo(User user,
+            int monthsSubscribed, SubscriptionTier tier, int loyaltyLeague, Instant? subscriptionUpdatedAt)
+            =>
+                await Collection.FindOneAndUpdateAsync<User>(
+                    filter: u => u.Id == user.Id,
+                    update: Builders<User>.Update
+                        .Set(u => u.MonthsSubscribed, monthsSubscribed)
+                        .Set(u => u.SubscriptionTier, tier)
+                        .Set(u => u.LoyaltyLeague, loyaltyLeague)
+                        .Set(u => u.SubscriptionUpdatedAt, subscriptionUpdatedAt),
+                    options: new FindOneAndUpdateOptions<User>
+                    {
+                        ReturnDocument = ReturnDocument.After,
+                        IsUpsert = false
+                    })
+                ?? throw new ArgumentException($"user {user} does not exist");
     }
 }

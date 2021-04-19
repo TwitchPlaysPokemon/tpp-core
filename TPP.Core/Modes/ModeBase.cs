@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,15 +10,16 @@ using TPP.Core.Chat;
 using TPP.Core.Commands;
 using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
+using TPP.Core.Overlay;
 using TPP.Persistence.Repos;
 
 namespace TPP.Core.Modes
 {
     public sealed class ModeBase : IDisposable
     {
-        private readonly CommandProcessor _commandProcessor;
-        private readonly IChat _chat;
-        private readonly ICommandResponder _commandResponder;
+        private readonly IImmutableDictionary<string, IChat> _chats;
+        private readonly IImmutableDictionary<string, ICommandResponder> _commandResponders;
+        private readonly IImmutableDictionary<string, CommandProcessor> _commandProcessors;
         private readonly IMessagequeueRepo _messagequeueRepo;
         private readonly bool _forwardUnprocessedMessages;
         private readonly IMessagelogRepo _messagelogRepo;
@@ -30,23 +32,36 @@ namespace TPP.Core.Modes
 
         public ModeBase(
             ILoggerFactory loggerFactory,
+            Setups.Databases repos,
             BaseConfig baseConfig,
             StopToken stopToken,
+            OverlayConnection overlayConnection,
             ProcessMessage? processMessage = null)
         {
             PokedexData pokedexData = PokedexData.Load();
-            Setups.Databases repos = Setups.SetUpRepositories(baseConfig);
             ArgsParser argsParser = Setups.SetUpArgsParser(repos.UserRepo, pokedexData);
             _processMessage = processMessage ?? (_ => Task.FromResult(false));
 
-            TwitchChat twitchChat = new(loggerFactory, SystemClock.Instance, baseConfig.Chat, repos.UserRepo);
-            _chat = twitchChat;
-            _chat.IncomingMessage += MessageReceived;
-            _chat.IncomingUnhandledIrcLine += UnhandledIrcLineReceived;
-            _commandResponder = new CommandResponder(_chat);
-
-            _commandProcessor = Setups.SetUpCommandProcessor(
-                loggerFactory, argsParser, repos, stopToken, baseConfig.Chat, twitchChat);
+            var chats = new Dictionary<string, IChat>();
+            var chatFactory = new ChatFactory(loggerFactory, SystemClock.Instance,
+                repos.UserRepo, repos.TokensBank, repos.SubscriptionLogRepo, repos.LinkedAccountRepo,
+                overlayConnection);
+            foreach (ConnectionConfig connectorConfig in baseConfig.Chat.Connections)
+            {
+                IChat chat = chatFactory.Create(connectorConfig);
+                if (chats.ContainsKey(chat.Name))
+                    throw new ArgumentException($"chat name '{chat.Name}' was used multiple times. It must be unique.");
+                chats[chat.Name] = chat;
+            }
+            _chats = chats.ToImmutableDictionary();
+            foreach (IChat chat in _chats.Values)
+                chat.IncomingMessage += MessageReceived;
+            _commandResponders = _chats.Values.ToImmutableDictionary(
+                c => c.Name,
+                c => (ICommandResponder)new CommandResponder(c));
+            _commandProcessors = _chats.Values.ToImmutableDictionary(
+                c => c.Name,
+                c => Setups.SetUpCommandProcessor(loggerFactory, argsParser, repos, stopToken, baseConfig.Chat, c, c, pokedexData.KnownSpecies));
 
             _messagequeueRepo = repos.MessagequeueRepo;
             _messagelogRepo = repos.MessagelogRepo;
@@ -56,24 +71,20 @@ namespace TPP.Core.Modes
 
         public void InstallAdditionalCommand(Command command)
         {
-            _commandProcessor.InstallCommand(command);
+            foreach (CommandProcessor commandProcessor in _commandProcessors.Values)
+                commandProcessor.InstallCommand(command);
         }
 
         private async void MessageReceived(object? sender, MessageEventArgs e) =>
-            await ProcessIncomingMessage(e.Message);
+            await ProcessIncomingMessage((IChat)sender!, e.Message);
 
-        private async void UnhandledIrcLineReceived(object? sender, string unhandledIrcLine)
-        {
-            if (_forwardUnprocessedMessages)
-                await _messagequeueRepo.EnqueueMessage(unhandledIrcLine);
-        }
-
-        private async Task ProcessIncomingMessage(Message message)
+        private async Task ProcessIncomingMessage(IChat chat, Message message)
         {
             await _messagelogRepo.LogChat(
                 message.User.Id, message.RawIrcMessage, message.MessageText, _clock.GetCurrentInstant());
 
-            string[] parts = message.MessageText.Split(" ");
+            List<string> parts = message.MessageText.Split(" ")
+                .Where(s => !string.IsNullOrEmpty(s)).ToList();
             string? firstPart = parts.FirstOrDefault();
             string? commandName = firstPart switch
             {
@@ -87,16 +98,16 @@ namespace TPP.Core.Modes
             bool wasProcessed = false;
             if (commandName != null)
             {
-                CommandResult? result = await _commandProcessor
+                CommandResult? result = await _commandProcessors[chat.Name]
                     .Process(commandName, parts.Skip(1).ToImmutableList(), message);
                 if (result != null)
                 {
-                    await _commandResponder.ProcessResponse(message, result);
+                    await _commandResponders[chat.Name].ProcessResponse(message, result);
                     wasProcessed = true;
                 }
                 else if (!_forwardUnprocessedMessages)
                 {
-                    await _commandResponder.ProcessResponse(message, new CommandResult
+                    await _commandResponders[chat.Name].ProcessResponse(message, new CommandResult
                     {
                         Response = $"unknown command '{commandName}'",
                         ResponseTarget = ResponseTarget.Whisper
@@ -113,14 +124,17 @@ namespace TPP.Core.Modes
 
         public void Start()
         {
-            _chat.Connect();
+            foreach (IChat chat in _chats.Values)
+                chat.Connect();
         }
 
         public void Dispose()
         {
-            _chat.Dispose();
-            _chat.IncomingMessage -= MessageReceived;
-            _chat.IncomingUnhandledIrcLine -= UnhandledIrcLineReceived;
+            foreach (IChat chat in _chats.Values)
+            {
+                chat.Dispose();
+                chat.IncomingMessage -= MessageReceived;
+            }
         }
     }
 }

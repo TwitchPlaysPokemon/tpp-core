@@ -43,6 +43,11 @@ namespace TPP.Persistence.Models
         /// </summary>
         public Instant CreatedAt { get; init; }
 
+        /// If this badge is on sale, for how much.
+        public long? SellPrice { get; init; }
+        /// If this badge is on sale, since when.
+        public Instant? SellingSince { get; init; }
+
         public Badge(
             string id,
             string? userId,

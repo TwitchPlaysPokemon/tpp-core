@@ -26,12 +26,13 @@ namespace TPP.ArgsParsing.TypeParsers
 
         public override async Task<ArgsParseResult<User>> Parse(IImmutableList<string> args, Type[] genericTypes)
         {
-            string simpleName = args[0].ToLower();
-            bool isPrefixed = simpleName.StartsWith('@');
-            if (isPrefixed) simpleName = simpleName.Substring(1);
-            User? user = await _userRepo.FindBySimpleName(simpleName);
+            string displayName = args[0];
+            bool isPrefixed = displayName.StartsWith('@');
+            if (isPrefixed) displayName = displayName.Substring(1);
+            User? user = await _userRepo.FindByDisplayName(displayName);
+            user ??= await _userRepo.FindBySimpleName(displayName.ToLower());
             return user == null
-                ? ArgsParseResult<User>.Failure($"did not recognize a user with the name '{simpleName}'",
+                ? ArgsParseResult<User>.Failure($"did not recognize a user with the name '{displayName}'",
                     isPrefixed ? ErrorRelevanceConfidence.Likely : ErrorRelevanceConfidence.Default)
                 : ArgsParseResult<User>.Success(user, args.Skip(1).ToImmutableList());
         }
