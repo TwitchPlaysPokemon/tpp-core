@@ -13,12 +13,12 @@ namespace TPP.Inputting.Tests
         {
             // given
             const float targetDurationSeconds = 5f;
-            var inputScheduler = new InputBufferQueue<int>(
-                bufferLengthSeconds: targetDurationSeconds,
-                speedupRate: 1f,
-                slowdownRate: 1f,
-                minInputDuration: 0f,
-                maxInputDuration: 999f);
+            var inputScheduler = new InputBufferQueue<int>(new InputBufferQueue<int>.Config(
+                BufferLengthSeconds: targetDurationSeconds,
+                SpeedupRate: 1f,
+                SlowdownRate: 1f,
+                MinInputDuration: 0f,
+                MaxInputDuration: 999f));
 
             // when: for every input dequeued another one gets queued
             inputScheduler.Enqueue(1);
@@ -46,12 +46,12 @@ namespace TPP.Inputting.Tests
             // given
             const float targetDurationSeconds = 3f;
             const float inputsPerSecond = 5f;
-            var inputScheduler = new InputBufferQueue<int>(
-                bufferLengthSeconds: targetDurationSeconds,
-                speedupRate: 1f,
-                slowdownRate: 1f,
-                minInputDuration: 0f,
-                maxInputDuration: 999f);
+            var inputScheduler = new InputBufferQueue<int>(new InputBufferQueue<int>.Config(
+                BufferLengthSeconds: targetDurationSeconds,
+                SpeedupRate: 1f,
+                SlowdownRate: 1f,
+                MinInputDuration: 0f,
+                MaxInputDuration: 999f));
             for (int i = 0; i < targetDurationSeconds * inputsPerSecond; i++)
             {
                 inputScheduler.Enqueue(i);
@@ -72,12 +72,12 @@ namespace TPP.Inputting.Tests
         {
             // given
             const float targetDurationSeconds = 5f;
-            var inputScheduler = new InputBufferQueue<int>(
-                bufferLengthSeconds: targetDurationSeconds,
-                speedupRate: 1f,
-                slowdownRate: 1f,
-                minInputDuration: 0f,
-                maxInputDuration: 999f);
+            var inputScheduler = new InputBufferQueue<int>(new InputBufferQueue<int>.Config(
+                BufferLengthSeconds: targetDurationSeconds,
+                SpeedupRate: 1f,
+                SlowdownRate: 1f,
+                MinInputDuration: 0f,
+                MaxInputDuration: 999f));
 
             // when: more items are being queued than dequeued
             inputScheduler.Enqueue(1);
@@ -105,12 +105,12 @@ namespace TPP.Inputting.Tests
         {
             // given
             const float targetDurationSeconds = 5f;
-            var inputScheduler = new InputBufferQueue<int>(
-                bufferLengthSeconds: targetDurationSeconds,
-                speedupRate: 1f,
-                slowdownRate: 1f,
-                minInputDuration: 0f,
-                maxInputDuration: 999f);
+            var inputScheduler = new InputBufferQueue<int>(new InputBufferQueue<int>.Config(
+                BufferLengthSeconds: targetDurationSeconds,
+                SpeedupRate: 1f,
+                SlowdownRate: 1f,
+                MinInputDuration: 0f,
+                MaxInputDuration: 999f));
 
             // when: fewer items are being queued than dequeued
             inputScheduler.Enqueue(1);
@@ -140,12 +140,12 @@ namespace TPP.Inputting.Tests
         {
             // given
             const float targetDurationSeconds = 5f;
-            var inputScheduler = new InputBufferQueue<int>(
-                bufferLengthSeconds: targetDurationSeconds,
-                speedupRate: 0.5f,
-                slowdownRate: 1.0f,
-                minInputDuration: 0f,
-                maxInputDuration: 999f);
+            var inputScheduler = new InputBufferQueue<int>(new InputBufferQueue<int>.Config(
+                BufferLengthSeconds: targetDurationSeconds,
+                SpeedupRate: 0.5f,
+                SlowdownRate: 1.0f,
+                MinInputDuration: 0f,
+                MaxInputDuration: 999f));
 
             // when: items are being queued and dequeued
             inputScheduler.Enqueue(1);
@@ -170,6 +170,19 @@ namespace TPP.Inputting.Tests
             Assert.AreEqual(targetDurationSeconds * (0.5f + 0.5f / 4), t4);
             Assert.AreEqual(targetDurationSeconds * (0.5f + 0.5f / 8), t5);
             Assert.AreEqual(targetDurationSeconds * (0.5f + 0.5f / 16), t6);
+        }
+
+        [Test]
+        public void TestMaxCapacity()
+        {
+            var inputScheduler = new InputBufferQueue<int>(new InputBufferQueue<int>.Config(MaxBufferLength: 2));
+            Assert.IsTrue(inputScheduler.Enqueue(1));
+            Assert.IsTrue(inputScheduler.Enqueue(2));
+            Assert.IsFalse(inputScheduler.Enqueue(3));
+
+            Assert.AreEqual(1, inputScheduler.Dequeue().Item1);
+            Assert.AreEqual(2, inputScheduler.Dequeue().Item1);
+            Assert.IsTrue(inputScheduler.IsEmpty);
         }
     }
 }

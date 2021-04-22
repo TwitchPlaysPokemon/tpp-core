@@ -24,13 +24,23 @@ namespace TPP.Core.Modes
         private readonly bool _forwardUnprocessedMessages;
         private readonly IMessagelogRepo _messagelogRepo;
         private readonly IClock _clock;
+        private readonly ProcessMessage _processMessage;
+
+        /// Processes a message that wasn't already processed by the mode base,
+        /// and returns whether the message was actively processed.
+        public delegate Task<bool> ProcessMessage(Message message);
 
         public ModeBase(
-            ILoggerFactory loggerFactory, Setups.Databases repos, BaseConfig baseConfig, StopToken stopToken,
-            OverlayConnection overlayConnection)
+            ILoggerFactory loggerFactory,
+            Setups.Databases repos,
+            BaseConfig baseConfig,
+            StopToken stopToken,
+            OverlayConnection overlayConnection,
+            ProcessMessage? processMessage = null)
         {
             PokedexData pokedexData = PokedexData.Load();
             ArgsParser argsParser = Setups.SetUpArgsParser(repos.UserRepo, pokedexData);
+            _processMessage = processMessage ?? (_ => Task.FromResult(false));
 
             var chats = new Dictionary<string, IChat>();
             var chatFactory = new ChatFactory(loggerFactory, SystemClock.Instance,
@@ -105,6 +115,7 @@ namespace TPP.Core.Modes
                     wasProcessed = true;
                 }
             }
+            wasProcessed |= await _processMessage(message);
             if (!wasProcessed && _forwardUnprocessedMessages)
             {
                 await _messagequeueRepo.EnqueueMessage(message.RawIrcMessage);

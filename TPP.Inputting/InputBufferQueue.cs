@@ -13,57 +13,57 @@ namespace TPP.Inputting
     /// </summary>
     public class InputBufferQueue<T>
     {
+        /// <summary>
+        /// The queue's configuration.
+        /// </summary>
+        /// <param name="BufferLengthSeconds">Duration in seconds the buffer queue aims to buffer inputs for.
+        /// E.g. if it is set to 3 seconds and inputs get enqueued and dequeued at a constant rate of 5 per second,
+        /// the queue will stabilize at 15 items.</param>
+        /// <param name="SpeedupRate">The rate at which input speed can increase,
+        /// as a percentage from 0 to 1 with 1 being instantaneous.</param>
+        /// <param name="SlowdownRate">The rate at which input speed can decrease,
+        /// as a percentage from 0 to 1 with 1 being instantaneous.</param>
+        /// <param name="MinInputDuration">The minimum duration a single input can have, in seconds.</param>
+        /// <param name="MaxInputDuration">The maximum duration a single input can have, in seconds.</param>
+        /// <param name="MaxBufferLength">Maximum number of queued inputs before new incoming inputs are discarded.
+        /// Prevents the queue from growing unbounded if inputs aren't dequeued fast enough for some reason.</param>
+        public sealed record Config(
+            float BufferLengthSeconds = 3f,
+            float SpeedupRate = 0.2f,
+            float SlowdownRate = 1f,
+            float MinInputDuration = 1 / 60f,
+            float MaxInputDuration = 100 / 60f,
+            int MaxBufferLength = 1000);
+
         private readonly Queue<T> _queue = new Queue<T>();
 
-        private readonly float _bufferLengthSeconds;
-        private readonly float _speedupRate;
-        private readonly float _slowdownRate;
-        private readonly float _minInputDuration;
-        private readonly float _maxInputDuration;
+        private Config _config;
 
         private float _prevInputDuration;
 
-        private Queue<TaskCompletionSource<(T, float)>> _awaitedDequeueings =
-            new Queue<TaskCompletionSource<(T, float)>>();
+        private readonly Queue<TaskCompletionSource<(T, float)>> _awaitedDequeueings = new();
 
-        /// <summary>
-        /// Create a new buffer for the given settings.
-        /// </summary>
-        /// <param name="bufferLengthSeconds">Duration in seconds the buffer queue aims to buffer inputs for.
-        /// E.g. if it is set to 3 seconds and inputs get enqueued and dequeued at a constant rate of 5 per second,
-        /// the queue will stabilize at 15 items.</param>
-        /// <param name="speedupRate">The rate at which input speed can increase,
-        /// as a percentage from 0 to 1 with 1 being instantaneous.</param>
-        /// <param name="slowdownRate">The rate at which input speed can decrease,
-        /// as a percentage from 0 to 1 with 1 being instantaneous.</param>
-        /// <param name="minInputDuration">The minimum duration a single input can have, in seconds.</param>
-        /// <param name="maxInputDuration">The maximum duration a single input can have, in seconds.</param>
-        public InputBufferQueue(
-            float bufferLengthSeconds = 3f,
-            float speedupRate = 0.2f,
-            float slowdownRate = 1f,
-            float minInputDuration = 1 / 60f,
-            float maxInputDuration = 100 / 60f)
+        public InputBufferQueue(Config? config = null)
         {
-            _minInputDuration = minInputDuration;
-            _bufferLengthSeconds = bufferLengthSeconds;
-            _speedupRate = speedupRate;
-            _slowdownRate = slowdownRate;
-            _minInputDuration = minInputDuration;
-            _maxInputDuration = maxInputDuration;
-            _prevInputDuration = _bufferLengthSeconds;
+            _config = config ?? new Config();
+            _prevInputDuration = _config.BufferLengthSeconds;
+        }
+
+        public void SetNewConfig(Config config)
+        {
+            _config = config;
         }
 
         private float CalcInputDuration(float prevInputDuration)
         {
             // if the target duration is n seconds and we have m inputs, each input has a duration of n/m
-            float inputDuration = _bufferLengthSeconds / Math.Max(_queue.Count, 1);
+            float inputDuration = _config.BufferLengthSeconds / Math.Max(_queue.Count, 1);
             float delta = inputDuration - prevInputDuration;
             // smoothing. if delta > 0, time per input increased and therefore overall speed dropped
-            float rate = delta > 0 ? _slowdownRate : _speedupRate;
+            float rate = delta > 0 ? _config.SlowdownRate : _config.SpeedupRate;
             inputDuration = prevInputDuration + delta * rate;
             // clamp to min/max
-            inputDuration = Math.Clamp(inputDuration, min: _minInputDuration, max: _maxInputDuration);
+            inputDuration = Math.Clamp(inputDuration, min: _config.MinInputDuration, max: _config.MaxInputDuration);
             return inputDuration;
         }
 
@@ -71,13 +71,16 @@ namespace TPP.Inputting
         /// Enqueue a new input.
         /// </summary>
         /// <param name="value">The input to enqueue.</param>
-        public void Enqueue(T value)
+        /// <returns>If the input was enqueued. False if e.g. the queue is at maximum capacity.</returns>
+        public bool Enqueue(T value)
         {
+            if (_queue.Count >= _config.MaxBufferLength) return false;
             _queue.Enqueue(value);
             if (_awaitedDequeueings.TryDequeue(out TaskCompletionSource<(T, float)>? task))
             {
                 task.SetResult(Dequeue());
             }
+            return true;
         }
 
         /// <summary>
@@ -116,7 +119,7 @@ namespace TPP.Inputting
         public void Clear()
         {
             _queue.Clear();
-            _prevInputDuration = _bufferLengthSeconds;
+            _prevInputDuration = _config.BufferLengthSeconds;
             while (_awaitedDequeueings.Any())
             {
                 _awaitedDequeueings.Dequeue().SetCanceled();
