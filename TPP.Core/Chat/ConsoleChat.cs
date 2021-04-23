@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using TPP.Core.Configuration;
@@ -56,7 +57,7 @@ namespace TPP.Core.Chat
                 {
                     string[] split = line.Split(' ', count: 2);
                     username = split[0][1..];
-                    line = split[1];
+                    line = split.ElementAtOrDefault(1) ?? string.Empty;
                 }
                 string simpleName = username.ToLower();
 
