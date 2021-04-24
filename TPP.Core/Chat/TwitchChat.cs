@@ -283,6 +283,9 @@ namespace TPP.Core.Chat
             string messageText,
             MessageSource source)
         {
+            if (twitchLibMessage.Username == _twitchClient.TwitchUsername)
+                // new core sees messages posted by old core, but we don't want to process our own messages
+                return;
             string? colorHex = twitchLibMessage.ColorHex;
             User user = await _userRepo.RecordUser(new UserInfo(
                 id: twitchLibMessage.UserId,
