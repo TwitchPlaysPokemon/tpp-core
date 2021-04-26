@@ -1,5 +1,6 @@
 using NodaTime;
 using TPP.Common;
+using System.ComponentModel.DataAnnotations;
 
 namespace TPP.Persistence.Models
 {
@@ -43,6 +44,24 @@ namespace TPP.Persistence.Models
         /// </summary>
         public Instant CreatedAt { get; init; }
 
+        public enum BadgeForm
+        {
+            Normal,
+            Shiny,
+            Shadow,
+            Mega,
+            Alolan,
+            Galarian,
+            ShinyShadow,
+            ShinyMega,
+            ShinyAlolan,
+            ShinyGalarian
+        }
+        /// <summary>
+        /// What form of the pokemon this badge is.
+        /// </summary>
+        public BadgeForm Form { get; init; }
+
         /// If this badge is on sale, for how much.
         public long? SellPrice { get; init; }
         /// If this badge is on sale, since when.
@@ -53,13 +72,15 @@ namespace TPP.Persistence.Models
             string? userId,
             PkmnSpecies species,
             BadgeSource source,
-            Instant createdAt)
+            Instant createdAt,
+            BadgeForm form)
         {
             Id = id;
             UserId = userId;
             Species = species;
             Source = source;
             CreatedAt = createdAt;
+            Form = form;
         }
 
         public override string ToString() => $"Badge({Species}@{UserId ?? "<nobody>"})";

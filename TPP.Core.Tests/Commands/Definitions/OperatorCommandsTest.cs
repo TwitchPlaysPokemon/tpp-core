@@ -158,9 +158,9 @@ namespace TPP.Core.Tests.Commands.Definitions
                 _messageSenderMock.Object, _badgeRepoMock.Object);
             _userRepoMock.Setup(repo => repo.FindBySimpleName("gifter")).Returns(Task.FromResult((User?)gifter));
             _userRepoMock.Setup(repo => repo.FindBySimpleName("recipient")).Returns(Task.FromResult((User?)recipient));
-            Badge badge1 = new("badge1", gifter.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue);
-            Badge badge2 = new("badge2", gifter.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue);
-            Badge badge3 = new("badge3", gifter.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue);
+            Badge badge1 = new("badge1", gifter.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue, Badge.BadgeForm.Normal);
+            Badge badge2 = new("badge2", gifter.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue, Badge.BadgeForm.Normal);
+            Badge badge3 = new("badge3", gifter.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue, Badge.BadgeForm.Normal);
             _badgeRepoMock.Setup(repo => repo.FindByUserAndSpecies(gifter.Id, species))
                 .Returns(Task.FromResult(new List<Badge> { badge1, badge2, badge3, }));
 
@@ -256,10 +256,10 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await operatorCommands.CreateBadge(new CommandContext(MockMessage(user),
                 ImmutableList.Create("recipient", "species", "123"), _argsParser));
 
-            Assert.AreEqual("123 badges of species #001 Species created for user Recipient.", result.Response);
+            Assert.AreEqual("123 Normal #001 Species badges created for Recipient.", result.Response);
             Assert.AreEqual(ResponseTarget.Source, result.ResponseTarget);
             _badgeRepoMock.Verify(repo =>
-                    repo.AddBadge(recipient.Id, species, Badge.BadgeSource.ManualCreation, null),
+                    repo.AddBadge(recipient.Id, species, Badge.BadgeSource.ManualCreation, Badge.BadgeForm.Normal, null),
                 Times.Exactly(123));
         }
     }
