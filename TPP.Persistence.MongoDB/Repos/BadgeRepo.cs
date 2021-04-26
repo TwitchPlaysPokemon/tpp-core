@@ -36,6 +36,7 @@ namespace TPP.Persistence.MongoDB.Repos
                 cm.MapProperty(b => b.Species).SetElementName("species");
                 cm.MapProperty(b => b.Source).SetElementName("source");
                 cm.MapProperty(b => b.CreatedAt).SetElementName("created_at");
+                cm.MapProperty(b => b.Form).SetElementName("form");
                 cm.MapProperty(b => b.SellPrice).SetElementName("sell_price")
                     .SetIgnoreIfNull(true);
                 cm.MapProperty(b => b.SellingSince).SetElementName("selling_since")
@@ -64,14 +65,15 @@ namespace TPP.Persistence.MongoDB.Repos
         }
 
         public async Task<Badge> AddBadge(
-            string? userId, PkmnSpecies species, Badge.BadgeSource source, Instant? createdAt = null)
+            string? userId, PkmnSpecies species, Badge.BadgeSource source, Badge.BadgeForm form, Instant? createdAt = null)
         {
             var badge = new Badge(
                 id: string.Empty,
                 userId: userId,
                 species: species,
                 source: source,
-                createdAt: createdAt ?? _clock.GetCurrentInstant()
+                createdAt: createdAt ?? _clock.GetCurrentInstant(),
+                form: form
             );
             await Collection.InsertOneAsync(badge);
             Debug.Assert(badge.Id.Length > 0, "The MongoDB driver injected a generated ID");

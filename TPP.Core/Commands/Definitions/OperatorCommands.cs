@@ -183,18 +183,19 @@ namespace TPP.Core.Commands.Definitions
 
         public async Task<CommandResult> CreateBadge(CommandContext context)
         {
-            (User recipient, PkmnSpecies species, Optional<PositiveInt> amountOpt) =
-                await context.ParseArgs<AnyOrder<User, PkmnSpecies, Optional<PositiveInt>>>();
+            (User recipient, PkmnSpecies species, Optional<PositiveInt> amountOpt, Optional<Badge.BadgeForm> formOpt) =
+                await context.ParseArgs<AnyOrder<User, PkmnSpecies, Optional<PositiveInt>, Optional<Badge.BadgeForm>>>();
             int amount = amountOpt.Map(i => i.Number).OrElse(1);
+            Badge.BadgeForm form = formOpt.IsPresent ? formOpt.Value : Badge.BadgeForm.Normal;
 
             for (int i = 0; i < amount; i++)
-                await _badgeRepo.AddBadge(recipient.Id, species, Badge.BadgeSource.ManualCreation);
+                await _badgeRepo.AddBadge(recipient.Id, species, Badge.BadgeSource.ManualCreation, form);
 
             return new CommandResult
             {
                 Response = amount > 1
-                    ? $"{amount} badges of species {species} created for user {recipient.Name}."
-                    : $"Badge of species {species} created for user {recipient.Name}."
+                    ? $"{amount} {form} {species} badges created for {recipient.Name}."
+                    : $"{form} {species} badge created for {recipient.Name}."
             };
         }
     }

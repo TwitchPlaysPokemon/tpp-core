@@ -264,9 +264,9 @@ namespace TPP.Core.Tests.Commands.Definitions
             User user = MockUser("MockUser");
             User recipient = MockUser("Recipient");
             _userRepoMock.Setup(repo => repo.FindBySimpleName("recipient")).Returns(Task.FromResult((User?)recipient));
-            Badge badge1 = new("badge1", user.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue);
-            Badge badge2 = new("badge2", user.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue);
-            Badge badge3 = new("badge3", user.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue);
+            Badge badge1 = new("badge1", user.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue, Badge.BadgeForm.Normal);
+            Badge badge2 = new("badge2", user.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue, Badge.BadgeForm.Normal);
+            Badge badge3 = new("badge3", user.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue, Badge.BadgeForm.Normal);
             _badgeRepoMock.Setup(repo => repo.FindByUserAndSpecies(user.Id, species))
                 .Returns(Task.FromResult(new List<Badge> { badge1, badge2, badge3, }));
 
