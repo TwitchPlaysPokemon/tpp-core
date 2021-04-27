@@ -48,7 +48,7 @@ namespace TPP.Core.Commands.Definitions
             new Command("giftbadge", GiftBadge)
             {
                 Description =
-                    "Gift a badge you own to another user with no price. Arguments: <pokemon> <number of badges>(Optional) <username>"
+                    "Gift a badge you own to another user with no price. Arguments: <pokemon> <number of badges>(Optional) <username>" //TODO also update this before merge
             },
         };
 
@@ -271,15 +271,18 @@ namespace TPP.Core.Commands.Definitions
         public async Task<CommandResult> GiftBadge(CommandContext context)
         {
             User gifter = context.Message.User;
-            (User recipient, PkmnSpecies species, Optional<PositiveInt> amountOpt) =
-                await context.ParseArgs<AnyOrder<User, PkmnSpecies, Optional<PositiveInt>>>();
+            (User recipient, PkmnSpecies species, Optional<PositiveInt> amountOpt, Optional<Badge.BadgeForm> formOpt, Optional<Badge.BadgeSource> sourceOpt) =
+                await context.ParseArgs<AnyOrder<User, PkmnSpecies, Optional<PositiveInt>, Optional<Badge.BadgeForm>, Optional<Badge.BadgeSource>>>();
             int amount = amountOpt.Map(i => i.Number).OrElse(1);
+            Badge.BadgeForm? form = formOpt.IsPresent ? formOpt.Value : null;
+            Badge.BadgeSource? source = sourceOpt.IsPresent ? sourceOpt.Value : null;
 
             if (recipient == gifter)
                 return new CommandResult { Response = "You cannot gift to yourself" };
 
-            List<Badge> badges = await _badgeRepo.FindByUserAndSpecies(gifter.Id, species);
+            List<Badge> badges = await _badgeRepo.FindAllByCustom(gifter.Id, species, form, source);
             if (badges.Count < amount)
+                //TODO big improve before merge
                 return new CommandResult
                 {
                     Response = $"You tried to gift {amount} {species} badges, but you only have {badges.Count}."

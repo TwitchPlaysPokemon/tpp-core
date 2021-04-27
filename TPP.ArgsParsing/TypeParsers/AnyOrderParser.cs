@@ -78,6 +78,7 @@ namespace TPP.ArgsParsing.TypeParsers
                     2 => typeof(AnyOrder<,>),
                     3 => typeof(AnyOrder<,,>),
                     4 => typeof(AnyOrder<,,,>),
+                    5 => typeof(AnyOrder<,,,,>),
                     var num => throw new InvalidOperationException(
                         $"An implementation of {typeof(AnyOrder)} for {num} generic arguments " +
                         "needs to be implemented and wired up where this exception is thrown. " +

@@ -86,6 +86,23 @@ namespace TPP.Persistence.MongoDB.Repos
         public async Task<List<Badge>> FindByUserAndSpecies(string? userId, PkmnSpecies species) =>
             await Collection.Find(b => b.UserId == userId && b.Species == species).ToListAsync();
 
+        public async Task<List<Badge>> FindAllByCustom(string? userId = null, PkmnSpecies? species = null, Badge.BadgeForm? form = null, Badge.BadgeSource? source = null)
+        {
+            FilterDefinition<Badge> filter = Builders<Badge>.Filter.Empty;
+            if (userId != null)
+                filter &= Builders<Badge>.Filter.Eq(b => b.UserId, userId);
+            else
+                filter &= Builders<Badge>.Filter.Ne(b => b.UserId, null);
+            if (species != null)
+                filter &= Builders<Badge>.Filter.Eq(b => b.Species, species);
+            if (form != null)
+                filter &= Builders<Badge>.Filter.Eq(b=> b.Form, form);
+            if (source != null)
+                filter &= Builders<Badge>.Filter.Eq(b => b.Source, source);
+
+            return await Collection.Find(filter).ToListAsync();
+        }
+
         public async Task<long> CountByUserAndSpecies(string? userId, PkmnSpecies species) =>
             await Collection.CountDocumentsAsync(b => b.UserId == userId && b.Species == species);
 
