@@ -39,6 +39,7 @@ namespace TPP.Core
             argsParser.AddArgumentParser(new SignedTokensParser());
             argsParser.AddArgumentParser(new PkmnSpeciesParser(pokedexData.KnownSpecies, PokedexData.NormalizeName));
             argsParser.AddArgumentParser(new BadgeFormParser());
+            argsParser.AddArgumentParser(new BadgeSourceParser());
 
             argsParser.AddArgumentParser(new AnyOrderParser(argsParser));
             argsParser.AddArgumentParser(new OneOfParser(argsParser));
