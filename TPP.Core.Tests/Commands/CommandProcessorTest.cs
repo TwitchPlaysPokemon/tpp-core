@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -134,6 +135,28 @@ namespace TPP.Core.Tests.Commands
             var ex = Assert.Throws<ArgumentException>(() => commandProcessor
                 .InstallCommand(new Command("b", CommandUtils.StaticResponse("Hi!")) { Aliases = new[] { "x" } }));
             Assert.AreEqual("The command name 'b' conflicts with: a(b): <no description>", ex.Message);
+        }
+
+        [Test]
+        public async Task TestPermissions()
+        {
+            var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock.Object, new ArgsParser());
+            commandProcessor.InstallCommand(new Command("opsonly", CommandUtils.StaticResponse("you are an operator")).WithCondition(
+            canExecute: ctx => IsOperator(ctx.Message.User),
+            ersatzResult: new CommandResult { Response = "Only operators can use that command" }));
+            bool IsOperator(User user) =>
+                user.Roles.Contains(Role.Operator);
+            User op = new User(
+            id: Guid.NewGuid().ToString(),
+            name: "operator", twitchDisplayName: "operator", simpleName: "mockoperator", color: null,
+            firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
+            lastMessageAt: null, pokeyen: 0, tokens: 0, roles: new HashSet<Role> { Role.Operator });
+
+            CommandResult? userResult = await commandProcessor.Process("opsonly", _noArgs, new Message(_mockUser, "", MessageSource.Chat, ""));
+            Assert.AreEqual("Only operators can use that command", userResult?.Response);
+
+            CommandResult? opResult = await commandProcessor.Process("opsonly", _noArgs, new Message(op, "", MessageSource.Chat, ""));
+            Assert.AreEqual("you are an operator", opResult?.Response);
         }
     }
 }

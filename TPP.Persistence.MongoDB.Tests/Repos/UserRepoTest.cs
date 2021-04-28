@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Driver;
@@ -17,7 +18,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
         private UserRepo CreateUserRepo()
         {
             IMongoDatabase database = CreateTemporaryDatabase();
-            UserRepo userRepo = new UserRepo(database, 100, 1);
+            UserRepo userRepo = new UserRepo(database, 100, 1, ImmutableList<string>.Empty);
             Assert.AreEqual(expected: 0, actual: userRepo.Collection.CountDocuments(FilterDefinition<User>.Empty));
             return userRepo;
         }
@@ -194,7 +195,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
         {
             const long pokeyen = long.MaxValue - 123;
             const long tokens = long.MaxValue - 234;
-            var userRepo = new UserRepo(CreateTemporaryDatabase(), pokeyen, tokens);
+            var userRepo = new UserRepo(CreateTemporaryDatabase(), pokeyen, tokens, ImmutableList<string>.Empty);
 
             User userFromRecording = await userRepo.RecordUser(new UserInfo("123", "X", "x", null));
             Assert.AreEqual(pokeyen, userFromRecording.Pokeyen);
@@ -210,7 +211,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
         [Test]
         public async Task set_is_subscribed()
         {
-            IUserRepo userRepo = new UserRepo(CreateTemporaryDatabase(), 0, 0);
+            IUserRepo userRepo = new UserRepo(CreateTemporaryDatabase(), 0, 0, ImmutableList<string>.Empty);
 
             User userBeforeUpdate = await userRepo.RecordUser(new UserInfo("123", "X", "x"));
             Assert.IsFalse(userBeforeUpdate.IsSubscribed);
@@ -221,7 +222,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
         [Test]
         public async Task set_subscription_info()
         {
-            IUserRepo userRepo = new UserRepo(CreateTemporaryDatabase(), 0, 0);
+            IUserRepo userRepo = new UserRepo(CreateTemporaryDatabase(), 0, 0, ImmutableList<string>.Empty);
 
             User userBeforeUpdate = await userRepo.RecordUser(new UserInfo("123", "X", "x"));
             Assert.AreEqual(0, userBeforeUpdate.MonthsSubscribed);

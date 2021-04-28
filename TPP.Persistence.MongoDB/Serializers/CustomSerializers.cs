@@ -19,6 +19,7 @@ namespace TPP.Persistence.MongoDB.Serializers
             BsonSerializer.RegisterSerializer(InstantSerializer.Instance);
             BsonSerializer.RegisterSerializer(NullableInstantSerializer.Instance);
             BsonSerializer.RegisterSerializer(SubscriptionTierSerializer.Instance);
+            BsonSerializer.RegisterSerializer(RoleSerializer.Instance);
         }
     }
 }

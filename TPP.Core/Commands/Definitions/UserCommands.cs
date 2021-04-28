@@ -63,6 +63,17 @@ namespace TPP.Core.Commands.Definitions
                 Aliases = new[] { "gifttokens" },
                 Description = "Donate another user tokens. Arguments: <user to donate to> <amount of tokens>"
             },
+            new Command("list", List)
+            {
+                Description = "List all of the people who have a given role." +
+                              "Arguemnts: <Role>"
+            },
+            new Command("showroles", ShowRoles)
+            {
+                Aliases = new[] {"roles"},
+                Description = "Operators only: Show which roles a user has." +
+                              "Arguments: <user>"
+            },
         };
 
         private readonly IUserRepo _userRepo;
@@ -253,6 +264,30 @@ namespace TPP.Core.Commands.Definitions
             {
                 Response = $"has donated T{tokens} to @{recipient.Name}!",
                 ResponseTarget = ResponseTarget.Chat
+            };
+        }
+
+        public async Task<CommandResult> List(CommandContext context)
+        {
+            Role role = await context.ParseArgs<Role>();
+            List<User> users = await _userRepo.FindAllByRole(role);
+
+            return new CommandResult
+            {
+                Response = users.Count > 0
+                    ? $"The users with the '{role.ToString()}' role are: {string.Join(", ", users.Select(u => u.Name))}"
+                    : $"There are no users with the '{role.ToString()}' role."
+            };
+        }
+        public async Task<CommandResult> ShowRoles(CommandContext context)
+        {
+            User user = await context.ParseArgs<User>();
+
+            return new CommandResult
+            {
+                Response = user.Roles.Count > 0
+                    ? $"{user.Name} has the roles: {string.Join(", ", user.Roles)}"
+                    : $"{user.Name} has no roles"
             };
         }
     }
