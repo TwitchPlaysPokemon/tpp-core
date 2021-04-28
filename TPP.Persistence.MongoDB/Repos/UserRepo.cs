@@ -96,6 +96,7 @@ namespace TPP.Persistence.MongoDB.Repos
                 new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.TwitchDisplayName)),
                 new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.Pokeyen)),
                 new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.Tokens)),
+                new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.Roles)),
             });
         }
 
