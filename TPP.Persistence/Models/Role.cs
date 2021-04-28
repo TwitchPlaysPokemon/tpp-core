@@ -1,5 +1,3 @@
-using System;
-
 namespace TPP.Persistence.Models
 {
     public enum Role
@@ -7,6 +5,8 @@ namespace TPP.Persistence.Models
         Operator,
         Moderator,
         Trusted,
-        MusicTeam
+        MusicTeam,
+        Developer,
+        Artist,
     }
 }

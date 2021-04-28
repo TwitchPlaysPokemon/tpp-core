@@ -13,6 +13,8 @@ namespace TPP.Persistence.MongoDB.Serializers
             [Role.Moderator] = "moderator",
             [Role.Trusted] = "trusted",
             [Role.MusicTeam] = "musicteam",
+            [Role.Developer] = "developer",
+            [Role.Artist] = "artist",
         })
         {
         }
