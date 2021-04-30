@@ -88,4 +88,26 @@ namespace TPP.ArgsParsing.Types
         public void Deconstruct(out T1 item1, out T2 item2, out T3 item3, out T4 item4, out T5 item5) =>
             (item1, item2, item3, item4, item5) = (Item1, Item2, Item3, Item4, Item5);
     }
+    public class AnyOrder<T1, T2, T3, T4, T5, T6> : AnyOrder
+    {
+        public T1 Item1 { get; }
+        public T2 Item2 { get; }
+        public T3 Item3 { get; }
+        public T4 Item4 { get; }
+        public T5 Item5 { get; }
+        public T6 Item6 { get; }
+
+        public AnyOrder(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6)
+        {
+            Item1 = item1;
+            Item2 = item2;
+            Item3 = item3;
+            Item4 = item4;
+            Item5 = item5;
+            Item6 = item6;
+        }
+
+        public void Deconstruct(out T1 item1, out T2 item2, out T3 item3, out T4 item4, out T5 item5, out T6 item6) =>
+            (item1, item2, item3, item4, item5, item6) = (Item1, Item2, Item3, Item4, Item5, Item6);
+    }
 }

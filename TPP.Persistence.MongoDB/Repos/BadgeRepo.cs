@@ -65,7 +65,7 @@ namespace TPP.Persistence.MongoDB.Repos
         }
 
         public async Task<Badge> AddBadge(
-            string? userId, PkmnSpecies species, Badge.BadgeSource source, Badge.BadgeForm form, Instant? createdAt = null)
+            string? userId, PkmnSpecies species, Badge.BadgeSource source, int form, Instant? createdAt = null)
         {
             var badge = new Badge(
                 id: string.Empty,
@@ -86,7 +86,7 @@ namespace TPP.Persistence.MongoDB.Repos
         public async Task<List<Badge>> FindByUserAndSpecies(string? userId, PkmnSpecies species) =>
             await Collection.Find(b => b.UserId == userId && b.Species == species).ToListAsync();
 
-        public async Task<List<Badge>> FindAllByCustom(string? userId = null, PkmnSpecies? species = null, Badge.BadgeForm? form = null, Badge.BadgeSource? source = null)
+        public async Task<List<Badge>> FindAllByCustom(string? userId = null, PkmnSpecies? species = null, int? form = null, Badge.BadgeSource? source = null)
         {
             FilterDefinition<Badge> filter = Builders<Badge>.Filter.Empty;
             if (userId != null)
@@ -96,7 +96,7 @@ namespace TPP.Persistence.MongoDB.Repos
             if (species != null)
                 filter &= Builders<Badge>.Filter.Eq(b => b.Species, species);
             if (form != null)
-                filter &= Builders<Badge>.Filter.Eq(b=> b.Form, form);
+                filter &= Builders<Badge>.Filter.Eq(b => b.Form, form);
             if (source != null)
                 filter &= Builders<Badge>.Filter.Eq(b => b.Source, source);
 

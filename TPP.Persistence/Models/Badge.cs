@@ -44,23 +44,10 @@ namespace TPP.Persistence.Models
         /// </summary>
         public Instant CreatedAt { get; init; }
 
-        public enum BadgeForm
-        {
-            Normal,
-            Shiny,
-            Shadow,
-            Mega,
-            Alolan,
-            Galarian,
-            ShinyShadow,
-            ShinyMega,
-            ShinyAlolan,
-            ShinyGalarian
-        }
         /// <summary>
-        /// What form of the pokemon this badge is.
+        /// If this pokemon has multiple forms, which form it is.
         /// </summary>
-        public BadgeForm Form { get; init; }
+        public int Form { get; init; }
 
         /// If this badge is on sale, for how much.
         public long? SellPrice { get; init; }
@@ -73,7 +60,7 @@ namespace TPP.Persistence.Models
             PkmnSpecies species,
             BadgeSource source,
             Instant createdAt,
-            BadgeForm form)
+            int form)
         {
             Id = id;
             UserId = userId;

@@ -15,7 +15,6 @@ namespace TPP.Persistence.MongoDB.Serializers
             if (_registered) return;
             _registered = true;
             BsonSerializer.RegisterSerializer(BadgeSourceSerializer.Instance);
-            BsonSerializer.RegisterSerializer(BadgeFormSerializer.Instance);
             BsonSerializer.RegisterSerializer(PkmnSpeciesSerializer.Instance);
             BsonSerializer.RegisterSerializer(InstantSerializer.Instance);
             BsonSerializer.RegisterSerializer(NullableInstantSerializer.Instance);

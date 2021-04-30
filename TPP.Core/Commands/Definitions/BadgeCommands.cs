@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -271,12 +272,28 @@ namespace TPP.Core.Commands.Definitions
         public async Task<CommandResult> GiftBadge(CommandContext context)
         {
             User gifter = context.Message.User;
-            (User recipient, PkmnSpecies species, Optional<PositiveInt> amountOpt, Optional<Badge.BadgeForm> formOpt, Optional<Badge.BadgeSource> sourceOpt) =
-                await context.ParseArgs<AnyOrder<User, PkmnSpecies, Optional<PositiveInt>, Optional<Badge.BadgeForm>, Optional<Badge.BadgeSource>>>();
+            (User recipient, PkmnSpecies species, Optional<PositiveInt> amountOpt, Optional<Badge.BadgeSource> sourceOpt, Optional<string> formOpt, Optional<string> formOpt2) =
+                await context.ParseArgs<AnyOrder<User, PkmnSpecies, Optional<PositiveInt>, Optional<Badge.BadgeSource>, Optional<string>, Optional<string>>>();
             int amount = amountOpt.Map(i => i.Number).OrElse(1);
-            Badge.BadgeForm? form = formOpt.IsPresent ? formOpt.Value : null;
             Badge.BadgeSource? source = sourceOpt.IsPresent ? sourceOpt.Value : null;
-
+            int? form = null;
+            if (formOpt.IsPresent)
+            {
+                string formName = formOpt.Value;
+                if (formOpt2.IsPresent)
+                    formName += " " + formOpt2.Value;
+                try
+                {
+                    form = PkmnForms.getFormId(species, formName);
+                }
+                catch (ArgumentException e)
+                {
+                    return new CommandResult
+                    {
+                        Response = e.Message
+                    };
+                }
+            }
             if (recipient == gifter)
                 return new CommandResult { Response = "You cannot gift to yourself" };
 

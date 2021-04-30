@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -183,19 +184,39 @@ namespace TPP.Core.Commands.Definitions
 
         public async Task<CommandResult> CreateBadge(CommandContext context)
         {
-            (User recipient, PkmnSpecies species, Optional<PositiveInt> amountOpt, Optional<Badge.BadgeForm> formOpt) =
-                await context.ParseArgs<AnyOrder<User, PkmnSpecies, Optional<PositiveInt>, Optional<Badge.BadgeForm>>>();
+            (User recipient, PkmnSpecies species, Optional<PositiveInt> amountOpt, Optional<string> formOpt, Optional<string> formOpt2) =
+                await context.ParseArgs<AnyOrder<User, PkmnSpecies, Optional<PositiveInt>, Optional<string>, Optional<string>>>();
             int amount = amountOpt.Map(i => i.Number).OrElse(1);
-            Badge.BadgeForm form = formOpt.IsPresent ? formOpt.Value : Badge.BadgeForm.Normal;
-
+            int form = PkmnForms.pokemonHasForms(species) ? 0 : 1; // default to the first listed form if form is unspecified
+            if (formOpt.IsPresent)
+            {
+                string formName = formOpt.Value;
+                if (formOpt2.IsPresent)
+                    formName += " " + formOpt2.Value;
+                try
+                {
+                    form = PkmnForms.getFormId(species, formName);
+                }
+                catch (ArgumentException e)
+                {
+                    return new CommandResult
+                    {
+                        Response = e.Message
+                    };
+                }
+            }
             for (int i = 0; i < amount; i++)
                 await _badgeRepo.AddBadge(recipient.Id, species, Badge.BadgeSource.ManualCreation, form);
 
             return new CommandResult
             {
-                Response = amount > 1
-                    ? $"{amount} {form} {species} badges created for {recipient.Name}."
-                    : $"{form} {species} badge created for {recipient.Name}."
+                Response = PkmnForms.pokemonHasForms(species)
+                    ? amount > 1
+                        ? $"{amount} {PkmnForms.getFormName(species, form)} {species} badges created for {recipient.Name}."
+                        : $"{PkmnForms.getFormName(species, form)} {species} badge created for {recipient.Name}."
+                    : amount > 1
+                        ? $"{amount} {species} badges created for {recipient.Name}."
+                        : $"{species} badge created for {recipient.Name}."
             };
         }
     }
