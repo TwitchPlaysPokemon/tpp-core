@@ -8,5 +8,6 @@ namespace TPP.Persistence.Models
         MusicTeam,
         Developer,
         Artist,
+        ModbotExempt,
     }
 }

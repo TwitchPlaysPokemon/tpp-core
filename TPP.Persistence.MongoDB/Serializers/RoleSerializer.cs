@@ -15,6 +15,7 @@ namespace TPP.Persistence.MongoDB.Serializers
             [Role.MusicTeam] = "musicteam",
             [Role.Developer] = "developer",
             [Role.Artist] = "artist",
+            [Role.ModbotExempt] = "modbot_exempt",
         })
         {
         }
