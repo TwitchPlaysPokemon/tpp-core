@@ -12,6 +12,7 @@ using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
 using TPP.Core.Moderation;
 using TPP.Core.Overlay;
+using TPP.Persistence.Models;
 using TPP.Persistence.Repos;
 
 namespace TPP.Core.Modes
@@ -99,6 +100,7 @@ namespace TPP.Core.Modes
                 message.User.Id, message.RawIrcMessage, message.MessageText, _clock.GetCurrentInstant());
 
             bool isOk = message.Details.IsStaff
+                        || message.User.Roles.Intersect(new[] { Role.Operator, Role.Moderator }).Any()
                         || message.MessageSource != MessageSource.Chat
                         || await _moderators[chat.Name].Check(message);
             if (!isOk)
