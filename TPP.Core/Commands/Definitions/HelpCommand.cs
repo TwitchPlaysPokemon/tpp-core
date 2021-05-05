@@ -52,7 +52,6 @@ namespace TPP.Core.Commands.Definitions
             ["cancelleaderboard"] = "Operators only: Cancel the season's leaderboard.",
             ["subscriptionadjust"] = "Operators only: Adjust a user's internal subscription count. Also gives them tokens. Arguments: <username> <months> <message>",
             ["subadjust"] = "Operators only: Adjust a user's internal subscription count. Also gives them tokens. Arguments: <username> <months> <message>",
-            ["seesubmonths"] = "Operators only: Show total number of months subbed. Arguments: <username>",
             ["setsubmonths"] = "Operators only: Override the stored number of months subbed. Arguments: <username> <number of months>",
             ["adjustxp"] = "Operators only: Add or remove exp. Will cause users to have negative exp, but not delevel. Arguments: <username> <amount of exp>",
             ["adjustexp"] = "Operators only: Add or remove exp. Will cause users to have negative exp, but not delevel. Arguments: <username> <amount of exp>",
@@ -162,6 +161,7 @@ namespace TPP.Core.Commands.Definitions
             ["xp"] = "Show your level and experience.",
             ["loyalty"] = "Show your current subscription Loyalty League. See the description for more info about Leagues. Argument: <username> (optional)",
             ["league"] = "Show your current subscription Loyalty League. See the description for more info about Leagues. Argument: <username> (optional)",
+            ["seesubmonths"] = "Show total number of months subbed. Arguments: <username>",
 
             // generic information
             ["operators"] = "Respond with a list of the current operators.",

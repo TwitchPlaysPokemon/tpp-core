@@ -7,19 +7,7 @@
       ],
       "additionalProperties": false,
       "properties": {
-        "OperatorNames": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "type": [
-              "string",
-              "null"
-            ]
-          }
-        },
-        "ModeratorNames": {
+        "DefaultOperatorNames": {
           "type": [
             "array",
             "null"

@@ -11,6 +11,7 @@ using TPP.Core.Commands;
 using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
 using TPP.Core.Moderation;
+using TPP.Core.Overlay;
 using TPP.Persistence.Repos;
 
 namespace TPP.Core.Modes
@@ -25,16 +26,29 @@ namespace TPP.Core.Modes
         private readonly bool _forwardUnprocessedMessages;
         private readonly IMessagelogRepo _messagelogRepo;
         private readonly IClock _clock;
+        private readonly ProcessMessage _processMessage;
+
+        /// Processes a message that wasn't already processed by the mode base,
+        /// and returns whether the message was actively processed.
+        public delegate Task<bool> ProcessMessage(Message message);
 
         public ModeBase(
-            ILoggerFactory loggerFactory, Setups.Databases repos, BaseConfig baseConfig, StopToken stopToken)
+            ILoggerFactory loggerFactory,
+            Setups.Databases repos,
+            BaseConfig baseConfig,
+            StopToken stopToken,
+            OverlayConnection overlayConnection,
+            ProcessMessage? processMessage = null)
         {
             IClock clock = SystemClock.Instance;
             PokedexData pokedexData = PokedexData.Load();
             ArgsParser argsParser = Setups.SetUpArgsParser(repos.UserRepo, pokedexData);
+            _processMessage = processMessage ?? (_ => Task.FromResult(false));
 
             var chats = new Dictionary<string, IChat>();
-            var chatFactory = new ChatFactory(loggerFactory, clock, repos.UserRepo);
+            var chatFactory = new ChatFactory(loggerFactory, clock,
+                repos.UserRepo, repos.TokensBank, repos.SubscriptionLogRepo, repos.LinkedAccountRepo,
+                overlayConnection);
             foreach (ConnectionConfig connectorConfig in baseConfig.Chat.Connections)
             {
                 IChat chat = chatFactory.Create(connectorConfig);
@@ -124,6 +138,7 @@ namespace TPP.Core.Modes
                     wasProcessed = true;
                 }
             }
+            wasProcessed |= await _processMessage(message);
             if (!wasProcessed && _forwardUnprocessedMessages)
             {
                 await _messagequeueRepo.EnqueueMessage(message.RawIrcMessage);

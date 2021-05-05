@@ -27,7 +27,7 @@ namespace TPP.Core.Modes
         private readonly WebsocketBroadcastServer _broadcastServer;
         private readonly OverlayConnection _overlayConnection;
         private readonly IBank<User> _pokeyenBank;
-
+        private readonly IUserRepo _userRepo;
         private IBettingPeriod<User>? _bettingPeriod = null;
 
         public Matchmode(ILoggerFactory loggerFactory, BaseConfig baseConfig, MatchmodeConfig matchmodeConfig)
@@ -38,13 +38,12 @@ namespace TPP.Core.Modes
             _stopToken = new StopToken();
             Setups.Databases repos = Setups.SetUpRepositories(baseConfig);
             _pokeyenBank = repos.PokeyenBank;
-            _modeBase = new ModeBase(loggerFactory, repos, baseConfig, _stopToken);
-
+            _userRepo = repos.UserRepo;
+            (_broadcastServer, _overlayConnection) = Setups.SetUpOverlayServer(loggerFactory);
+            _modeBase = new ModeBase(loggerFactory, repos, baseConfig, _stopToken, _overlayConnection);
             var bettingCommands = new BettingCommands(() => _bettingPeriod);
             foreach (Command command in bettingCommands.Commands)
                 _modeBase.InstallAdditionalCommand(command);
-
-            (_broadcastServer, _overlayConnection) = Setups.SetUpOverlayServer(loggerFactory);
         }
 
         public async Task Run()
@@ -78,6 +77,7 @@ namespace TPP.Core.Modes
             };
             await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
 
+            await ResetBalances(); //ensure everyone has money to bet before the betting period
             const int matchId = -1; // TODO
             IBettingShop<User> bettingShop = new DefaultBettingShop<User>(
                 async user => await _pokeyenBank.GetAvailableMoney(user));
@@ -170,5 +170,36 @@ namespace TPP.Core.Modes
         {
             _modeBase.Dispose();
         }
+
+        private async Task ResetBalances()
+        {
+            _logger.LogDebug("Resetting Balances");
+            long minimumPokeyen = _matchmodeConfig.MinimumPokeyen;
+            long subscriberMinimumPokeyen = _matchmodeConfig.SubscriberMinimumPokeyen;
+
+            List<User> poorUsers = await _userRepo.FindAllByPokeyenUnder(Math.Max(minimumPokeyen, subscriberMinimumPokeyen));
+            List<Transaction<User>> transactions = new List<Transaction<User>>();
+            foreach (User u in poorUsers)
+            {
+                long pokeyen = u.Pokeyen;
+                if (u.IsSubscribed && pokeyen < subscriberMinimumPokeyen)
+                {
+                    long amountToGive = subscriberMinimumPokeyen - pokeyen;
+                    transactions.Add(new Transaction<User>(u, amountToGive, TransactionType.Welfare));
+                    // TODO whisper users informing them they have been given money
+                    _logger.LogDebug(String.Format("Subscriber {0} had their balance reset to P{1} (+P{2})", u.SimpleName, subscriberMinimumPokeyen, amountToGive));
+
+                }
+                else if (!u.IsSubscribed && u.Pokeyen < minimumPokeyen)
+                {
+                    long amountToGive = minimumPokeyen - pokeyen;
+                    transactions.Add(new Transaction<User>(u, amountToGive, TransactionType.Welfare));
+                    // TODO whisper users informing them they have been given money
+                    _logger.LogDebug(String.Format("User {0} had their balance reset to P{1} (+P{2})", u.SimpleName, minimumPokeyen, amountToGive));
+                }
+            }
+            await _pokeyenBank.PerformTransactions(transactions);
+        }
     }
 }
+

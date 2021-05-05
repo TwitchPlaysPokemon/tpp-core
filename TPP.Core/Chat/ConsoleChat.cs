@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
@@ -57,7 +58,7 @@ namespace TPP.Core.Chat
                 {
                     string[] split = line.Split(' ', count: 2);
                     username = split[0][1..];
-                    line = split[1];
+                    line = split.ElementAtOrDefault(1) ?? string.Empty;
                 }
                 string simpleName = username.ToLower();
 
@@ -82,7 +83,7 @@ namespace TPP.Core.Chat
             Task.Run(ReadInput).ContinueWith(task =>
             {
                 if (task.IsFaulted)
-                    _logger.LogError("console read task failed", task.Exception);
+                    _logger.LogError(task.Exception, "console read task failed");
                 else
                     _logger.LogInformation("console read task finished");
             });

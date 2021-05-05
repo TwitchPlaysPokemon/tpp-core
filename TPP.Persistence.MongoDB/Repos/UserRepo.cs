@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using MongoDB.Bson.Serialization;
@@ -19,6 +20,7 @@ namespace TPP.Persistence.MongoDB.Repos
 
         private readonly long _startingPokeyen;
         private readonly long _startingTokens;
+        private readonly ImmutableHashSet<string> _defaultOperators;
 
         static UserRepo()
         {
@@ -33,6 +35,9 @@ namespace TPP.Persistence.MongoDB.Repos
                 cm.MapProperty(u => u.LastActiveAt).SetElementName("last_active_at");
                 cm.MapProperty(u => u.LastMessageAt).SetElementName("last_message_at");
                 cm.MapProperty(u => u.Pokeyen).SetElementName("pokeyen");
+                cm.MapProperty(u => u.PokeyenHighScore).SetElementName("pokeyen_highscore")
+                    .SetDefaultValue(0L)
+                    .SetIgnoreIfDefault(true);
                 cm.MapProperty(u => u.Tokens).SetElementName("tokens");
                 cm.MapProperty(u => u.ParticipationEmblems)
                     .SetElementName("participation")
@@ -44,16 +49,34 @@ namespace TPP.Persistence.MongoDB.Repos
                 cm.MapProperty(u => u.GlowColor).SetElementName("secondary_color");
                 cm.MapProperty(u => u.GlowColorUnlocked).SetElementName("secondary_color_unlocked");
                 cm.MapProperty(u => u.PokeyenBetRank).SetElementName("pokeyen_bet_rank");
+                cm.MapProperty(u => u.IsSubscribed).SetElementName("subscriber");
+                cm.MapProperty(u => u.MonthsSubscribed).SetElementName("months_subscribed")
+                    // 0 instead of null in code, but may be omitted in the database
+                    .SetDefaultValue(0)
+                    .SetIgnoreIfDefault(true);
+                cm.MapProperty(u => u.SubscriptionTier).SetElementName("sub_plan");
+                cm.MapProperty(u => u.LoyaltyLeague).SetElementName("loyalty_tier");
+                cm.MapProperty(u => u.SubscriptionUpdatedAt).SetElementName("subscription_updated_at");
+                cm.MapProperty(u => u.Roles).SetElementName("roles")
+                    .SetDefaultValue(new HashSet<Role>());
             });
         }
 
-        public UserRepo(IMongoDatabase database, long startingPokeyen, long startingTokens)
+        public UserRepo(IMongoDatabase database, long startingPokeyen, long startingTokens, IImmutableList<string> defaultOperators)
         {
             database.CreateCollectionIfNotExists(CollectionName).Wait();
             Collection = database.GetCollection<User>(CollectionName);
             _startingPokeyen = startingPokeyen;
             _startingTokens = startingTokens;
+            _defaultOperators = defaultOperators.ToImmutableHashSet<string>();
             InitIndexes();
+
+            foreach (string name in _defaultOperators)
+            {
+                User? user = FindBySimpleName(name.ToLower()).Result;
+                if (user != null)
+                    SetRoles(user, new HashSet<Role> { Role.Operator });
+            }
             // TODO currently pokeyen are not nullable in the user object, but in the current database some are.
             // There has been an unfinished discussion on whether nullable pokeyen are desired, e.g. to better represent
             // a balance reset, where each user with "null" would get the default amount on first load for example.
@@ -73,6 +96,7 @@ namespace TPP.Persistence.MongoDB.Repos
                 new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.TwitchDisplayName)),
                 new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.Pokeyen)),
                 new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.Tokens)),
+                new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.Roles)),
             });
         }
 
@@ -115,7 +139,8 @@ namespace TPP.Persistence.MongoDB.Repos
                 lastActiveAt: userInfo.UpdatedAt,
                 lastMessageAt: userInfo.FromMessage ? userInfo.UpdatedAt : (Instant?)null,
                 pokeyen: _startingPokeyen,
-                tokens: _startingTokens
+                tokens: _startingTokens,
+                roles: _defaultOperators.Contains(userInfo.SimpleName) ? new HashSet<Role> { Role.Operator } : null
             );
             try
             {
@@ -137,6 +162,12 @@ namespace TPP.Persistence.MongoDB.Repos
 
         public async Task<User?> FindByDisplayName(string displayName) =>
             await Collection.Find(u => u.TwitchDisplayName == displayName).FirstOrDefaultAsync();
+
+        public async Task<List<User>> FindAllByPokeyenUnder(long yen) =>
+            await Collection.Find(u => u.Pokeyen < yen).ToListAsync();
+
+        public async Task<List<User>> FindAllByRole(Role role) =>
+            await Collection.Find(u => u.Roles.Contains(role)).ToListAsync();
 
         private async Task<User> UpdateField<T>(User user, Expression<Func<User, T>> field, T value) =>
             await Collection.FindOneAndUpdateAsync<User>(
@@ -160,11 +191,34 @@ namespace TPP.Persistence.MongoDB.Repos
         public Task<User> SetDisplayName(User user, string displayName) =>
             UpdateField(user, u => u.Name, displayName);
 
+        public Task<User> SetRoles(User user, HashSet<Role> newRoles) =>
+            UpdateField(user, u => u.Roles, newRoles);
+
         public async Task<bool> UnselectBadgeIfSpeciesSelected(string userId, PkmnSpecies species) =>
             await Collection.FindOneAndUpdateAsync<User>(
                 filter: u => u.Id == userId && u.SelectedBadge == species,
                 update: Builders<User>.Update.Set(u => u.SelectedBadge, null),
                 options: new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After, IsUpsert = false })
             != null;
+
+        public Task<User> SetIsSubscribed(User user, bool isSubscribed) =>
+            UpdateField(user, u => u.IsSubscribed, isSubscribed);
+
+        public async Task<User> SetSubscriptionInfo(User user,
+            int monthsSubscribed, SubscriptionTier tier, int loyaltyLeague, Instant? subscriptionUpdatedAt)
+            =>
+                await Collection.FindOneAndUpdateAsync<User>(
+                    filter: u => u.Id == user.Id,
+                    update: Builders<User>.Update
+                        .Set(u => u.MonthsSubscribed, monthsSubscribed)
+                        .Set(u => u.SubscriptionTier, tier)
+                        .Set(u => u.LoyaltyLeague, loyaltyLeague)
+                        .Set(u => u.SubscriptionUpdatedAt, subscriptionUpdatedAt),
+                    options: new FindOneAndUpdateOptions<User>
+                    {
+                        ReturnDocument = ReturnDocument.After,
+                        IsUpsert = false
+                    })
+                ?? throw new ArgumentException($"user {user} does not exist");
     }
 }

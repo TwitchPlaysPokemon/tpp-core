@@ -10,6 +10,11 @@ using TPP.Persistence.Repos;
 
 namespace TPP.Core.Commands.Definitions
 {
+    /// <summary>
+    /// Helper class to store all relevant Information for a single Region
+    /// </summary>
+    public record RegionInformation(Generation Generation, int TotalRegionCount);
+
     public class BadgeCommands : ICommandCollection
     {
         // using an enum didn't work out, because no "-" characters allowed in enums. So go with const strings instead, or change modes to camel-case
@@ -18,6 +23,7 @@ namespace TPP.Core.Commands.Definitions
         private const string PokedexModeMissing = "missing";
         private const string PokedexModeDupes = "dupes";
         private const string PokedexModeModes = "modes";
+        private const string PokedexModeNational = "national";
 
         public IEnumerable<Command> Commands => new[]
         {
@@ -57,6 +63,7 @@ namespace TPP.Core.Commands.Definitions
         private readonly IMessageSender _messageSender;
         private readonly HashSet<PkmnSpecies>? _whitelist;
         private readonly IImmutableSet<PkmnSpecies> _knownSpecies;
+        private readonly Dictionary<string, RegionInformation> _pokedexModeRegions;
 
         public BadgeCommands(
             IBadgeRepo badgeRepo,
@@ -71,6 +78,19 @@ namespace TPP.Core.Commands.Definitions
             _messageSender = messageSender;
             _knownSpecies = knownSpecies;
             _whitelist = whitelist;
+            _pokedexModeRegions = new Dictionary<string, RegionInformation>()
+            {
+                { "kanto", new RegionInformation(Generation.Gen1, _knownSpecies.Count(pokemon => pokemon.GetGeneration() == Generation.Gen1))},
+                { "johto", new RegionInformation(Generation.Gen2, _knownSpecies.Count(pokemon => pokemon.GetGeneration() == Generation.Gen2))},
+                { "hoenn", new RegionInformation(Generation.Gen3, _knownSpecies.Count(pokemon => pokemon.GetGeneration() == Generation.Gen3))},
+                { "sinnoh", new RegionInformation(Generation.Gen4, _knownSpecies.Count(pokemon => pokemon.GetGeneration() == Generation.Gen4))},
+                { "unova", new RegionInformation(Generation.Gen5, _knownSpecies.Count(pokemon => pokemon.GetGeneration() == Generation.Gen5))},
+                { "kalos", new RegionInformation(Generation.Gen6, _knownSpecies.Count(pokemon => pokemon.GetGeneration() == Generation.Gen6))},
+                { "alola", new RegionInformation(Generation.Gen7, _knownSpecies.Count(pokemon => pokemon.GetGeneration() == Generation.Gen7))},
+                { "galar", new RegionInformation(Generation.Gen8, _knownSpecies.Count(pokemon => pokemon.GetGeneration() == Generation.Gen8))},
+                { "fakemons", new RegionInformation(Generation.GenFake, _knownSpecies.Count(pokemon => pokemon.GetGeneration() == Generation.GenFake))},
+                { PokedexModeNational, new RegionInformation(Generation.GenFake, _knownSpecies.Count(pokemon => pokemon.GetGeneration() != Generation.GenFake))}
+            };
         }
 
         public async Task<CommandResult> Badges(CommandContext context)
@@ -161,7 +181,7 @@ namespace TPP.Core.Commands.Definitions
                 };
             }
 
-            string mode = optionalMode.Value;
+            string mode = optionalMode.Value.ToLower();
             ImmutableSortedDictionary<PkmnSpecies, int> numBadgesPerSpecies =
                 await _badgeRepo.CountByUserPerSpecies(user.Id);
 
@@ -253,18 +273,36 @@ namespace TPP.Core.Commands.Definitions
                     ResponseTarget = ResponseTarget.WhisperIfLong
                 };
             }
+            else if (_pokedexModeRegions.ContainsKey(mode))
+            {
+                RegionInformation regionInformation = _pokedexModeRegions[mode];
+                ImmutableSortedDictionary<PkmnSpecies, int> ownedPokemons = (await _badgeRepo.CountByUserPerSpecies(user.Id));
+                int userOwnedRegionCount = mode.Equals(PokedexModeNational)
+                    ? ownedPokemons.Count(ownedPokemon => ownedPokemon.Key.GetGeneration() != regionInformation.Generation)
+                    : ownedPokemons.Count(ownedPokemon => ownedPokemon.Key.GetGeneration() == regionInformation.Generation);
+                return new CommandResult
+                {
+                    Response = isSelf
+                        ? $"You have collected {userOwnedRegionCount}/{regionInformation.TotalRegionCount} "
+                          + $"distinct {mode[0].ToString().ToUpper() + mode[1..].ToLower()} badge(s)"
+                        : $"{user.Name} has collected {userOwnedRegionCount}/{regionInformation.TotalRegionCount} "
+                          + $"distinct {mode[0].ToString().ToUpper() + mode[1..].ToLower()} badge(s)"
+                };
+            }
             else if (mode.Equals(PokedexModeModes))
             {
                 return new CommandResult
                 {
                     Response = $"Supported modes are '{PokedexModeDupes}': Show duplicate badges, '{PokedexModeMissing}': Show missing badges, "
                         + $"'{PokedexModeComplementFrom}' Compares missing badges from User A with owned badges from User B, "
-                        + $"'{PokedexModeComplementFromDupes}' Compares missing badges from User A with owned duplicate badges from User B"
+                        + $"'{PokedexModeComplementFromDupes}' Compares missing badges from User A with owned duplicate badges from User B, "
+                        + $"'kanto', 'johto,',... Shows how many badges you or the specified user owns from the specified region only"
                 };
             }
             return new CommandResult
             {
-                Response = $"Unsupported mode '{mode}'. Current modes supported: {PokedexModeModes}, {PokedexModeDupes}, {PokedexModeMissing}, {PokedexModeComplementFromDupes}, {PokedexModeComplementFrom}"
+                Response = $"Unsupported mode '{mode}'. Current modes supported: {PokedexModeModes}, {PokedexModeDupes}, {PokedexModeMissing}, {PokedexModeComplementFromDupes}, "
+                    + $"{PokedexModeComplementFrom}, kanto, johto,... "
             };
         }
 
