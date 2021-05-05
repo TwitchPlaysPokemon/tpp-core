@@ -65,7 +65,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
         {
             UserRepo userRepo = CreateUserRepo();
             // given
-            var userInfo = new UserInfo("123", "X", "x", null);
+            var userInfo = new UserInfo("123", "X", "x");
 
             // when new user
             User userBefore = await userRepo.RecordUser(userInfo);
@@ -138,7 +138,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
         {
             UserRepo userRepo = CreateUserRepo();
             // given
-            var userInfo = new UserInfo("123", "X", "x", null);
+            var userInfo = new UserInfo("123", "X", "x");
 
             // when, then
             User userNew = await userRepo.RecordUser(userInfo);
@@ -162,7 +162,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
         {
             UserRepo userRepo = CreateUserRepo();
             // given
-            var userInfo = new UserInfo("123", "X", "x", null);
+            var userInfo = new UserInfo("123", "X", "x");
             await userRepo.RecordUser(userInfo);
             UpdateResult updateResult = await userRepo.Collection.UpdateOneAsync(u => u.Id == userInfo.Id,
                 Builders<User>.Update.Unset(u => u.ParticipationEmblems));
@@ -185,9 +185,9 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
         public async Task recording_users_concurrently_works_reliably()
         {
             UserRepo userRepo = CreateUserRepo();
-            var userInfo = new UserInfo("123", "X", "x", null);
+            var userInfo = new UserInfo("123", "X", "x");
             await Task.WhenAll(Enumerable.Range(0, 100)
-                .Select(i => userRepo.RecordUser(userInfo)));
+                .Select(_ => userRepo.RecordUser(userInfo)));
         }
 
         [Test]
@@ -197,7 +197,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             const long tokens = long.MaxValue - 234;
             var userRepo = new UserRepo(CreateTemporaryDatabase(), pokeyen, tokens, ImmutableList<string>.Empty);
 
-            User userFromRecording = await userRepo.RecordUser(new UserInfo("123", "X", "x", null));
+            User userFromRecording = await userRepo.RecordUser(new UserInfo("123", "X", "x"));
             Assert.That(userFromRecording.Pokeyen, Is.EqualTo(pokeyen));
             Assert.That(userFromRecording.Tokens, Is.EqualTo(tokens));
 

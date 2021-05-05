@@ -45,7 +45,7 @@ namespace TPP.Core.Tests.Commands
         {
             var loggerMock = new Mock<ILogger<CommandProcessor>>();
             var commandProcessor = new CommandProcessor(loggerMock.Object, _commandLoggerMock.Object, new ArgsParser());
-            commandProcessor.InstallCommand(new Command("slow", async context =>
+            commandProcessor.InstallCommand(new Command("slow", async _ =>
             {
                 await Task.Delay(TimeSpan.FromMilliseconds(1050));
                 return new CommandResult();
@@ -64,7 +64,7 @@ namespace TPP.Core.Tests.Commands
             var loggerMock = new Mock<ILogger<CommandProcessor>>();
             var commandProcessor = new CommandProcessor(loggerMock.Object, _commandLoggerMock.Object, new ArgsParser());
             commandProcessor.InstallCommand(new Command("broken",
-                context => throw new InvalidOperationException("this command is busted!")));
+                _ => throw new InvalidOperationException("this command is busted!")));
 
             CommandResult? result = await commandProcessor.Process("broken", _noArgs, MockMessage("bla"));
 

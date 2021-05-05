@@ -85,6 +85,7 @@ namespace TPP.Core.Tests.Overlay
                 .Select(task => ReadAllMessages(task.Result))
                 .ToList(); // start all coroutines to start consuming websocket messages
 
+            // ReSharper disable once AccessToDisposedClosure
             await Task.WhenAll(messages.Select(msg => server.Send(msg, CancellationToken.None)));
             await server.Stop();
 
