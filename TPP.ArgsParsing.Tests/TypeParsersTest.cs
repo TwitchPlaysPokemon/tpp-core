@@ -34,8 +34,8 @@ namespace TPP.ArgsParsing.Tests
             Assert.That(string1, Is.EqualTo("foo"));
             Assert.That(string2, Is.EqualTo("foo"));
 
-            var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<AnyOrder<SignedInt, string>>(ImmutableList.Create("foo", "bar")));
+            ArgsParseFailure ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<AnyOrder<SignedInt, string>>(ImmutableList.Create("foo", "bar")))!;
             Assert.That(ex.Failures.Count, Is.EqualTo(2));
             Assert.That(ex.Message, Is.EqualTo("did not recognize 'foo' as a number, or did not recognize 'bar' as a number"));
         }
@@ -117,10 +117,10 @@ namespace TPP.ArgsParsing.Tests
             Assert.That(result2, Is.EqualTo(refInstant));
             Assert.That(result2, Is.EqualTo(result1));
 
-            var ex1 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<Instant>(ImmutableList.Create("2020-03-22T01:59:20+02")));
-            var ex2 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<Instant>(ImmutableList.Create("asdasdasd")));
+            ArgsParseFailure ex1 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<Instant>(ImmutableList.Create("2020-03-22T01:59:20+02")))!;
+            ArgsParseFailure ex2 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<Instant>(ImmutableList.Create("asdasdasd")))!;
             Assert.That(ex1.Message, Is.EqualTo("did not recognize '2020-03-22T01:59:20+02' as a UTC-instant"));
             Assert.That(ex2.Message, Is.EqualTo("did not recognize 'asdasdasd' as a UTC-instant"));
         }
@@ -138,12 +138,12 @@ namespace TPP.ArgsParsing.Tests
             Assert.That((await argsParser
                 .Parse<HexColor>(args: ImmutableList.Create("#0f9D5a"))).StringWithHash, Is.EqualTo("#0F9D5A"));
 
-            var ex1 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<HexColor>(ImmutableList.Create("blabla")));
-            var ex2 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<HexColor>(ImmutableList.Create("#abc")));
-            var ex3 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<HexColor>(ImmutableList.Create("#bcdefg")));
+            ArgsParseFailure ex1 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<HexColor>(ImmutableList.Create("blabla")))!;
+            ArgsParseFailure ex2 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<HexColor>(ImmutableList.Create("#abc")))!;
+            ArgsParseFailure ex3 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<HexColor>(ImmutableList.Create("#bcdefg")))!;
             Assert.That(ex1.Message, Is.EqualTo("'blabla' is not a valid hex color"));
             Assert.That(ex2.Message, Is.EqualTo("'#abc' must be a 6-character hex code consisting of 0-9 and A-F, " +
                             "for example '#FF0000' for pure red."));
@@ -171,13 +171,13 @@ namespace TPP.ArgsParsing.Tests
             Assert.IsTrue(result2.Item2.IsPresent);
             Assert.That(result2.Item2.Value, Is.EqualTo("foo"));
 
-            var exUnrecognized = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<OneOf<SignedInt, Instant>>(ImmutableList.Create("foo")));
+            ArgsParseFailure exUnrecognized = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<OneOf<SignedInt, Instant>>(ImmutableList.Create("foo")))!;
             Assert.That(exUnrecognized.Failures.Count, Is.EqualTo(2));
             const string errorText = "did not recognize 'foo' as a number, or did not recognize 'foo' as a UTC-instant";
             Assert.That(exUnrecognized.Message, Is.EqualTo(errorText));
-            var exTooManyArgs = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<OneOf<SignedInt, SignedInt>>(ImmutableList.Create("123", "234")));
+            ArgsParseFailure exTooManyArgs = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<OneOf<SignedInt, SignedInt>>(ImmutableList.Create("123", "234")))!;
             Assert.That(exTooManyArgs.Message, Is.EqualTo("too many arguments"));
         }
 
@@ -216,11 +216,11 @@ namespace TPP.ArgsParsing.Tests
             Assert.That(percentageZero.AsDecimal, Is.EqualTo(0.0));
 
             ArgsParseFailure failureNoNumber = Assert.ThrowsAsync<ArgsParseFailure>(() =>
-                argsParser.Parse<Percentage>(ImmutableList.Create("abc%")));
+                argsParser.Parse<Percentage>(ImmutableList.Create("abc%")))!;
             ArgsParseFailure failureNoPercentSign = Assert.ThrowsAsync<ArgsParseFailure>(() =>
-                argsParser.Parse<Percentage>(ImmutableList.Create("1.23")));
+                argsParser.Parse<Percentage>(ImmutableList.Create("1.23")))!;
             ArgsParseFailure failureNegative = Assert.ThrowsAsync<ArgsParseFailure>(() =>
-                argsParser.Parse<Percentage>(ImmutableList.Create("-5%")));
+                argsParser.Parse<Percentage>(ImmutableList.Create("-5%")))!;
             Assert.That(failureNoNumber.Message, Is.EqualTo("did not recognize 'abc' as a decimal"));
             Assert.That(failureNoPercentSign.Message, Is.EqualTo("percentages must end in '%'"));
             Assert.That(failureNegative.Message, Is.EqualTo("percentage cannot be negative"));
@@ -247,10 +247,10 @@ namespace TPP.ArgsParsing.Tests
             Assert.That(resultByName2, Is.EqualTo(species));
 
             ArgsParseFailure exNotPrefixed = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<PkmnSpecies>(args: ImmutableList.Create(speciesId)));
+                .Parse<PkmnSpecies>(args: ImmutableList.Create(speciesId)))!;
             Assert.That(exNotPrefixed.Message, Is.EqualTo("Please prefix with '#' to supply and pokedex number"));
             ArgsParseFailure exUnknown = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<PkmnSpecies>(args: ImmutableList.Create("unknown")));
+                .Parse<PkmnSpecies>(args: ImmutableList.Create("unknown")))!;
             Assert.That(
 exUnknown.Message, Is.EqualTo("No pokemon with the name 'unknown' was recognized. Please supply a valid name, " +
                 "or prefix with '#' to supply and pokedex number instead"));
@@ -280,12 +280,12 @@ exUnknown.Message, Is.EqualTo("No pokemon with the name 'unknown' was recognized
             Assert.That(result5, Is.EqualTo(species));
 
             ArgsParseFailure exNotRecognized = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<PkmnSpecies>(args: ImmutableList.Create("mahina", "aaaaaa")));
+                .Parse<PkmnSpecies>(args: ImmutableList.Create("mahina", "aaaaaa")))!;
             Assert.That(
 exNotRecognized.Message, Is.EqualTo("No pokemon with the name 'mahina' was recognized. Please supply a valid name, " +
                 "or prefix with '#' to supply and pokedex number instead"));
             ArgsParseFailure exNoAccidentalHashRemoval = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<PkmnSpecies>(args: ImmutableList.Create("#mahinapea")));
+                .Parse<PkmnSpecies>(args: ImmutableList.Create("#mahinapea")))!;
             Assert.That(exNoAccidentalHashRemoval.Message, Is.EqualTo("did not recognize species '#mahinapea'"));
         }
 
@@ -324,28 +324,28 @@ exNotRecognized.Message, Is.EqualTo("No pokemon with the name 'mahina' was recog
             [Test]
             public void rejects_wrong_prefix()
             {
-                var exPokeyen = Assert.ThrowsAsync<ArgsParseFailure>(() => _argsParser
-                    .Parse<Pokeyen>(ImmutableList.Create("X11")));
+                ArgsParseFailure exPokeyen = Assert.ThrowsAsync<ArgsParseFailure>(() => _argsParser
+                    .Parse<Pokeyen>(ImmutableList.Create("X11")))!;
                 Assert.That(exPokeyen.Message, Is.EqualTo("did not recognize 'X11' as a 'P'-prefixed number"));
-                var exTokens = Assert.ThrowsAsync<ArgsParseFailure>(() => _argsParser
-                    .Parse<Tokens>(ImmutableList.Create("X22")));
+                ArgsParseFailure exTokens = Assert.ThrowsAsync<ArgsParseFailure>(() => _argsParser
+                    .Parse<Tokens>(ImmutableList.Create("X22")))!;
                 Assert.That(exTokens.Message, Is.EqualTo("did not recognize 'X22' as a 'T'-prefixed number"));
-                var exSignedPokeyen = Assert.ThrowsAsync<ArgsParseFailure>(() => _argsParser
-                    .Parse<SignedPokeyen>(ImmutableList.Create("X33")));
+                ArgsParseFailure exSignedPokeyen = Assert.ThrowsAsync<ArgsParseFailure>(() => _argsParser
+                    .Parse<SignedPokeyen>(ImmutableList.Create("X33")))!;
                 Assert.That(exSignedPokeyen.Message, Is.EqualTo("did not recognize 'X33' as a 'P'-prefixed number"));
-                var exSignedTokens = Assert.ThrowsAsync<ArgsParseFailure>(() => _argsParser
-                    .Parse<SignedTokens>(ImmutableList.Create("X44")));
+                ArgsParseFailure exSignedTokens = Assert.ThrowsAsync<ArgsParseFailure>(() => _argsParser
+                    .Parse<SignedTokens>(ImmutableList.Create("X44")))!;
                 Assert.That(exSignedTokens.Message, Is.EqualTo("did not recognize 'X44' as a 'T'-prefixed number"));
             }
 
             [Test]
             public void rejects_negative_if_not_signed()
             {
-                var exPokeyen = Assert.ThrowsAsync<ArgsParseFailure>(() => _argsParser
-                    .Parse<Pokeyen>(args: ImmutableList.Create("P-11")));
+                ArgsParseFailure exPokeyen = Assert.ThrowsAsync<ArgsParseFailure>(() => _argsParser
+                    .Parse<Pokeyen>(args: ImmutableList.Create("P-11")))!;
                 Assert.That(exPokeyen.Message, Is.EqualTo("'P-11' cannot be less than P0"));
-                var exTokens = Assert.ThrowsAsync<ArgsParseFailure>(() => _argsParser
-                    .Parse<Tokens>(args: ImmutableList.Create("T-22")));
+                ArgsParseFailure exTokens = Assert.ThrowsAsync<ArgsParseFailure>(() => _argsParser
+                    .Parse<Tokens>(args: ImmutableList.Create("T-22")))!;
                 Assert.That(exTokens.Message, Is.EqualTo("'T-22' cannot be less than T0"));
             }
 
@@ -376,10 +376,10 @@ exNotRecognized.Message, Is.EqualTo("No pokemon with the name 'mahina' was recog
             Assert.That(result1, Is.EqualTo(expected));
             Assert.That(result2, Is.EqualTo(TimeSpan.FromDays(90)));
 
-            var ex1 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<TimeSpan>(args: ImmutableList.Create("5s3d")));
-            var ex2 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<TimeSpan>(args: ImmutableList.Create("asdasdasd")));
+            ArgsParseFailure ex1 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<TimeSpan>(args: ImmutableList.Create("5s3d")))!;
+            ArgsParseFailure ex2 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<TimeSpan>(args: ImmutableList.Create("asdasdasd")))!;
             Assert.IsTrue(ex1.Message.Contains("did not recognize '5s3d' as a duration"));
             Assert.IsTrue(ex2.Message.Contains("did not recognize 'asdasdasd' as a duration"));
         }
@@ -411,14 +411,14 @@ exNotRecognized.Message, Is.EqualTo("No pokemon with the name 'mahina' was recog
             var resultUserDisplayName = await argsParser.Parse<User>(args: ImmutableList.Create(displayName));
             Assert.That(resultUserDisplayName, Is.EqualTo(origUser));
 
-            var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<User>(args: ImmutableList.Create("some_unknown_name")));
+            ArgsParseFailure ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<User>(args: ImmutableList.Create("some_unknown_name")))!;
             Assert.That(ex.Message, Is.EqualTo("did not recognize a user with the name 'some_unknown_name'"));
-            var exUserPrefixed = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<User>(args: ImmutableList.Create("@some_unknown_name")));
+            ArgsParseFailure exUserPrefixed = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<User>(args: ImmutableList.Create("@some_unknown_name")))!;
             Assert.That(exUserPrefixed.Message, Is.EqualTo("did not recognize a user with the name 'some_unknown_name'"));
-            var exDisplayName = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<User>(args: ImmutableList.Create("なまえ")));
+            ArgsParseFailure exDisplayName = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<User>(args: ImmutableList.Create("なまえ")))!;
             Assert.That(exDisplayName.Message, Is.EqualTo("did not recognize a user with the name 'なまえ'"));
         }
 
@@ -438,7 +438,7 @@ exNotRecognized.Message, Is.EqualTo("No pokemon with the name 'mahina' was recog
             CollectionAssert.AreEqual(Array.Empty<int>(), zeroInts.Select(i => i.Number));
 
             ArgsParseFailure failure = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<ManyOf<PositiveInt>>(ImmutableList.Create<string>("1", "c", "2")));
+                .Parse<ManyOf<PositiveInt>>(ImmutableList.Create<string>("1", "c", "2")))!;
             Assert.That(failure.Message, Is.EqualTo("did not recognize 'c' as a number"));
         }
     }

@@ -75,7 +75,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
 
             var transaction = new Transaction<TestUser>(user, 1, "test");
             InvalidOperationException failure = Assert.ThrowsAsync<InvalidOperationException>(
-                () => bank.PerformTransaction(transaction));
+                () => bank.PerformTransaction(transaction))!;
 
             Assert.That(
                 failure.Message, Is.EqualTo("Tried to perform transaction with stale user data: " +
@@ -94,7 +94,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
 
             var transaction = new Transaction<TestUser>(user, 1, "test");
             UserNotFoundException<TestUser> userNotFound = Assert.ThrowsAsync<UserNotFoundException<TestUser>>(
-                () => bank.PerformTransaction(transaction));
+                () => bank.PerformTransaction(transaction))!;
             Assert.That(userNotFound.User, Is.EqualTo(user));
         }
 
@@ -112,7 +112,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
                     new Transaction<TestUser>(knownUser, 3, "test"),
                     new Transaction<TestUser>(unknownUser, -3, "test")
                 })
-            );
+            )!;
 
             Assert.That(userNotFound.User, Is.EqualTo(unknownUser));
             // ensure neither user's balance was modified
@@ -147,7 +147,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             (IBank<TestUser> bank, IMongoCollection<TestUser> _) = CreateDbObjects(new MockClock());
             TestUser unknownUser = new TestUser { Money = 0 }; // not persisted
             UserNotFoundException<TestUser> userNotFound = Assert.ThrowsAsync<UserNotFoundException<TestUser>>(
-                () => bank.GetAvailableMoney(unknownUser));
+                () => bank.GetAvailableMoney(unknownUser))!;
             Assert.That(userNotFound.User, Is.EqualTo(unknownUser));
         }
 

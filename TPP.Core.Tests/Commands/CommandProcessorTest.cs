@@ -108,8 +108,8 @@ namespace TPP.Core.Tests.Commands
             var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock.Object, new ArgsParser());
 
             commandProcessor.InstallCommand(new Command("a", CommandUtils.StaticResponse("Hi!")));
-            var ex = Assert.Throws<ArgumentException>(() => commandProcessor
-                .InstallCommand(new Command("A", CommandUtils.StaticResponse("Hi!"))));
+            ArgumentException ex = Assert.Throws<ArgumentException>(() => commandProcessor
+                .InstallCommand(new Command("A", CommandUtils.StaticResponse("Hi!"))))!;
             Assert.That(ex.Message, Is.EqualTo("The command name 'a' conflicts with: a: <no description>"));
         }
 
@@ -120,8 +120,8 @@ namespace TPP.Core.Tests.Commands
 
             commandProcessor.InstallCommand(new Command("a", CommandUtils.StaticResponse("Hi!"))
             { Aliases = new[] { "x" } });
-            var ex = Assert.Throws<ArgumentException>(() => commandProcessor
-                .InstallCommand(new Command("b", CommandUtils.StaticResponse("Hi!")) { Aliases = new[] { "X" } }));
+            ArgumentException ex = Assert.Throws<ArgumentException>(() => commandProcessor
+                .InstallCommand(new Command("b", CommandUtils.StaticResponse("Hi!")) { Aliases = new[] { "X" } }))!;
             Assert.That(ex.Message, Is.EqualTo("The alias 'x' conflicts with: a(x): <no description>"));
         }
 
@@ -132,8 +132,8 @@ namespace TPP.Core.Tests.Commands
 
             commandProcessor.InstallCommand(new Command("a", CommandUtils.StaticResponse("Hi!"))
             { Aliases = new[] { "b" } });
-            var ex = Assert.Throws<ArgumentException>(() => commandProcessor
-                .InstallCommand(new Command("b", CommandUtils.StaticResponse("Hi!")) { Aliases = new[] { "x" } }));
+            ArgumentException ex = Assert.Throws<ArgumentException>(() => commandProcessor
+                .InstallCommand(new Command("b", CommandUtils.StaticResponse("Hi!")) { Aliases = new[] { "x" } }))!;
             Assert.That(ex.Message, Is.EqualTo("The command name 'b' conflicts with: a(b): <no description>"));
         }
 

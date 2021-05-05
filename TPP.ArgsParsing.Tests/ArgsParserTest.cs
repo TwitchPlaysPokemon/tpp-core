@@ -14,8 +14,8 @@ namespace TPP.ArgsParsing.Tests
             var argsParser = new ArgsParser();
             argsParser.AddArgumentParser(new NonNegativeIntParser());
 
-            var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<NonNegativeInt, NonNegativeInt>(args: ImmutableList.Create("123")));
+            ArgsParseFailure ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<NonNegativeInt, NonNegativeInt>(args: ImmutableList.Create("123")))!;
             Assert.That(ex.Message, Is.EqualTo("too few arguments"));
         }
 
@@ -25,8 +25,8 @@ namespace TPP.ArgsParsing.Tests
             var argsParser = new ArgsParser();
             argsParser.AddArgumentParser(new NonNegativeIntParser());
 
-            var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<NonNegativeInt>(args: ImmutableList.Create("123", "234")));
+            ArgsParseFailure ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<NonNegativeInt>(args: ImmutableList.Create("123", "234")))!;
             Assert.That(ex.Message, Is.EqualTo("too many arguments"));
         }
 
@@ -41,8 +41,8 @@ namespace TPP.ArgsParsing.Tests
             argsParser.AddArgumentParser(new NonNegativeIntParser());
             argsParser.AddArgumentParser(new OptionalParser(argsParser));
 
-            var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<Optional<NonNegativeInt>>(args: ImmutableList.Create("abc")));
+            ArgsParseFailure ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<Optional<NonNegativeInt>>(args: ImmutableList.Create("abc")))!;
             Assert.That(ex.Message, Is.Not.EqualTo("too many arguments"));
             Assert.That(ex.Message, Is.EqualTo("did not recognize 'abc' as a number"));
         }
@@ -61,8 +61,8 @@ namespace TPP.ArgsParsing.Tests
             argsParser.AddArgumentParser(new AnyOrderParser(argsParser));
             argsParser.AddArgumentParser(new OptionalParser(argsParser));
 
-            var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<AnyOrder<Optional<NonNegativeInt>, Optional<Instant>>>(args: ImmutableList.Create("X", "Y")));
+            ArgsParseFailure ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<AnyOrder<Optional<NonNegativeInt>, Optional<Instant>>>(args: ImmutableList.Create("X", "Y")))!;
             Assert.That(ex.Message, Is.Not.EqualTo("too many arguments"));
             Assert.That(ex.Message, Is.EqualTo("did not recognize 'X' as a number, or did not recognize 'X' as a UTC-instant"));
             Assert.That(ex.Failures, Is.EqualTo(new[]
@@ -86,8 +86,8 @@ namespace TPP.ArgsParsing.Tests
             argsParser.AddArgumentParser(new NonNegativeIntParser());
             argsParser.AddArgumentParser(new AnyOrderParser(argsParser));
 
-            var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
-                .Parse<AnyOrder<NonNegativeInt, NonNegativeInt>>(ImmutableList.Create("1", "x")));
+            ArgsParseFailure ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
+                .Parse<AnyOrder<NonNegativeInt, NonNegativeInt>>(ImmutableList.Create("1", "x")))!;
             Assert.That(ex.Message, Is.EqualTo("did not recognize 'x' as a number"));
             // this is how it used to be:
             Assert.That(ex.Message, Is.Not.EqualTo("did not recognize 'x' as a number, or did not recognize 'x' as a number"));

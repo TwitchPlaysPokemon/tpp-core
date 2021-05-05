@@ -104,8 +104,8 @@ namespace TPP.Core.Tests.Overlay
 
             await client.WriteAsync("Hi server!", CancellationToken.None);
             Assert.IsNull(await client.ReadAsync(CancellationToken.None)); // server is terminating the connection
-            var ex = Assert.ThrowsAsync<WebSocketException>(()
-                => client.WriteAsync("Websocket is already dead", CancellationToken.None));
+            WebSocketException ex = Assert.ThrowsAsync<WebSocketException>(()
+                => client.WriteAsync("Websocket is already dead", CancellationToken.None))!;
             Assert.That(ex.WebSocketErrorCode, Is.EqualTo(WebSocketError.InvalidState));
         }
 
