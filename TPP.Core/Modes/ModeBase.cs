@@ -19,6 +19,8 @@ namespace TPP.Core.Modes
 {
     public sealed class ModeBase : IDisposable
     {
+        private static readonly Role[] ExemptionRoles = { Role.Operator, Role.Moderator, Role.ModbotExempt };
+
         private readonly IImmutableDictionary<string, IChat> _chats;
         private readonly IImmutableDictionary<string, ICommandResponder> _commandResponders;
         private readonly IImmutableDictionary<string, CommandProcessor> _commandProcessors;
@@ -100,7 +102,7 @@ namespace TPP.Core.Modes
                 message.User.Id, message.RawIrcMessage, message.MessageText, _clock.GetCurrentInstant());
 
             bool isOk = message.Details.IsStaff
-                        || message.User.Roles.Intersect(new[] { Role.Operator, Role.Moderator }).Any()
+                        || message.User.Roles.Intersect(ExemptionRoles).Any()
                         || message.MessageSource != MessageSource.Chat
                         || await _moderators[chat.Name].Check(message);
             if (!isOk)
