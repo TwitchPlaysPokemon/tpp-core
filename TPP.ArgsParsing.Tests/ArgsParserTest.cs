@@ -16,7 +16,7 @@ namespace TPP.ArgsParsing.Tests
 
             var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
                 .Parse<NonNegativeInt, NonNegativeInt>(args: ImmutableList.Create("123")));
-            Assert.AreEqual("too few arguments", ex.Message);
+            Assert.That(ex.Message, Is.EqualTo("too few arguments"));
         }
 
         [Test]
@@ -27,7 +27,7 @@ namespace TPP.ArgsParsing.Tests
 
             var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
                 .Parse<NonNegativeInt>(args: ImmutableList.Create("123", "234")));
-            Assert.AreEqual("too many arguments", ex.Message);
+            Assert.That(ex.Message, Is.EqualTo("too many arguments"));
         }
 
         /// <summary>
@@ -43,8 +43,8 @@ namespace TPP.ArgsParsing.Tests
 
             var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
                 .Parse<Optional<NonNegativeInt>>(args: ImmutableList.Create("abc")));
-            Assert.AreNotEqual("too many arguments", ex.Message);
-            Assert.AreEqual("did not recognize 'abc' as a number", ex.Message);
+            Assert.That(ex.Message, Is.Not.EqualTo("too many arguments"));
+            Assert.That(ex.Message, Is.EqualTo("did not recognize 'abc' as a number"));
         }
 
         /// <summary>
@@ -63,15 +63,14 @@ namespace TPP.ArgsParsing.Tests
 
             var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
                 .Parse<AnyOrder<Optional<NonNegativeInt>, Optional<Instant>>>(args: ImmutableList.Create("X", "Y")));
-            Assert.AreNotEqual("too many arguments", ex.Message);
-            Assert.AreEqual("did not recognize 'X' as a number, or did not recognize 'X' as a UTC-instant", ex.Message);
-            Assert.AreEqual(new[]
+            Assert.That(ex.Message, Is.Not.EqualTo("too many arguments"));
+            Assert.That(ex.Message, Is.EqualTo("did not recognize 'X' as a number, or did not recognize 'X' as a UTC-instant"));
+            Assert.That(ex.Failures, Is.EqualTo(new[]
                 {
                     new Failure(ErrorRelevanceConfidence.Default, "did not recognize 'X' as a number"),
                     new Failure(ErrorRelevanceConfidence.Default, "did not recognize 'X' as a UTC-instant"),
                     new Failure(ErrorRelevanceConfidence.Unlikely, "too many arguments")
-                },
-                ex.Failures);
+                }));
         }
 
         /// <summary>
@@ -89,9 +88,9 @@ namespace TPP.ArgsParsing.Tests
 
             var ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
                 .Parse<AnyOrder<NonNegativeInt, NonNegativeInt>>(ImmutableList.Create("1", "x")));
-            Assert.AreEqual("did not recognize 'x' as a number", ex.Message);
+            Assert.That(ex.Message, Is.EqualTo("did not recognize 'x' as a number"));
             // this is how it used to be:
-            Assert.AreNotEqual("did not recognize 'x' as a number, or did not recognize 'x' as a number", ex.Message);
+            Assert.That(ex.Message, Is.Not.EqualTo("did not recognize 'x' as a number, or did not recognize 'x' as a number"));
         }
     }
 }

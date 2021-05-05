@@ -68,7 +68,7 @@ namespace TPP.Core.Tests.Commands
 
             CommandResult? result = await commandProcessor.Process("broken", _noArgs, MockMessage("bla"));
 
-            Assert.AreEqual("An error occurred.", result?.Response);
+            Assert.That(result?.Response, Is.EqualTo("An error occurred."));
             string errorTextRegex = @"^An exception occured while executing command 'broken'\. " +
                                      $@"User: {Regex.Escape(_mockUser.ToString())}, Original text: bla$";
             loggerMock.VerifyLog(logger => logger.LogError(
@@ -84,7 +84,7 @@ namespace TPP.Core.Tests.Commands
             foreach (string command in ImmutableList.Create("MiXeD", "mixed", "MIXED"))
             {
                 CommandResult? result = await commandProcessor.Process(command, _noArgs, MockMessage());
-                Assert.AreEqual("Hi!", result?.Response);
+                Assert.That(result?.Response, Is.EqualTo("Hi!"));
             }
         }
 
@@ -98,7 +98,7 @@ namespace TPP.Core.Tests.Commands
             foreach (string command in ImmutableList.Create("main", "alias1", "ALIAS2"))
             {
                 CommandResult? result = await commandProcessor.Process(command, _noArgs, MockMessage());
-                Assert.AreEqual("Hi!", result?.Response);
+                Assert.That(result?.Response, Is.EqualTo("Hi!"));
             }
         }
 
@@ -110,7 +110,7 @@ namespace TPP.Core.Tests.Commands
             commandProcessor.InstallCommand(new Command("a", CommandUtils.StaticResponse("Hi!")));
             var ex = Assert.Throws<ArgumentException>(() => commandProcessor
                 .InstallCommand(new Command("A", CommandUtils.StaticResponse("Hi!"))));
-            Assert.AreEqual("The command name 'a' conflicts with: a: <no description>", ex.Message);
+            Assert.That(ex.Message, Is.EqualTo("The command name 'a' conflicts with: a: <no description>"));
         }
 
         [Test]
@@ -122,7 +122,7 @@ namespace TPP.Core.Tests.Commands
             { Aliases = new[] { "x" } });
             var ex = Assert.Throws<ArgumentException>(() => commandProcessor
                 .InstallCommand(new Command("b", CommandUtils.StaticResponse("Hi!")) { Aliases = new[] { "X" } }));
-            Assert.AreEqual("The alias 'x' conflicts with: a(x): <no description>", ex.Message);
+            Assert.That(ex.Message, Is.EqualTo("The alias 'x' conflicts with: a(x): <no description>"));
         }
 
         [Test]
@@ -134,7 +134,7 @@ namespace TPP.Core.Tests.Commands
             { Aliases = new[] { "b" } });
             var ex = Assert.Throws<ArgumentException>(() => commandProcessor
                 .InstallCommand(new Command("b", CommandUtils.StaticResponse("Hi!")) { Aliases = new[] { "x" } }));
-            Assert.AreEqual("The command name 'b' conflicts with: a(b): <no description>", ex.Message);
+            Assert.That(ex.Message, Is.EqualTo("The command name 'b' conflicts with: a(b): <no description>"));
         }
 
         [Test]
@@ -153,10 +153,10 @@ namespace TPP.Core.Tests.Commands
             lastMessageAt: null, pokeyen: 0, tokens: 0, roles: new HashSet<Role> { Role.Operator });
 
             CommandResult? userResult = await commandProcessor.Process("opsonly", _noArgs, new Message(_mockUser, "", MessageSource.Chat, ""));
-            Assert.AreEqual("Only operators can use that command", userResult?.Response);
+            Assert.That(userResult?.Response, Is.EqualTo("Only operators can use that command"));
 
             CommandResult? opResult = await commandProcessor.Process("opsonly", _noArgs, new Message(op, "", MessageSource.Chat, ""));
-            Assert.AreEqual("you are an operator", opResult?.Response);
+            Assert.That(opResult?.Response, Is.EqualTo("you are an operator"));
         }
     }
 }

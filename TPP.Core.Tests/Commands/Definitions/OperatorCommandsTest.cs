@@ -83,7 +83,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             {
                 CommandResult result = await operatorCommands.AdjustTokens(new CommandContext(MockMessage(user),
                     ImmutableList.Create(user.Name, "T123", "because", "reason"), _argsParser));
-                Assert.AreEqual("Your token balance was adjusted by +123. Reason: because reason", result.Response);
+                Assert.That(result.Response, Is.EqualTo("Your token balance was adjusted by +123. Reason: because reason"));
 
                 var transaction = new Transaction<User>(user, 123, "manual_adjustment",
                     new Dictionary<string, object?> { ["responsible_user"] = user.Id });
@@ -93,7 +93,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             {
                 CommandResult result = await operatorCommands.AdjustTokens(new CommandContext(MockMessage(user),
                     ImmutableList.Create(user.Name, "T-123", "because"), _argsParser));
-                Assert.AreEqual("Your token balance was adjusted by -123. Reason: because", result.Response);
+                Assert.That(result.Response, Is.EqualTo("Your token balance was adjusted by -123. Reason: because"));
 
                 var transaction = new Transaction<User>(user, -123, "manual_adjustment",
                     new Dictionary<string, object?> { ["responsible_user"] = user.Id });
@@ -120,8 +120,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             {
                 CommandResult result = await operatorCommands.AdjustTokens(new CommandContext(MockMessage(userSelf),
                     ImmutableList.Create(userOther.Name, "T123", "because", "reason"), _argsParser));
-                Assert.AreEqual("MockUserOther's token balance was adjusted by +123. Reason: because reason",
-                    result.Response);
+                Assert.That(result.Response, Is.EqualTo("MockUserOther's token balance was adjusted by +123. Reason: because reason"));
 
                 var transaction = new Transaction<User>(userOther, 123, "manual_adjustment",
                     new Dictionary<string, object?> { ["responsible_user"] = userSelf.Id });
@@ -135,7 +134,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             {
                 CommandResult result = await operatorCommands.AdjustTokens(new CommandContext(MockMessage(userSelf),
                     ImmutableList.Create(userOther.Name, "T-123", "because"), _argsParser));
-                Assert.AreEqual("MockUserOther's token balance was adjusted by -123. Reason: because", result.Response);
+                Assert.That(result.Response, Is.EqualTo("MockUserOther's token balance was adjusted by -123. Reason: because"));
 
                 var transaction = new Transaction<User>(userOther, -123, "manual_adjustment",
                     new Dictionary<string, object?> { ["responsible_user"] = userSelf.Id });
@@ -175,9 +174,8 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await operatorCommands.TransferBadge(new CommandContext(MockMessage(userSelf),
                 ImmutableList.Create("gifter", "recipient", "species", "2", "because", "reason"), _argsParser));
 
-            Assert.AreEqual("transferred 2 #001 species badges from Gifter to Recipient. Reason: because reason",
-                result.Response);
-            Assert.AreEqual(ResponseTarget.Chat, result.ResponseTarget);
+            Assert.That(result.Response, Is.EqualTo("transferred 2 #001 species badges from Gifter to Recipient. Reason: because reason"));
+            Assert.That(result.ResponseTarget, Is.EqualTo(ResponseTarget.Chat));
             IDictionary<string, object?> data = new Dictionary<string, object?>
             {
                 ["gifter"] = gifter.Id,
@@ -210,7 +208,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await operatorCommands.TransferBadge(new CommandContext(MockMessage(userSelf),
                 ImmutableList.Create("gifter", "recipient", "species", "2"), _argsParser));
 
-            Assert.AreEqual("Must provide a reason", result.Response);
+            Assert.That(result.Response, Is.EqualTo("Must provide a reason"));
             _badgeRepoMock.Verify(repo => repo.TransferBadges(
                     It.IsAny<IImmutableList<Badge>>(),
                     It.IsAny<string>(),
@@ -240,8 +238,8 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await operatorCommands.TransferBadge(new CommandContext(MockMessage(userSelf),
                 ImmutableList.Create("gifter", "recipient", "species", "reason"), _argsParser));
 
-            Assert.AreEqual("You tried to transfer 1 #001 species badges, but the gifter only has 0.", result.Response);
-            Assert.AreEqual(ResponseTarget.Source, result.ResponseTarget);
+            Assert.That(result.Response, Is.EqualTo("You tried to transfer 1 #001 species badges, but the gifter only has 0."));
+            Assert.That(result.ResponseTarget, Is.EqualTo(ResponseTarget.Source));
             _badgeRepoMock.Verify(repo => repo.TransferBadges(
                     It.IsAny<IImmutableList<Badge>>(),
                     It.IsAny<string?>(),
@@ -266,8 +264,8 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await operatorCommands.CreateBadge(new CommandContext(MockMessage(user),
                 ImmutableList.Create("recipient", "species", "123"), _argsParser));
 
-            Assert.AreEqual("123 badges of species #001 Species created for user Recipient.", result.Response);
-            Assert.AreEqual(ResponseTarget.Source, result.ResponseTarget);
+            Assert.That(result.Response, Is.EqualTo("123 badges of species #001 Species created for user Recipient."));
+            Assert.That(result.ResponseTarget, Is.EqualTo(ResponseTarget.Source));
             _badgeRepoMock.Verify(repo =>
                     repo.AddBadge(recipient.Id, species, Badge.BadgeSource.ManualCreation, null),
                 Times.Exactly(123));

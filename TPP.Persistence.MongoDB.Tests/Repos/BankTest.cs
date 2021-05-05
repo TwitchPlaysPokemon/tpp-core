@@ -56,13 +56,13 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             var transaction = new Transaction<TestUser>(user, 1, "test");
             TransactionLog log = await bank.PerformTransaction(transaction);
 
-            Assert.AreEqual(10, log.OldBalance);
-            Assert.AreEqual(11, log.NewBalance);
-            Assert.AreEqual(1, log.Change);
-            Assert.AreEqual("test", log.Type);
+            Assert.That(log.OldBalance, Is.EqualTo(10));
+            Assert.That(log.NewBalance, Is.EqualTo(11));
+            Assert.That(log.Change, Is.EqualTo(1));
+            Assert.That(log.Type, Is.EqualTo("test"));
             TestUser userAfter = await usersCollection.Find(u => u.Id == user.Id).FirstAsync();
-            Assert.AreEqual(11, userAfter.Money);
-            Assert.AreEqual(11, user.Money); // new balance value was injected into existing object as well
+            Assert.That(userAfter.Money, Is.EqualTo(11));
+            Assert.That(user.Money, Is.EqualTo(11)); // new balance value was injected into existing object as well
         }
 
         [Test]
@@ -77,14 +77,13 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             InvalidOperationException failure = Assert.ThrowsAsync<InvalidOperationException>(
                 () => bank.PerformTransaction(transaction));
 
-            Assert.AreEqual(
-                "Tried to perform transaction with stale user data: " +
-                $"old balance 15 plus change 1 does not equal new balance 11 for user {user}",
-                failure.Message);
+            Assert.That(
+                failure.Message, Is.EqualTo("Tried to perform transaction with stale user data: " +
+                $"old balance 15 plus change 1 does not equal new balance 11 for user {user}"));
 
             TestUser userAfter = await usersCollection.Find(u => u.Id == user.Id).FirstAsync();
-            Assert.AreEqual(10, userAfter.Money);
-            Assert.AreEqual(15, user.Money); // no new balance was injected
+            Assert.That(userAfter.Money, Is.EqualTo(10));
+            Assert.That(user.Money, Is.EqualTo(15)); // no new balance was injected
         }
 
         [Test]
@@ -96,7 +95,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             var transaction = new Transaction<TestUser>(user, 1, "test");
             UserNotFoundException<TestUser> userNotFound = Assert.ThrowsAsync<UserNotFoundException<TestUser>>(
                 () => bank.PerformTransaction(transaction));
-            Assert.AreEqual(user, userNotFound.User);
+            Assert.That(userNotFound.User, Is.EqualTo(user));
         }
 
         [Test]
@@ -115,12 +114,12 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
                 })
             );
 
-            Assert.AreEqual(unknownUser, userNotFound.User);
+            Assert.That(userNotFound.User, Is.EqualTo(unknownUser));
             // ensure neither user's balance was modified
-            Assert.AreEqual(10, knownUser.Money);
-            Assert.AreEqual(20, unknownUser.Money);
+            Assert.That(knownUser.Money, Is.EqualTo(10));
+            Assert.That(unknownUser.Money, Is.EqualTo(20));
             TestUser knownUserAfterwards = await usersCollection.Find(u => u.Id == knownUser.Id).FirstAsync();
-            Assert.AreEqual(10, knownUserAfterwards.Money);
+            Assert.That(knownUserAfterwards.Money, Is.EqualTo(10));
         }
 
         [Test]
@@ -132,14 +131,14 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             await usersCollection.InsertManyAsync(new[] { user, otherUser });
             Task<long> Checker(TestUser u) => Task.FromResult(u == user ? 1L : 0L);
 
-            Assert.AreEqual(10, await bank.GetAvailableMoney(user));
-            Assert.AreEqual(20, await bank.GetAvailableMoney(otherUser));
+            Assert.That(await bank.GetAvailableMoney(user), Is.EqualTo(10));
+            Assert.That(await bank.GetAvailableMoney(otherUser), Is.EqualTo(20));
             bank.AddReservedMoneyChecker(Checker);
-            Assert.AreEqual(9, await bank.GetAvailableMoney(user));
-            Assert.AreEqual(20, await bank.GetAvailableMoney(otherUser));
+            Assert.That(await bank.GetAvailableMoney(user), Is.EqualTo(9));
+            Assert.That(await bank.GetAvailableMoney(otherUser), Is.EqualTo(20));
             bank.RemoveReservedMoneyChecker(Checker);
-            Assert.AreEqual(10, await bank.GetAvailableMoney(user));
-            Assert.AreEqual(20, await bank.GetAvailableMoney(otherUser));
+            Assert.That(await bank.GetAvailableMoney(user), Is.EqualTo(10));
+            Assert.That(await bank.GetAvailableMoney(otherUser), Is.EqualTo(20));
         }
 
         [Test]
@@ -149,7 +148,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             TestUser unknownUser = new TestUser { Money = 0 }; // not persisted
             UserNotFoundException<TestUser> userNotFound = Assert.ThrowsAsync<UserNotFoundException<TestUser>>(
                 () => bank.GetAvailableMoney(unknownUser));
-            Assert.AreEqual(unknownUser, userNotFound.User);
+            Assert.That(userNotFound.User, Is.EqualTo(unknownUser));
         }
 
         [Test]
@@ -175,17 +174,17 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             BsonDocument log = await transactionLogCollection.Find(FilterDefinition<BsonDocument>.Empty).FirstAsync();
 
             Assert.IsInstanceOf<BsonObjectId>(log["_id"]);
-            Assert.AreEqual(BsonString.Create(user.Id), log["user"]);
-            Assert.AreEqual(BsonInt64.Create(1), log["change"]);
-            Assert.AreEqual(BsonInt64.Create(10), log["old_balance"]);
-            Assert.AreEqual(BsonInt64.Create(11), log["new_balance"]);
-            Assert.AreEqual(clockMock.FixedCurrentInstant, log["timestamp"].ToUniversalTime().ToInstant());
-            Assert.AreEqual(BsonString.Create("test"), log["type"]);
-            Assert.AreEqual(BsonNull.Value, log["null_field"]);
-            Assert.AreEqual(BsonInt32.Create(42), log["int_field"]);
-            Assert.AreEqual(BsonString.Create("foo"), log["string_field"]);
-            Assert.AreEqual(BsonArray.Create(list), log["list_field"]);
-            Assert.AreEqual(BsonDocument.Create(dictionary), log["dictionary_field"]);
+            Assert.That(log["user"], Is.EqualTo(BsonString.Create(user.Id)));
+            Assert.That(log["change"], Is.EqualTo(BsonInt64.Create(1)));
+            Assert.That(log["old_balance"], Is.EqualTo(BsonInt64.Create(10)));
+            Assert.That(log["new_balance"], Is.EqualTo(BsonInt64.Create(11)));
+            Assert.That(log["timestamp"].ToUniversalTime().ToInstant(), Is.EqualTo(clockMock.FixedCurrentInstant));
+            Assert.That(log["type"], Is.EqualTo(BsonString.Create("test")));
+            Assert.That(log["null_field"], Is.EqualTo(BsonNull.Value));
+            Assert.That(log["int_field"], Is.EqualTo(BsonInt32.Create(42)));
+            Assert.That(log["string_field"], Is.EqualTo(BsonString.Create("foo")));
+            Assert.That(log["list_field"], Is.EqualTo(BsonArray.Create(list)));
+            Assert.That(log["dictionary_field"], Is.EqualTo(BsonDocument.Create(dictionary)));
         }
 
         [Test]
@@ -211,14 +210,14 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
                 usersCollection.Database.GetCollection<TransactionLog>("transactionLog");
             TransactionLog log = await transactionLogCollection.Find(t => t.Id == id).FirstAsync();
 
-            Assert.AreEqual(id, log.Id);
-            Assert.AreEqual("137272735", log.UserId);
-            Assert.AreEqual(-9, log.Change);
-            Assert.AreEqual(25, log.OldBalance);
-            Assert.AreEqual(16, log.NewBalance);
-            Assert.AreEqual(instant, log.CreatedAt);
+            Assert.That(log.Id, Is.EqualTo(id));
+            Assert.That(log.UserId, Is.EqualTo("137272735"));
+            Assert.That(log.Change, Is.EqualTo(-9));
+            Assert.That(log.OldBalance, Is.EqualTo(25));
+            Assert.That(log.NewBalance, Is.EqualTo(16));
+            Assert.That(log.CreatedAt, Is.EqualTo(instant));
             Assert.IsNull(log.Type);
-            Assert.AreEqual(new Dictionary<string, object?> { ["match"] = 35510 }, log.AdditionalData);
+            Assert.That(log.AdditionalData, Is.EqualTo(new Dictionary<string, object?> { ["match"] = 35510 }));
         }
 
         [Test]
@@ -232,9 +231,9 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             TransactionLog[] transactionLogs = await Task.WhenAll(Enumerable.Range(0, numTransactions)
                 .Select(i => bank.PerformTransaction(new Transaction<TestUser>(user, 1, "test-" + i))));
 
-            Assert.AreEqual(numTransactions, transactionLogs.Length);
+            Assert.That(transactionLogs.Length, Is.EqualTo(numTransactions));
             TestUser userAfterwards = await usersCollection.Find(u => u.Id == user.Id).FirstAsync();
-            Assert.AreEqual(10 + numTransactions, userAfterwards.Money);
+            Assert.That(userAfterwards.Money, Is.EqualTo(10 + numTransactions));
         }
     }
 }

@@ -61,7 +61,7 @@ namespace TPP.Core.Tests.Overlay
             await server.Send("beep", CancellationToken.None);
             await server.Send("boop", CancellationToken.None);
             await server.Stop();
-            Assert.AreEqual(new List<string> { "beep", "boop" }, await readMessagesTask);
+            Assert.That(await readMessagesTask, Is.EqualTo(new List<string> { "beep", "boop" }));
         }
 
         [Test]
@@ -90,7 +90,7 @@ namespace TPP.Core.Tests.Overlay
 
             foreach (var stream in messageStreams)
             {
-                Assert.AreEqual(messages, await stream);
+                Assert.That(await stream, Is.EqualTo(messages));
             }
         }
 
@@ -106,7 +106,7 @@ namespace TPP.Core.Tests.Overlay
             Assert.IsNull(await client.ReadAsync(CancellationToken.None)); // server is terminating the connection
             var ex = Assert.ThrowsAsync<WebSocketException>(()
                 => client.WriteAsync("Websocket is already dead", CancellationToken.None));
-            Assert.AreEqual(WebSocketError.InvalidState, ex.WebSocketErrorCode);
+            Assert.That(ex.WebSocketErrorCode, Is.EqualTo(WebSocketError.InvalidState));
         }
 
         [Test]
