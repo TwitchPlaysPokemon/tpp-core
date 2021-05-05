@@ -37,7 +37,8 @@ namespace TPP.ArgsParsing.Tests
             ArgsParseFailure ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
                 .Parse<AnyOrder<SignedInt, string>>(ImmutableList.Create("foo", "bar")))!;
             Assert.That(ex.Failures.Count, Is.EqualTo(2));
-            Assert.That(ex.Message, Is.EqualTo("did not recognize 'foo' as a number, or did not recognize 'bar' as a number"));
+            Assert.That(ex.Message,
+                Is.EqualTo("did not recognize 'foo' as a number, or did not recognize 'bar' as a number"));
         }
 
         [Test]
@@ -146,9 +147,9 @@ namespace TPP.ArgsParsing.Tests
                 .Parse<HexColor>(ImmutableList.Create("#bcdefg")))!;
             Assert.That(ex1.Message, Is.EqualTo("'blabla' is not a valid hex color"));
             Assert.That(ex2.Message, Is.EqualTo("'#abc' must be a 6-character hex code consisting of 0-9 and A-F, " +
-                            "for example '#FF0000' for pure red."));
+                                                "for example '#FF0000' for pure red."));
             Assert.That(ex3.Message, Is.EqualTo("'#bcdefg' must be a 6-character hex code consisting of 0-9 and A-F, " +
-                            "for example '#FF0000' for pure red."));
+                                                "for example '#FF0000' for pure red."));
         }
 
         [Test]
@@ -251,8 +252,8 @@ namespace TPP.ArgsParsing.Tests
             Assert.That(exNotPrefixed.Message, Is.EqualTo("Please prefix with '#' to supply and pokedex number"));
             ArgsParseFailure exUnknown = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
                 .Parse<PkmnSpecies>(args: ImmutableList.Create("unknown")))!;
-            Assert.That(
-exUnknown.Message, Is.EqualTo("No pokemon with the name 'unknown' was recognized. Please supply a valid name, " +
+            Assert.That(exUnknown.Message, Is.EqualTo(
+                "No pokemon with the name 'unknown' was recognized. Please supply a valid name, " +
                 "or prefix with '#' to supply and pokedex number instead"));
         }
 
@@ -281,8 +282,8 @@ exUnknown.Message, Is.EqualTo("No pokemon with the name 'unknown' was recognized
 
             ArgsParseFailure exNotRecognized = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
                 .Parse<PkmnSpecies>(args: ImmutableList.Create("mahina", "aaaaaa")))!;
-            Assert.That(
-exNotRecognized.Message, Is.EqualTo("No pokemon with the name 'mahina' was recognized. Please supply a valid name, " +
+            Assert.That(exNotRecognized.Message, Is.EqualTo(
+                "No pokemon with the name 'mahina' was recognized. Please supply a valid name, " +
                 "or prefix with '#' to supply and pokedex number instead"));
             ArgsParseFailure exNoAccidentalHashRemoval = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
                 .Parse<PkmnSpecies>(args: ImmutableList.Create("#mahinapea")))!;
@@ -416,7 +417,8 @@ exNotRecognized.Message, Is.EqualTo("No pokemon with the name 'mahina' was recog
             Assert.That(ex.Message, Is.EqualTo("did not recognize a user with the name 'some_unknown_name'"));
             ArgsParseFailure exUserPrefixed = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
                 .Parse<User>(args: ImmutableList.Create("@some_unknown_name")))!;
-            Assert.That(exUserPrefixed.Message, Is.EqualTo("did not recognize a user with the name 'some_unknown_name'"));
+            Assert.That(exUserPrefixed.Message,
+                Is.EqualTo("did not recognize a user with the name 'some_unknown_name'"));
             ArgsParseFailure exDisplayName = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
                 .Parse<User>(args: ImmutableList.Create("なまえ")))!;
             Assert.That(exDisplayName.Message, Is.EqualTo("did not recognize a user with the name 'なまえ'"));
