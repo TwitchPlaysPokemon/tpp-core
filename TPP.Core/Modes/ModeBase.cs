@@ -75,13 +75,21 @@ namespace TPP.Core.Modes
             _forwardUnprocessedMessages = baseConfig.Chat.ForwardUnprocessedMessages;
             _clock = SystemClock.Instance;
 
-            IImmutableList<IModerationRule> rules = ImmutableList.Create<IModerationRule>(
+            ILogger<Moderator> moderatorLogger = loggerFactory.CreateLogger<Moderator>();
+
+            IImmutableList<IModerationRule> availableRules = ImmutableList.Create<IModerationRule>(
                 new BannedUrlsRule(),
                 new SpambotRule(),
                 new EmoteRule(),
                 new CopypastaRule(clock),
-                new UnicodeCharacterCategoryRule());
-            ILogger<Moderator> moderatorLogger = loggerFactory.CreateLogger<Moderator>();
+                new UnicodeCharacterCategoryRule()
+            );
+            foreach (string unknown in baseConfig.DisabledModbotRules.Except(availableRules.Select(rule => rule.Id)))
+                moderatorLogger.LogWarning("unknown modbot rule '{UnknownRule}' marked as disabled", unknown);
+            IImmutableList<IModerationRule> rules = availableRules
+                .Where(rule => !baseConfig.DisabledModbotRules.Contains(rule.Id))
+                .ToImmutableList();
+
             _moderators = _chats.Values.ToImmutableDictionary(
                 c => c.Name,
                 c => (IModerator)new Moderator(moderatorLogger, c, rules, repos.ModLogRepo, clock));
