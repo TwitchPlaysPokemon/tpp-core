@@ -82,7 +82,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await _userCommands.CheckBalance(new CommandContext(MockMessage(user),
                 ImmutableList<string>.Empty, _argsParser));
 
-            Assert.AreEqual("You have P900 pokeyen (P100 reserved) and T9 tokens (T1 reserved).", result.Response);
+            Assert.That(result.Response, Is.EqualTo("You have P900 pokeyen (P100 reserved) and T9 tokens (T1 reserved)."));
         }
 
         [Test]
@@ -97,10 +97,9 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await _userCommands.CheckBalance(new CommandContext(MockMessage(user),
                 ImmutableList<string>.Empty, _argsParser));
 
-            Assert.AreEqual(
-                "You have P1000 pokeyen and T10 tokens. " +
-                "You are currently rank 123 in the leaderboard.",
-                result.Response);
+            Assert.That(
+                result.Response, Is.EqualTo("You have P1000 pokeyen and T10 tokens. " +
+                "You are currently rank 123 in the leaderboard."));
         }
 
         [Test]
@@ -118,10 +117,9 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await _userCommands.CheckBalance(new CommandContext(message,
                 ImmutableList.Create(user.Name), _argsParser));
 
-            Assert.AreEqual(
-                $"{user.Name} has P1000 pokeyen and T10 tokens. " +
-                "They are currently rank 123 in the leaderboard.",
-                result.Response);
+            Assert.That(
+                result.Response, Is.EqualTo($"{user.Name} has P1000 pokeyen and T10 tokens. " +
+                "They are currently rank 123 in the leaderboard."));
         }
 
         [Test]
@@ -131,7 +129,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await _userCommands.SetGlow(new CommandContext(MockMessage(user),
                 ImmutableList.Create("#123456"), _argsParser));
 
-            Assert.AreEqual("glow color is still locked, use 'unlockglow' to unlock (costs T1)", result.Response);
+            Assert.That(result.Response, Is.EqualTo("glow color is still locked, use 'unlockglow' to unlock (costs T1)"));
             _userRepoMock.VerifyNoOtherCalls();
         }
 
@@ -144,7 +142,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await _userCommands.SetGlow(new CommandContext(MockMessage(user),
                 ImmutableList.Create('#' + glowColor), _argsParser));
 
-            Assert.AreEqual("glow color set to #123456", result.Response);
+            Assert.That(result.Response, Is.EqualTo("glow color set to #123456"));
             _userRepoMock.Verify(u => u.SetGlowColor(user, glowColor), Times.Once);
         }
 
@@ -156,7 +154,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await _userCommands.RemoveGlow(new CommandContext(MockMessage(user),
                 ImmutableList<string>.Empty, _argsParser));
 
-            Assert.AreEqual("your glow color was removed", result.Response);
+            Assert.That(result.Response, Is.EqualTo("your glow color was removed"));
             _userRepoMock.Verify(u => u.SetGlowColor(user, null), Times.Once);
         }
 
@@ -168,7 +166,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await _userCommands.UnlockGlow(new CommandContext(MockMessage(user),
                 ImmutableList<string>.Empty, _argsParser));
 
-            Assert.AreEqual("glow color is already unlocked", result.Response);
+            Assert.That(result.Response, Is.EqualTo("glow color is already unlocked"));
             _userRepoMock.VerifyNoOtherCalls();
         }
 
@@ -181,7 +179,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await _userCommands.UnlockGlow(new CommandContext(MockMessage(user),
                 ImmutableList<string>.Empty, _argsParser));
 
-            Assert.AreEqual("you don't have T1 to unlock the glow color", result.Response);
+            Assert.That(result.Response, Is.EqualTo("you don't have T1 to unlock the glow color"));
             _userRepoMock.VerifyNoOtherCalls();
         }
 
@@ -194,7 +192,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await _userCommands.UnlockGlow(new CommandContext(MockMessage(user),
                 ImmutableList<string>.Empty, _argsParser));
 
-            Assert.AreEqual("your glow color was unlocked", result.Response);
+            Assert.That(result.Response, Is.EqualTo("your glow color was unlocked"));
             _userRepoMock.Verify(u => u.SetGlowColorUnlocked(user, true), Times.Once);
             _tokenBankMock.Verify(b => b.PerformTransaction(
                     It.Is((Transaction<User> tx) =>
@@ -212,9 +210,9 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await _userCommands.SetDisplayName(new CommandContext(MockMessage(user),
                 ImmutableList.Create(newDisplayName), _argsParser));
 
-            Assert.AreEqual(
-                "you don't have any special characters in your name " +
-                "and can therefore still change it in your twitch settings", result.Response);
+            Assert.That(
+                result.Response, Is.EqualTo("you don't have any special characters in your name " +
+                "and can therefore still change it in your twitch settings"));
             _userRepoMock.VerifyNoOtherCalls();
         }
 
@@ -227,7 +225,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await _userCommands.SetDisplayName(new CommandContext(MockMessage(user),
                 ImmutableList.Create(newDisplayName), _argsParser));
 
-            Assert.AreEqual($"your display name has been updated to '{newDisplayName}'", result.Response);
+            Assert.That(result.Response, Is.EqualTo($"your display name has been updated to '{newDisplayName}'"));
             _userRepoMock.Verify(u => u.SetDisplayName(user, newDisplayName), Times.Once);
         }
 
@@ -239,9 +237,8 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await _userCommands.CheckEmblems(new CommandContext(MockMessage(user),
                 ImmutableList<string>.Empty, _argsParser));
 
-            Assert.AreEqual(
-                "you have participated in the following runs: #1 (Red), #2 (Crystal), #47 (Sirius)",
-                result.Response);
+            Assert.That(
+                result.Response, Is.EqualTo("you have participated in the following runs: #1 (Red), #2 (Crystal), #47 (Sirius)"));
         }
 
         [Test]
@@ -256,9 +253,8 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await _userCommands.CheckEmblems(new CommandContext(MockMessage(userSelf),
                 ImmutableList.Create("oThErUsEr"), _argsParser));
 
-            Assert.AreEqual(
-                "OtherUser has participated in the following runs: #1 (Red), #2 (Crystal), #47 (Sirius)",
-                result.Response);
+            Assert.That(
+                result.Response, Is.EqualTo("OtherUser has participated in the following runs: #1 (Red), #2 (Crystal), #47 (Sirius)"));
         }
 
         [Test]
@@ -269,7 +265,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await _userCommands.SelectEmblem(new CommandContext(MockMessage(user),
                 ImmutableList.Create("10"), _argsParser));
 
-            Assert.AreEqual("you don't own that participation badge", result.Response);
+            Assert.That(result.Response, Is.EqualTo("you don't own that participation badge"));
             _userRepoMock.VerifyNoOtherCalls();
         }
 
@@ -281,7 +277,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await _userCommands.SelectEmblem(new CommandContext(MockMessage(user),
                 ImmutableList.Create("2"), _argsParser));
 
-            Assert.AreEqual("color of participation badge #2 (Crystal) successfully equipped", result.Response);
+            Assert.That(result.Response, Is.EqualTo("color of participation badge #2 (Crystal) successfully equipped"));
             _userRepoMock.Verify(u => u.SetSelectedEmblem(user, 2), Times.Once);
         }
 
@@ -299,7 +295,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await _userCommands.Donate(new CommandContext(MockMessage(userSelf),
                 ImmutableList.Create("T1", "Recipient"), _argsParser));
 
-            Assert.AreEqual("has donated T1 to @Recipient!", result.Response);
+            Assert.That(result.Response, Is.EqualTo("has donated T1 to @Recipient!"));
             List<Transaction<User>> txs = txInvocations.SelectMany(t => t).ToList();
             CollectionAssert.AreEquivalent(new List<Transaction<User>>
             {
@@ -320,7 +316,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await _userCommands.Donate(new CommandContext(MockMessage(userSelf),
                 ImmutableList.Create("T2", "Recipient"), _argsParser));
 
-            Assert.AreEqual("You are trying to donate T2 but you only have T1.", result.Response);
+            Assert.That(result.Response, Is.EqualTo("You are trying to donate T2 but you only have T1."));
             _tokenBankMock.Verify(b =>
                 b.PerformTransactions(It.IsAny<IEnumerable<Transaction<User>>>(), It.IsAny<CancellationToken>()),
                 Times.Never);

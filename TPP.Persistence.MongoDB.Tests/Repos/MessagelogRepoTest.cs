@@ -21,21 +21,21 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
 
             // persist to db
             Messagelog written = await repo.LogChat(userId, ircLine, message, timestamp);
-            Assert.AreEqual(userId, written.UserId);
-            Assert.AreEqual(ircLine, written.IrcLine);
-            Assert.AreEqual(message, written.Message);
-            Assert.AreEqual(timestamp, written.Timestamp);
+            Assert.That(written.UserId, Is.EqualTo(userId));
+            Assert.That(written.IrcLine, Is.EqualTo(ircLine));
+            Assert.That(written.Message, Is.EqualTo(message));
+            Assert.That(written.Timestamp, Is.EqualTo(timestamp));
             Assert.NotNull(written.Id);
 
             // read from db
             List<Messagelog> allItems = await repo.Collection.Find(FilterDefinition<Messagelog>.Empty).ToListAsync();
-            Assert.AreEqual(1, allItems.Count);
+            Assert.That(allItems.Count, Is.EqualTo(1));
             Messagelog read = allItems[0];
-            Assert.AreEqual(written, read);
-            Assert.AreEqual(userId, read.UserId);
-            Assert.AreEqual(ircLine, read.IrcLine);
-            Assert.AreEqual(message, read.Message);
-            Assert.AreEqual(timestamp, read.Timestamp);
+            Assert.That(read, Is.EqualTo(written));
+            Assert.That(read.UserId, Is.EqualTo(userId));
+            Assert.That(read.IrcLine, Is.EqualTo(ircLine));
+            Assert.That(read.Message, Is.EqualTo(message));
+            Assert.That(read.Timestamp, Is.EqualTo(timestamp));
         }
     }
 }

@@ -48,7 +48,7 @@ namespace TPP.Core.Tests.Commands.Definitions
                 CommandResult result = await commands.Bet(new CommandContext(MockMessage(MockUser("me")),
                     ImmutableList.Create("!bet 1 blue"), ArgsParser));
 
-                Assert.AreEqual("betting not available right now", result.Response);
+                Assert.That(result.Response, Is.EqualTo("betting not available right now"));
             }
 
             [Test]
@@ -61,7 +61,7 @@ namespace TPP.Core.Tests.Commands.Definitions
                 CommandResult result = await commands.Bet(new CommandContext(MockMessage(MockUser("me")),
                     ImmutableList.Create("!bet 1 blue"), ArgsParser));
 
-                Assert.AreEqual("betting is already closed", result.Response);
+                Assert.That(result.Response, Is.EqualTo("betting is already closed"));
             }
 
             [Test]
@@ -75,7 +75,7 @@ namespace TPP.Core.Tests.Commands.Definitions
                     MockMessage(user, source: MessageSource.Whisper),
                     ImmutableList.Create("100", "blue"), ArgsParser));
 
-                Assert.AreEqual("you may only bet through chat", result.Response);
+                Assert.That(result.Response, Is.EqualTo("you may only bet through chat"));
             }
 
             [Test]
@@ -93,7 +93,7 @@ namespace TPP.Core.Tests.Commands.Definitions
                 CommandResult result = await commands.Bet(new CommandContext(MockMessage(user),
                     ImmutableList.Create("100", "blue"), ArgsParser));
 
-                Assert.AreEqual("insufficient funds, you only have 50 pokeyen available", result.Response);
+                Assert.That(result.Response, Is.EqualTo("insufficient funds, you only have 50 pokeyen available"));
             }
 
             [Test]
@@ -111,7 +111,7 @@ namespace TPP.Core.Tests.Commands.Definitions
                 CommandResult result = await commands.Bet(new CommandContext(MockMessage(user),
                     ImmutableList.Create("100", "blue"), ArgsParser));
 
-                Assert.AreEqual("placed a P100 bet on Blue.", result.Response);
+                Assert.That(result.Response, Is.EqualTo("placed a P100 bet on Blue."));
             }
         }
     }
