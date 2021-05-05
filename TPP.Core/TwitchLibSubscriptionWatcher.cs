@@ -73,7 +73,10 @@ namespace TPP.Core
                 user, int.Parse(subscriptionMessage.MsgParamMonths), StreakMonths: 1, tier,
                 subscriptionMessage.MsgParamSubPlanName, _clock.GetCurrentInstant(),
                 Message: null, ParseEmotes(e.GiftedSubscription.Emotes));
-            SubscriptionGiftInfo subscriptionGiftInfo = new(subscriptionInfo, gifter, subscriptionMessage.IsAnonymous);
+            int numGiftedMonths = string.IsNullOrEmpty(e.GiftedSubscription.MsgParamMultiMonthGiftDuration)
+                ? 1
+                : int.Parse(e.GiftedSubscription.MsgParamMultiMonthGiftDuration);
+            SubscriptionGiftInfo subscriptionGiftInfo = new(subscriptionInfo, gifter, numGiftedMonths, subscriptionMessage.IsAnonymous);
             SubscriptionGifted?.Invoke(this, subscriptionGiftInfo);
         }
 

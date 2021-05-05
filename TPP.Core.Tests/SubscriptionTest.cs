@@ -189,9 +189,9 @@ namespace TPP.Core.Tests
                 Instant.MinValue, "sub message", ImmutableList<EmoteOccurrence>.Empty);
             (ISubscriptionProcessor.SubResult subResult, ISubscriptionProcessor.SubGiftResult subGiftResult) =
                 await subscriptionProcessor.ProcessSubscriptionGift(
-                    new SubscriptionGiftInfo(subscriptionInfo, gifter, false));
+                    new SubscriptionGiftInfo(subscriptionInfo, gifter, 2, false));
 
-            const int expectedGiftTokens = 10 * 5; // 10 per rank. Tier 3 has rank 5 because $25 = 5 * $5
+            const int expectedGiftTokens = 10 * 5 * 2; // 10 per rank. Tier 3 has rank 5 because $25 = 5 * $5, 2 months
             Assert.IsInstanceOf<ISubscriptionProcessor.SubGiftResult.Ok>(subGiftResult);
             var okGiftResult = (ISubscriptionProcessor.SubGiftResult.Ok)subGiftResult;
             Assert.AreEqual(expectedGiftTokens, okGiftResult.GifterTokens);
@@ -237,7 +237,7 @@ namespace TPP.Core.Tests
                 Instant.MinValue, "sub message", ImmutableList<EmoteOccurrence>.Empty);
             (ISubscriptionProcessor.SubResult subResult, ISubscriptionProcessor.SubGiftResult subGiftResult) =
                 await subscriptionProcessor.ProcessSubscriptionGift(
-                    new SubscriptionGiftInfo(subscriptionInfo, gifter, false));
+                    new SubscriptionGiftInfo(subscriptionInfo, gifter, 1, false));
 
             Assert.IsInstanceOf<ISubscriptionProcessor.SubGiftResult.SameMonth>(subGiftResult);
             var sameMonthGiftResult = (ISubscriptionProcessor.SubGiftResult.SameMonth)subGiftResult;
