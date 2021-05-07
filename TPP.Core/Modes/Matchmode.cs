@@ -13,6 +13,7 @@ using TPP.Core.Overlay.Events;
 using TPP.Match;
 using TPP.Persistence.Models;
 using TPP.Persistence.Repos;
+using static TPP.Core.EventUtils;
 
 namespace TPP.Core.Modes
 {
@@ -36,7 +37,7 @@ namespace TPP.Core.Modes
             _loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger<Matchmode>();
             _stopToken = new StopToken();
-            Setups.Databases repos = Setups.SetUpRepositories(baseConfig);
+            Setups.Databases repos = Setups.SetUpRepositories(_logger, baseConfig);
             _pokeyenBank = repos.PokeyenBank;
             _userRepo = repos.UserRepo;
             (_broadcastServer, _overlayConnection) = Setups.SetUpOverlayServer(loggerFactory);
@@ -81,15 +82,15 @@ namespace TPP.Core.Modes
             const int matchId = -1; // TODO
             IBettingShop<User> bettingShop = new DefaultBettingShop<User>(
                 async user => await _pokeyenBank.GetAvailableMoney(user));
-            bettingShop.BetPlaced += async (_, args) =>
-                await _overlayConnection.Send(new MatchPokeyenBetUpdateEvent
+            bettingShop.BetPlaced += (_, args) => TaskToVoidSafely(_logger, () =>
+                _overlayConnection.Send(new MatchPokeyenBetUpdateEvent
                 {
                     MatchId = matchId,
                     DefaultAction = "",
                     NewBet = new Bet { Amount = args.Amount, Team = args.Side, BetBonus = 0 },
                     NewBetUser = args.User,
                     Odds = bettingShop.GetOdds()
-                }, cancellationToken);
+                }, cancellationToken));
             _bettingPeriod = new BettingPeriod<User>(_pokeyenBank, bettingShop);
             _bettingPeriod.Start();
 
@@ -202,4 +203,3 @@ namespace TPP.Core.Modes
         }
     }
 }
-

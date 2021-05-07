@@ -14,6 +14,7 @@ using TPP.Core.Moderation;
 using TPP.Core.Overlay;
 using TPP.Persistence.Models;
 using TPP.Persistence.Repos;
+using static TPP.Core.EventUtils;
 
 namespace TPP.Core.Modes
 {
@@ -21,6 +22,7 @@ namespace TPP.Core.Modes
     {
         private static readonly Role[] ExemptionRoles = { Role.Operator, Role.Moderator, Role.ModbotExempt };
 
+        private readonly ILogger<ModeBase> _logger;
         private readonly IImmutableDictionary<string, IChat> _chats;
         private readonly IImmutableDictionary<string, ICommandResponder> _commandResponders;
         private readonly IImmutableDictionary<string, CommandProcessor> _commandProcessors;
@@ -44,6 +46,7 @@ namespace TPP.Core.Modes
             ProcessMessage? processMessage = null)
         {
             IClock clock = SystemClock.Instance;
+            _logger = loggerFactory.CreateLogger<ModeBase>();
             PokedexData pokedexData = PokedexData.Load();
             ArgsParser argsParser = Setups.SetUpArgsParser(repos.UserRepo, pokedexData);
             _processMessage = processMessage ?? (_ => Task.FromResult(false));
@@ -101,8 +104,13 @@ namespace TPP.Core.Modes
                 commandProcessor.InstallCommand(command);
         }
 
-        private async void MessageReceived(object? sender, MessageEventArgs e) =>
-            await ProcessIncomingMessage((IChat)sender!, e.Message);
+        private void MessageReceived(object? sender, MessageEventArgs e)
+        {
+            TaskToVoidSafely(_logger, async () =>
+            {
+                await ProcessIncomingMessage((IChat)sender!, e.Message);
+            });
+        }
 
         private async Task ProcessIncomingMessage(IChat chat, Message message)
         {
