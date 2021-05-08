@@ -58,6 +58,7 @@ namespace TPP.Common
             [49] = "Vega",
             [50] = "Chatty Crystal",
             [51] = "Renegade Platinum",
+            [52] = "RGB Race Green"
         };
 
         public static string FormatEmblem(int emblemNum)
