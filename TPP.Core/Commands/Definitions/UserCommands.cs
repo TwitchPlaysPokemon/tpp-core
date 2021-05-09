@@ -71,7 +71,7 @@ namespace TPP.Core.Commands.Definitions
             new Command("showroles", ShowRoles)
             {
                 Aliases = new[] {"roles"},
-                Description = "Operators only: Show which roles a user has." +
+                Description = "Show which roles a user has." +
                               "Arguments: <user>"
             },
         };

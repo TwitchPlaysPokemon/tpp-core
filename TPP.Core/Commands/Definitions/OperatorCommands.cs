@@ -47,45 +47,48 @@ namespace TPP.Core.Commands.Definitions
         {
             new Command("stopnew", Stop)
             {
-                Description = "Operators only: Stop the core, or cancel a previously issued stop command. " +
+                Description = "Stop the core, or cancel a previously issued stop command. " +
                               "Argument: cancel(optional)"
             },
             new Command("pokeyenadjust", AdjustPokeyen)
             {
                 Aliases = new[] { "adjustpokeyen" },
-                Description = "Operators only: Add or remove pokeyen from an user. " +
+                Description = "Add or remove pokeyen from an user. " +
                               "Arguments: p<amount>(can be negative) <user> <reason>"
             },
             new Command("tokensadjust", AdjustTokens)
             {
                 Aliases = new[] { "adjusttokens" },
-                Description = "Operators only: Add or remove tokens from an user. " +
+                Description = "Add or remove tokens from an user. " +
                               "Arguments: t<amount>(can be negative) <user> <reason>"
             },
             new Command("transferbadge", TransferBadge)
             {
-                Description = "Operators only: Transfer badges from one user to another user. " +
+                Description = "Transfer badges from one user to another user. " +
                               "Arguments: <gifter> <recipient> <pokemon> <number of badges>(Optional) <reason>"
             },
             new Command("createbadge", CreateBadge)
             {
-                Description = "Operators only: Create a badge for a user. " +
+                Description = "Create a badge for a user. " +
                               "Arguments: <recipient> <pokemon> <number of badges>(Optional)"
             },
             new Command("addrole", AddRole)
             {
                 Aliases = new[] { "giverole" },
-                Description = "Operators only: Give a user a role." +
+                Description = "Give a user a role." +
                               "Arguments: <user> <role>"
             },
             new Command("removerole", RemoveRole)
             {
-                Description = "Operators only: Remove a role from a user." +
+                Description = "Remove a role from a user." +
                               "Arguments: <user> <role>"
             },
-        }.Select(cmd => cmd.WithCondition(
-            canExecute: ctx => IsOperator(ctx.Message.User),
-            ersatzResult: new CommandResult { Response = "Only operators can use that command" }));
+        }.Select(cmd => cmd
+            .WithCondition(
+                canExecute: ctx => IsOperator(ctx.Message.User),
+                ersatzResult: new CommandResult { Response = "Only operators can use that command" })
+            .WithChangedDescription(desc => "Operators only: " + desc)
+        );
 
         private bool IsOperator(User user) =>
             user.Roles.Contains(Role.Operator);
@@ -254,7 +257,7 @@ namespace TPP.Core.Commands.Definitions
             else
             {
                 response = user.Roles.Count > 0
-                    ? $"{user.Name} didn't have the role { role.ToString() }. {user.Name}'s roles are: {string.Join(", ", user.Roles)}"
+                    ? $"{user.Name} didn't have the role {role.ToString()}. {user.Name}'s roles are: {string.Join(", ", user.Roles)}"
                     : $"{user.Name} has no roles";
             }
 

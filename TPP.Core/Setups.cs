@@ -80,7 +80,9 @@ namespace TPP.Core
                     stopToken,chatConfig.DefaultOperatorNames, databases.PokeyenBank, databases.TokensBank,
                     messageSender: messageSender, databases.BadgeRepo, databases.UserRepo
                 ).Commands,
-                new ModeratorCommands(chatModeChanger, databases.LinkedAccountRepo).Commands
+                new ModeratorCommands(
+                    chatModeChanger, databases.LinkedAccountRepo, databases.ResponseCommandRepo
+                ).Commands
             }.SelectMany(cmds => cmds).Concat(new[]
             {
                 new HelpCommand(commandProcessor).Command
@@ -101,7 +103,8 @@ namespace TPP.Core
             IMessagequeueRepo MessagequeueRepo,
             IMessagelogRepo MessagelogRepo,
             ILinkedAccountRepo LinkedAccountRepo,
-            ISubscriptionLogRepo SubscriptionLogRepo
+            ISubscriptionLogRepo SubscriptionLogRepo,
+            IResponseCommandRepo ResponseCommandRepo
         );
 
         public static Databases SetUpRepositories(BaseConfig baseConfig)
@@ -146,7 +149,8 @@ namespace TPP.Core
                 MessagequeueRepo: new MessagequeueRepo(mongoDatabase),
                 MessagelogRepo: new MessagelogRepo(mongoDatabaseMessagelog),
                 LinkedAccountRepo: new LinkedAccountRepo(mongoDatabase, userRepo.Collection),
-                SubscriptionLogRepo: new SubscriptionLogRepo(mongoDatabase)
+                SubscriptionLogRepo: new SubscriptionLogRepo(mongoDatabase),
+                ResponseCommandRepo: new ResponseCommandRepo(mongoDatabase)
             );
         }
 
