@@ -42,7 +42,10 @@ namespace TPP.Persistence.MongoDB.Repos
                 Builders<ResponseCommand>.Filter.Eq(c => c.Command, command),
                 newCommand,
                 new FindOneAndReplaceOptions<ResponseCommand>
-                    { IsUpsert = true, ReturnDocument = ReturnDocument.Before });
+                {
+                    IsUpsert = true,
+                    ReturnDocument = ReturnDocument.Before
+                });
             if (oldCommand != null)
                 CommandRemoved?.Invoke(this, oldCommand.Command);
             CommandInserted?.Invoke(this, newCommand);

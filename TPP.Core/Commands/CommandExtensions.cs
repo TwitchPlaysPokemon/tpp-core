@@ -23,7 +23,10 @@ namespace TPP.Core.Commands
         public static Command WithExecution(this Command command, Command.Execute newExecution)
         {
             return new Command(command.Name, newExecution)
-                { Aliases = command.Aliases, Description = command.Description };
+            {
+                Aliases = command.Aliases,
+                Description = command.Description
+            };
         }
 
         /// Replace the command execution with one that only executes the original execution
@@ -59,6 +62,9 @@ namespace TPP.Core.Commands
         /// Modify the command description through a modification function
         public static Command WithChangedDescription(this Command command, Func<string?, string?> change) =>
             new(command.Name, command.Execution)
-                { Aliases = command.Aliases, Description = change(command.Description) };
+            {
+                Aliases = command.Aliases,
+                Description = change(command.Description)
+            };
     }
 }

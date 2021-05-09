@@ -120,7 +120,7 @@ namespace TPP.Core.Commands.Definitions
         private async Task<CommandResult> Responses(CommandContext context)
         {
             if (context.Args.Count == 0)
-                return new CommandResult {Response = $"See '!help {StaticResponsesCommandName}' for usage."};
+                return new CommandResult { Response = $"See '!help {StaticResponsesCommandName}' for usage." };
             string subcommand = context.Args[0].ToLower();
             if (subcommand == "list")
             {
