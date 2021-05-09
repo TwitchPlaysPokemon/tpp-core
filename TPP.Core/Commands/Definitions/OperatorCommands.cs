@@ -18,7 +18,6 @@ namespace TPP.Core.Commands.Definitions
     public class OperatorCommands : ICommandCollection
     {
         private readonly StopToken _stopToken;
-        private readonly ImmutableHashSet<string> _operatorNamesLower;
         private readonly IBank<User> _pokeyenBank;
         private readonly IBank<User> _tokensBank;
         private readonly IMessageSender _messageSender;
@@ -27,7 +26,6 @@ namespace TPP.Core.Commands.Definitions
 
         public OperatorCommands(
             StopToken stopToken,
-            IEnumerable<string> defaultOperatorNames,
             IBank<User> pokeyenBank,
             IBank<User> tokensBank,
             IMessageSender messageSender,
@@ -35,7 +33,6 @@ namespace TPP.Core.Commands.Definitions
             IUserRepo userRepo)
         {
             _stopToken = stopToken;
-            _operatorNamesLower = defaultOperatorNames.Select(s => s.ToLowerInvariant()).ToImmutableHashSet();
             _pokeyenBank = pokeyenBank;
             _tokensBank = tokensBank;
             _messageSender = messageSender;

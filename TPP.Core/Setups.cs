@@ -57,15 +57,13 @@ namespace TPP.Core
             ArgsParser argsParser,
             Databases databases,
             StopToken stopToken,
-            ChatConfig chatConfig,
             IMessageSender messageSender,
             IChatModeChanger chatModeChanger,
             IImmutableSet<Common.PkmnSpecies> knownSpecies)
         {
             var commandProcessor = new CommandProcessor(
                 loggerFactory.CreateLogger<CommandProcessor>(),
-                databases.CommandLogger, argsParser,
-                chatConfig.DefaultOperatorNames);
+                databases.CommandLogger, argsParser);
 
             IEnumerable<Command> commands = new[]
             {
@@ -77,7 +75,7 @@ namespace TPP.Core
                 ).Commands,
                 new BadgeCommands(databases.BadgeRepo, databases.UserRepo, messageSender, knownSpecies).Commands,
                 new OperatorCommands(
-                    stopToken,chatConfig.DefaultOperatorNames, databases.PokeyenBank, databases.TokensBank,
+                    stopToken, databases.PokeyenBank, databases.TokensBank,
                     messageSender: messageSender, databases.BadgeRepo, databases.UserRepo
                 ).Commands,
                 new ModeratorCommands(
