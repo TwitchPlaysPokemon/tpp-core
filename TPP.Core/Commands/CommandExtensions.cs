@@ -47,7 +47,7 @@ namespace TPP.Core.Commands
         public static Command WithGlobalCooldown(this Command command, Duration duration)
         {
             var cooldown = new GlobalCooldown(SystemClock.Instance, duration);
-            return command.WithCondition(ctx => cooldown.CheckLapsedThenReset());
+            return command.WithCondition(_ => cooldown.CheckLapsedThenReset());
         }
 
         /// Replace the command execution with one that does nothing

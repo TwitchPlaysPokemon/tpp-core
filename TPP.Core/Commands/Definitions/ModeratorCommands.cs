@@ -66,10 +66,8 @@ namespace TPP.Core.Commands.Definitions
             .WithChangedDescription(desc => "Moderators only: " + desc)
         );
 
-        private bool IsModerator(User u)
-        {
-            return u.Roles == null ? false : u.Roles.Contains(Role.Moderator) || u.Roles.Contains(Role.Operator);
-        }
+        private static bool IsModerator(User u) =>
+            u.Roles.Contains(Role.Moderator) || u.Roles.Contains(Role.Operator);
 
         private async Task<CommandResult> EnableEmoteOnly(CommandContext context)
         {
