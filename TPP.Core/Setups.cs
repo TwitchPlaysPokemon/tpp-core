@@ -89,6 +89,7 @@ namespace TPP.Core
             {
                 commandProcessor.InstallCommand(command);
             }
+            SetUpDynamicCommands(loggerFactory.CreateLogger("setups"), commandProcessor, databases.ResponseCommandRepo);
             return commandProcessor;
         }
 
@@ -160,6 +161,44 @@ namespace TPP.Core
             OverlayConnection overlayConnection = new(
                 loggerFactory.CreateLogger<OverlayConnection>(), broadcastServer);
             return (broadcastServer, overlayConnection);
+        }
+
+        private static void SetUpDynamicCommands(
+            ILogger logger, CommandProcessor commandProcessor, IResponseCommandRepo responseCommandRepo)
+        {
+            IImmutableList<ResponseCommand> commands = responseCommandRepo.GetCommands().Result;
+
+            HashSet<string> dynamicallyInstalledCommands = new();
+            void InstallCommand(ResponseCommand command)
+            {
+                Command? existing = commandProcessor.FindCommand(command.Command);
+                if (existing != null)
+                {
+                    logger.LogWarning(
+                        "not installing static response command '{Command}' " +
+                        "because it conflicts with an existing command", command.Command);
+                }
+                else
+                {
+                    commandProcessor
+                        .InstallCommand(new Command(command.Command, CommandUtils.StaticResponse(command.Response)));
+                    dynamicallyInstalledCommands.Add(command.Command);
+                }
+            }
+            void UninstallCommand(string commandName)
+            {
+                if (!dynamicallyInstalledCommands.Contains(commandName))
+                    return; // this command wasn't added dynamically, probably because it conflicted
+                commandProcessor.UninstallCommand(commandName);
+                dynamicallyInstalledCommands.Remove(commandName);
+            }
+
+            foreach (ResponseCommand command in commands)
+            {
+                InstallCommand(command);
+            }
+            responseCommandRepo.CommandRemoved += (_, name) => UninstallCommand(name);
+            responseCommandRepo.CommandInserted += (_, command) => InstallCommand(command);
         }
     }
 }

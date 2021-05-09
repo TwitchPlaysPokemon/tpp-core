@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using MongoDB.Bson.Serialization;
@@ -12,6 +13,9 @@ namespace TPP.Persistence.MongoDB.Repos
         public const string CollectionName = "response_commands";
 
         public readonly IMongoCollection<ResponseCommand> Collection;
+
+        public event EventHandler<ResponseCommand>? CommandInserted;
+        public event EventHandler<string>? CommandRemoved;
 
         static ResponseCommandRepo()
         {
@@ -31,14 +35,25 @@ namespace TPP.Persistence.MongoDB.Repos
         public async Task<IImmutableList<ResponseCommand>> GetCommands() =>
             (await Collection.Find(FilterDefinition<ResponseCommand>.Empty).ToListAsync()).ToImmutableList();
 
-        public async Task<ResponseCommand> UpsertCommand(string command, string response) =>
-            await Collection.FindOneAndReplaceAsync(
+        public async Task<ResponseCommand> UpsertCommand(string command, string response)
+        {
+            ResponseCommand newCommand = new(command, response);
+            ResponseCommand? oldCommand = await Collection.FindOneAndReplaceAsync(
                 Builders<ResponseCommand>.Filter.Eq(c => c.Command, command),
-                new ResponseCommand(command, response),
+                newCommand,
                 new FindOneAndReplaceOptions<ResponseCommand>
-                    { IsUpsert = true, ReturnDocument = ReturnDocument.After });
+                    { IsUpsert = true, ReturnDocument = ReturnDocument.Before });
+            if (oldCommand != null)
+                CommandRemoved?.Invoke(this, oldCommand.Command);
+            CommandInserted?.Invoke(this, newCommand);
+            return newCommand;
+        }
 
-        public async Task<bool> RemoveCommand(string command) =>
-            (await Collection.DeleteOneAsync(c => c.Command == command)).DeletedCount > 0;
+        public async Task<bool> RemoveCommand(string command)
+        {
+            DeleteResult deleteOneAsync = await Collection.DeleteOneAsync(c => c.Command == command);
+            CommandRemoved?.Invoke(this, command);
+            return deleteOneAsync.DeletedCount > 0;
+        }
     }
 }

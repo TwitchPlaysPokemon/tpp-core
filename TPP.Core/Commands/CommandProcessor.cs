@@ -58,12 +58,11 @@ namespace TPP.Core.Commands
             }
         }
 
-        public void UninstallCommand(Command command)
+        public void UninstallCommand(params string[] commandOrAlias)
         {
-            _commands.Remove(command.Name.ToLower());
-            foreach (string alias in command.Aliases.Select(a => a.ToLower()))
+            foreach (string name in commandOrAlias.Select(a => a.ToLower()))
             {
-                _commands.Remove(alias);
+                _commands.Remove(name);
             }
         }
 

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using TPP.Persistence.Models;
@@ -14,5 +15,12 @@ namespace TPP.Persistence.Repos
 
         /// Remove a command by name. Returns whether that command was found and removed.
         public Task<bool> RemoveCommand(string command);
+
+        /// A command was inserted. Note that if a command was replaced, a <see cref="CommandRemoved"/> event
+        /// will have been fired for the command beforehand.
+        public event EventHandler<ResponseCommand> CommandInserted;
+
+        /// A command was removed.
+        public event EventHandler<string> CommandRemoved;
     }
 }
