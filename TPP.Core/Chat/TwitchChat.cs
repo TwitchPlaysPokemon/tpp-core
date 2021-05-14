@@ -24,7 +24,7 @@ namespace TPP.Core.Chat
     public sealed class TwitchChat : IChat
     {
         public string Name { get; }
-        public event EventHandler<MessageEventArgs> IncomingMessage = null!;
+        public event EventHandler<MessageEventArgs>? IncomingMessage;
 
         /// Twitch Messaging Interface (TMI, the somewhat IRC-compatible protocol twitch uses) maximum message length.
         /// This limit is in characters, not bytes. See https://discuss.dev.twitch.tv/t/message-character-limit/7793/6
