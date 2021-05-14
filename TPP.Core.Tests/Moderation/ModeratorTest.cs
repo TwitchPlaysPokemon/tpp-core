@@ -92,8 +92,8 @@ namespace TPP.Core.Tests.Moderation
                                 "and therefore a timeout is issued";
             clock.Setup(c => c.GetCurrentInstant()).Returns(Instant.FromUnixTimeSeconds(99));
             Assert.IsFalse(await moderator.Check(new Message(user, msg4, MessageSource.Chat, string.Empty)));
-            const string reasons = "points for testing #1 and points for testing #2 " +
-                                   "and points for testing #3 and points for testing #4";
+            const string reasons = "points for testing #1, points for testing #2, " +
+                                   "points for testing #3 and points for testing #4";
             executor.Verify(e => e.Timeout(user, reasons, Duration.FromMinutes(2)), Times.Once);
         }
 

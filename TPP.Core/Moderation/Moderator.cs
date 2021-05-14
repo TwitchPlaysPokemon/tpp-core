@@ -93,7 +93,12 @@ namespace TPP.Core.Moderation
             {
                 IImmutableList<PointStore.Violation> violations = store.GetTopViolations();
                 _pointsPerUser.Remove(user);
-                string topReasons = string.Join(" and ", violations.Select(v => v.Reason));
+                string topReasons;
+                if (violations.Count > 1)
+                    topReasons = string.Join(", ", violations.SkipLast(1).Select(v => v.Reason))
+                                 + " and " + violations[^1].Reason;
+                else
+                    topReasons = violations[0].Reason;
                 return new RuleResult.Timeout(topReasons);
             }
             else if (currentPoints >= _pointsForDelete)
