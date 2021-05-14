@@ -77,7 +77,7 @@ namespace TPP.Core.Tests.Commands.Definitions
                     ImmutableList<string>.Empty, _argsParser));
 
                 const string response = "Your badges: 3x #001 Einsmon, 9x #013 Drölfmon, 6x #022 Zwozwomon";
-                Assert.AreEqual(response, result.Response);
+                Assert.That(result.Response, Is.EqualTo(response));
             }
 
             [Test]
@@ -106,7 +106,7 @@ namespace TPP.Core.Tests.Commands.Definitions
 
                 const string response =
                     "Someone_Else's badges: 12x #001 Einsmon, 34x #013 Drölfmon, 23x #022 Zwozwomon";
-                Assert.AreEqual(response, result.Response);
+                Assert.That(result.Response, Is.EqualTo(response));
             }
 
             [Test]
@@ -115,8 +115,8 @@ namespace TPP.Core.Tests.Commands.Definitions
                 _argsParser.AddArgumentParser(new PkmnSpeciesParser(Array.Empty<PkmnSpecies>()));
                 User user = MockUser("MockUser");
                 ArgsParseFailure exception = Assert.ThrowsAsync<ArgsParseFailure>(() => _badgeCommands.Badges(
-                    new CommandContext(MockMessage(user), ImmutableList.Create("@someone_unknown"), _argsParser)));
-                Assert.AreEqual("did not recognize a user with the name 'someone_unknown'", exception.Message);
+                    new CommandContext(MockMessage(user), ImmutableList.Create("@someone_unknown"), _argsParser)))!;
+                Assert.That(exception.Message, Is.EqualTo("did not recognize a user with the name 'someone_unknown'"));
             }
 
             [Test]
@@ -138,11 +138,11 @@ namespace TPP.Core.Tests.Commands.Definitions
 
                 CommandResult resultAmbiguous = await _badgeCommands.Badges(new CommandContext(MockMessage(user),
                     ImmutableList.Create("PersonMon"), _argsParser));
-                Assert.AreEqual("You have 1x #001 PersonMon badges.", resultAmbiguous.Response);
+                Assert.That(resultAmbiguous.Response, Is.EqualTo("You have 1x #001 PersonMon badges."));
 
                 CommandResult resultDisambiguated = await _badgeCommands.Badges(new CommandContext(MockMessage(user),
                     ImmutableList.Create("@PersonMon"), _argsParser));
-                Assert.AreEqual("PersonMon has no badges.", resultDisambiguated.Response);
+                Assert.That(resultDisambiguated.Response, Is.EqualTo("PersonMon has no badges."));
             }
 
             [Test]
@@ -166,8 +166,8 @@ namespace TPP.Core.Tests.Commands.Definitions
                 CommandResult result2 = await _badgeCommands.Badges(new CommandContext(MockMessage(user),
                     ImmutableList.Create("User", "Species"), _argsParser));
 
-                Assert.AreEqual(result1.Response, result2.Response);
-                Assert.AreEqual("User has 1x #001 Species badges.", result1.Response);
+                Assert.That(result2.Response, Is.EqualTo(result1.Response));
+                Assert.That(result1.Response, Is.EqualTo("User has 1x #001 Species badges."));
             }
         }
 
@@ -180,7 +180,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await _badgeCommands.UnselectBadge(new CommandContext(MockMessage(user),
                 ImmutableList<string>.Empty, _argsParser));
 
-            Assert.AreEqual("#001 Mon badge unequipped.", result.Response);
+            Assert.That(result.Response, Is.EqualTo("#001 Mon badge unequipped."));
             _userRepoMock.Verify(repo => repo.SetSelectedBadge(user, null), Times.Once());
         }
 
@@ -192,7 +192,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await _badgeCommands.UnselectBadge(new CommandContext(MockMessage(user),
                 ImmutableList<string>.Empty, _argsParser));
 
-            Assert.AreEqual("You don't have a badge equipped.", result.Response);
+            Assert.That(result.Response, Is.EqualTo("You don't have a badge equipped."));
             _userRepoMock.VerifyNoOtherCalls();
         }
 
@@ -208,7 +208,7 @@ namespace TPP.Core.Tests.Commands.Definitions
                 ImmutableList.Create("#1"), _argsParser));
 
             _userRepoMock.Verify(repo => repo.SetSelectedBadge(user, species), Times.Once());
-            Assert.AreEqual("#001 Mon selected as badge.", result.Response);
+            Assert.That(result.Response, Is.EqualTo("#001 Mon selected as badge."));
         }
 
         [Test]
@@ -223,7 +223,7 @@ namespace TPP.Core.Tests.Commands.Definitions
                 ImmutableList.Create("#1"), _argsParser));
 
             _userRepoMock.VerifyNoOtherCalls();
-            Assert.AreEqual("#001 Mon is not an owned badge.", result.Response);
+            Assert.That(result.Response, Is.EqualTo("#001 Mon is not an owned badge."));
         }
 
         [Test]
@@ -233,8 +233,8 @@ namespace TPP.Core.Tests.Commands.Definitions
             User user = MockUser("MockUser");
             ArgsParseFailure failure = Assert.ThrowsAsync<ArgsParseFailure>(() =>
                 _badgeCommands.SelectBadge(new CommandContext(MockMessage(user),
-                    ImmutableList.Create("#123"), _argsParser)));
-            Assert.AreEqual("did not recognize species '#123'", failure.Message);
+                    ImmutableList.Create("#123"), _argsParser)))!;
+            Assert.That(failure.Message, Is.EqualTo("did not recognize species '#123'"));
         }
 
         [Test]
@@ -253,7 +253,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await _badgeCommands.Pokedex(new CommandContext(MockMessage(user),
                 ImmutableList<string>.Empty, _argsParser));
 
-            Assert.AreEqual("You have collected 3 distinct Pokémon badge(s)", result.Response);
+            Assert.That(result.Response, Is.EqualTo("You have collected 3 distinct Pokémon badge(s)"));
         }
 
         [Test]
@@ -273,8 +273,8 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await _badgeCommands.GiftBadge(new CommandContext(MockMessage(user),
                 ImmutableList.Create("recipient", "species", "2"), _argsParser));
 
-            Assert.AreEqual("has gifted 2 #001 species badges to Recipient!", result.Response);
-            Assert.AreEqual(ResponseTarget.Chat, result.ResponseTarget);
+            Assert.That(result.Response, Is.EqualTo("has gifted 2 #001 species badges to Recipient!"));
+            Assert.That(result.ResponseTarget, Is.EqualTo(ResponseTarget.Chat));
             IDictionary<string, object?> data = new Dictionary<string, object?> { ["gifter"] = user.Id };
             _badgeRepoMock.Verify(repo => repo.TransferBadges(
                 It.Is<IImmutableList<Badge>>(list => list.SequenceEqual(ImmutableList.Create(badge1, badge2))),
@@ -297,8 +297,8 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await _badgeCommands.GiftBadge(new CommandContext(MockMessage(user),
                 ImmutableList.Create("recipient", "species"), _argsParser));
 
-            Assert.AreEqual("You tried to gift 1 #001 species badges, but you only have 0.", result.Response);
-            Assert.AreEqual(ResponseTarget.Source, result.ResponseTarget);
+            Assert.That(result.Response, Is.EqualTo("You tried to gift 1 #001 species badges, but you only have 0."));
+            Assert.That(result.ResponseTarget, Is.EqualTo(ResponseTarget.Source));
             _badgeRepoMock.Verify(repo => repo.TransferBadges(
                     It.IsAny<IImmutableList<Badge>>(),
                     It.IsAny<string?>(),

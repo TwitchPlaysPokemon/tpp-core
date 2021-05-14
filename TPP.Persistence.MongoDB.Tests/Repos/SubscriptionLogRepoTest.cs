@@ -34,40 +34,40 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
                 monthsStreak, monthsNumPrev, monthsNumNew, monthsDifference,
                 loyaltyLeaguePrev, loyaltyLeagueNew, loyaltyCompletions, rewardTokens,
                 subMessage, subPlan, subPlanName);
-            Assert.AreEqual(timestamp, written.Timestamp);
-            Assert.AreEqual(userId, written.UserId);
-            Assert.AreEqual(monthsStreak, written.MonthsStreak);
-            Assert.AreEqual(monthsNumPrev, written.MonthsNumPrev);
-            Assert.AreEqual(monthsNumNew, written.MonthsNumNew);
-            Assert.AreEqual(monthsDifference, written.MonthsDifference);
-            Assert.AreEqual(loyaltyLeaguePrev, written.LoyaltyLeaguePrev);
-            Assert.AreEqual(loyaltyLeagueNew, written.LoyaltyLeagueNew);
-            Assert.AreEqual(loyaltyCompletions, written.LoyaltyCompletions);
-            Assert.AreEqual(rewardTokens, written.RewardTokens);
-            Assert.AreEqual(subMessage, written.SubMessage);
-            Assert.AreEqual(subPlan, written.SubPlan);
-            Assert.AreEqual(subPlanName, written.SubPlanName);
+            Assert.That(written.Timestamp, Is.EqualTo(timestamp));
+            Assert.That(written.UserId, Is.EqualTo(userId));
+            Assert.That(written.MonthsStreak, Is.EqualTo(monthsStreak));
+            Assert.That(written.MonthsNumPrev, Is.EqualTo(monthsNumPrev));
+            Assert.That(written.MonthsNumNew, Is.EqualTo(monthsNumNew));
+            Assert.That(written.MonthsDifference, Is.EqualTo(monthsDifference));
+            Assert.That(written.LoyaltyLeaguePrev, Is.EqualTo(loyaltyLeaguePrev));
+            Assert.That(written.LoyaltyLeagueNew, Is.EqualTo(loyaltyLeagueNew));
+            Assert.That(written.LoyaltyCompletions, Is.EqualTo(loyaltyCompletions));
+            Assert.That(written.RewardTokens, Is.EqualTo(rewardTokens));
+            Assert.That(written.SubMessage, Is.EqualTo(subMessage));
+            Assert.That(written.SubPlan, Is.EqualTo(subPlan));
+            Assert.That(written.SubPlanName, Is.EqualTo(subPlanName));
             Assert.NotNull(written.Id);
 
             // read from db
             List<SubscriptionLog> allItems = await repo.Collection.Find(FilterDefinition<SubscriptionLog>.Empty).ToListAsync();
-            Assert.AreEqual(1, allItems.Count);
+            Assert.That(allItems.Count, Is.EqualTo(1));
             SubscriptionLog read = allItems[0];
-            Assert.AreEqual(written, read);
+            Assert.That(read, Is.EqualTo(written));
 
-            Assert.AreEqual(timestamp, read.Timestamp);
-            Assert.AreEqual(userId, read.UserId);
-            Assert.AreEqual(monthsStreak, read.MonthsStreak);
-            Assert.AreEqual(monthsNumPrev, read.MonthsNumPrev);
-            Assert.AreEqual(monthsNumNew, read.MonthsNumNew);
-            Assert.AreEqual(monthsDifference, read.MonthsDifference);
-            Assert.AreEqual(loyaltyLeaguePrev, read.LoyaltyLeaguePrev);
-            Assert.AreEqual(loyaltyLeagueNew, read.LoyaltyLeagueNew);
-            Assert.AreEqual(loyaltyCompletions, read.LoyaltyCompletions);
-            Assert.AreEqual(rewardTokens, read.RewardTokens);
-            Assert.AreEqual(subMessage, read.SubMessage);
-            Assert.AreEqual(subPlan, read.SubPlan);
-            Assert.AreEqual(subPlanName, read.SubPlanName);
+            Assert.That(read.Timestamp, Is.EqualTo(timestamp));
+            Assert.That(read.UserId, Is.EqualTo(userId));
+            Assert.That(read.MonthsStreak, Is.EqualTo(monthsStreak));
+            Assert.That(read.MonthsNumPrev, Is.EqualTo(monthsNumPrev));
+            Assert.That(read.MonthsNumNew, Is.EqualTo(monthsNumNew));
+            Assert.That(read.MonthsDifference, Is.EqualTo(monthsDifference));
+            Assert.That(read.LoyaltyLeaguePrev, Is.EqualTo(loyaltyLeaguePrev));
+            Assert.That(read.LoyaltyLeagueNew, Is.EqualTo(loyaltyLeagueNew));
+            Assert.That(read.LoyaltyCompletions, Is.EqualTo(loyaltyCompletions));
+            Assert.That(read.RewardTokens, Is.EqualTo(rewardTokens));
+            Assert.That(read.SubMessage, Is.EqualTo(subMessage));
+            Assert.That(read.SubPlan, Is.EqualTo(subPlan));
+            Assert.That(read.SubPlanName, Is.EqualTo(subPlanName));
         }
     }
 }

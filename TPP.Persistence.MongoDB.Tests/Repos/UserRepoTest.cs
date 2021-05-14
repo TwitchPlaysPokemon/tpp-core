@@ -19,7 +19,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
         {
             IMongoDatabase database = CreateTemporaryDatabase();
             UserRepo userRepo = new UserRepo(database, 100, 1, ImmutableList<string>.Empty);
-            Assert.AreEqual(expected: 0, actual: userRepo.Collection.CountDocuments(FilterDefinition<User>.Empty));
+            Assert.That(userRepo.Collection.CountDocuments(FilterDefinition<User>.Empty), Is.EqualTo(expected: 0));
             return userRepo;
         }
 
@@ -46,15 +46,15 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
                 HexColor.FromWithHash("#abcdef")));
 
             // then
-            Assert.AreEqual(1, await userRepo.Collection.CountDocumentsAsync(FilterDefinition<User>.Empty));
-            Assert.AreEqual(userId, userBefore.Id);
-            Assert.AreEqual(userId, userAfter.Id);
-            Assert.AreEqual(displayNameBefore, userBefore.TwitchDisplayName);
-            Assert.AreEqual(displayNameAfter, userAfter.TwitchDisplayName);
-            Assert.AreEqual(usernameBefore, userBefore.SimpleName);
-            Assert.AreEqual(usernameAfter, userAfter.SimpleName);
-            Assert.AreEqual("123456", userBefore.Color);
-            Assert.AreEqual("abcdef", userAfter.Color);
+            Assert.That(await userRepo.Collection.CountDocumentsAsync(FilterDefinition<User>.Empty), Is.EqualTo(1));
+            Assert.That(userBefore.Id, Is.EqualTo(userId));
+            Assert.That(userAfter.Id, Is.EqualTo(userId));
+            Assert.That(userBefore.TwitchDisplayName, Is.EqualTo(displayNameBefore));
+            Assert.That(userAfter.TwitchDisplayName, Is.EqualTo(displayNameAfter));
+            Assert.That(userBefore.SimpleName, Is.EqualTo(usernameBefore));
+            Assert.That(userAfter.SimpleName, Is.EqualTo(usernameAfter));
+            Assert.That(userBefore.Color, Is.EqualTo("123456"));
+            Assert.That(userAfter.Color, Is.EqualTo("abcdef"));
         }
 
         /// <summary>
@@ -65,13 +65,13 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
         {
             UserRepo userRepo = CreateUserRepo();
             // given
-            var userInfo = new UserInfo("123", "X", "x", null);
+            var userInfo = new UserInfo("123", "X", "x");
 
             // when new user
             User userBefore = await userRepo.RecordUser(userInfo);
             // then initial currency
-            Assert.AreEqual(100, userBefore.Pokeyen);
-            Assert.AreEqual(1, userBefore.Tokens);
+            Assert.That(userBefore.Pokeyen, Is.EqualTo(100));
+            Assert.That(userBefore.Tokens, Is.EqualTo(1));
 
             // when existing user
             await userRepo.Collection.UpdateOneAsync(u => u.Id == userInfo.Id, Builders<User>.Update
@@ -79,8 +79,8 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
                 .Set(u => u.Tokens, 5));
             User userAfter = await userRepo.RecordUser(userInfo);
             // then keep currency
-            Assert.AreEqual(123, userAfter.Pokeyen);
-            Assert.AreEqual(5, userAfter.Tokens);
+            Assert.That(userAfter.Pokeyen, Is.EqualTo(123));
+            Assert.That(userAfter.Tokens, Is.EqualTo(5));
         }
 
         /// <summary>
@@ -98,9 +98,9 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
 
             // when, then
             User userT1 = await userRepo.RecordUser(userInfoT1);
-            Assert.AreEqual(t1, userT1.LastActiveAt);
+            Assert.That(userT1.LastActiveAt, Is.EqualTo(t1));
             User userT2 = await userRepo.RecordUser(userInfoT2);
-            Assert.AreEqual(t2, userT2.LastActiveAt);
+            Assert.That(userT2.LastActiveAt, Is.EqualTo(t2));
         }
 
         /// <summary>
@@ -121,11 +121,11 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
 
             // when, then
             User userT1 = await userRepo.RecordUser(userInfoT1);
-            Assert.AreEqual(null, userT1.LastMessageAt); // fromMessage=false, stayed null
+            Assert.That(userT1.LastMessageAt, Is.EqualTo(null)); // fromMessage=false, stayed null
             User userT2 = await userRepo.RecordUser(userInfoT2);
-            Assert.AreEqual(t2, userT2.LastMessageAt); // fromMessage=true, got updated
+            Assert.That(userT2.LastMessageAt, Is.EqualTo(t2)); // fromMessage=true, got updated
             User userT3 = await userRepo.RecordUser(userInfoT3);
-            Assert.AreEqual(t2, userT3.LastMessageAt); // fromMessage=false, didn't get updated
+            Assert.That(userT3.LastMessageAt, Is.EqualTo(t2)); // fromMessage=false, didn't get updated
         }
 
         /// <summary>
@@ -138,19 +138,19 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
         {
             UserRepo userRepo = CreateUserRepo();
             // given
-            var userInfo = new UserInfo("123", "X", "x", null);
+            var userInfo = new UserInfo("123", "X", "x");
 
             // when, then
             User userNew = await userRepo.RecordUser(userInfo);
             Assert.NotNull(userNew.ParticipationEmblems);
-            Assert.AreEqual(new SortedSet<int>(), userNew.ParticipationEmblems);
+            Assert.That(userNew.ParticipationEmblems, Is.EqualTo(new SortedSet<int>()));
 
             await userRepo.Collection.UpdateOneAsync(u => u.Id == userInfo.Id, Builders<User>.Update
                 .Set(u => u.ParticipationEmblems, new SortedSet<int> { 42 }));
             // when, then
             User userExisting = await userRepo.RecordUser(userInfo);
             Assert.NotNull(userExisting.ParticipationEmblems);
-            Assert.AreEqual(new SortedSet<int> { 42 }, userExisting.ParticipationEmblems);
+            Assert.That(userExisting.ParticipationEmblems, Is.EqualTo(new SortedSet<int> { 42 }));
         }
 
         /// <summary>
@@ -162,11 +162,11 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
         {
             UserRepo userRepo = CreateUserRepo();
             // given
-            var userInfo = new UserInfo("123", "X", "x", null);
+            var userInfo = new UserInfo("123", "X", "x");
             await userRepo.RecordUser(userInfo);
             UpdateResult updateResult = await userRepo.Collection.UpdateOneAsync(u => u.Id == userInfo.Id,
                 Builders<User>.Update.Unset(u => u.ParticipationEmblems));
-            Assert.AreEqual(1, updateResult.ModifiedCount);
+            Assert.That(updateResult.ModifiedCount, Is.EqualTo(1));
 
             // when
             User? deserializedUser = await userRepo.FindBySimpleName(userInfo.SimpleName);
@@ -174,7 +174,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             // then
             Assert.NotNull(deserializedUser);
             Assert.NotNull(deserializedUser!.ParticipationEmblems);
-            Assert.AreEqual(new SortedSet<int>(), deserializedUser!.ParticipationEmblems);
+            Assert.That(deserializedUser!.ParticipationEmblems, Is.EqualTo(new SortedSet<int>()));
         }
 
         /// <summary>
@@ -185,9 +185,9 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
         public async Task recording_users_concurrently_works_reliably()
         {
             UserRepo userRepo = CreateUserRepo();
-            var userInfo = new UserInfo("123", "X", "x", null);
+            var userInfo = new UserInfo("123", "X", "x");
             await Task.WhenAll(Enumerable.Range(0, 100)
-                .Select(i => userRepo.RecordUser(userInfo)));
+                .Select(_ => userRepo.RecordUser(userInfo)));
         }
 
         [Test]
@@ -197,15 +197,15 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             const long tokens = long.MaxValue - 234;
             var userRepo = new UserRepo(CreateTemporaryDatabase(), pokeyen, tokens, ImmutableList<string>.Empty);
 
-            User userFromRecording = await userRepo.RecordUser(new UserInfo("123", "X", "x", null));
-            Assert.AreEqual(pokeyen, userFromRecording.Pokeyen);
-            Assert.AreEqual(tokens, userFromRecording.Tokens);
+            User userFromRecording = await userRepo.RecordUser(new UserInfo("123", "X", "x"));
+            Assert.That(userFromRecording.Pokeyen, Is.EqualTo(pokeyen));
+            Assert.That(userFromRecording.Tokens, Is.EqualTo(tokens));
 
             User? userFromReading = await userRepo.FindBySimpleName("x");
             Assert.NotNull(userFromReading);
-            Assert.AreNotSame(userFromReading!, userFromRecording);
-            Assert.AreEqual(pokeyen, userFromReading!.Pokeyen);
-            Assert.AreEqual(tokens, userFromReading!.Tokens);
+            Assert.That(userFromRecording, Is.Not.SameAs(userFromReading!));
+            Assert.That(userFromReading!.Pokeyen, Is.EqualTo(pokeyen));
+            Assert.That(userFromReading!.Tokens, Is.EqualTo(tokens));
         }
 
         [Test]
@@ -225,17 +225,17 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             IUserRepo userRepo = new UserRepo(CreateTemporaryDatabase(), 0, 0, ImmutableList<string>.Empty);
 
             User userBeforeUpdate = await userRepo.RecordUser(new UserInfo("123", "X", "x"));
-            Assert.AreEqual(0, userBeforeUpdate.MonthsSubscribed);
+            Assert.That(userBeforeUpdate.MonthsSubscribed, Is.EqualTo(0));
             Assert.IsNull(userBeforeUpdate.SubscriptionTier);
-            Assert.AreEqual(0, userBeforeUpdate.LoyaltyLeague);
+            Assert.That(userBeforeUpdate.LoyaltyLeague, Is.EqualTo(0));
             Assert.IsNull(userBeforeUpdate.SubscriptionUpdatedAt);
 
             User userAfterUpdate = await userRepo.SetSubscriptionInfo(userBeforeUpdate,
                 42, SubscriptionTier.Tier2, 10, Instant.FromUnixTimeSeconds(123));
-            Assert.AreEqual(42, userAfterUpdate.MonthsSubscribed);
-            Assert.AreEqual(SubscriptionTier.Tier2, userAfterUpdate.SubscriptionTier);
-            Assert.AreEqual(10, userAfterUpdate.LoyaltyLeague);
-            Assert.AreEqual(Instant.FromUnixTimeSeconds(123), userAfterUpdate.SubscriptionUpdatedAt);
+            Assert.That(userAfterUpdate.MonthsSubscribed, Is.EqualTo(42));
+            Assert.That(userAfterUpdate.SubscriptionTier, Is.EqualTo(SubscriptionTier.Tier2));
+            Assert.That(userAfterUpdate.LoyaltyLeague, Is.EqualTo(10));
+            Assert.That(userAfterUpdate.SubscriptionUpdatedAt, Is.EqualTo(Instant.FromUnixTimeSeconds(123)));
         }
     }
 }

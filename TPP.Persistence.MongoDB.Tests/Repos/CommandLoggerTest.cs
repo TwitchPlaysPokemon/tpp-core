@@ -26,23 +26,23 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
 
             // persist to db
             CommandLog written = await repo.Log(userId, command, args, response);
-            Assert.AreEqual(userId, written.UserId);
-            Assert.AreEqual(command, written.Command);
-            Assert.AreEqual(args, written.Args);
-            Assert.AreEqual(response, written.Response);
-            Assert.AreEqual(timestamp, written.Timestamp);
+            Assert.That(written.UserId, Is.EqualTo(userId));
+            Assert.That(written.Command, Is.EqualTo(command));
+            Assert.That(written.Args, Is.EqualTo(args));
+            Assert.That(written.Response, Is.EqualTo(response));
+            Assert.That(written.Timestamp, Is.EqualTo(timestamp));
             Assert.NotNull(written.Id);
 
             // read from db
             List<CommandLog> allItems = await repo.Collection.Find(FilterDefinition<CommandLog>.Empty).ToListAsync();
-            Assert.AreEqual(1, allItems.Count);
+            Assert.That(allItems.Count, Is.EqualTo(1));
             CommandLog read = allItems[0];
-            Assert.AreEqual(written, read);
-            Assert.AreEqual(userId, read.UserId);
-            Assert.AreEqual(command, read.Command);
-            Assert.AreEqual(args, read.Args);
-            Assert.AreEqual(response, read.Response);
-            Assert.AreEqual(timestamp, read.Timestamp);
+            Assert.That(read, Is.EqualTo(written));
+            Assert.That(read.UserId, Is.EqualTo(userId));
+            Assert.That(read.Command, Is.EqualTo(command));
+            Assert.That(read.Args, Is.EqualTo(args));
+            Assert.That(read.Response, Is.EqualTo(response));
+            Assert.That(read.Timestamp, Is.EqualTo(timestamp));
         }
     }
 }

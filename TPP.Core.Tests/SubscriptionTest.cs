@@ -52,10 +52,10 @@ namespace TPP.Core.Tests
             // verify result
             Assert.IsInstanceOf<ISubscriptionProcessor.SubResult.Ok>(subResult);
             var okResult = (ISubscriptionProcessor.SubResult.Ok)subResult;
-            Assert.AreEqual(3, okResult.CumulativeMonths);
-            Assert.AreEqual(expectedTokens, okResult.DeltaTokens);
-            Assert.AreEqual(4, okResult.OldLoyaltyLeague);
-            Assert.AreEqual(6, okResult.NewLoyaltyLeague);
+            Assert.That(okResult.CumulativeMonths, Is.EqualTo(3));
+            Assert.That(okResult.DeltaTokens, Is.EqualTo(expectedTokens));
+            Assert.That(okResult.OldLoyaltyLeague, Is.EqualTo(4));
+            Assert.That(okResult.NewLoyaltyLeague, Is.EqualTo(6));
             Assert.IsFalse(okResult.SubCountCorrected);
 
             // verify tokens were awarded
@@ -106,7 +106,7 @@ namespace TPP.Core.Tests
             // negative result
             Assert.IsInstanceOf<ISubscriptionProcessor.SubResult.SameMonth>(subResult);
             var sameMonthResult = (ISubscriptionProcessor.SubResult.SameMonth)subResult;
-            Assert.AreEqual(2, sameMonthResult.Month);
+            Assert.That(sameMonthResult.Month, Is.EqualTo(2));
             // no tokens were awarded
             bankMock.VerifyNoOtherCalls();
             // no user data was adjusted
@@ -144,8 +144,8 @@ namespace TPP.Core.Tests
             // negative result
             Assert.IsInstanceOf<ISubscriptionProcessor.SubResult.Ok>(subResult);
             var okResult = (ISubscriptionProcessor.SubResult.Ok)subResult;
-            Assert.AreEqual(6, okResult.NewLoyaltyLeague);
-            Assert.AreEqual(2, okResult.CumulativeMonths);
+            Assert.That(okResult.NewLoyaltyLeague, Is.EqualTo(6));
+            Assert.That(okResult.CumulativeMonths, Is.EqualTo(2));
             // only tokens for rank upgrade were awarded
             IDictionary<string, object?> expectedData = new Dictionary<string, object?>
             {
@@ -189,12 +189,12 @@ namespace TPP.Core.Tests
                 Instant.MinValue, "sub message", ImmutableList<EmoteOccurrence>.Empty);
             (ISubscriptionProcessor.SubResult subResult, ISubscriptionProcessor.SubGiftResult subGiftResult) =
                 await subscriptionProcessor.ProcessSubscriptionGift(
-                    new SubscriptionGiftInfo(subscriptionInfo, gifter, false));
+                    new SubscriptionGiftInfo(subscriptionInfo, gifter, 2, false));
 
-            const int expectedGiftTokens = 10 * 5; // 10 per rank. Tier 3 has rank 5 because $25 = 5 * $5
+            const int expectedGiftTokens = 10 * 5 * 2; // 10 per rank. Tier 3 has rank 5 because $25 = 5 * $5, 2 months
             Assert.IsInstanceOf<ISubscriptionProcessor.SubGiftResult.Ok>(subGiftResult);
             var okGiftResult = (ISubscriptionProcessor.SubGiftResult.Ok)subGiftResult;
-            Assert.AreEqual(expectedGiftTokens, okGiftResult.GifterTokens);
+            Assert.That(okGiftResult.GifterTokens, Is.EqualTo(expectedGiftTokens));
             IDictionary<string, object?> expectedGiftData = new Dictionary<string, object?>();
             bankMock.Verify(b => b.PerformTransaction(
                 new Transaction<User>(gifter, expectedGiftTokens, "subscription gift", expectedGiftData),
@@ -203,10 +203,10 @@ namespace TPP.Core.Tests
             const int expectedSubTokens = 10 + 12 + 14 + 16 + 18; // Tier 3 = 5 ranks with increasing loyalty league
             Assert.IsInstanceOf<ISubscriptionProcessor.SubResult.Ok>(subResult);
             var okResult = (ISubscriptionProcessor.SubResult.Ok)subResult;
-            Assert.AreEqual(1, okResult.CumulativeMonths);
-            Assert.AreEqual(expectedSubTokens, okResult.DeltaTokens);
-            Assert.AreEqual(0, okResult.OldLoyaltyLeague);
-            Assert.AreEqual(5, okResult.NewLoyaltyLeague);
+            Assert.That(okResult.CumulativeMonths, Is.EqualTo(1));
+            Assert.That(okResult.DeltaTokens, Is.EqualTo(expectedSubTokens));
+            Assert.That(okResult.OldLoyaltyLeague, Is.EqualTo(0));
+            Assert.That(okResult.NewLoyaltyLeague, Is.EqualTo(5));
             Assert.IsFalse(okResult.SubCountCorrected);
             IDictionary<string, object?> expectedSubData = new Dictionary<string, object?>
             {
@@ -237,16 +237,16 @@ namespace TPP.Core.Tests
                 Instant.MinValue, "sub message", ImmutableList<EmoteOccurrence>.Empty);
             (ISubscriptionProcessor.SubResult subResult, ISubscriptionProcessor.SubGiftResult subGiftResult) =
                 await subscriptionProcessor.ProcessSubscriptionGift(
-                    new SubscriptionGiftInfo(subscriptionInfo, gifter, false));
+                    new SubscriptionGiftInfo(subscriptionInfo, gifter, 1, false));
 
             Assert.IsInstanceOf<ISubscriptionProcessor.SubGiftResult.SameMonth>(subGiftResult);
             var sameMonthGiftResult = (ISubscriptionProcessor.SubGiftResult.SameMonth)subGiftResult;
-            Assert.AreEqual(1, sameMonthGiftResult.Month);
+            Assert.That(sameMonthGiftResult.Month, Is.EqualTo(1));
             bankMock.VerifyNoOtherCalls();
 
             Assert.IsInstanceOf<ISubscriptionProcessor.SubResult.SameMonth>(subResult);
             var sameMonthSubResult = (ISubscriptionProcessor.SubResult.SameMonth)subResult;
-            Assert.AreEqual(1, sameMonthSubResult.Month);
+            Assert.That(sameMonthSubResult.Month, Is.EqualTo(1));
             bankMock.VerifyNoOtherCalls();
         }
     }

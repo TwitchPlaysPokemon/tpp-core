@@ -28,7 +28,8 @@ namespace TPP.Core
         IImmutableList<EmoteOccurrence> Emotes);
 
     /// Information on a user subscribing through a gifted subscription.
-    public record SubscriptionGiftInfo(SubscriptionInfo SubscriptionInfo, User Gifter, bool IsAnonymous);
+    public record SubscriptionGiftInfo(
+        SubscriptionInfo SubscriptionInfo, User Gifter, int NumGiftedMonths, bool IsAnonymous);
 
     public interface ISubscriptionProcessor
     {
@@ -174,11 +175,12 @@ namespace TPP.Core
         public async Task<(ISubscriptionProcessor.SubResult, ISubscriptionProcessor.SubGiftResult)> ProcessSubscriptionGift(
             SubscriptionGiftInfo subscriptionGiftInfo)
         {
+            SubscriptionInfo subscriptionInfo = subscriptionGiftInfo.SubscriptionInfo;
             ISubscriptionProcessor.SubResult subResult =
-                await ProcessSubscription(subscriptionGiftInfo.SubscriptionInfo);
+                await ProcessSubscription(subscriptionInfo);
             bool isLinkedAccount = await _linkedAccountRepo.AreLinked(
                 subscriptionGiftInfo.Gifter.Id,
-                subscriptionGiftInfo.SubscriptionInfo.Subscriber.Id);
+                subscriptionInfo.Subscriber.Id);
 
             if (isLinkedAccount)
                 return (subResult, new ISubscriptionProcessor.SubGiftResult.LinkedAccount());
@@ -187,7 +189,7 @@ namespace TPP.Core
                 return (subResult, new ISubscriptionProcessor.SubGiftResult.SameMonth(month));
 
             const int tokensPerRank = 10;
-            int rewardTokens = subscriptionGiftInfo.SubscriptionInfo.Tier.ToRank() * tokensPerRank;
+            int rewardTokens = subscriptionGiftInfo.NumGiftedMonths * subscriptionInfo.Tier.ToRank() * tokensPerRank;
             TransactionLog transactionLog = await _tokenBank.PerformTransaction(new Transaction<User>(
                 subscriptionGiftInfo.Gifter,
                 rewardTokens,

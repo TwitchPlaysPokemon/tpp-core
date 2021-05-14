@@ -23,23 +23,23 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             // persist to db
             IDictionary<string, object?> data = new Dictionary<string, object?> { ["some"] = "data" };
             BadgeLog written = await repo.Log(badgeId, badgeLogType, userId, timestamp, data);
-            Assert.AreEqual(badgeId, written.BadgeId);
-            Assert.AreEqual(badgeLogType, written.BadgeLogType);
-            Assert.AreEqual(userId, written.UserId);
-            Assert.AreEqual(timestamp, written.Timestamp);
-            Assert.AreEqual(data, written.AdditionalData);
+            Assert.That(written.BadgeId, Is.EqualTo(badgeId));
+            Assert.That(written.BadgeLogType, Is.EqualTo(badgeLogType));
+            Assert.That(written.UserId, Is.EqualTo(userId));
+            Assert.That(written.Timestamp, Is.EqualTo(timestamp));
+            Assert.That(written.AdditionalData, Is.EqualTo(data));
             Assert.NotNull(written.Id);
 
             // read from db
             List<BadgeLog> allItems = await repo.Collection.Find(FilterDefinition<BadgeLog>.Empty).ToListAsync();
-            Assert.AreEqual(1, allItems.Count);
+            Assert.That(allItems.Count, Is.EqualTo(1));
             BadgeLog read = allItems[0];
-            Assert.AreEqual(written, read);
-            Assert.AreEqual(badgeId, read.BadgeId);
-            Assert.AreEqual(badgeLogType, read.BadgeLogType);
-            Assert.AreEqual(userId, read.UserId);
-            Assert.AreEqual(timestamp, read.Timestamp);
-            Assert.AreEqual(data, read.AdditionalData);
+            Assert.That(read, Is.EqualTo(written));
+            Assert.That(read.BadgeId, Is.EqualTo(badgeId));
+            Assert.That(read.BadgeLogType, Is.EqualTo(badgeLogType));
+            Assert.That(read.UserId, Is.EqualTo(userId));
+            Assert.That(read.Timestamp, Is.EqualTo(timestamp));
+            Assert.That(read.AdditionalData, Is.EqualTo(data));
         }
     }
 }
