@@ -269,34 +269,51 @@ namespace TPP.Core.Chat
         {
             _logger.LogDebug("<#{Channel} {Username}: {Message}",
                 _ircChannel, e.ChatMessage.Username, e.ChatMessage.Message);
-            await AnyMessageReceived(e.ChatMessage, e.ChatMessage.Message, MessageSource.Chat);
+            if (e.ChatMessage.Username == _twitchClient.TwitchUsername)
+                // new core sees messages posted by old core, but we don't want to process our own messages
+                return;
+            User user = await _userRepo.RecordUser(GetUserInfoFromTwitchMessage(e.ChatMessage));
+            var message = new Message(user, e.ChatMessage.Message, MessageSource.Chat, e.ChatMessage.RawIrcMessage)
+            {
+                Details = new MessageDetails(
+                    MessageId: e.ChatMessage.Id,
+                    IsAction: e.ChatMessage.IsMe,
+                    IsStaff: e.ChatMessage.IsBroadcaster || e.ChatMessage.IsModerator,
+                    Emotes: e.ChatMessage.EmoteSet.Emotes
+                        .Select(em => new Emote(em.Id, em.Name, em.StartIndex, em.EndIndex)).ToImmutableList()
+                )
+            };
+            IncomingMessage?.Invoke(this, new MessageEventArgs(message));
         }
 
         private async void WhisperReceived(object? sender, OnWhisperReceivedArgs e)
         {
             _logger.LogDebug("<@{Username}: {Message}", e.WhisperMessage.Username, e.WhisperMessage.Message);
-            await AnyMessageReceived(e.WhisperMessage, e.WhisperMessage.Message, MessageSource.Whisper);
+            User user = await _userRepo.RecordUser(GetUserInfoFromTwitchMessage(e.WhisperMessage));
+            var message = new Message(user, e.WhisperMessage.Message, MessageSource.Whisper, e.WhisperMessage.RawIrcMessage)
+            {
+                Details = new MessageDetails(
+                    MessageId: null,
+                    IsAction: false,
+                    IsStaff: false,
+                    Emotes: e.WhisperMessage.EmoteSet.Emotes
+                        .Select(em => new Emote(em.Id, em.Name, em.StartIndex, em.EndIndex)).ToImmutableList()
+                )
+            };
+            IncomingMessage?.Invoke(this, new MessageEventArgs(message));
         }
 
-        private async Task AnyMessageReceived(
-            TwitchLibMessage twitchLibMessage,
-            string messageText,
-            MessageSource source)
+        private UserInfo GetUserInfoFromTwitchMessage(TwitchLibMessage message)
         {
-            if (twitchLibMessage.Username == _twitchClient.TwitchUsername)
-                // new core sees messages posted by old core, but we don't want to process our own messages
-                return;
-            string? colorHex = twitchLibMessage.ColorHex;
-            User user = await _userRepo.RecordUser(new UserInfo(
-                id: twitchLibMessage.UserId,
-                twitchDisplayName: twitchLibMessage.DisplayName,
-                simpleName: twitchLibMessage.Username,
+            string? colorHex = message.ColorHex;
+            return new UserInfo(
+                id: message.UserId,
+                twitchDisplayName: message.DisplayName,
+                simpleName: message.Username,
                 color: string.IsNullOrEmpty(colorHex) ? null : HexColor.FromWithHash(colorHex),
                 fromMessage: true,
                 updatedAt: _clock.GetCurrentInstant()
-            ));
-            Message message = new(user, messageText, source, twitchLibMessage.RawIrcMessage);
-            IncomingMessage?.Invoke(this, new MessageEventArgs(message));
+            );
         }
 
         public void Dispose()
@@ -339,6 +356,34 @@ namespace TPP.Core.Chat
 
             _logger.LogDebug($"disabling emote only mode in #{_ircChannel}");
             await Task.Run(() => _twitchClient.EmoteOnlyOff(_ircChannel));
+        }
+
+        public async Task DeleteMessage(string messageId)
+        {
+            if (_suppressions.Contains(SuppressionType.Command) &&
+                !_suppressionOverrides.Contains(_ircChannel))
+            {
+                _logger.LogDebug($"(suppressed) deleting message {messageId} in #{_ircChannel}");
+                return;
+            }
+
+            _logger.LogDebug($"deleting message {messageId} in #{_ircChannel}");
+            await Task.Run(() => _twitchClient.SendMessage(_ircChannel, ".delete " + messageId));
+        }
+
+        public async Task Timeout(User user, string? message, Duration duration)
+        {
+            if (_suppressions.Contains(SuppressionType.Command) &&
+                !(_suppressionOverrides.Contains(_ircChannel) && _suppressionOverrides.Contains(user.SimpleName)))
+            {
+                _logger.LogDebug($"(suppressed) time out {user} for {duration} in #{_ircChannel}: {message}");
+                return;
+            }
+
+            _logger.LogDebug($"time out {user} for {duration} in #{_ircChannel}: {message}");
+            await Task.Run(() =>
+                _twitchClient.TimeoutUser(_ircChannel, user.SimpleName, duration.ToTimeSpan(),
+                    message ?? "no timeout reason was given"));
         }
     }
 }

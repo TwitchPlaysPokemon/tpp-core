@@ -10,16 +10,21 @@ using TPP.Core.Chat;
 using TPP.Core.Commands;
 using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
+using TPP.Core.Moderation;
 using TPP.Core.Overlay;
+using TPP.Persistence.Models;
 using TPP.Persistence.Repos;
 
 namespace TPP.Core.Modes
 {
     public sealed class ModeBase : IDisposable
     {
+        private static readonly Role[] ExemptionRoles = { Role.Operator, Role.Moderator, Role.ModbotExempt };
+
         private readonly IImmutableDictionary<string, IChat> _chats;
         private readonly IImmutableDictionary<string, ICommandResponder> _commandResponders;
         private readonly IImmutableDictionary<string, CommandProcessor> _commandProcessors;
+        private readonly IImmutableDictionary<string, IModerator> _moderators;
         private readonly IMessagequeueRepo _messagequeueRepo;
         private readonly bool _forwardUnprocessedMessages;
         private readonly IMessagelogRepo _messagelogRepo;
@@ -38,12 +43,13 @@ namespace TPP.Core.Modes
             OverlayConnection overlayConnection,
             ProcessMessage? processMessage = null)
         {
+            IClock clock = SystemClock.Instance;
             PokedexData pokedexData = PokedexData.Load();
             ArgsParser argsParser = Setups.SetUpArgsParser(repos.UserRepo, pokedexData);
             _processMessage = processMessage ?? (_ => Task.FromResult(false));
 
             var chats = new Dictionary<string, IChat>();
-            var chatFactory = new ChatFactory(loggerFactory, SystemClock.Instance,
+            var chatFactory = new ChatFactory(loggerFactory, clock,
                 repos.UserRepo, repos.TokensBank, repos.SubscriptionLogRepo, repos.LinkedAccountRepo,
                 overlayConnection);
             foreach (ConnectionConfig connectorConfig in baseConfig.Chat.Connections)
@@ -61,12 +67,32 @@ namespace TPP.Core.Modes
                 c => (ICommandResponder)new CommandResponder(c));
             _commandProcessors = _chats.Values.ToImmutableDictionary(
                 c => c.Name,
-                c => Setups.SetUpCommandProcessor(loggerFactory, argsParser, repos, stopToken, baseConfig.Chat, c, c, pokedexData.KnownSpecies));
+                c => Setups.SetUpCommandProcessor(loggerFactory, argsParser, repos, stopToken, baseConfig.Chat, c, c,
+                    pokedexData.KnownSpecies));
 
             _messagequeueRepo = repos.MessagequeueRepo;
             _messagelogRepo = repos.MessagelogRepo;
             _forwardUnprocessedMessages = baseConfig.Chat.ForwardUnprocessedMessages;
             _clock = SystemClock.Instance;
+
+            ILogger<Moderator> moderatorLogger = loggerFactory.CreateLogger<Moderator>();
+
+            IImmutableList<IModerationRule> availableRules = ImmutableList.Create<IModerationRule>(
+                new BannedUrlsRule(),
+                new SpambotRule(),
+                new EmoteRule(),
+                new CopypastaRule(clock),
+                new UnicodeCharacterCategoryRule()
+            );
+            foreach (string unknown in baseConfig.DisabledModbotRules.Except(availableRules.Select(rule => rule.Id)))
+                moderatorLogger.LogWarning("unknown modbot rule '{UnknownRule}' marked as disabled", unknown);
+            IImmutableList<IModerationRule> rules = availableRules
+                .Where(rule => !baseConfig.DisabledModbotRules.Contains(rule.Id))
+                .ToImmutableList();
+
+            _moderators = _chats.Values.ToImmutableDictionary(
+                c => c.Name,
+                c => (IModerator)new Moderator(moderatorLogger, c, rules, repos.ModLogRepo, clock));
         }
 
         public void InstallAdditionalCommand(Command command)
@@ -82,6 +108,15 @@ namespace TPP.Core.Modes
         {
             await _messagelogRepo.LogChat(
                 message.User.Id, message.RawIrcMessage, message.MessageText, _clock.GetCurrentInstant());
+
+            bool isOk = message.Details.IsStaff
+                        || message.User.Roles.Intersect(ExemptionRoles).Any()
+                        || message.MessageSource != MessageSource.Chat
+                        || await _moderators[chat.Name].Check(message);
+            if (!isOk)
+            {
+                return;
+            }
 
             List<string> parts = message.MessageText.Split(" ")
                 .Where(s => !string.IsNullOrEmpty(s)).ToList();

@@ -101,7 +101,8 @@ namespace TPP.Core
             IMessagequeueRepo MessagequeueRepo,
             IMessagelogRepo MessagelogRepo,
             ILinkedAccountRepo LinkedAccountRepo,
-            ISubscriptionLogRepo SubscriptionLogRepo
+            ISubscriptionLogRepo SubscriptionLogRepo,
+            IModLogRepo ModLogRepo
         );
 
         public static Databases SetUpRepositories(BaseConfig baseConfig)
@@ -146,7 +147,8 @@ namespace TPP.Core
                 MessagequeueRepo: new MessagequeueRepo(mongoDatabase),
                 MessagelogRepo: new MessagelogRepo(mongoDatabaseMessagelog),
                 LinkedAccountRepo: new LinkedAccountRepo(mongoDatabase, userRepo.Collection),
-                SubscriptionLogRepo: new SubscriptionLogRepo(mongoDatabase)
+                SubscriptionLogRepo: new SubscriptionLogRepo(mongoDatabase),
+                ModLogRepo: new ModLogRepo(mongoDatabase)
             );
         }
 
