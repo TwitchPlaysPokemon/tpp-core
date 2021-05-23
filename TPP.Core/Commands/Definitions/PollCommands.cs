@@ -50,8 +50,7 @@ namespace TPP.Core.Commands.Definitions
                     option = poll.PollOptions.FirstOrDefault(o => o.Id == voteInt);
                 option ??= poll.PollOptions.FirstOrDefault(o => o.Option == voteStr);
                 if (option == null)
-                    return new CommandResult
-                        { Response = $"Invalid option '{voteStr}' included for poll '{pollCode}'." };
+                    return new CommandResult { Response = $"Invalid option '{voteStr}' included for poll '{pollCode}'." };
                 selectedOptions.Add(option.Id);
             }
 
