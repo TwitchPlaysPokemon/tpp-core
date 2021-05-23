@@ -11,18 +11,12 @@ namespace TPP.Core.Commands.Definitions
 {
     public class ModeratorCommands : ICommandCollection
     {
-        private readonly ImmutableHashSet<string> _moderatorNamesLower;
         private readonly IChatModeChanger _changer;
         private readonly ILinkedAccountRepo _linkedAccountRepo;
 
-        public ModeratorCommands(
-            IEnumerable<string> moderatorNames,
-            IEnumerable<string> operatorNames,
-            IChatModeChanger changer,
+        public ModeratorCommands(IChatModeChanger changer,
             ILinkedAccountRepo linkedAccountRepo)
         {
-            _moderatorNamesLower = operatorNames.Concat(moderatorNames).Select(s => s.ToLowerInvariant())
-                .Distinct().ToImmutableHashSet(); //add both mods and ops to mod list
             _changer = changer;
             _linkedAccountRepo = linkedAccountRepo;
         }
@@ -58,7 +52,10 @@ namespace TPP.Core.Commands.Definitions
             canExecute: ctx => IsModerator(ctx.Message.User),
             ersatzResult: new CommandResult { Response = "Only moderators can use that command" }));
 
-        private bool IsModerator(User user) => _moderatorNamesLower.Contains(user.SimpleName);
+        private bool IsModerator(User u)
+        {
+            return u.Roles == null ? false : u.Roles.Contains(Role.Moderator) || u.Roles.Contains(Role.Operator);
+        }
 
         private async Task<CommandResult> EnableEmoteOnly(CommandContext context)
         {

@@ -17,7 +17,7 @@ namespace TPP.Core.Commands.Definitions
             new Command("github", StaticResponse("https://github.com/TwitchPlaysPokemon"))
                 {Aliases = new[] {"source"}, Description = "Respond with the github."},
 
-            new Command("twitter", StaticResponse("https://twitter.com/Twitch_Plays"))
+            new Command("twitter", StaticResponse("https://twitter.com/TwitchPokemon"))
                 {Aliases = new[] {"tweet"}, Description = "Respond with the twitter handle."},
 
             new Command("rewards", StaticResponse("Season rewards: https://twitchplayspokemon.tv/season_rewards"))

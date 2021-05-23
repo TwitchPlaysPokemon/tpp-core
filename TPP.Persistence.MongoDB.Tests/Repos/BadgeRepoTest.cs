@@ -27,11 +27,11 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             Badge badge = await badgeRepo.AddBadge(null, PkmnSpecies.OfId("16"), Badge.BadgeSource.ManualCreation);
 
             // then
-            Assert.AreNotEqual(string.Empty, badge.Id);
+            Assert.That(badge.Id, Is.Not.EqualTo(string.Empty));
             Badge badgeFromDatabase = await badgeRepo.Collection.Find(b => b.Id == badge.Id).FirstOrDefaultAsync();
             Assert.NotNull(badgeFromDatabase);
-            Assert.AreNotSame(badgeFromDatabase, badge);
-            Assert.AreEqual(badgeFromDatabase, badge);
+            Assert.That(badge, Is.Not.SameAs(badgeFromDatabase));
+            Assert.That(badge, Is.EqualTo(badgeFromDatabase));
         }
 
         [Test]
@@ -44,7 +44,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
                 CreateTemporaryDatabase(), Mock.Of<IMongoBadgeLogRepo>(), clockMock.Object);
 
             Badge badge = await badgeRepo.AddBadge(null, PkmnSpecies.OfId("16"), Badge.BadgeSource.ManualCreation);
-            Assert.AreEqual(createdAt, badge.CreatedAt);
+            Assert.That(badge.CreatedAt, Is.EqualTo(createdAt));
         }
 
         /// <summary>
@@ -63,10 +63,10 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             IMongoCollection<BsonDocument> badgesCollectionBson =
                 badgeRepo.Collection.Database.GetCollection<BsonDocument>("badges");
             BsonDocument badgeBson = await badgesCollectionBson.Find(FilterDefinition<BsonDocument>.Empty).FirstAsync();
-            Assert.AreEqual(BsonObjectId.Create(ObjectId.Parse(badge.Id)), badgeBson["_id"]);
-            Assert.AreEqual(BsonNull.Value, badgeBson["user"]);
-            Assert.AreEqual(BsonString.Create(randomSpecies.Id), badgeBson["species"]);
-            Assert.AreEqual(BsonString.Create("run_caught"), badgeBson["source"]);
+            Assert.That(badgeBson["_id"], Is.EqualTo(BsonObjectId.Create(ObjectId.Parse(badge.Id))));
+            Assert.That(badgeBson["user"], Is.EqualTo(BsonNull.Value));
+            Assert.That(badgeBson["species"], Is.EqualTo(BsonString.Create(randomSpecies.Id)));
+            Assert.That(badgeBson["source"], Is.EqualTo(BsonString.Create("run_caught")));
         }
 
         [Test]
@@ -85,9 +85,9 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             List<Badge> resultNobody = await badgeRepo.FindByUser(null);
 
             // then
-            Assert.AreEqual(new List<Badge> { badgeUserA1, badgeUserA2 }, resultUserA);
-            Assert.AreEqual(new List<Badge> { badgeUserB }, resultUserB);
-            Assert.AreEqual(new List<Badge> { badgeNobody }, resultNobody);
+            Assert.That(resultUserA, Is.EqualTo(new List<Badge> { badgeUserA1, badgeUserA2 }));
+            Assert.That(resultUserB, Is.EqualTo(new List<Badge> { badgeUserB }));
+            Assert.That(resultNobody, Is.EqualTo(new List<Badge> { badgeNobody }));
         }
 
         [Test]
@@ -109,9 +109,9 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             long countHasThree = await badgeRepo.CountByUserAndSpecies("user", PkmnSpecies.OfId("3"));
 
             // then
-            Assert.AreEqual(0, countHasNone);
-            Assert.AreEqual(1, countHasOne);
-            Assert.AreEqual(3, countHasThree);
+            Assert.That(countHasNone, Is.EqualTo(0));
+            Assert.That(countHasOne, Is.EqualTo(1));
+            Assert.That(countHasThree, Is.EqualTo(3));
         }
 
         [Test]
@@ -136,7 +136,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
                 (PkmnSpecies.OfId("2"), 1),
                 (PkmnSpecies.OfId("3"), 3),
             }.ToImmutableSortedDictionary(tuple => tuple.Item1, tuple => tuple.Item2);
-            Assert.AreEqual(expected, result);
+            Assert.That(result, Is.EqualTo(expected));
         }
 
         [Test]
@@ -178,12 +178,12 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
                 IImmutableList<Badge> updatedBadges = await badgeRepo.TransferBadges(
                     ImmutableList.Create(badge), "recipient", "reason", new Dictionary<string, object?>());
 
-                Assert.AreEqual(1, updatedBadges.Count);
-                Assert.AreEqual(badge.Id, updatedBadges[0].Id);
-                Assert.AreEqual(badge.Species, updatedBadges[0].Species);
-                Assert.AreEqual(badge.Source, updatedBadges[0].Source);
-                Assert.AreEqual(badge.CreatedAt, updatedBadges[0].CreatedAt);
-                Assert.AreEqual("recipient", updatedBadges[0].UserId);
+                Assert.That(updatedBadges.Count, Is.EqualTo(1));
+                Assert.That(updatedBadges[0].Id, Is.EqualTo(badge.Id));
+                Assert.That(updatedBadges[0].Species, Is.EqualTo(badge.Species));
+                Assert.That(updatedBadges[0].Source, Is.EqualTo(badge.Source));
+                Assert.That(updatedBadges[0].CreatedAt, Is.EqualTo(badge.CreatedAt));
+                Assert.That(updatedBadges[0].UserId, Is.EqualTo("recipient"));
             }
 
             [Test]
@@ -201,11 +201,11 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
                 IImmutableList<Badge> updatedBadges = await badgeRepo.TransferBadges(
                     ImmutableList.Create(badge), "recipient", "reason", new Dictionary<string, object?>());
 
-                Assert.AreEqual(1, updatedBadges.Count);
+                Assert.That(updatedBadges.Count, Is.EqualTo(1));
                 Assert.IsNull(updatedBadges[0].SellingSince);
                 Assert.IsNull(updatedBadges[0].SellPrice);
                 Badge updatedBadge = await badgeRepo.Collection.Find(b => b.Id == badge.Id).FirstAsync();
-                Assert.AreEqual(updatedBadge, updatedBadges[0]);
+                Assert.That(updatedBadges[0], Is.EqualTo(updatedBadge));
                 Assert.IsNull(updatedBadge.SellingSince);
                 Assert.IsNull(updatedBadge.SellPrice);
             }
@@ -241,17 +241,17 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
                 int userLostBadgeInvocations = 0;
                 badgeRepo.UserLostBadgeSpecies += (_, args) =>
                 {
-                    Assert.AreEqual("user", args.UserId);
-                    Assert.AreEqual(species, args.Species);
+                    Assert.That(args.UserId, Is.EqualTo("user"));
+                    Assert.That(args.Species, Is.EqualTo(species));
                     userLostBadgeInvocations++;
                 };
 
                 await badgeRepo.TransferBadges(
                     ImmutableList.Create(badge1), "recipient", "reason", new Dictionary<string, object?>());
-                Assert.AreEqual(0, userLostBadgeInvocations, "one badge of species left");
+                Assert.That(userLostBadgeInvocations, Is.EqualTo(0), "one badge of species left");
                 await badgeRepo.TransferBadges(
                     ImmutableList.Create(badge2), "recipient", "reason", new Dictionary<string, object?>());
-                Assert.AreEqual(1, userLostBadgeInvocations, "last badge of species lost");
+                Assert.That(userLostBadgeInvocations, Is.EqualTo(1), "last badge of species lost");
             }
 
             [Test]
@@ -269,12 +269,12 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
 
                 OwnedBadgeNotFoundException ex = Assert.ThrowsAsync<OwnedBadgeNotFoundException>(() =>
                     badgeRepo.TransferBadges(ImmutableList.Create(badge1, badge2),
-                        "recipient", "reason", new Dictionary<string, object?>()));
-                Assert.AreEqual(badge2, ex.Badge);
+                        "recipient", "reason", new Dictionary<string, object?>()))!;
+                Assert.That(ex.Badge, Is.EqualTo(badge2));
                 // first badge must not have changed ownership
                 Badge firstBadge = await badgeRepo.Collection.Find(b => b.Id == badge1.Id).FirstAsync();
-                Assert.AreEqual("user", firstBadge.UserId);
-                Assert.AreEqual(badge1, firstBadge);
+                Assert.That(firstBadge.UserId, Is.EqualTo("user"));
+                Assert.That(firstBadge, Is.EqualTo(badge1));
             }
         }
     }

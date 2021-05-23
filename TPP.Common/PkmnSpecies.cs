@@ -67,11 +67,11 @@ namespace TPP.Common
                     $"The id '{id}' is invalid. " +
                     "It needs to be a number (for national pokedex) or have the format '<number>-<pokedex>'");
             }
-            IsFakemon = parts.Length > 1;
-            _sortKey = IsFakemon
+            IsFakemon = parts.Length > 1 || intPart >= 2000; // TODO: Until the 7 fakemons from #2000 - #2006 are dealt with, we need to additionally address them
+            _sortKey = parts.Length > 1
                 ? $"{parts[1]}{intPart:00000}"
                 : $"_{intPart:00000}"; // prefix with '_' to keep the national dex at the alphanumerical top
-            _displayText = IsFakemon
+            _displayText = parts.Length > 1
                 ? $"#{intPart:000}-{parts[1]} {name}"
                 : $"#{intPart:000} {name}";
         }

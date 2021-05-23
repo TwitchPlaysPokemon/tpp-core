@@ -1,4 +1,54 @@
 ﻿{
+  "definitions": {
+    "InputConfig": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "ButtonsProfile": {
+          "type": "string",
+          "enum": [
+            "gb"
+          ]
+        },
+        "FramesPerSecond": {
+          "type": "integer"
+        },
+        "MinSleepFrames": {
+          "type": "integer"
+        },
+        "MinPressFrames": {
+          "type": "integer"
+        },
+        "MaxPressFrames": {
+          "type": "integer"
+        },
+        "MaxHoldFrames": {
+          "type": "integer"
+        },
+        "BufferLengthSeconds": {
+          "type": "number"
+        },
+        "SpeedupRate": {
+          "type": "number"
+        },
+        "SlowdownRate": {
+          "type": "number"
+        },
+        "MinInputFrames": {
+          "type": "integer"
+        },
+        "MaxInputFrames": {
+          "type": "integer"
+        },
+        "MaxBufferLength": {
+          "type": "integer"
+        }
+      }
+    }
+  },
   "type": "object",
   "properties": {
     "$schema": {
@@ -6,6 +56,18 @@
         "string",
         "null"
       ]
+    },
+    "InputServerHost": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "InputServerPort": {
+      "type": "integer"
+    },
+    "InputConfig": {
+      "$ref": "#/definitions/InputConfig"
     }
   }
 }

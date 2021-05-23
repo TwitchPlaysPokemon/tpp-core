@@ -17,16 +17,16 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
 
             // persist to db
             MessagequeueItem written = await repo.EnqueueMessage(ircLine);
-            Assert.AreEqual(ircLine, written.IrcLine);
+            Assert.That(written.IrcLine, Is.EqualTo(ircLine));
             Assert.NotNull(written.Id);
 
             // read from db
             List<MessagequeueItem> allItems = await repo.Collection
                 .Find(FilterDefinition<MessagequeueItem>.Empty).ToListAsync();
-            Assert.AreEqual(1, allItems.Count);
+            Assert.That(allItems.Count, Is.EqualTo(1));
             MessagequeueItem read = allItems[0];
-            Assert.AreEqual(written, read);
-            Assert.AreEqual(ircLine, read.IrcLine);
+            Assert.That(read, Is.EqualTo(written));
+            Assert.That(read.IrcLine, Is.EqualTo(ircLine));
         }
     }
 }

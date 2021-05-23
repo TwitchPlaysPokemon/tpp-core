@@ -38,6 +38,7 @@ namespace TPP.Core
             argsParser.AddArgumentParser(new TokensParser());
             argsParser.AddArgumentParser(new SignedPokeyenParser());
             argsParser.AddArgumentParser(new SignedTokensParser());
+            argsParser.AddArgumentParser(new RoleParser());
             argsParser.AddArgumentParser(new PkmnSpeciesParser(pokedexData.KnownSpecies, PokedexData.NormalizeName));
             argsParser.AddArgumentParser(new PercentageParser());
             argsParser.AddArgumentParser(new SideParser());
@@ -63,7 +64,8 @@ namespace TPP.Core
         {
             var commandProcessor = new CommandProcessor(
                 loggerFactory.CreateLogger<CommandProcessor>(),
-                databases.CommandLogger, argsParser);
+                databases.CommandLogger, argsParser,
+                chatConfig.DefaultOperatorNames);
 
             IEnumerable<Command> commands = new[]
             {
@@ -77,13 +79,10 @@ namespace TPP.Core
                 new CreatePollCommands(databases.PollRepo).Commands,
                 new BadgeCommands(databases.BadgeRepo, databases.UserRepo, messageSender, knownSpecies).Commands,
                 new OperatorCommands(
-                    stopToken, chatConfig.OperatorNames, databases.PokeyenBank, databases.TokensBank,
-                    messageSender: messageSender, databases.BadgeRepo
+                    stopToken,chatConfig.DefaultOperatorNames, databases.PokeyenBank, databases.TokensBank,
+                    messageSender: messageSender, databases.BadgeRepo, databases.UserRepo
                 ).Commands,
-                new ModeratorCommands(
-                    chatConfig.ModeratorNames, chatConfig.OperatorNames, chatModeChanger, databases.LinkedAccountRepo
-                ).Commands,
-                new MiscCommands().Commands,
+                new ModeratorCommands(chatModeChanger, databases.LinkedAccountRepo).Commands
             }.SelectMany(cmds => cmds).Concat(new[]
             {
                 new HelpCommand(commandProcessor).Command
@@ -104,7 +103,9 @@ namespace TPP.Core
             ICommandLogger CommandLogger,
             IMessagequeueRepo MessagequeueRepo,
             IMessagelogRepo MessagelogRepo,
-            ILinkedAccountRepo LinkedAccountRepo
+            ILinkedAccountRepo LinkedAccountRepo,
+            ISubscriptionLogRepo SubscriptionLogRepo,
+            IModLogRepo ModLogRepo
         );
 
         public static Databases SetUpRepositories(BaseConfig baseConfig)
@@ -117,7 +118,8 @@ namespace TPP.Core
             UserRepo userRepo = new(
                 database: mongoDatabase,
                 startingPokeyen: baseConfig.StartingPokeyen,
-                startingTokens: baseConfig.StartingTokens);
+                startingTokens: baseConfig.StartingTokens,
+                defaultOperators: baseConfig.Chat.DefaultOperatorNames);
             IMongoBadgeLogRepo badgeLogRepo = new BadgeLogRepo(mongoDatabase);
             IBadgeRepo badgeRepo = new BadgeRepo(mongoDatabase, badgeLogRepo, clock);
             badgeRepo.UserLostBadgeSpecies += async (_, args) =>
@@ -148,7 +150,9 @@ namespace TPP.Core
                 CommandLogger: new CommandLogger(mongoDatabase, clock),
                 MessagequeueRepo: new MessagequeueRepo(mongoDatabase),
                 MessagelogRepo: new MessagelogRepo(mongoDatabaseMessagelog),
-                LinkedAccountRepo: new LinkedAccountRepo(mongoDatabase, userRepo.Collection)
+                LinkedAccountRepo: new LinkedAccountRepo(mongoDatabase, userRepo.Collection),
+                SubscriptionLogRepo: new SubscriptionLogRepo(mongoDatabase),
+                ModLogRepo: new ModLogRepo(mongoDatabase)
             );
         }
 

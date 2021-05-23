@@ -38,16 +38,16 @@ namespace TPP.Core.Tests
 
             Dictionary<string, long> changesBlueWon = await bettingPeriod
                 .Resolve(1234, new MatchResult(Side.Blue), CancellationToken.None);
-            Assert.AreEqual(2, changesBlueWon.Count);
-            Assert.AreEqual(250, changesBlueWon["userBlue"]);
-            Assert.AreEqual(-250, changesBlueWon["userRed"]);
+            Assert.That(changesBlueWon.Count, Is.EqualTo(2));
+            Assert.That(changesBlueWon["userBlue"], Is.EqualTo(250));
+            Assert.That(changesBlueWon["userRed"], Is.EqualTo(-250));
 
             bankMock.Verify(b => b.PerformTransactions(Capture.In(transactions), It.IsAny<CancellationToken>()),
                 Times.Once);
             foreach (Transaction<string> tx in transactions.SelectMany(list => list))
             {
-                Assert.AreEqual("match", tx.Type);
-                Assert.AreEqual(new Dictionary<string, object?> { ["match"] = 1234 }, tx.AdditionalData);
+                Assert.That(tx.Type, Is.EqualTo("match"));
+                Assert.That(tx.AdditionalData, Is.EqualTo(new Dictionary<string, object?> { ["match"] = 1234 }));
             }
             CollectionAssert.AreEquivalent(new[]
             {
@@ -65,16 +65,16 @@ namespace TPP.Core.Tests
 
             Dictionary<string, long> changesRedWon = await bettingPeriod
                 .Resolve(1234, new MatchResult(Side.Red), CancellationToken.None);
-            Assert.AreEqual(2, changesRedWon.Count);
-            Assert.AreEqual(-200, changesRedWon["userBlue"]);
-            Assert.AreEqual(200, changesRedWon["userRed"]);
+            Assert.That(changesRedWon.Count, Is.EqualTo(2));
+            Assert.That(changesRedWon["userBlue"], Is.EqualTo(-200));
+            Assert.That(changesRedWon["userRed"], Is.EqualTo(200));
 
             bankMock.Verify(b => b.PerformTransactions(Capture.In(transactions), It.IsAny<CancellationToken>()),
                 Times.Once);
             foreach (Transaction<string> tx in transactions.SelectMany(list => list))
             {
-                Assert.AreEqual("match", tx.Type);
-                Assert.AreEqual(new Dictionary<string, object?> { ["match"] = 1234 }, tx.AdditionalData);
+                Assert.That(tx.Type, Is.EqualTo("match"));
+                Assert.That(tx.AdditionalData, Is.EqualTo(new Dictionary<string, object?> { ["match"] = 1234 }));
             }
             CollectionAssert.AreEquivalent(new[]
             {
@@ -91,9 +91,9 @@ namespace TPP.Core.Tests
 
             Dictionary<string, long> changesDraw = await bettingPeriod
                 .Resolve(1234, new MatchResult(null), CancellationToken.None);
-            Assert.AreEqual(2, changesDraw.Count);
-            Assert.AreEqual(0, changesDraw["userBlue"]);
-            Assert.AreEqual(0, changesDraw["userRed"]);
+            Assert.That(changesDraw.Count, Is.EqualTo(2));
+            Assert.That(changesDraw["userBlue"], Is.EqualTo(0));
+            Assert.That(changesDraw["userRed"], Is.EqualTo(0));
 
             bankMock.Verify(
                 b => b.PerformTransactions(It.IsAny<IEnumerable<Transaction<string>>>(), It.IsAny<CancellationToken>()),

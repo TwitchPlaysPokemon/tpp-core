@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using NUnit.Framework;
@@ -11,9 +11,9 @@ namespace TPP.Inputting.Tests.Parsing
     public class ContextualInputParserTest
     {
         private static InputSet Set(params string[] inputs) =>
-            new InputSet(inputs.Select(s => new Input(s, s, s)));
+            new(inputs.Select(s => new Input(s, s, s)).ToImmutableList());
 
-        private static InputSequence Seq(params InputSet[] inputSets) => new InputSequence(inputSets);
+        private static InputSequence Seq(params InputSet[] inputSets) => new(inputSets.ToImmutableList());
 
         private IInputParser _inputParser = null!;
 
@@ -47,17 +47,13 @@ namespace TPP.Inputting.Tests.Parsing
                 .Touchscreen(width: 240, height: 160, multitouch: true, allowDrag: true)
                 .Build();
 
-            Assert.AreEqual(Seq(new InputSet(new List<Input>
-                {
-                    new TouchscreenInput("234,123", "touchscreen", "234,123", 234, 123),
-                    new TouchscreenInput("11,22", "touchscreen", "11,22", 11, 22),
-                })
+            Assert.AreEqual(Seq(new InputSet(ImmutableList.Create<Input>(
+                new TouchscreenInput("234,123", "touchscreen", "234,123", 234, 123),
+                new TouchscreenInput("11,22", "touchscreen", "11,22", 11, 22)))
             ), _inputParser.Parse("234,123+11,22"));
-            Assert.AreEqual(Seq(new InputSet(new List<Input>
-                {
-                    new TouchscreenInput("234,123", "touchscreen", "234,123", 234, 123),
-                    new TouchscreenDragInput("11,22>33,44", "touchscreen", "11,22>33,44", 11, 22, 33, 44),
-                })
+            Assert.AreEqual(Seq(new InputSet(ImmutableList.Create<Input>(
+                new TouchscreenInput("234,123", "touchscreen", "234,123", 234, 123),
+                new TouchscreenDragInput("11,22>33,44", "touchscreen", "11,22>33,44", 11, 22, 33, 44)))
             ), _inputParser.Parse("234,123+11,22>33,44"));
 
             // multitouch disabled

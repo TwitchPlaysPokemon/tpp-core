@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text.RegularExpressions;
 using TPP.Inputting.Inputs;
@@ -13,8 +14,6 @@ namespace TPP.Inputting.Parsing
     /// </summary>
     public class BareInputParser : IInputParser
     {
-        public static readonly Input InputHold = new Input("hold", "hold", "-");
-
         private readonly List<IInputDefinition> _inputDefinitions;
         private readonly int _maxSequenceLength;
         private readonly Regex _regex;
@@ -97,7 +96,7 @@ namespace TPP.Inputting.Parsing
                 inputs.AddRange(inputWithIndexes.OrderBy(tuple => tuple.Item1).Select(tuple => tuple.Item2));
                 if (capturesHold.Any() && capturesHold.Peek().Index < endIndex)
                 {
-                    inputs.Add(InputHold);
+                    inputs.Add(HoldInput.Instance);
                     capturesHold.Dequeue();
                 }
                 int numRepeat = 1;
@@ -105,7 +104,7 @@ namespace TPP.Inputting.Parsing
                 {
                     numRepeat = int.Parse(capturesRepeat.Dequeue().Value);
                 }
-                var inputSet = new InputSet(inputs.ToList());
+                var inputSet = new InputSet(inputs.ToImmutableList());
                 inputSets.AddRange(Enumerable.Repeat(inputSet, numRepeat));
                 // we need to check the length, because the regex cannot enforce the max length since the sequence may
                 // have been lengthened with a specified number of repetitions for a button set.
@@ -114,7 +113,7 @@ namespace TPP.Inputting.Parsing
                     return null;
                 }
             }
-            return new InputSequence(inputSets);
+            return new InputSequence(inputSets.ToImmutableList());
         }
     }
 }

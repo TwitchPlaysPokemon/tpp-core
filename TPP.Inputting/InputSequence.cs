@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 
@@ -9,10 +8,11 @@ namespace TPP.Inputting
     /// An input sequence is a sequence of <see cref="InputSet"/> that are inputted in sequence.
     /// This is used e.g. in democracy mode.
     /// </summary>
-    public readonly struct InputSequence : IEquatable<InputSequence>
+    public sealed record InputSequence(IImmutableList<InputSet> InputSets)
     {
-        public IImmutableList<InputSet> InputSets { get; }
-        public bool Equals(InputSequence other) => InputSets.SequenceEqual(other.InputSets);
+        // Need to manually define these, because lists don't implement a proper Equals and GetHashCode themselves.
+        public bool Equals(InputSequence? other) => other != null && InputSets.SequenceEqual(other.InputSets);
+        public override int GetHashCode() => InputSets.Select(i => i.GetHashCode()).Aggregate(HashCode.Combine);
 
         /// <summary>
         /// Determines whether this input sequence is effectively equal to another input sequence,
@@ -32,11 +32,6 @@ namespace TPP.Inputting
             return true;
         }
 
-        public InputSequence(IEnumerable<InputSet> inputSets)
-        {
-            InputSets = inputSets.ToImmutableList();
-        }
-
-        public override string ToString() => $"InputSequence({string.Join(", ", InputSets)})";
+        public override string ToString() => $"{nameof(InputSequence)}({string.Join(", ", InputSets)})";
     }
 }

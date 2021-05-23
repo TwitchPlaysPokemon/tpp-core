@@ -33,100 +33,100 @@ namespace TPP.Core.Tests
                 };
                 foreach (string name in names)
                 {
-                    Assert.AreEqual(name, PokedexData.NormalizeName(name));
+                    Assert.That(PokedexData.NormalizeName(name), Is.EqualTo(name));
                 }
             }
 
             [Test]
             public void is_case_insensitive()
             {
-                Assert.AreEqual("Porygon-Z", PokedexData.NormalizeName("porygon-z"));
-                Assert.AreEqual("Ho-Oh", PokedexData.NormalizeName("HO-OH"));
+                Assert.That(PokedexData.NormalizeName("porygon-z"), Is.EqualTo("Porygon-Z"));
+                Assert.That(PokedexData.NormalizeName("HO-OH"), Is.EqualTo("Ho-Oh"));
             }
 
             [Test]
             public void requires_full_match()
             {
-                Assert.AreEqual("Porygon-Z", PokedexData.NormalizeName("Porygon-Z"));
-                Assert.AreNotEqual("Porygon-Z", PokedexData.NormalizeName("~Porygon-Z"));
-                Assert.AreNotEqual("Porygon-Z", PokedexData.NormalizeName("Porygon-Z~"));
+                Assert.That(PokedexData.NormalizeName("Porygon-Z"), Is.EqualTo("Porygon-Z"));
+                Assert.That(PokedexData.NormalizeName("~Porygon-Z"), Is.Not.EqualTo("Porygon-Z"));
+                Assert.That(PokedexData.NormalizeName("Porygon-Z~"), Is.Not.EqualTo("Porygon-Z"));
             }
 
             [Test]
             public void ignores_names_that_do_not_need_normalization()
             {
-                Assert.AreEqual("Pidgey", PokedexData.NormalizeName("Pidgey"));
-                Assert.AreNotEqual("Pidgey", PokedexData.NormalizeName("Pid'gey"));
-                Assert.AreNotEqual("Pidgey", PokedexData.NormalizeName("Pid gey"));
-                Assert.AreNotEqual("Pidgey", PokedexData.NormalizeName("Pid-gey"));
-                Assert.AreNotEqual("Pidgey", PokedexData.NormalizeName("Pidgey."));
+                Assert.That(PokedexData.NormalizeName("Pidgey"), Is.EqualTo("Pidgey"));
+                Assert.That(PokedexData.NormalizeName("Pid'gey"), Is.Not.EqualTo("Pidgey"));
+                Assert.That(PokedexData.NormalizeName("Pid gey"), Is.Not.EqualTo("Pidgey"));
+                Assert.That(PokedexData.NormalizeName("Pid-gey"), Is.Not.EqualTo("Pidgey"));
+                Assert.That(PokedexData.NormalizeName("Pidgey."), Is.Not.EqualTo("Pidgey"));
             }
 
             [Test]
             public void recognizes_dashes_for_spaces()
             {
-                Assert.AreEqual("Mr. Mime", PokedexData.NormalizeName("Mr.-Mime"));
-                Assert.AreEqual("Mr. Rime", PokedexData.NormalizeName("Mr.-Rime"));
-                Assert.AreEqual("Mime Jr.", PokedexData.NormalizeName("Mime-Jr."));
-                Assert.AreEqual("Type: Null", PokedexData.NormalizeName("Type:-Null"));
-                Assert.AreEqual("Tapu Koko", PokedexData.NormalizeName("Tapu-Koko"));
-                Assert.AreEqual("Tapu Lele", PokedexData.NormalizeName("Tapu-Lele"));
-                Assert.AreEqual("Tapu Bulu", PokedexData.NormalizeName("Tapu-Bulu"));
-                Assert.AreEqual("Tapu Fini", PokedexData.NormalizeName("Tapu-Fini"));
+                Assert.That(PokedexData.NormalizeName("Mr.-Mime"), Is.EqualTo("Mr. Mime"));
+                Assert.That(PokedexData.NormalizeName("Mr.-Rime"), Is.EqualTo("Mr. Rime"));
+                Assert.That(PokedexData.NormalizeName("Mime-Jr."), Is.EqualTo("Mime Jr."));
+                Assert.That(PokedexData.NormalizeName("Type:-Null"), Is.EqualTo("Type: Null"));
+                Assert.That(PokedexData.NormalizeName("Tapu-Koko"), Is.EqualTo("Tapu Koko"));
+                Assert.That(PokedexData.NormalizeName("Tapu-Lele"), Is.EqualTo("Tapu Lele"));
+                Assert.That(PokedexData.NormalizeName("Tapu-Bulu"), Is.EqualTo("Tapu Bulu"));
+                Assert.That(PokedexData.NormalizeName("Tapu-Fini"), Is.EqualTo("Tapu Fini"));
             }
 
             [Test]
             public void recognizes_omitted_spaces()
             {
-                Assert.AreEqual("Mr. Mime", PokedexData.NormalizeName("Mr.Mime"));
-                Assert.AreEqual("Mr. Rime", PokedexData.NormalizeName("Mr.Rime"));
-                Assert.AreEqual("Mime Jr.", PokedexData.NormalizeName("MimeJr."));
-                Assert.AreEqual("Type: Null", PokedexData.NormalizeName("Type:Null"));
-                Assert.AreEqual("Tapu Koko", PokedexData.NormalizeName("TapuKoko"));
-                Assert.AreEqual("Tapu Lele", PokedexData.NormalizeName("TapuLele"));
-                Assert.AreEqual("Tapu Bulu", PokedexData.NormalizeName("TapuBulu"));
-                Assert.AreEqual("Tapu Fini", PokedexData.NormalizeName("TapuFini"));
+                Assert.That(PokedexData.NormalizeName("Mr.Mime"), Is.EqualTo("Mr. Mime"));
+                Assert.That(PokedexData.NormalizeName("Mr.Rime"), Is.EqualTo("Mr. Rime"));
+                Assert.That(PokedexData.NormalizeName("MimeJr."), Is.EqualTo("Mime Jr."));
+                Assert.That(PokedexData.NormalizeName("Type:Null"), Is.EqualTo("Type: Null"));
+                Assert.That(PokedexData.NormalizeName("TapuKoko"), Is.EqualTo("Tapu Koko"));
+                Assert.That(PokedexData.NormalizeName("TapuLele"), Is.EqualTo("Tapu Lele"));
+                Assert.That(PokedexData.NormalizeName("TapuBulu"), Is.EqualTo("Tapu Bulu"));
+                Assert.That(PokedexData.NormalizeName("TapuFini"), Is.EqualTo("Tapu Fini"));
             }
 
             [Test]
             public void recognizes_omitted_punctuation()
             {
-                Assert.AreEqual("Mr. Mime", PokedexData.NormalizeName("Mr Mime"));
-                Assert.AreEqual("Mr. Rime", PokedexData.NormalizeName("Mr Rime"));
-                Assert.AreEqual("Mime Jr.", PokedexData.NormalizeName("Mime Jr"));
-                Assert.AreEqual("Type: Null", PokedexData.NormalizeName("Type Null"));
-                Assert.AreEqual("MissingNo.", PokedexData.NormalizeName("MissingNo"));
-                Assert.AreEqual("Farfetch'd", PokedexData.NormalizeName("Farfetchd"));
-                Assert.AreEqual("Sirfetch'd", PokedexData.NormalizeName("Sirfetchd"));
+                Assert.That(PokedexData.NormalizeName("Mr Mime"), Is.EqualTo("Mr. Mime"));
+                Assert.That(PokedexData.NormalizeName("Mr Rime"), Is.EqualTo("Mr. Rime"));
+                Assert.That(PokedexData.NormalizeName("Mime Jr"), Is.EqualTo("Mime Jr."));
+                Assert.That(PokedexData.NormalizeName("Type Null"), Is.EqualTo("Type: Null"));
+                Assert.That(PokedexData.NormalizeName("MissingNo"), Is.EqualTo("MissingNo."));
+                Assert.That(PokedexData.NormalizeName("Farfetchd"), Is.EqualTo("Farfetch'd"));
+                Assert.That(PokedexData.NormalizeName("Sirfetchd"), Is.EqualTo("Sirfetch'd"));
             }
 
             [Test]
             public void recognizes_omitted_dashes()
             {
-                Assert.AreEqual("Ho-Oh", PokedexData.NormalizeName("HoOh"));
-                Assert.AreEqual("Porygon-Z", PokedexData.NormalizeName("PorygonZ"));
-                Assert.AreEqual("Jangmo-o", PokedexData.NormalizeName("Jangmoo"));
-                Assert.AreEqual("Hakamo-o", PokedexData.NormalizeName("Hakamoo"));
-                Assert.AreEqual("Kommo-o", PokedexData.NormalizeName("Kommoo"));
+                Assert.That(PokedexData.NormalizeName("HoOh"), Is.EqualTo("Ho-Oh"));
+                Assert.That(PokedexData.NormalizeName("PorygonZ"), Is.EqualTo("Porygon-Z"));
+                Assert.That(PokedexData.NormalizeName("Jangmoo"), Is.EqualTo("Jangmo-o"));
+                Assert.That(PokedexData.NormalizeName("Hakamoo"), Is.EqualTo("Hakamo-o"));
+                Assert.That(PokedexData.NormalizeName("Kommoo"), Is.EqualTo("Kommo-o"));
             }
 
             [Test]
             public void recognizes_all_special_characters_omitted()
             {
-                Assert.AreEqual("Mr. Mime", PokedexData.NormalizeName("MrMime"));
-                Assert.AreEqual("Mr. Rime", PokedexData.NormalizeName("MrRime"));
-                Assert.AreEqual("Mime Jr.", PokedexData.NormalizeName("MimeJr"));
-                Assert.AreEqual("Type: Null", PokedexData.NormalizeName("TypeNull"));
+                Assert.That(PokedexData.NormalizeName("MrMime"), Is.EqualTo("Mr. Mime"));
+                Assert.That(PokedexData.NormalizeName("MrRime"), Is.EqualTo("Mr. Rime"));
+                Assert.That(PokedexData.NormalizeName("MimeJr"), Is.EqualTo("Mime Jr."));
+                Assert.That(PokedexData.NormalizeName("TypeNull"), Is.EqualTo("Type: Null"));
             }
 
             [Test]
             public void recognizes_replaced_unicode()
             {
-                Assert.AreEqual("Nidoran♀", PokedexData.NormalizeName("Nidoranf"));
-                Assert.AreEqual("Nidoran♀", PokedexData.NormalizeName("Nidoran-f"));
-                Assert.AreEqual("Nidoran♂", PokedexData.NormalizeName("Nidoranm"));
-                Assert.AreEqual("Nidoran♂", PokedexData.NormalizeName("Nidoran-m"));
-                Assert.AreEqual("Flabébé", PokedexData.NormalizeName("Flabebe"));
+                Assert.That(PokedexData.NormalizeName("Nidoranf"), Is.EqualTo("Nidoran♀"));
+                Assert.That(PokedexData.NormalizeName("Nidoran-f"), Is.EqualTo("Nidoran♀"));
+                Assert.That(PokedexData.NormalizeName("Nidoranm"), Is.EqualTo("Nidoran♂"));
+                Assert.That(PokedexData.NormalizeName("Nidoran-m"), Is.EqualTo("Nidoran♂"));
+                Assert.That(PokedexData.NormalizeName("Flabebe"), Is.EqualTo("Flabébé"));
             }
         }
 

@@ -37,10 +37,8 @@ namespace TPP.Inputting.Parsing
 
         public InputSequence? Parse(string text)
         {
-            InputSequence? baseInputSequenceNullable = _baseInputParser.Parse(text);
-            if (baseInputSequenceNullable == null) return null;
-
-            InputSequence baseInputSequence = baseInputSequenceNullable.Value;
+            InputSequence? baseInputSequence = _baseInputParser.Parse(text);
+            if (baseInputSequence == null) return null;
 
             IImmutableList<InputSet> inputSets = baseInputSequence.InputSets;
             bool hasWaitConflict = inputSets.Any(HasNonLoneWait);
