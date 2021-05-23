@@ -1,12 +1,16 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using TPP.ArgsParsing.Types;
+using TPP.Persistence.Models;
 using TPP.Persistence.Repos;
 
 namespace TPP.Core.Commands.Definitions
 {
-    class CreatePollCommands : ICommandCollection
+    class ManagePollCommands : ICommandCollection
     {
+        private static readonly Role[] AllowedRoles = { Role.Moderator, Role.Operator };
+
         public IEnumerable<Command> Commands => new[]
         {
             new Command("poll", StartPoll)
@@ -24,11 +28,13 @@ namespace TPP.Core.Commands.Definitions
                               "Argument: <PollName> <PollCode> <Option1> <Option2> <OptionX> (optional). " +
                               "Underscores in the poll name will be replaces with spaces."
             },
-        };
+        }.Select(cmd => cmd.WithCondition(
+            canExecute: ctx => ctx.Message.User.Roles.Intersect(AllowedRoles).Any(),
+            ersatzResult: new CommandResult { Response = "Only moderators can manage polls" }));
 
         private readonly IPollRepo _pollRepo;
 
-        public CreatePollCommands(IPollRepo pollRepo)
+        public ManagePollCommands(IPollRepo pollRepo)
         {
             _pollRepo = pollRepo;
         }
