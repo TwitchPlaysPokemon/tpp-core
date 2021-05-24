@@ -39,6 +39,7 @@ namespace TPP.Core.Chat
                 ConnectionConfig.Twitch cfg => new TwitchChat(config.Name, _loggerFactory, _clock, cfg, _userRepo,
                     new SubscriptionProcessor(_tokenBank, _userRepo, _subscriptionLogRepo, _linkedAccountRepo),
                     _overlayConnection),
+                ConnectionConfig.Simulation cfg => new SimulationChat(config.Name, _loggerFactory, cfg, _userRepo),
                 _ => throw new ArgumentOutOfRangeException(nameof(config), "unknown chat connector type")
             };
     }
