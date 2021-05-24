@@ -101,6 +101,8 @@ namespace TPP.Persistence.MongoDB.Repos
                 return new VoteFailure.PollNotAlive();
             if (!poll.AllowChangeVote && poll.Voters.Contains(userId))
                 return new VoteFailure.AlreadyVoted();
+            if (options.Count == 0)
+                return new VoteFailure.CannotVoteForNone();
             if (options.Count > 1 && !poll.MultiChoice)
                 return new VoteFailure.NotMultipleChoice();
 

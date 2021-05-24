@@ -13,6 +13,7 @@ namespace TPP.Persistence.Repos
         public sealed record PollNotFound(string PollCode) : VoteFailure;
         public sealed record PollNotAlive : VoteFailure;
         public sealed record AlreadyVoted : VoteFailure;
+        public sealed record CannotVoteForNone : VoteFailure;
         public sealed record NotMultipleChoice : VoteFailure;
         public sealed record InvalidOptions(IImmutableList<int> Options) : VoteFailure;
     }

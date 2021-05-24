@@ -64,6 +64,9 @@ namespace TPP.Core.Commands.Definitions
                     VoteFailure.PollNotFound => $"No poll with the code '{pollCode}' was found.",
                     VoteFailure.PollNotAlive => "The poll has already ended.",
                     VoteFailure.AlreadyVoted => "You already voted in that poll.",
+                    VoteFailure.CannotVoteForNone => poll.MultiChoice
+                        ? "Must vote for at least one option."
+                        : "Must vote for an option.",
                     VoteFailure.NotMultipleChoice => "Cannot select multiple options in non-multi-choice polls.",
                     VoteFailure.InvalidOptions { Options: var options } =>
                         $"Invalid poll options: {string.Join(", ", options)}.",
