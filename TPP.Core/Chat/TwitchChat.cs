@@ -18,6 +18,7 @@ using TwitchLib.Client.Models;
 using TwitchLib.Communication.Clients;
 using TwitchLib.Communication.Models;
 using static TPP.Core.Configuration.ConnectionConfig.Twitch;
+using static TPP.Core.EventUtils;
 
 namespace TPP.Core.Chat
 {
@@ -88,7 +89,8 @@ namespace TPP.Core.Chat
             _twitchClient.OnConnected += Connected;
             _twitchClient.OnMessageReceived += MessageReceived;
             _twitchClient.OnWhisperReceived += WhisperReceived;
-            _subscriptionWatcher = new TwitchLibSubscriptionWatcher(_userRepo, _twitchClient, clock);
+            _subscriptionWatcher = new TwitchLibSubscriptionWatcher(
+                loggerFactory.CreateLogger<TwitchLibSubscriptionWatcher>(), _userRepo, _twitchClient, clock);
             _subscriptionWatcher.Subscribed += OnSubscribed;
             _subscriptionWatcher.SubscriptionGifted += OnSubscriptionGifted;
         }
@@ -132,54 +134,60 @@ namespace TPP.Core.Chat
             };
         }
 
-        private async void OnSubscribed(object? sender, SubscriptionInfo e)
+        private void OnSubscribed(object? sender, SubscriptionInfo e)
         {
-            ISubscriptionProcessor.SubResult subResult = await _subscriptionProcessor.ProcessSubscription(e);
-            string response = BuildSubResponse(subResult, null, false);
-            await SendWhisper(e.Subscriber, response);
-
-            await _overlayConnection.Send(new NewSubscriber
+            TaskToVoidSafely(_logger, async () =>
             {
-                User = e.Subscriber,
-                Emotes = e.Emotes.Select(EmoteInfo.FromOccurence).ToImmutableList(),
-                SubMessage = e.Message,
-                ShareSub = true,
-            }, CancellationToken.None);
+                ISubscriptionProcessor.SubResult subResult = await _subscriptionProcessor.ProcessSubscription(e);
+                string response = BuildSubResponse(subResult, null, false);
+                await SendWhisper(e.Subscriber, response);
+
+                await _overlayConnection.Send(new NewSubscriber
+                {
+                    User = e.Subscriber,
+                    Emotes = e.Emotes.Select(EmoteInfo.FromOccurence).ToImmutableList(),
+                    SubMessage = e.Message,
+                    ShareSub = true,
+                }, CancellationToken.None);
+            });
         }
 
-        private async void OnSubscriptionGifted(object? sender, SubscriptionGiftInfo e)
+        private void OnSubscriptionGifted(object? sender, SubscriptionGiftInfo e)
         {
-            (ISubscriptionProcessor.SubResult subResult, ISubscriptionProcessor.SubGiftResult subGiftResult) =
-                await _subscriptionProcessor.ProcessSubscriptionGift(e);
-
-            string subResponse = BuildSubResponse(subResult, e.Gifter, e.IsAnonymous);
-            await SendWhisper(e.SubscriptionInfo.Subscriber, subResponse);
-
-            string subGiftResponse = subGiftResult switch
+            TaskToVoidSafely(_logger, async () =>
             {
-                ISubscriptionProcessor.SubGiftResult.LinkedAccount =>
-                    $"As you are linked to the account '{e.SubscriptionInfo.Subscriber.Name}' you have gifted to, " +
-                    "you have not received a token bonus. " +
-                    "The recipient account still gains the normal benefits however. Thanks for subscribing!",
-                ISubscriptionProcessor.SubGiftResult.SameMonth { Month: var month } =>
-                    $"We detected that this gift sub may have been a repeated message for month {month}, " +
-                    "and you have already received the appropriate tokens. " +
-                    "If you believe this is in error, please contact a moderator so this can be corrected.",
-                ISubscriptionProcessor.SubGiftResult.Ok { GifterTokens: var tokens } =>
-                    $"Thank you for your generosity! You received T{tokens} tokens for giving a gift " +
-                    "subscription. The recipient has been notified and awarded their token benefits.",
-                _ => throw new ArgumentOutOfRangeException(nameof(subGiftResult))
-            };
-            if (!e.IsAnonymous)
-                await SendWhisper(e.Gifter, subGiftResponse); // don't respond to the "AnAnonymousGifter" user
+                (ISubscriptionProcessor.SubResult subResult, ISubscriptionProcessor.SubGiftResult subGiftResult) =
+                    await _subscriptionProcessor.ProcessSubscriptionGift(e);
 
-            await _overlayConnection.Send(new NewSubscriber
-            {
-                User = e.SubscriptionInfo.Subscriber,
-                Emotes = e.SubscriptionInfo.Emotes.Select(EmoteInfo.FromOccurence).ToImmutableList(),
-                SubMessage = e.SubscriptionInfo.Message,
-                ShareSub = false,
-            }, CancellationToken.None);
+                string subResponse = BuildSubResponse(subResult, e.Gifter, e.IsAnonymous);
+                await SendWhisper(e.SubscriptionInfo.Subscriber, subResponse);
+
+                string subGiftResponse = subGiftResult switch
+                {
+                    ISubscriptionProcessor.SubGiftResult.LinkedAccount =>
+                        $"As you are linked to the account '{e.SubscriptionInfo.Subscriber.Name}' you have gifted to, " +
+                        "you have not received a token bonus. " +
+                        "The recipient account still gains the normal benefits however. Thanks for subscribing!",
+                    ISubscriptionProcessor.SubGiftResult.SameMonth { Month: var month } =>
+                        $"We detected that this gift sub may have been a repeated message for month {month}, " +
+                        "and you have already received the appropriate tokens. " +
+                        "If you believe this is in error, please contact a moderator so this can be corrected.",
+                    ISubscriptionProcessor.SubGiftResult.Ok { GifterTokens: var tokens } =>
+                        $"Thank you for your generosity! You received T{tokens} tokens for giving a gift " +
+                        "subscription. The recipient has been notified and awarded their token benefits.",
+                    _ => throw new ArgumentOutOfRangeException(nameof(subGiftResult))
+                };
+                if (!e.IsAnonymous)
+                    await SendWhisper(e.Gifter, subGiftResponse); // don't respond to the "AnAnonymousGifter" user
+
+                await _overlayConnection.Send(new NewSubscriber
+                {
+                    User = e.SubscriptionInfo.Subscriber,
+                    Emotes = e.SubscriptionInfo.Emotes.Select(EmoteInfo.FromOccurence).ToImmutableList(),
+                    SubMessage = e.SubscriptionInfo.Message,
+                    ShareSub = false,
+                }, CancellationToken.None);
+            });
         }
 
         public async Task SendMessage(string message)
@@ -265,42 +273,49 @@ namespace TPP.Core.Chat
             }
         }
 
-        private async void MessageReceived(object? sender, OnMessageReceivedArgs e)
+        private void MessageReceived(object? sender, OnMessageReceivedArgs e)
         {
-            _logger.LogDebug("<#{Channel} {Username}: {Message}",
-                _ircChannel, e.ChatMessage.Username, e.ChatMessage.Message);
-            if (e.ChatMessage.Username == _twitchClient.TwitchUsername)
-                // new core sees messages posted by old core, but we don't want to process our own messages
-                return;
-            User user = await _userRepo.RecordUser(GetUserInfoFromTwitchMessage(e.ChatMessage));
-            var message = new Message(user, e.ChatMessage.Message, MessageSource.Chat, e.ChatMessage.RawIrcMessage)
+            TaskToVoidSafely(_logger, async () =>
             {
-                Details = new MessageDetails(
-                    MessageId: e.ChatMessage.Id,
-                    IsAction: e.ChatMessage.IsMe,
-                    IsStaff: e.ChatMessage.IsBroadcaster || e.ChatMessage.IsModerator,
-                    Emotes: e.ChatMessage.EmoteSet.Emotes
-                        .Select(em => new Emote(em.Id, em.Name, em.StartIndex, em.EndIndex)).ToImmutableList()
-                )
-            };
-            IncomingMessage?.Invoke(this, new MessageEventArgs(message));
+                _logger.LogDebug("<#{Channel} {Username}: {Message}",
+                    _ircChannel, e.ChatMessage.Username, e.ChatMessage.Message);
+                if (e.ChatMessage.Username == _twitchClient.TwitchUsername)
+                    // new core sees messages posted by old core, but we don't want to process our own messages
+                    return;
+                User user = await _userRepo.RecordUser(GetUserInfoFromTwitchMessage(e.ChatMessage));
+                var message = new Message(user, e.ChatMessage.Message, MessageSource.Chat, e.ChatMessage.RawIrcMessage)
+                {
+                    Details = new MessageDetails(
+                        MessageId: e.ChatMessage.Id,
+                        IsAction: e.ChatMessage.IsMe,
+                        IsStaff: e.ChatMessage.IsBroadcaster || e.ChatMessage.IsModerator,
+                        Emotes: e.ChatMessage.EmoteSet.Emotes
+                            .Select(em => new Emote(em.Id, em.Name, em.StartIndex, em.EndIndex)).ToImmutableList()
+                    )
+                };
+                IncomingMessage?.Invoke(this, new MessageEventArgs(message));
+            });
         }
 
-        private async void WhisperReceived(object? sender, OnWhisperReceivedArgs e)
+        private void WhisperReceived(object? sender, OnWhisperReceivedArgs e)
         {
-            _logger.LogDebug("<@{Username}: {Message}", e.WhisperMessage.Username, e.WhisperMessage.Message);
-            User user = await _userRepo.RecordUser(GetUserInfoFromTwitchMessage(e.WhisperMessage));
-            var message = new Message(user, e.WhisperMessage.Message, MessageSource.Whisper, e.WhisperMessage.RawIrcMessage)
+            TaskToVoidSafely(_logger, async () =>
             {
-                Details = new MessageDetails(
-                    MessageId: null,
-                    IsAction: false,
-                    IsStaff: false,
-                    Emotes: e.WhisperMessage.EmoteSet.Emotes
-                        .Select(em => new Emote(em.Id, em.Name, em.StartIndex, em.EndIndex)).ToImmutableList()
-                )
-            };
-            IncomingMessage?.Invoke(this, new MessageEventArgs(message));
+                _logger.LogDebug("<@{Username}: {Message}", e.WhisperMessage.Username, e.WhisperMessage.Message);
+                User user = await _userRepo.RecordUser(GetUserInfoFromTwitchMessage(e.WhisperMessage));
+                var message = new Message(user, e.WhisperMessage.Message, MessageSource.Whisper,
+                    e.WhisperMessage.RawIrcMessage)
+                {
+                    Details = new MessageDetails(
+                        MessageId: null,
+                        IsAction: false,
+                        IsStaff: false,
+                        Emotes: e.WhisperMessage.EmoteSet.Emotes
+                            .Select(em => new Emote(em.Id, em.Name, em.StartIndex, em.EndIndex)).ToImmutableList()
+                    )
+                };
+                IncomingMessage?.Invoke(this, new MessageEventArgs(message));
+            });
         }
 
         private UserInfo GetUserInfoFromTwitchMessage(TwitchLibMessage message)

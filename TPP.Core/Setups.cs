@@ -16,6 +16,7 @@ using TPP.Persistence.MongoDB;
 using TPP.Persistence.MongoDB.Repos;
 using TPP.Persistence.MongoDB.Serializers;
 using TPP.Persistence.Repos;
+using static TPP.Core.EventUtils;
 
 namespace TPP.Core
 {
@@ -77,7 +78,7 @@ namespace TPP.Core
                 ).Commands,
                 new BadgeCommands(databases.BadgeRepo, databases.UserRepo, messageSender, knownSpecies).Commands,
                 new OperatorCommands(
-                    stopToken,chatConfig.DefaultOperatorNames, databases.PokeyenBank, databases.TokensBank,
+                    stopToken, chatConfig.DefaultOperatorNames, databases.PokeyenBank, databases.TokensBank,
                     messageSender: messageSender, databases.BadgeRepo, databases.UserRepo
                 ).Commands,
                 new ModeratorCommands(chatModeChanger, databases.LinkedAccountRepo).Commands
@@ -105,7 +106,7 @@ namespace TPP.Core
             IModLogRepo ModLogRepo
         );
 
-        public static Databases SetUpRepositories(BaseConfig baseConfig)
+        public static Databases SetUpRepositories(ILogger logger, BaseConfig baseConfig)
         {
             IClock clock = SystemClock.Instance;
             CustomSerializers.RegisterAll();
@@ -119,8 +120,8 @@ namespace TPP.Core
                 defaultOperators: baseConfig.Chat.DefaultOperatorNames);
             IMongoBadgeLogRepo badgeLogRepo = new BadgeLogRepo(mongoDatabase);
             IBadgeRepo badgeRepo = new BadgeRepo(mongoDatabase, badgeLogRepo, clock);
-            badgeRepo.UserLostBadgeSpecies += async (_, args) =>
-                await userRepo.UnselectBadgeIfSpeciesSelected(args.UserId, args.Species);
+            badgeRepo.UserLostBadgeSpecies += (_, args) => TaskToVoidSafely(logger, () =>
+                userRepo.UnselectBadgeIfSpeciesSelected(args.UserId, args.Species));
             IBank<User> pokeyenBank = new Bank<User>(
                 database: mongoDatabase,
                 currencyCollectionName: UserRepo.CollectionName,

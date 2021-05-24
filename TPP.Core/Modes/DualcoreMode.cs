@@ -18,7 +18,7 @@ namespace TPP.Core.Modes
         {
             _logger = loggerFactory.CreateLogger<DualcoreMode>();
             _stopToken = new StopToken();
-            Setups.Databases repos = Setups.SetUpRepositories(baseConfig);
+            Setups.Databases repos = Setups.SetUpRepositories(_logger, baseConfig);
             OverlayConnection overlayConnection;
             (_broadcastServer, overlayConnection) = Setups.SetUpOverlayServer(loggerFactory);
             _modeBase = new ModeBase(loggerFactory, repos, baseConfig, _stopToken, overlayConnection);

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using NodaTime;
 using TPP.Common;
 using TPP.Persistence.Models;
@@ -10,11 +11,13 @@ using TwitchLib.Client;
 using TwitchLib.Client.Enums;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
+using static TPP.Core.EventUtils;
 
 namespace TPP.Core
 {
     public sealed class TwitchLibSubscriptionWatcher : IDisposable
     {
+        private readonly ILogger<TwitchLibSubscriptionWatcher> _logger;
         private readonly IUserRepo _userRepo;
         private readonly TwitchClient _twitchClient;
         private readonly IClock _clock;
@@ -23,8 +26,9 @@ namespace TPP.Core
         public event EventHandler<SubscriptionGiftInfo>? SubscriptionGifted;
 
         public TwitchLibSubscriptionWatcher(
-            IUserRepo userRepo, TwitchClient twitchClient, IClock clock)
+            ILogger<TwitchLibSubscriptionWatcher> logger, IUserRepo userRepo, TwitchClient twitchClient, IClock clock)
         {
+            _logger = logger;
             _userRepo = userRepo;
             _twitchClient = twitchClient;
             _clock = clock;
@@ -33,51 +37,60 @@ namespace TPP.Core
             _twitchClient.OnGiftedSubscription += OnGiftedSubscription;
         }
 
-        private async void OnNewSubscriber(object? sender, OnNewSubscriberArgs e)
+        private void OnNewSubscriber(object? sender, OnNewSubscriberArgs e)
         {
-            SubscriptionInfo subscriptionInfo = await ParseSubscription(e.Subscriber);
-            Subscribed?.Invoke(this, subscriptionInfo);
-        }
-
-        private async void OnReSubscriber(object? sender, OnReSubscriberArgs e)
-        {
-            SubscriptionInfo subscriptionInfo = await ParseSubscription(e.ReSubscriber);
-            Subscribed?.Invoke(this, subscriptionInfo);
-        }
-
-        private async void OnGiftedSubscription(object? sender, OnGiftedSubscriptionArgs e)
-        {
-            GiftedSubscription subscriptionMessage = e.GiftedSubscription;
-            User gifter = await _userRepo.RecordUser(new UserInfo(
-                subscriptionMessage.UserId,
-                subscriptionMessage.DisplayName,
-                subscriptionMessage.Login
-            ));
-            User user = await _userRepo.RecordUser(new UserInfo(
-                subscriptionMessage.MsgParamRecipientId,
-                subscriptionMessage.MsgParamRecipientDisplayName,
-                subscriptionMessage.MsgParamRecipientUserName
-            ));
-            SubscriptionTier tier = subscriptionMessage.MsgParamSubPlan switch
+            TaskToVoidSafely(_logger, async () =>
             {
-                SubscriptionPlan.Prime => SubscriptionTier.Prime,
-                SubscriptionPlan.Tier1 => SubscriptionTier.Tier1,
-                SubscriptionPlan.Tier2 => SubscriptionTier.Tier2,
-                SubscriptionPlan.Tier3 => SubscriptionTier.Tier3,
-                SubscriptionPlan.NotSet => throw new ArgumentOutOfRangeException(
-                    $"subscription plan not set, plan name: {subscriptionMessage.MsgParamSubPlanName}"),
-                _ => throw new ArgumentOutOfRangeException(
-                    $"unknown subscription plan '{subscriptionMessage.MsgParamSubPlan}'")
-            };
-            SubscriptionInfo subscriptionInfo = new(
-                user, int.Parse(subscriptionMessage.MsgParamMonths), StreakMonths: 1, tier,
-                subscriptionMessage.MsgParamSubPlanName, _clock.GetCurrentInstant(),
-                Message: null, ParseEmotes(e.GiftedSubscription.Emotes));
-            int numGiftedMonths = string.IsNullOrEmpty(e.GiftedSubscription.MsgParamMultiMonthGiftDuration)
-                ? 1
-                : int.Parse(e.GiftedSubscription.MsgParamMultiMonthGiftDuration);
-            SubscriptionGiftInfo subscriptionGiftInfo = new(subscriptionInfo, gifter, numGiftedMonths, subscriptionMessage.IsAnonymous);
-            SubscriptionGifted?.Invoke(this, subscriptionGiftInfo);
+                SubscriptionInfo subscriptionInfo = await ParseSubscription(e.Subscriber);
+                Subscribed?.Invoke(this, subscriptionInfo);
+            });
+        }
+
+        private void OnReSubscriber(object? sender, OnReSubscriberArgs e)
+        {
+            TaskToVoidSafely(_logger, async () =>
+            {
+                SubscriptionInfo subscriptionInfo = await ParseSubscription(e.ReSubscriber);
+                Subscribed?.Invoke(this, subscriptionInfo);
+            });
+        }
+
+        private void OnGiftedSubscription(object? sender, OnGiftedSubscriptionArgs e)
+        {
+            TaskToVoidSafely(_logger, async () =>
+            {
+                GiftedSubscription subscriptionMessage = e.GiftedSubscription;
+                User gifter = await _userRepo.RecordUser(new UserInfo(
+                    subscriptionMessage.UserId,
+                    subscriptionMessage.DisplayName,
+                    subscriptionMessage.Login
+                ));
+                User user = await _userRepo.RecordUser(new UserInfo(
+                    subscriptionMessage.MsgParamRecipientId,
+                    subscriptionMessage.MsgParamRecipientDisplayName,
+                    subscriptionMessage.MsgParamRecipientUserName
+                ));
+                SubscriptionTier tier = subscriptionMessage.MsgParamSubPlan switch
+                {
+                    SubscriptionPlan.Prime => SubscriptionTier.Prime,
+                    SubscriptionPlan.Tier1 => SubscriptionTier.Tier1,
+                    SubscriptionPlan.Tier2 => SubscriptionTier.Tier2,
+                    SubscriptionPlan.Tier3 => SubscriptionTier.Tier3,
+                    SubscriptionPlan.NotSet => throw new ArgumentOutOfRangeException(
+                        $"subscription plan not set, plan name: {subscriptionMessage.MsgParamSubPlanName}"),
+                    _ => throw new ArgumentOutOfRangeException(
+                        $"unknown subscription plan '{subscriptionMessage.MsgParamSubPlan}'")
+                };
+                SubscriptionInfo subscriptionInfo = new(
+                    user, int.Parse(subscriptionMessage.MsgParamMonths), StreakMonths: 1, tier,
+                    subscriptionMessage.MsgParamSubPlanName, _clock.GetCurrentInstant(),
+                    Message: null, ParseEmotes(e.GiftedSubscription.Emotes));
+                int numGiftedMonths = string.IsNullOrEmpty(e.GiftedSubscription.MsgParamMultiMonthGiftDuration)
+                    ? 1
+                    : int.Parse(e.GiftedSubscription.MsgParamMultiMonthGiftDuration);
+                SubscriptionGiftInfo subscriptionGiftInfo = new(subscriptionInfo, gifter, numGiftedMonths, subscriptionMessage.IsAnonymous);
+                SubscriptionGifted?.Invoke(this, subscriptionGiftInfo);
+            });
         }
 
         private async Task<SubscriptionInfo> ParseSubscription(SubscriberBase subscriptionMessage)
