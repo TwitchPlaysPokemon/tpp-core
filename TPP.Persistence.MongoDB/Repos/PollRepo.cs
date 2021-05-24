@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.IdGenerators;
@@ -10,6 +9,7 @@ using NodaTime;
 using TPP.Persistence.Models;
 using TPP.Persistence.MongoDB.Serializers;
 using TPP.Persistence.Repos;
+using static System.Linq.Enumerable;
 
 namespace TPP.Persistence.MongoDB.Repos
 {
@@ -28,7 +28,6 @@ namespace TPP.Persistence.MongoDB.Repos
                 cm.MapIdProperty(b => b.Id).SetElementName("id");
                 cm.MapProperty(b => b.Option).SetElementName("option");
                 cm.MapProperty(b => b.VoterIds).SetElementName("voters");
-                cm.MapProperty(b => b.Votes).SetElementName("votes");
             });
 
             BsonClassMap.RegisterClassMap<Poll>(cm =>
@@ -43,6 +42,7 @@ namespace TPP.Persistence.MongoDB.Repos
                 cm.MapProperty(b => b.CreatedAt).SetElementName("created_at");
                 cm.MapProperty(b => b.MultiChoice).SetElementName("multi");
                 cm.MapProperty(b => b.Alive).SetElementName("alive");
+                cm.MapProperty(b => b.AllowChangeVote).SetElementName("allow_change_vote");
             });
         }
 
@@ -64,13 +64,13 @@ namespace TPP.Persistence.MongoDB.Repos
         }
 
         public async Task<Poll> CreatePoll(
-            string pollTitle, string pollCode, bool multiChoice, IImmutableList<string> pollOptions)
+            string pollTitle, string pollCode, bool multiChoice, bool allowChangeVote,
+            IImmutableList<string> pollOptions)
         {
             List<PollOption> pollOptionsObjects = pollOptions
                 .Select((option, index) => new PollOption(
                     id: index + 1,
                     option: option,
-                    votes: 0,
                     voterIds: new List<string>()
                 )).ToList();
 
@@ -82,7 +82,8 @@ namespace TPP.Persistence.MongoDB.Repos
                 pollOptions: pollOptionsObjects,
                 _clock.GetCurrentInstant(),
                 multiChoice: multiChoice,
-                alive: true
+                alive: true,
+                allowChangeVote: allowChangeVote
             );
 
             await Collection.InsertOneAsync(poll);
@@ -98,7 +99,7 @@ namespace TPP.Persistence.MongoDB.Repos
                 return new VoteFailure.PollNotFound(pollCode);
             if (!poll.Alive)
                 return new VoteFailure.PollNotAlive();
-            if (poll.Voters.Contains(userId))
+            if (!poll.AllowChangeVote && poll.Voters.Contains(userId))
                 return new VoteFailure.AlreadyVoted();
             if (options.Count > 1 && !poll.MultiChoice)
                 return new VoteFailure.NotMultipleChoice();
@@ -111,6 +112,13 @@ namespace TPP.Persistence.MongoDB.Repos
             if (invalidOptions.Any())
                 return new VoteFailure.InvalidOptions(invalidOptions);
 
+            // remove any existing votes in case the user has voted before and is changing their vote right now.
+            // no typed support for the $[] (for each in array) operator yet, see https://jira.mongodb.org/browse/CSHARP-2232
+            foreach (int i in Range(0, poll.PollOptions.Count))
+                await Collection.UpdateOneAsync(
+                    p => p.PollCode == pollCode,
+                    Builders<Poll>.Update.Pull(p => p.PollOptions[i].VoterIds, userId));
+
             // the MongoDB C# driver's representation for '$', see also https://docs.mongodb.com/manual/reference/operator/update/positional/
             const int positionalOperator = -1;
 
@@ -118,9 +126,7 @@ namespace TPP.Persistence.MongoDB.Repos
             {
                 await Collection.UpdateOneAsync(
                     p => p.PollCode == pollCode && p.PollOptions.Any(o => o.Id == option),
-                    Builders<Poll>.Update
-                        .AddToSet(p => p.PollOptions[positionalOperator].VoterIds, userId)
-                        .Inc(p => p.PollOptions[positionalOperator].Votes, 1));
+                    Builders<Poll>.Update.AddToSet(p => p.PollOptions[positionalOperator].VoterIds, userId));
             }
 
             return null;

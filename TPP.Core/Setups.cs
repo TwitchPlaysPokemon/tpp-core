@@ -27,6 +27,7 @@ namespace TPP.Core
         public static ArgsParser SetUpArgsParser(IUserRepo userRepo, PokedexData pokedexData)
         {
             var argsParser = new ArgsParser();
+            argsParser.AddArgumentParser(new BoolParser());
             argsParser.AddArgumentParser(new SignedIntParser());
             argsParser.AddArgumentParser(new PositiveIntParser());
             argsParser.AddArgumentParser(new NonNegativeIntParser());

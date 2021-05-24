@@ -22,7 +22,8 @@ namespace TPP.Persistence.Repos
         public Task<Poll?> FindPoll(string pollCode);
 
         public Task<Poll> CreatePoll(
-            string pollName, string pollCode, bool multiChoice, IImmutableList<string> pollOptions);
+            string pollName, string pollCode, bool multiChoice, bool allowChangeVote,
+            IImmutableList<string> pollOptions);
 
         public Task<VoteFailure?> Vote(string id, string userId, IImmutableList<int> options);
     }

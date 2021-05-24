@@ -10,16 +10,14 @@ namespace TPP.Persistence.Models
     {
         public int Id { get; init; }
         public string? Option { get; init; }
-        public int Votes { get; init; }
         public List<string>? VoterIds { get; init; }
 
         protected override object EqualityId => Id;
 
-        public PollOption(int id, string option, int votes, List<string> voterIds)
+        public PollOption(int id, string option, List<string> voterIds)
         {
             Id = id;
             Option = option;
-            Votes = votes;
             VoterIds = voterIds;
         }
     }
@@ -58,7 +56,14 @@ namespace TPP.Persistence.Models
         /// </summary>
         public bool Alive { get; init; }
 
-        public Poll(string id, string pollTitle, string pollCode, List<string> voters, List<PollOption> pollOptions, Instant createdAt, bool multiChoice, bool alive)
+        /// <summary>
+        /// Whether users can change their vote. Otherwise they cannot change their once they voted once.
+        /// </summary>
+        public bool AllowChangeVote { get; init; }
+
+        public Poll(
+            string id, string pollTitle, string pollCode, List<string> voters, List<PollOption> pollOptions,
+            Instant createdAt, bool multiChoice, bool alive, bool allowChangeVote)
         {
             Id = id;
             PollTitle = pollTitle;
@@ -68,6 +73,7 @@ namespace TPP.Persistence.Models
             CreatedAt = createdAt;
             MultiChoice = multiChoice;
             Alive = alive;
+            AllowChangeVote = allowChangeVote;
         }
 
     }
