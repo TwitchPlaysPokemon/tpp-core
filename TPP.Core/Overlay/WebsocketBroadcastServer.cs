@@ -168,7 +168,7 @@ namespace TPP.Core.Overlay
                 }
                 catch (HttpListenerException)
                 {
-                    _logger.LogInformation("Websocket listener was stopped");
+                    _logger.LogDebug("Websocket listener was stopped");
                     return;
                 }
                 catch (ObjectDisposedException)
