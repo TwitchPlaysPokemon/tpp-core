@@ -50,7 +50,7 @@ namespace TPP.Core.Commands.Definitions
             foreach (string voteStr in votes)
             {
                 PollOption? option = null;
-                if (int.TryParse(voteStr, out int voteInt))
+                if (int.TryParse(voteStr.TrimStart('#'), out int voteInt))
                     option = poll.PollOptions.FirstOrDefault(o => o.Id == voteInt);
                 option ??= poll.PollOptions.FirstOrDefault(o => o.Option == voteStr);
                 if (option == null)
