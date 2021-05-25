@@ -10,7 +10,7 @@ namespace TPP.Persistence.Models
     {
         public int Id { get; init; }
         public string? Option { get; init; }
-        public List<string>? VoterIds { get; init; }
+        public List<string> VoterIds { get; init; }
 
         protected override object EqualityId => Id;
 

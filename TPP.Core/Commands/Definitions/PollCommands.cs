@@ -15,9 +15,13 @@ namespace TPP.Core.Commands.Definitions
         {
             new Command("vote", Vote)
             {
-                Aliases = new[] { "vote" },
                 Description = "Vote on a poll. Argument: <PollCode> <Option1> <OptionX> (optional if multi-choice poll)"
-            }
+            },
+            new Command("poll", Poll)
+            {
+                Aliases = new[] { "checkpoll" },
+                Description = "Check a poll's status and options. Argument: <PollCode>"
+            },
         };
 
         private readonly IPollRepo _pollRepo;
@@ -50,7 +54,8 @@ namespace TPP.Core.Commands.Definitions
                     option = poll.PollOptions.FirstOrDefault(o => o.Id == voteInt);
                 option ??= poll.PollOptions.FirstOrDefault(o => o.Option == voteStr);
                 if (option == null)
-                    return new CommandResult { Response = $"Invalid option '{voteStr}' included for poll '{pollCode}'." };
+                    return new CommandResult
+                        { Response = $"Invalid option '{voteStr}' included for poll '{pollCode}'." };
                 selectedOptions.Add(option.Id);
             }
 
@@ -72,6 +77,24 @@ namespace TPP.Core.Commands.Definitions
                         $"Invalid poll options: {string.Join(", ", options)}.",
                     _ => throw new ArgumentOutOfRangeException(nameof(failure), "Unhandled poll voting result")
                 }
+            };
+        }
+
+        public async Task<CommandResult> Poll(CommandContext context)
+        {
+            string pollCode = await context.ParseArgs<string>();
+            Poll? poll = await _pollRepo.FindPoll(pollCode);
+            if (poll == null)
+                return new CommandResult { Response = $"No poll with the code '{pollCode}' was found." };
+
+            string Percentage(PollOption option) => poll.Voters.Count == 0
+                ? "0" // avoid division by zero
+                : $"{100 * (option.VoterIds.Count / (double) poll.Voters.Count):0.#}";
+
+            return new CommandResult
+            {
+                Response = $"Poll '{poll.PollCode}': {poll.PollTitle} - " + string.Join(", ",
+                    poll.PollOptions.Select(option => $"#{option.Id} {option.Option} ({Percentage(option)}%)"))
             };
         }
     }
