@@ -54,8 +54,7 @@ namespace TPP.Core.Commands.Definitions
                     option = poll.PollOptions.FirstOrDefault(o => o.Id == voteInt);
                 option ??= poll.PollOptions.FirstOrDefault(o => o.Option == voteStr);
                 if (option == null)
-                    return new CommandResult
-                        { Response = $"Invalid option '{voteStr}' included for poll '{pollCode}'." };
+                    return new CommandResult { Response = $"Invalid option '{voteStr}' included for poll '{pollCode}'." };
                 selectedOptions.Add(option.Id);
             }
 
@@ -89,7 +88,7 @@ namespace TPP.Core.Commands.Definitions
 
             string Percentage(PollOption option) => poll.Voters.Count == 0
                 ? "0" // avoid division by zero
-                : $"{100 * (option.VoterIds.Count / (double) poll.Voters.Count):0.#}";
+                :$"{100 * (option.VoterIds.Count / (double) poll.Voters.Count):0.#}";
 
             return new CommandResult
             {
