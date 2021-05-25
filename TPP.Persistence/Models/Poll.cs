@@ -24,18 +24,16 @@ namespace TPP.Persistence.Models
 
     public class Poll : PropertyEquatable<Poll>
     {
-        public string Id { get; init; }
-        protected override object EqualityId => Id;
+        /// <summary>
+        /// The code used to publicly identify this poll.
+        /// </summary>
+        public string PollCode { get; init; }
+        protected override object EqualityId => PollCode;
 
         /// <summary>
         /// The subject this poll is about.
         /// </summary>
         public string PollTitle { get; init; }
-
-        /// <summary>
-        /// The capitalized 4-letter code used to publicly identify this poll.
-        /// </summary>
-        public string PollCode { get; init; }
 
         public List<string> Voters { get; init; }
 
@@ -62,12 +60,11 @@ namespace TPP.Persistence.Models
         public bool AllowChangeVote { get; init; }
 
         public Poll(
-            string id, string pollTitle, string pollCode, List<string> voters, List<PollOption> pollOptions,
+            string pollCode, string pollTitle, List<string> voters, List<PollOption> pollOptions,
             Instant createdAt, bool multiChoice, bool alive, bool allowChangeVote)
         {
-            Id = id;
-            PollTitle = pollTitle;
             PollCode = pollCode;
+            PollTitle = pollTitle;
             Voters = voters;
             PollOptions = pollOptions;
             CreatedAt = createdAt;

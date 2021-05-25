@@ -1,13 +1,10 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using MongoDB.Bson.Serialization;
-using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Driver;
 using NodaTime;
 using TPP.Persistence.Models;
-using TPP.Persistence.MongoDB.Serializers;
 using TPP.Persistence.Repos;
 using static System.Linq.Enumerable;
 
@@ -32,11 +29,8 @@ namespace TPP.Persistence.MongoDB.Repos
 
             BsonClassMap.RegisterClassMap<Poll>(cm =>
             {
-                cm.MapIdProperty(b => b.Id)
-                    .SetIdGenerator(StringObjectIdGenerator.Instance)
-                    .SetSerializer(ObjectIdAsStringSerializer.Instance);
+                cm.MapIdProperty(b => b.PollCode);
                 cm.MapProperty(b => b.PollTitle).SetElementName("title");
-                cm.MapProperty(b => b.PollCode).SetElementName("code");
                 cm.MapProperty(b => b.Voters).SetElementName("voters");
                 cm.MapProperty(b => b.PollOptions).SetElementName("options");
                 cm.MapProperty(b => b.CreatedAt).SetElementName("created_at");
@@ -64,7 +58,7 @@ namespace TPP.Persistence.MongoDB.Repos
         }
 
         public async Task<Poll> CreatePoll(
-            string pollTitle, string pollCode, bool multiChoice, bool allowChangeVote,
+            string pollCode, string pollTitle, bool multiChoice, bool allowChangeVote,
             IImmutableList<string> pollOptions)
         {
             List<PollOption> pollOptionsObjects = pollOptions
@@ -75,9 +69,8 @@ namespace TPP.Persistence.MongoDB.Repos
                 )).ToList();
 
             Poll poll = new(
-                id: string.Empty,
-                pollTitle: pollTitle,
                 pollCode: pollCode,
+                pollTitle: pollTitle,
                 voters: new List<string>(),
                 pollOptions: pollOptionsObjects,
                 _clock.GetCurrentInstant(),
@@ -87,7 +80,6 @@ namespace TPP.Persistence.MongoDB.Repos
             );
 
             await Collection.InsertOneAsync(poll);
-            Debug.Assert(poll.Id.Length > 0, "The MongoDB driver injected a generated ID");
 
             return poll;
         }

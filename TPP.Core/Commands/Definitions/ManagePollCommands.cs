@@ -38,8 +38,17 @@ namespace TPP.Core.Commands.Definitions
             if (options.Values.Count < 2) return new CommandResult { Response = "must specify at least 2 options" };
             pollName = pollName.Replace('_', ' ');
 
-            await _pollRepo.CreatePoll(pollName, pollCode, multiChoice, allowChangeVote, options.Values);
-            return new CommandResult { Response = "Single option poll created" };
+            if (await _pollRepo.FindPoll(pollCode) != null)
+                return new CommandResult { Response = $"A poll with the code '{pollCode}' already exists." };
+
+            await _pollRepo.CreatePoll(pollCode, pollName, multiChoice, allowChangeVote, options.Values);
+            return new CommandResult
+            {
+                Response =
+                    $"Poll '{pollCode}' created: {pollName}" +
+                    $" - {(multiChoice ? "multiple-choice" : "single-choice")}" +
+                    $" - {(allowChangeVote ? "changeable votes" : "unchangeable votes")}"
+            };
         }
     }
 }
