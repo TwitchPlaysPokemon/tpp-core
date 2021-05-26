@@ -50,7 +50,7 @@ Options:
             IDictionary<string, ValueObject> args = new Docopt().Apply(Usage, argv, exit: true);
             string? mode = null;
             string modeConfigFilename = args["--mode-config"].ToString();
-            if (args["--mode"] != null && !args["--mode"].IsNullOrEmpty)
+            if (args["--mode"] is { IsNullOrEmpty: false })
             {
                 mode = args["--mode"].ToString();
                 if (!DefaultConfigs.ContainsKey(mode))
