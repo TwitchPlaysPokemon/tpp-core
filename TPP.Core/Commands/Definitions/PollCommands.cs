@@ -11,6 +11,8 @@ namespace TPP.Core.Commands.Definitions
 {
     public class PollCommands : ICommandCollection
     {
+        private const string PollCommandName = "poll";
+
         public IEnumerable<Command> Commands => new[]
         {
             new Command("vote", Vote)
@@ -18,10 +20,15 @@ namespace TPP.Core.Commands.Definitions
                 Description =
                     "Vote on a poll. Arguments: <PollCode> <Option1> <OptionX> (optional if multi-choice poll)"
             },
-            new Command("poll", Poll)
+            new Command(PollCommandName, Poll)
             {
                 Aliases = new[] { "checkpoll" },
                 Description = "Check a poll's status and options. Argument: <PollCode>"
+            },
+            new Command("polls", Polls)
+            {
+                Aliases = new[] { "listpolls", "allpolls", "activepolls" },
+                Description = "List all currently active polls."
             },
         };
 
@@ -100,6 +107,16 @@ namespace TPP.Core.Commands.Definitions
                         $"#{option.Id} {option.Option} " +
                         $"({(option.VoterIds.Count == 1 ? "1 vote" : $"{option.VoterIds.Count} votes")}, " +
                         $"{Percentage(option)}%)"))
+            };
+        }
+
+        private async Task<CommandResult> Polls(CommandContext context)
+        {
+            IImmutableList<Poll> polls = await _pollRepo.FindPolls();
+            return new CommandResult
+            {
+                Response = $"Currently active polls are: {string.Join(", ", polls.Select(p => p.PollCode))}. " +
+                           $"Use '!{PollCommandName} <code>' for more details on a specific poll"
             };
         }
     }

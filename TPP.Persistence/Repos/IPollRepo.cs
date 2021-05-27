@@ -21,11 +21,10 @@ namespace TPP.Persistence.Repos
     public interface IPollRepo
     {
         public Task<Poll?> FindPoll(string pollCode);
-
+        public Task<IImmutableList<Poll>> FindPolls();
         public Task<Poll> CreatePoll(
             string pollCode, string pollName, bool multiChoice, bool allowChangeVote,
             IImmutableList<string> pollOptions);
-
         public Task<VoteFailure?> Vote(string id, string userId, IImmutableList<int> options);
     }
 }
