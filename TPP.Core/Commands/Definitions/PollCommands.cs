@@ -15,7 +15,8 @@ namespace TPP.Core.Commands.Definitions
         {
             new Command("vote", Vote)
             {
-                Description = "Vote on a poll. Arguments: <PollCode> <Option1> <OptionX> (optional if multi-choice poll)"
+                Description =
+                    "Vote on a poll. Arguments: <PollCode> <Option1> <OptionX> (optional if multi-choice poll)"
             },
             new Command("poll", Poll)
             {
@@ -52,9 +53,11 @@ namespace TPP.Core.Commands.Definitions
                 PollOption? option = null;
                 if (int.TryParse(voteStr.TrimStart('#'), out int voteInt))
                     option = poll.PollOptions.FirstOrDefault(o => o.Id == voteInt);
-                option ??= poll.PollOptions.FirstOrDefault(o => o.Option == voteStr);
+                option ??= poll.PollOptions.FirstOrDefault(o =>
+                    string.Equals(o.Option, voteStr, StringComparison.InvariantCultureIgnoreCase));
                 if (option == null)
-                    return new CommandResult { Response = $"Invalid option '{voteStr}' included for poll '{pollCode}'." };
+                    return new CommandResult
+                        { Response = $"Invalid option '{voteStr}' included for poll '{pollCode}'." };
                 selectedOptions.Add(option.Id);
             }
 
@@ -88,12 +91,15 @@ namespace TPP.Core.Commands.Definitions
 
             string Percentage(PollOption option) => poll.Voters.Count == 0
                 ? "0" // avoid division by zero
-                :$"{100 * (option.VoterIds.Count / (double) poll.Voters.Count):0.#}";
+                : $"{100 * (option.VoterIds.Count / (double)poll.Voters.Count):0.#}";
 
             return new CommandResult
             {
                 Response = $"Poll '{poll.PollCode}': {poll.PollTitle} - " + string.Join(", ",
-                    poll.PollOptions.Select(option => $"#{option.Id} {option.Option} ({Percentage(option)}%)"))
+                    poll.PollOptions.Select(option =>
+                        $"#{option.Id} {option.Option} " +
+                        $"({(option.VoterIds.Count == 1 ? "1 vote" : $"{option.VoterIds.Count} votes")}, " +
+                        $"{Percentage(option)}%)"))
             };
         }
     }
