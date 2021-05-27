@@ -98,13 +98,13 @@ namespace TPP.Persistence.MongoDB.Repos
             if (options.Count > 1 && !poll.MultiChoice)
                 return new VoteFailure.NotMultipleChoice();
 
-            await Collection.UpdateOneAsync(
-                p => p.PollCode == pollCode,
-                Builders<Poll>.Update.AddToSet(p => p.Voters, userId));
-
             ImmutableList<int> invalidOptions = options.Except(poll.PollOptions.Select(p => p.Id)).ToImmutableList();
             if (invalidOptions.Any())
                 return new VoteFailure.InvalidOptions(invalidOptions);
+
+            await Collection.UpdateOneAsync(
+                p => p.PollCode == pollCode,
+                Builders<Poll>.Update.AddToSet(p => p.Voters, userId));
 
             // remove any existing votes in case the user has voted before and is changing their vote right now.
             // no typed support for the $[] (for each in array) operator yet, see https://jira.mongodb.org/browse/CSHARP-2232
