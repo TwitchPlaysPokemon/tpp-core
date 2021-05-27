@@ -28,6 +28,7 @@ namespace TPP.Core
         public static ArgsParser SetUpArgsParser(IUserRepo userRepo, PokedexData pokedexData)
         {
             var argsParser = new ArgsParser();
+            argsParser.AddArgumentParser(new BoolParser());
             argsParser.AddArgumentParser(new SignedIntParser());
             argsParser.AddArgumentParser(new PositiveIntParser());
             argsParser.AddArgumentParser(new NonNegativeIntParser());
@@ -76,6 +77,8 @@ namespace TPP.Core
                     databases.UserRepo, pokeyenBank: databases.PokeyenBank, tokenBank: databases.TokensBank,
                     messageSender
                 ).Commands,
+                new PollCommands(databases.PollRepo).Commands,
+                new ManagePollCommands(databases.PollRepo).Commands,
                 new BadgeCommands(databases.BadgeRepo, databases.UserRepo, messageSender, knownSpecies).Commands,
                 new OperatorCommands(
                     stopToken, chatConfig.DefaultOperatorNames, databases.PokeyenBank, databases.TokensBank,
@@ -95,6 +98,7 @@ namespace TPP.Core
 
         public record Databases(
             IUserRepo UserRepo,
+            IPollRepo PollRepo,
             IBadgeRepo BadgeRepo,
             IBank<User> PokeyenBank,
             IBank<User> TokensBank,
@@ -142,6 +146,7 @@ namespace TPP.Core
             (
                 UserRepo: userRepo,
                 BadgeRepo: badgeRepo,
+                PollRepo: new PollRepo(mongoDatabase, clock),
                 PokeyenBank: pokeyenBank,
                 TokensBank: tokenBank,
                 CommandLogger: new CommandLogger(mongoDatabase, clock),

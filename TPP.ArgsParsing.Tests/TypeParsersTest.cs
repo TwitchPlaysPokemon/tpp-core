@@ -105,6 +105,22 @@ namespace TPP.ArgsParsing.Tests
         }
 
         [Test]
+        public async Task TestBoolParser()
+        {
+            var argsParser = new ArgsParser();
+            argsParser.AddArgumentParser(new BoolParser());
+
+            Assert.That(await argsParser.Parse<bool>(ImmutableList.Create("True")), Is.True);
+            Assert.That(await argsParser.Parse<bool>(ImmutableList.Create("YES")), Is.True);
+            Assert.That(await argsParser.Parse<bool>(ImmutableList.Create("false")), Is.False);
+            Assert.That(await argsParser.Parse<bool>(ImmutableList.Create("nO")), Is.False);
+
+            ArgsParseFailure failure = Assert.ThrowsAsync<ArgsParseFailure>(async () =>
+                await argsParser.Parse<bool>(ImmutableList.Create("?")))!;
+            Assert.That(failure.Message, Is.EqualTo("Did not recognize '?' as a boolean"));
+        }
+
+        [Test]
         public async Task TestInstantParser()
         {
             var argsParser = new ArgsParser();

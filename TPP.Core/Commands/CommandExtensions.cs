@@ -19,6 +19,9 @@ namespace TPP.Core.Commands
         public static Task<(T1, T2, T3, T4)> ParseArgs<T1, T2, T3, T4>(this CommandContext ctx) =>
             ctx.ArgsParser.Parse<T1, T2, T3, T4>(ctx.Args);
 
+        public static Task<(T1, T2, T3, T4, T5)> ParseArgs<T1, T2, T3, T4, T5>(this CommandContext ctx) =>
+            ctx.ArgsParser.Parse<T1, T2, T3, T4, T5>(ctx.Args);
+
         /// Replace the command execution with a different one.
         public static Command WithExecution(this Command command, Command.Execute newExecution)
         {
