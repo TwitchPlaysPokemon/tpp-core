@@ -16,9 +16,9 @@ namespace TPP.Core.Commands.Definitions
             new Command("createpoll", StartPoll)
             {
                 Aliases = new[] { "startpoll" },
-                Description = "Starts a poll with single choice. " +
-                              "Argument: <PollName> <PollCode> <MultipleChoice> <AllowChangeVote> <Option1> <Option2> <OptionX> (optional). " +
-                              "Underscores in the poll name will be replaces with spaces."
+                Description = "Starts a new poll. " +
+                              "Arguments: <PollName> <PollCode> <MultipleChoice> <AllowChangeVote> <Option1> <Option2> <OptionX> (optional). " +
+                              "Underscores in the poll name will be replaced with spaces."
             },
         }.Select(cmd => cmd.WithCondition(
             canExecute: ctx => ctx.Message.User.Roles.Intersect(AllowedRoles).Any(),
