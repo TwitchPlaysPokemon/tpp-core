@@ -10,8 +10,8 @@ namespace TPP.ArgsParsing.TypeParsers
         public override Task<ArgsParseResult<bool>> Parse(IImmutableList<string> args, Type[] genericTypes) =>
             Task.FromResult(args[0].ToLower() switch
             {
-                "yes" or "true" => ArgsParseResult<bool>.Success(true, args.Skip(1).ToImmutableList()),
-                "no" or "false" => ArgsParseResult<bool>.Success(false, args.Skip(1).ToImmutableList()),
+                "y" or "yes" or "true" => ArgsParseResult<bool>.Success(true, args.Skip(1).ToImmutableList()),
+                "n" or "no" or "false" => ArgsParseResult<bool>.Success(false, args.Skip(1).ToImmutableList()),
                 _ => ArgsParseResult<bool>.Failure($"Did not recognize '{args[0]}' as a boolean")
             });
     }
