@@ -30,19 +30,13 @@ namespace TPP.Core.Modes
             _logger = loggerFactory.CreateLogger<Runmode>();
             _stopToken = new StopToken();
             Setups.Databases repos = Setups.SetUpRepositories(_logger, baseConfig);
-            OverlayConnection overlayConnection;
-            (_broadcastServer, overlayConnection) = Setups.SetUpOverlayServer(loggerFactory);
-            _modeBase = new ModeBase(loggerFactory, repos, baseConfig, _stopToken, overlayConnection, ProcessMessage);
+            (_broadcastServer, _overlayConnection) = Setups.SetUpOverlayServer(loggerFactory);
+            _modeBase = new ModeBase(loggerFactory, repos, baseConfig, _stopToken, _overlayConnection, ProcessMessage);
             _modeBase.InstallAdditionalCommand(new Command("reloadinputconfig", _ =>
             {
                 ReloadConfig(configLoader().InputConfig);
                 return Task.FromResult(new CommandResult { Response = "input config reloaded" });
             }));
-
-            _broadcastServer = new WebsocketBroadcastServer(
-                loggerFactory.CreateLogger<WebsocketBroadcastServer>(), "localhost", 5001);
-            _overlayConnection =
-                new OverlayConnection(loggerFactory.CreateLogger<OverlayConnection>(), _broadcastServer);
 
             // TODO felk: this feels a bit messy the way it is done right now,
             //            but I am unsure yet how I'd integrate the individual parts in a cleaner way.
