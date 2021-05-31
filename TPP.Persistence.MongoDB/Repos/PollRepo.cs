@@ -131,5 +131,15 @@ namespace TPP.Persistence.MongoDB.Repos
 
         public async Task<IImmutableList<Poll>> FindPolls() =>
             (await Collection.Find(FilterDefinition<Poll>.Empty).ToListAsync()).ToImmutableList();
+
+        public async Task<bool?> SetAlive(string id, bool alive)
+        {
+            UpdateResult updateOneAsync = await Collection.UpdateOneAsync(
+                p => p.PollCode == id,
+                Builders<Poll>.Update.Set(p => p.Alive, alive));
+            if (updateOneAsync.MatchedCount == 0) return null;
+            // by virtue of dealing with a boolean we can imply the previous value from whether it was modified
+            return updateOneAsync.ModifiedCount > 0 ? !alive : alive;
+        }
     }
 }

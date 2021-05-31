@@ -21,6 +21,11 @@ namespace TPP.Core.Commands.Definitions
                               "Arguments: <PollName> <PollCode> <MultipleChoice> <AllowChangeVote> <Option1> <Option2> <OptionX> (optional). " +
                               "Underscores in the poll name will be replaced with spaces."
             },
+            new Command("closepoll", ClosePoll)
+            {
+                Aliases = new[] { "endpoll" },
+                Description = "End a poll. Arguments: <PollCode>"
+            },
         }.Select(cmd => cmd.WithCondition(
             canExecute: ctx => ctx.Message.User.Roles.Intersect(AllowedRoles).Any(),
             ersatzResult: new CommandResult { Response = "Only moderators can manage polls" }));
@@ -57,6 +62,18 @@ namespace TPP.Core.Commands.Definitions
                     $" - {(multiChoice ? "multiple-choice" : "single-choice")}" +
                     $" - {(allowChangeVote ? "changeable votes" : "unchangeable votes")}"
             };
+        }
+
+        private async Task<CommandResult> ClosePoll(CommandContext context)
+        {
+            string pollCode = await context.ParseArgs<string>();
+            bool? wasAlive = await _pollRepo.SetAlive(pollCode, false);
+            return new CommandResult { Response = wasAlive switch
+            {
+                true => $"The poll '{pollCode}' has been closed.",
+                false => $"The poll '{pollCode}' was already closed",
+                null => $"No poll with the code '{pollCode}' was found."
+            }};
         }
     }
 }
