@@ -306,3 +306,6 @@ config*.json
 
 # also ignore regular dotsettings files, as there currently is nothing it accomplishes.
 *.DotSettings
+
+# ignore python virtual environments
+venv*/
