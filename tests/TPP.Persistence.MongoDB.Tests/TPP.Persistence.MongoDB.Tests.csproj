@@ -14,7 +14,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\TPP.Persistence.MongoDB\TPP.Persistence.MongoDB.csproj" />
+      <ProjectReference Include="..\..\TPP.Persistence.MongoDB\TPP.Persistence.MongoDB.csproj" />
     </ItemGroup>
 
 </Project>

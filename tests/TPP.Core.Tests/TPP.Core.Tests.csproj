@@ -14,7 +14,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\TPP.Core\TPP.Core.csproj" />
+      <ProjectReference Include="..\..\TPP.Core\TPP.Core.csproj" />
     </ItemGroup>
 
 </Project>

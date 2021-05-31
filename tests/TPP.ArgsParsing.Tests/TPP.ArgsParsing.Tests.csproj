@@ -13,7 +13,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\TPP.ArgsParsing\TPP.ArgsParsing.csproj" />
+      <ProjectReference Include="..\..\TPP.ArgsParsing\TPP.ArgsParsing.csproj" />
     </ItemGroup>
 
 </Project>

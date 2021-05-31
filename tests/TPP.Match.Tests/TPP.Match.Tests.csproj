@@ -12,7 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\TPP.Match\TPP.Match.csproj" />
+        <ProjectReference Include="..\..\TPP.Match\TPP.Match.csproj" />
     </ItemGroup>
 
 </Project>
