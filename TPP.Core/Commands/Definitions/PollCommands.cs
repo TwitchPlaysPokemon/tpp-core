@@ -63,8 +63,7 @@ namespace TPP.Core.Commands.Definitions
                 option ??= poll.PollOptions.FirstOrDefault(o =>
                     string.Equals(o.Option, voteStr, StringComparison.InvariantCultureIgnoreCase));
                 if (option == null)
-                    return new CommandResult
-                        { Response = $"Invalid option '{voteStr}' included for poll '{pollCode}'." };
+                    return new CommandResult { Response = $"Invalid option '{voteStr}'." };
                 selectedOptions.Add(option.Id);
             }
 
