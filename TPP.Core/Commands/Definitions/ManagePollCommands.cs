@@ -68,12 +68,13 @@ namespace TPP.Core.Commands.Definitions
         {
             string pollCode = await context.ParseArgs<string>();
             bool? wasAlive = await _pollRepo.SetAlive(pollCode, false);
-            return new CommandResult { Response = wasAlive switch
+            string response = wasAlive switch
             {
                 true => $"The poll '{pollCode}' has been closed.",
                 false => $"The poll '{pollCode}' was already closed",
                 null => $"No poll with the code '{pollCode}' was found."
-            }};
+            };
+            return new CommandResult { Response = response };
         }
     }
 }
