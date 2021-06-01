@@ -75,5 +75,5 @@ If you want faster startup times or graceful SIGTERM handling,
 For example, making a release build and running the resulting `dll` with the dotnet runtime may look like this:
 ```
 dotnet publish -c Release
-dotnet ./bin/Release/net5.0/TPP.Core.dll --help
+dotnet ./bin/Release/net6.0/TPP.Core.dll --help
 ```
