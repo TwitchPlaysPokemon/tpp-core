@@ -54,14 +54,14 @@ namespace TPP.Core
                     }
                     catch (HttpListenerException)
                     {
-                        _logger.LogInformation("input server listener was stopped.");
+                        _logger.LogDebug("input server listener was stopped");
                         return;
                     }
                     catch (ObjectDisposedException)
                     {
                         // GetContextAsync doesn't take a cancellation token,
                         // and stopping the http server can cause it to trip over itself for some reason.
-                        _logger.LogError("Encountered ObjectDisposedException while accepting an incoming connection.");
+                        _logger.LogError("Encountered ObjectDisposedException while accepting an incoming connection");
                         return;
                     }
 
