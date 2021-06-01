@@ -8,17 +8,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Setup .NET 5
+      - name: Setup .NET 6
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 5.0.x
+          dotnet-version: 6.0.x
       - uses: actions/checkout@v2
       - name: Try publishing and running dummy mode
         run: |
           cd TPP.Core
           dotnet run -- gendefaultconfig --outfile=config.json
           dotnet publish -c Release
-          timeout --preserve-status -k1 3 dotnet ./bin/Release/net5.0/TPP.Core.dll start -m dummy || exit_code=$?
+          timeout --preserve-status -k1 3 dotnet ./bin/Release/net6.0/TPP.Core.dll start -m dummy || exit_code=$?
           if [ $exit_code -ne 143 ]; then
               echo "expected exit code 143, which means the program handled SIGTERM, but got $exit_code"
               exit 1
