@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+
 namespace TPP.Core.Configuration
 {
     /// <summary>
@@ -24,5 +26,7 @@ namespace TPP.Core.Configuration
 
         /* Required information to post log messages to discord. Logging to discord is disabled if null. */
         public DiscordLoggingConfig? DiscordLoggingConfig { get; init; } = null;
+
+        public ImmutableHashSet<string> DisabledModbotRules { get; init; } = ImmutableHashSet.Create<string>();
     }
 }

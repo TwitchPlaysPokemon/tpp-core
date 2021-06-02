@@ -16,6 +16,7 @@ using TPP.Persistence.MongoDB;
 using TPP.Persistence.MongoDB.Repos;
 using TPP.Persistence.MongoDB.Serializers;
 using TPP.Persistence.Repos;
+using static TPP.Core.EventUtils;
 
 namespace TPP.Core
 {
@@ -27,6 +28,7 @@ namespace TPP.Core
         public static ArgsParser SetUpArgsParser(IUserRepo userRepo, PokedexData pokedexData)
         {
             var argsParser = new ArgsParser();
+            argsParser.AddArgumentParser(new BoolParser());
             argsParser.AddArgumentParser(new SignedIntParser());
             argsParser.AddArgumentParser(new PositiveIntParser());
             argsParser.AddArgumentParser(new NonNegativeIntParser());
@@ -73,6 +75,8 @@ namespace TPP.Core
                     databases.UserRepo, pokeyenBank: databases.PokeyenBank, tokenBank: databases.TokensBank,
                     messageSender
                 ).Commands,
+                new PollCommands(databases.PollRepo).Commands,
+                new ManagePollCommands(databases.PollRepo).Commands,
                 new BadgeCommands(databases.BadgeRepo, databases.UserRepo, messageSender, knownSpecies).Commands,
                 new OperatorCommands(
                     stopToken, databases.PokeyenBank, databases.TokensBank,
@@ -95,6 +99,7 @@ namespace TPP.Core
 
         public record Databases(
             IUserRepo UserRepo,
+            IPollRepo PollRepo,
             IBadgeRepo BadgeRepo,
             IBank<User> PokeyenBank,
             IBank<User> TokensBank,
@@ -103,10 +108,11 @@ namespace TPP.Core
             IMessagelogRepo MessagelogRepo,
             ILinkedAccountRepo LinkedAccountRepo,
             ISubscriptionLogRepo SubscriptionLogRepo,
+            IModLogRepo ModLogRepo,
             IResponseCommandRepo ResponseCommandRepo
         );
 
-        public static Databases SetUpRepositories(BaseConfig baseConfig)
+        public static Databases SetUpRepositories(ILogger logger, BaseConfig baseConfig)
         {
             IClock clock = SystemClock.Instance;
             CustomSerializers.RegisterAll();
@@ -120,8 +126,8 @@ namespace TPP.Core
                 defaultOperators: baseConfig.Chat.DefaultOperatorNames);
             IMongoBadgeLogRepo badgeLogRepo = new BadgeLogRepo(mongoDatabase);
             IBadgeRepo badgeRepo = new BadgeRepo(mongoDatabase, badgeLogRepo, clock);
-            badgeRepo.UserLostBadgeSpecies += async (_, args) =>
-                await userRepo.UnselectBadgeIfSpeciesSelected(args.UserId, args.Species);
+            badgeRepo.UserLostBadgeSpecies += (_, args) => TaskToVoidSafely(logger, () =>
+                userRepo.UnselectBadgeIfSpeciesSelected(args.UserId, args.Species));
             IBank<User> pokeyenBank = new Bank<User>(
                 database: mongoDatabase,
                 currencyCollectionName: UserRepo.CollectionName,
@@ -142,6 +148,7 @@ namespace TPP.Core
             (
                 UserRepo: userRepo,
                 BadgeRepo: badgeRepo,
+                PollRepo: new PollRepo(mongoDatabase, clock),
                 PokeyenBank: pokeyenBank,
                 TokensBank: tokenBank,
                 CommandLogger: new CommandLogger(mongoDatabase, clock),
@@ -149,6 +156,7 @@ namespace TPP.Core
                 MessagelogRepo: new MessagelogRepo(mongoDatabaseMessagelog),
                 LinkedAccountRepo: new LinkedAccountRepo(mongoDatabase, userRepo.Collection),
                 SubscriptionLogRepo: new SubscriptionLogRepo(mongoDatabase),
+                ModLogRepo: new ModLogRepo(mongoDatabase),
                 ResponseCommandRepo: new ResponseCommandRepo(mongoDatabase)
             );
         }

@@ -65,13 +65,13 @@ namespace TPP.Core.Commands.Definitions
             },
             new Command("list", List)
             {
-                Description = "List all of the people who have a given role." +
-                              "Arguemnts: <Role>"
+                Description = "List all of the people who have a given role. " +
+                              "Arguments: <role>"
             },
             new Command("showroles", ShowRoles)
             {
                 Aliases = new[] {"roles"},
-                Description = "Show which roles a user has." +
+                Description = "Show which roles a user has. " +
                               "Arguments: <user>"
             },
         };

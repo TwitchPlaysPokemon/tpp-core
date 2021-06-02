@@ -1,10 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <IsPackable>false</IsPackable>
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="ILogger.Moq" Version="1.1.8" />
         <PackageReference Include="Moq" Version="4.16.0" />
         <PackageReference Include="nunit" Version="3.13.2" />
         <PackageReference Include="NUnit.Analyzers" Version="3.1.0" />
@@ -13,7 +14,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\TPP.ArgsParsing\TPP.ArgsParsing.csproj" />
+      <ProjectReference Include="..\..\TPP.Core\TPP.Core.csproj" />
     </ItemGroup>
 
 </Project>

@@ -14,7 +14,8 @@
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
         <PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.14" />
         <PackageReference Include="Serilog.Extensions.Logging.File" Version="2.0.0" />
-        <PackageReference Include="Serilog.Sinks.Discord" Version="1.0.1" />
+        <PackageReference Include="Serilog.Sinks.Discord" Version="1.1.1" />
+        <PackageReference Include="String.Similarity" Version="3.0.0" />
         <!-- Earliest version to include this fix: https://github.com/TwitchLib/TwitchLib.Client/pull/170 -->
         <PackageReference Include="TwitchLib.Client" Version="3.2.3-preview-94b33cd801bf51e1d81b179ce10c7d896072b4c3" />
     </ItemGroup>
