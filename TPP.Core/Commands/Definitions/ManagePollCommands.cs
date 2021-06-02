@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using TPP.ArgsParsing.Types;
@@ -16,9 +17,14 @@ namespace TPP.Core.Commands.Definitions
             new Command("createpoll", StartPoll)
             {
                 Aliases = new[] { "startpoll" },
-                Description = "Starts a poll with single choice. " +
-                              "Argument: <PollName> <PollCode> <MultipleChoice> <AllowChangeVote> <Option1> <Option2> <OptionX> (optional). " +
-                              "Underscores in the poll name will be replaces with spaces."
+                Description = "Starts a new poll. " +
+                              "Arguments: <PollName> <PollCode> <MultipleChoice> <AllowChangeVote> <Option1> <Option2> <OptionX> (optional). " +
+                              "Underscores in the poll name will be replaced with spaces."
+            },
+            new Command("closepoll", ClosePoll)
+            {
+                Aliases = new[] { "endpoll" },
+                Description = "End a poll. Arguments: <PollCode>"
             },
         }.Select(cmd => cmd.WithCondition(
             canExecute: ctx => ctx.Message.User.Roles.Intersect(AllowedRoles).Any(),
@@ -33,15 +39,22 @@ namespace TPP.Core.Commands.Definitions
 
         public async Task<CommandResult> StartPoll(CommandContext context)
         {
-            (string pollName, string pollCode, bool multiChoice, bool allowChangeVote, ManyOf<string> options) =
+            (string pollName, string pollCode, bool multiChoice, bool allowChangeVote, ManyOf<string> optionsArgs) =
                 await context.ParseArgs<string, string, bool, bool, ManyOf<string>>();
-            if (options.Values.Count < 2) return new CommandResult { Response = "must specify at least 2 options" };
+
+            ImmutableList<string> options = optionsArgs.Values
+                .Select(str => str.ToLower().Trim())
+                .Distinct().ToImmutableList();
+            if (optionsArgs.Values.Count > options.Count)
+                return new CommandResult { Response = "Options must be case-insensitively unique" };
+
+            if (options.Count < 2) return new CommandResult { Response = "must specify at least 2 options" };
             pollName = pollName.Replace('_', ' ');
 
             if (await _pollRepo.FindPoll(pollCode) != null)
                 return new CommandResult { Response = $"A poll with the code '{pollCode}' already exists." };
 
-            await _pollRepo.CreatePoll(pollCode, pollName, multiChoice, allowChangeVote, options.Values);
+            await _pollRepo.CreatePoll(pollCode, pollName, multiChoice, allowChangeVote, options);
             return new CommandResult
             {
                 Response =
@@ -49,6 +62,19 @@ namespace TPP.Core.Commands.Definitions
                     $" - {(multiChoice ? "multiple-choice" : "single-choice")}" +
                     $" - {(allowChangeVote ? "changeable votes" : "unchangeable votes")}"
             };
+        }
+
+        private async Task<CommandResult> ClosePoll(CommandContext context)
+        {
+            string pollCode = await context.ParseArgs<string>();
+            bool? wasAlive = await _pollRepo.SetAlive(pollCode, false);
+            string response = wasAlive switch
+            {
+                true => $"The poll '{pollCode}' has been closed.",
+                false => $"The poll '{pollCode}' was already closed",
+                null => $"No poll with the code '{pollCode}' was found."
+            };
+            return new CommandResult { Response = response };
         }
     }
 }

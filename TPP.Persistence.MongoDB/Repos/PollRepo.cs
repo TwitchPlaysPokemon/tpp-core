@@ -98,13 +98,13 @@ namespace TPP.Persistence.MongoDB.Repos
             if (options.Count > 1 && !poll.MultiChoice)
                 return new VoteFailure.NotMultipleChoice();
 
-            await Collection.UpdateOneAsync(
-                p => p.PollCode == pollCode,
-                Builders<Poll>.Update.AddToSet(p => p.Voters, userId));
-
             ImmutableList<int> invalidOptions = options.Except(poll.PollOptions.Select(p => p.Id)).ToImmutableList();
             if (invalidOptions.Any())
                 return new VoteFailure.InvalidOptions(invalidOptions);
+
+            await Collection.UpdateOneAsync(
+                p => p.PollCode == pollCode,
+                Builders<Poll>.Update.AddToSet(p => p.Voters, userId));
 
             // remove any existing votes in case the user has voted before and is changing their vote right now.
             // no typed support for the $[] (for each in array) operator yet, see https://jira.mongodb.org/browse/CSHARP-2232
@@ -128,5 +128,18 @@ namespace TPP.Persistence.MongoDB.Repos
 
         public async Task<Poll?> FindPoll(string pollCode) =>
             await Collection.Find(p => p.PollCode == pollCode).FirstOrDefaultAsync();
+
+        public async Task<IImmutableList<Poll>> FindPolls() =>
+            (await Collection.Find(FilterDefinition<Poll>.Empty).ToListAsync()).ToImmutableList();
+
+        public async Task<bool?> SetAlive(string id, bool alive)
+        {
+            UpdateResult updateOneAsync = await Collection.UpdateOneAsync(
+                p => p.PollCode == id,
+                Builders<Poll>.Update.Set(p => p.Alive, alive));
+            if (updateOneAsync.MatchedCount == 0) return null;
+            // by virtue of dealing with a boolean we can imply the previous value from whether it was modified
+            return updateOneAsync.ModifiedCount > 0 ? !alive : alive;
+        }
     }
 }
