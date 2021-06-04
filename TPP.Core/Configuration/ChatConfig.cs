@@ -7,7 +7,6 @@ namespace TPP.Core.Configuration
     /// </summary>
     public sealed class ChatConfig : ConfigBase
     {
-        // TODO this configurations should probably be in the database instead
         public IImmutableList<string> DefaultOperatorNames { get; init; } = ImmutableList.Create("admin");
 
         public IImmutableList<ConnectionConfig> Connections { get; init; } =

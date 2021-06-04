@@ -59,15 +59,13 @@ namespace TPP.Core
             ArgsParser argsParser,
             Databases databases,
             StopToken stopToken,
-            ChatConfig chatConfig,
             IMessageSender messageSender,
             IChatModeChanger chatModeChanger,
             IImmutableSet<Common.PkmnSpecies> knownSpecies)
         {
             var commandProcessor = new CommandProcessor(
                 loggerFactory.CreateLogger<CommandProcessor>(),
-                databases.CommandLogger, argsParser,
-                chatConfig.DefaultOperatorNames);
+                databases.CommandLogger, argsParser);
 
             IEnumerable<Command> commands = new[]
             {
@@ -81,10 +79,12 @@ namespace TPP.Core
                 new ManagePollCommands(databases.PollRepo).Commands,
                 new BadgeCommands(databases.BadgeRepo, databases.UserRepo, messageSender, knownSpecies).Commands,
                 new OperatorCommands(
-                    stopToken, chatConfig.DefaultOperatorNames, databases.PokeyenBank, databases.TokensBank,
+                    stopToken, databases.PokeyenBank, databases.TokensBank,
                     messageSender: messageSender, databases.BadgeRepo, databases.UserRepo
                 ).Commands,
-                new ModeratorCommands(chatModeChanger, databases.LinkedAccountRepo).Commands
+                new ModeratorCommands(
+                    chatModeChanger, databases.LinkedAccountRepo, databases.ResponseCommandRepo
+                ).Commands
             }.SelectMany(cmds => cmds).Concat(new[]
             {
                 new HelpCommand(commandProcessor).Command
@@ -93,6 +93,7 @@ namespace TPP.Core
             {
                 commandProcessor.InstallCommand(command);
             }
+            SetUpDynamicCommands(loggerFactory.CreateLogger("setups"), commandProcessor, databases.ResponseCommandRepo);
             return commandProcessor;
         }
 
@@ -107,7 +108,8 @@ namespace TPP.Core
             IMessagelogRepo MessagelogRepo,
             ILinkedAccountRepo LinkedAccountRepo,
             ISubscriptionLogRepo SubscriptionLogRepo,
-            IModLogRepo ModLogRepo
+            IModLogRepo ModLogRepo,
+            IResponseCommandRepo ResponseCommandRepo
         );
 
         public static Databases SetUpRepositories(ILogger logger, BaseConfig baseConfig)
@@ -154,7 +156,8 @@ namespace TPP.Core
                 MessagelogRepo: new MessagelogRepo(mongoDatabaseMessagelog),
                 LinkedAccountRepo: new LinkedAccountRepo(mongoDatabase, userRepo.Collection),
                 SubscriptionLogRepo: new SubscriptionLogRepo(mongoDatabase),
-                ModLogRepo: new ModLogRepo(mongoDatabase)
+                ModLogRepo: new ModLogRepo(mongoDatabase),
+                ResponseCommandRepo: new ResponseCommandRepo(mongoDatabase)
             );
         }
 
@@ -166,6 +169,44 @@ namespace TPP.Core
             OverlayConnection overlayConnection = new(
                 loggerFactory.CreateLogger<OverlayConnection>(), broadcastServer);
             return (broadcastServer, overlayConnection);
+        }
+
+        private static void SetUpDynamicCommands(
+            ILogger logger, CommandProcessor commandProcessor, IResponseCommandRepo responseCommandRepo)
+        {
+            IImmutableList<ResponseCommand> commands = responseCommandRepo.GetCommands().Result;
+
+            HashSet<string> dynamicallyInstalledCommands = new();
+            void InstallCommand(ResponseCommand command)
+            {
+                Command? existing = commandProcessor.FindCommand(command.Command);
+                if (existing != null)
+                {
+                    logger.LogWarning(
+                        "not installing static response command '{Command}' " +
+                        "because it conflicts with an existing command", command.Command);
+                }
+                else
+                {
+                    commandProcessor
+                        .InstallCommand(new Command(command.Command, CommandUtils.StaticResponse(command.Response)));
+                    dynamicallyInstalledCommands.Add(command.Command);
+                }
+            }
+            void UninstallCommand(string commandName)
+            {
+                if (!dynamicallyInstalledCommands.Contains(commandName))
+                    return; // this command wasn't added dynamically, probably because it conflicted
+                commandProcessor.UninstallCommand(commandName);
+                dynamicallyInstalledCommands.Remove(commandName);
+            }
+
+            foreach (ResponseCommand command in commands)
+            {
+                InstallCommand(command);
+            }
+            responseCommandRepo.CommandRemoved += (_, name) => UninstallCommand(name);
+            responseCommandRepo.CommandInserted += (_, command) => InstallCommand(command);
         }
     }
 }

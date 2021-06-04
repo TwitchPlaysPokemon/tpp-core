@@ -24,19 +24,16 @@ namespace TPP.Core.Commands
         private readonly ILogger<CommandProcessor> _logger;
         private readonly ICommandLogger _commandLogger;
         private readonly ArgsParser _argsParser;
-        private readonly Dictionary<string, Command> _commands = new Dictionary<string, Command>();
-        private readonly IImmutableList<String>? _operatorNames;
+        private readonly Dictionary<string, Command> _commands = new();
 
         public CommandProcessor(
             ILogger<CommandProcessor> logger,
             ICommandLogger commandLogger,
-            ArgsParser argsParser,
-            IImmutableList<String>? operatorNames = null)
+            ArgsParser argsParser)
         {
             _logger = logger;
             _commandLogger = commandLogger;
             _argsParser = argsParser;
-            _operatorNames = operatorNames;
         }
 
         public void InstallCommand(Command command)
@@ -61,12 +58,11 @@ namespace TPP.Core.Commands
             }
         }
 
-        public void UninstallCommand(Command command)
+        public void UninstallCommand(params string[] commandOrAlias)
         {
-            _commands.Remove(command.Name.ToLower());
-            foreach (string alias in command.Aliases.Select(a => a.ToLower()))
+            foreach (string name in commandOrAlias.Select(a => a.ToLower()))
             {
-                _commands.Remove(alias);
+                _commands.Remove(name);
             }
         }
 

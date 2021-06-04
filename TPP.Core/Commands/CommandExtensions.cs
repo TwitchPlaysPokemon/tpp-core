@@ -55,5 +55,13 @@ namespace TPP.Core.Commands
             var cooldown = new PerUserCooldown(SystemClock.Instance, duration);
             return command.WithCondition(ctx => cooldown.CheckLapsedThenReset(ctx.Message.User));
         }
+
+        /// Modify the command description through a modification function
+        public static Command WithChangedDescription(this Command command, Func<string?, string?> change) =>
+            new(command.Name, command.Execution)
+            {
+                Aliases = command.Aliases,
+                Description = change(command.Description)
+            };
     }
 }
