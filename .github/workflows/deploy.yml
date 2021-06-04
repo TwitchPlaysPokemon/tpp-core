@@ -1,0 +1,31 @@
+name: deploy
+
+on: [ workflow_dispatch ]
+
+jobs:
+  deploy:
+
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: TPP.Core
+
+    steps:
+      - name: Setup .NET 5
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+      - uses: actions/checkout@v2
+      - name: Publish the core
+        run: dotnet publish -c Release -r linux-x64 -p:PublishSingleFile=true --no-self-contained
+      - name: Deploy the core to TPP
+        env:
+          SSHUSER: ${{ secrets.TPP_SSH_USER }}
+          SSHPASS: ${{ secrets.TPP_SSH_PASS }}
+          SSHHOST: ${{ secrets.TPP_SSH_HOST }}
+          SSHPORT: ${{ secrets.TPP_SSH_PORT }}
+        run: |
+          sudo apt-get install sshpass
+          sshpass -e scp -o StrictHostKeyChecking=no -P ${SSHPORT} bin/Release/net5.0/linux-x64/publish/TPP.Core ${SSHUSER}@${SSHHOST}:core
+          sshpass -e ssh -o StrictHostKeyChecking=no -p ${SSHPORT} ${SSHUSER}@${SSHHOST} systemctl --user restart tpp-dualcore
