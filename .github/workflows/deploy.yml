@@ -22,10 +22,11 @@ jobs:
       - name: Deploy the core to TPP
         env:
           SSHUSER: ${{ secrets.TPP_SSH_USER }}
-          SSHPASS: ${{ secrets.TPP_SSH_PASS }}
+          SSHPRIVKEY: ${{ secrets.TPP_SSH_PRIVATE_KEY }}
           SSHHOST: ${{ secrets.TPP_SSH_HOST }}
           SSHPORT: ${{ secrets.TPP_SSH_PORT }}
         run: |
-          sudo apt-get install sshpass
-          sshpass -e scp -o StrictHostKeyChecking=no -P ${SSHPORT} bin/Release/net5.0/linux-x64/publish/TPP.Core ${SSHUSER}@${SSHHOST}:core
-          sshpass -e ssh -o StrictHostKeyChecking=no -p ${SSHPORT} ${SSHUSER}@${SSHHOST} systemctl --user restart tpp-dualcore
+          echo "$SSHPRIVKEY" > tpp.key
+          chmod 600 tpp.key
+          scp -i tpp.key -o StrictHostKeyChecking=no -P ${SSHPORT} bin/Release/net5.0/linux-x64/publish/TPP.Core ${SSHUSER}@${SSHHOST}:core_update
+          ssh -i tpp.key -o StrictHostKeyChecking=no -p ${SSHPORT} ${SSHUSER}@${SSHHOST} 'mv core_update core && systemctl --user restart tpp-dualcore'
