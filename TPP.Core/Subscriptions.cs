@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using NodaTime;
 using TPP.Common;
 using TPP.Persistence.Models;
@@ -72,15 +73,18 @@ namespace TPP.Core
 
     public class SubscriptionProcessor : ISubscriptionProcessor
     {
+        private readonly ILogger<SubscriptionProcessor> _logger;
         private readonly IBank<User> _tokenBank;
         private readonly IUserRepo _userRepo;
         private readonly ISubscriptionLogRepo _subscriptionLogRepo;
         private readonly ILinkedAccountRepo _linkedAccountRepo;
 
         public SubscriptionProcessor(
+            ILogger<SubscriptionProcessor> logger,
             IBank<User> tokenBank, IUserRepo userRepo, ISubscriptionLogRepo subscriptionLogRepo,
             ILinkedAccountRepo linkedAccountRepo)
         {
+            _logger = logger;
             _tokenBank = tokenBank;
             _userRepo = userRepo;
             _subscriptionLogRepo = subscriptionLogRepo;
@@ -90,6 +94,14 @@ namespace TPP.Core
         public async Task<ISubscriptionProcessor.SubResult> ProcessSubscription(SubscriptionInfo subscriptionInfo)
         {
             User user = subscriptionInfo.Subscriber;
+            if (user.MonthsSubscribed > 0 && user.SubscriptionTier == null)
+            {
+                _logger.LogWarning("Subscriber {User} has no subscription tier recorded. Assuming Tier 1", user);
+                user = await _userRepo.SetSubscriptionInfo(
+                    user, user.MonthsSubscribed, SubscriptionTier.Tier1, user.LoyaltyLeague,
+                    user.SubscriptionUpdatedAt);
+            }
+
             if (user.MonthsSubscribed == subscriptionInfo.NumMonths &&
                 user.SubscriptionTier?.ToRank() >= subscriptionInfo.Tier.ToRank())
             {

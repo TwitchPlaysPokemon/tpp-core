@@ -37,7 +37,9 @@ namespace TPP.Core.Chat
             {
                 ConnectionConfig.Console cfg => new ConsoleChat(config.Name, _loggerFactory, cfg, _userRepo),
                 ConnectionConfig.Twitch cfg => new TwitchChat(config.Name, _loggerFactory, _clock, cfg, _userRepo,
-                    new SubscriptionProcessor(_tokenBank, _userRepo, _subscriptionLogRepo, _linkedAccountRepo),
+                    new SubscriptionProcessor(
+                        _loggerFactory.CreateLogger<SubscriptionProcessor>(),
+                        _tokenBank, _userRepo, _subscriptionLogRepo, _linkedAccountRepo),
                     _overlayConnection),
                 _ => throw new ArgumentOutOfRangeException(nameof(config), "unknown chat connector type")
             };
