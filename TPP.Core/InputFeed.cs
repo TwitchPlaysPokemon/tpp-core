@@ -50,9 +50,10 @@ namespace TPP.Core
         public async Task Enqueue(InputSet inputSet, User user)
         {
             QueuedInput queuedInput = new(_inputIdSeq++, inputSet);
-            await _overlayConnection.Send(new NewAnarchyInput(queuedInput.InputId, queuedInput.InputSet, user),
-                CancellationToken.None);
-            _inputBufferQueue.Enqueue(queuedInput);
+            bool enqueued = _inputBufferQueue.Enqueue(queuedInput);
+            if (enqueued)
+                await _overlayConnection.Send(new NewAnarchyInput(queuedInput.InputId, queuedInput.InputSet, user),
+                    CancellationToken.None);
         }
 
         public async Task<InputMap?> HandleRequest(string? path)

@@ -12,7 +12,8 @@ namespace TPP.Core.Configuration
         public IImmutableList<ConnectionConfig> Connections { get; init; } =
             ImmutableList.Create<ConnectionConfig>(
                 new ConnectionConfig.Console(),
-                new ConnectionConfig.Twitch()
+                new ConnectionConfig.Twitch(),
+                new ConnectionConfig.Simulation()
             );
 
         /* whether to forward unprocessed messages to the old core by saving them to the "messagequeue" collection */

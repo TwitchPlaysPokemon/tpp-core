@@ -41,6 +41,7 @@ namespace TPP.Core.Chat
                         _loggerFactory.CreateLogger<SubscriptionProcessor>(),
                         _tokenBank, _userRepo, _subscriptionLogRepo, _linkedAccountRepo),
                     _overlayConnection),
+                ConnectionConfig.Simulation cfg => new SimulationChat(config.Name, _loggerFactory, cfg, _userRepo),
                 _ => throw new ArgumentOutOfRangeException(nameof(config), "unknown chat connector type")
             };
     }

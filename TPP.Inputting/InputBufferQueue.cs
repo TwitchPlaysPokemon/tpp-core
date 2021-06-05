@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TPP.Inputting
@@ -35,13 +36,12 @@ namespace TPP.Inputting
             float MaxInputDuration = 100 / 60f,
             int MaxBufferLength = 1000);
 
-        private readonly Queue<T> _queue = new Queue<T>();
+        private readonly Queue<T> _queue = new();
+        private readonly Queue<TaskCompletionSource<(T, float)>> _awaitedDequeueings = new();
+        private readonly SemaphoreSlim _semaphoreSlim = new(1);
 
         private Config _config;
-
         private float _prevInputDuration;
-
-        private readonly Queue<TaskCompletionSource<(T, float)>> _awaitedDequeueings = new();
 
         public InputBufferQueue(Config? config = null)
         {
@@ -74,11 +74,19 @@ namespace TPP.Inputting
         /// <returns>If the input was enqueued. False if e.g. the queue is at maximum capacity.</returns>
         public bool Enqueue(T value)
         {
-            if (_queue.Count >= _config.MaxBufferLength) return false;
-            _queue.Enqueue(value);
-            if (_awaitedDequeueings.TryDequeue(out TaskCompletionSource<(T, float)>? task))
+            _semaphoreSlim.Wait();
+            try
             {
-                task.SetResult(Dequeue());
+                if (_queue.Count >= _config.MaxBufferLength) return false;
+                _queue.Enqueue(value);
+                if (_awaitedDequeueings.TryDequeue(out TaskCompletionSource<(T, float)>? task))
+                {
+                    task.SetResult(Dequeue());
+                }
+            }
+            finally
+            {
+                _semaphoreSlim.Release();
             }
             return true;
         }
@@ -89,10 +97,17 @@ namespace TPP.Inputting
         /// <returns>a (input, duration) tuple for the next input. The duration is in seconds</returns>
         public (T, float) Dequeue()
         {
-            float inputDuration = CalcInputDuration(_prevInputDuration);
-            _prevInputDuration = inputDuration;
-            (T, float inputDuration) result = (_queue.Dequeue(), inputDuration);
-            return result;
+            _semaphoreSlim.Wait();
+            try
+            {
+                float inputDuration = CalcInputDuration(_prevInputDuration);
+                _prevInputDuration = inputDuration;
+                return (_queue.Dequeue(), inputDuration);
+            }
+            finally
+            {
+                _semaphoreSlim.Release();
+            }
         }
 
         /// <summary>
@@ -101,15 +116,23 @@ namespace TPP.Inputting
         /// <returns>a task containing a (input, duration) tuple for the next input. The duration is in seconds</returns>
         public async Task<(T, float)> DequeueWaitAsync()
         {
-            if (IsEmpty)
+            await _semaphoreSlim.WaitAsync();
+            try
             {
-                var taskCompletionSource = new TaskCompletionSource<(T, float)>();
-                _awaitedDequeueings.Enqueue(taskCompletionSource);
-                return await taskCompletionSource.Task;
+                if (IsEmpty)
+                {
+                    var taskCompletionSource = new TaskCompletionSource<(T, float)>();
+                    _awaitedDequeueings.Enqueue(taskCompletionSource);
+                    return await taskCompletionSource.Task;
+                }
+                else
+                {
+                    return Dequeue();
+                }
             }
-            else
+            finally
             {
-                return await Task.FromResult(Dequeue());
+                _semaphoreSlim.Release();
             }
         }
 
@@ -118,11 +141,19 @@ namespace TPP.Inputting
         /// </summary>
         public void Clear()
         {
-            _queue.Clear();
-            _prevInputDuration = _config.BufferLengthSeconds;
-            while (_awaitedDequeueings.Any())
+            _semaphoreSlim.Wait();
+            try
             {
-                _awaitedDequeueings.Dequeue().SetCanceled();
+                _queue.Clear();
+                _prevInputDuration = _config.BufferLengthSeconds;
+                while (_awaitedDequeueings.Any())
+                {
+                    _awaitedDequeueings.Dequeue().SetCanceled();
+                }
+            }
+            finally
+            {
+                _semaphoreSlim.Release();
             }
         }
 
