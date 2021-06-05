@@ -161,9 +161,9 @@ namespace TPP.Core
             );
         }
 
-        public static (WebsocketBroadcastServer, OverlayConnection) SetUpOverlayServer(ILoggerFactory loggerFactory)
+        public static (WebsocketBroadcastServer, OverlayConnection) SetUpOverlayServer(
+            ILoggerFactory loggerFactory, string wsHost, int wsPort)
         {
-            (string wsHost, int wsPort) = ("localhost", 5001);
             WebsocketBroadcastServer broadcastServer = new(
                 loggerFactory.CreateLogger<WebsocketBroadcastServer>(), wsHost, wsPort);
             OverlayConnection overlayConnection = new(

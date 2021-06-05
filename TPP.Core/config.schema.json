@@ -125,6 +125,15 @@
     "StartingTokens": {
       "type": "integer"
     },
+    "OverlayWebsocketHost": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "OverlayWebsocketPort": {
+      "type": "integer"
+    },
     "DiscordLoggingConfig": {
       "$ref": "#/definitions/DiscordLoggingConfig"
     },
