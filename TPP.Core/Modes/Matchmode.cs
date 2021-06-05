@@ -40,7 +40,8 @@ namespace TPP.Core.Modes
             Setups.Databases repos = Setups.SetUpRepositories(_logger, baseConfig);
             _pokeyenBank = repos.PokeyenBank;
             _userRepo = repos.UserRepo;
-            (_broadcastServer, _overlayConnection) = Setups.SetUpOverlayServer(loggerFactory);
+            (_broadcastServer, _overlayConnection) = Setups.SetUpOverlayServer(loggerFactory,
+                baseConfig.OverlayWebsocketHost, baseConfig.OverlayWebsocketPort);
             _modeBase = new ModeBase(loggerFactory, repos, baseConfig, _stopToken, _overlayConnection);
             var bettingCommands = new BettingCommands(() => _bettingPeriod);
             foreach (Command command in bettingCommands.Commands)

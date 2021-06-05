@@ -20,7 +20,8 @@ namespace TPP.Core.Modes
             _stopToken = new StopToken();
             Setups.Databases repos = Setups.SetUpRepositories(_logger, baseConfig);
             OverlayConnection overlayConnection;
-            (_broadcastServer, overlayConnection) = Setups.SetUpOverlayServer(loggerFactory);
+            (_broadcastServer, overlayConnection) = Setups.SetUpOverlayServer(loggerFactory,
+                baseConfig.OverlayWebsocketHost, baseConfig.OverlayWebsocketPort);
             _modeBase = new ModeBase(loggerFactory, repos, baseConfig, _stopToken, overlayConnection);
         }
 

@@ -30,7 +30,8 @@ namespace TPP.Core.Modes
             _logger = loggerFactory.CreateLogger<Runmode>();
             _stopToken = new StopToken();
             Setups.Databases repos = Setups.SetUpRepositories(_logger, baseConfig);
-            (_broadcastServer, _overlayConnection) = Setups.SetUpOverlayServer(loggerFactory);
+            (_broadcastServer, _overlayConnection) = Setups.SetUpOverlayServer(loggerFactory,
+                baseConfig.OverlayWebsocketHost, baseConfig.OverlayWebsocketPort);
             _modeBase = new ModeBase(loggerFactory, repos, baseConfig, _stopToken, _overlayConnection, ProcessMessage);
             _modeBase.InstallAdditionalCommand(new Command("reloadinputconfig", _ =>
             {
