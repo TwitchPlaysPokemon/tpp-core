@@ -100,7 +100,8 @@ Options:
             LoggerFactory.Create(builder =>
             {
                 builder.AddConsole().SetMinimumLevel(LogLevel.Debug);
-                if (baseConfig.LogPath != null) builder.AddFile(Path.Combine(baseConfig.LogPath, "tpp-{Date}.log"));
+                if (baseConfig.LogPath != null) builder.AddFile(Path.Combine(baseConfig.LogPath, "tpp-{Date}.log"),
+                    outputTemplate: "{Timestamp:o} [{Level:u3}] {Message}{NewLine}{Exception}");
                 if (baseConfig.DiscordLoggingConfig != null)
                 {
                     builder.AddSerilog(new LoggerConfiguration()

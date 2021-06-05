@@ -1,0 +1,33 @@
+/*
+ * This is a configuration file for the lnav command line log viewer.
+ * put this files somewhere and install with `lnav -i tpp-lnav.json`,
+ * and then lnav will be able to give you proper highlighting
+ * and semantically understand the log files produces by tpp.
+ */
+{
+  "$schema": "https://lnav.org/schemas/format-v1.schema.json",
+  "tpp": {
+    "title": "tpp",
+    "description": "The file log format used by tpp, close to and compatible with the serilog default format",
+    "regex": {
+      "default": {
+        "pattern": "^(?<timestamp>[^ ]+)\\s+\\[(?<level>...)\\] (?<body>.*)$"
+      }
+    },
+    "level": {
+      "fatal": "FTL",
+      "error": "ERR",
+      "warning": "WRN",
+      "info": "INF",
+      "debug": "DBG"
+    },
+    "sample": [
+      {
+        "line": "2021-05-31T18:15:07.9407838+02:00  [INF] Something normal happened"
+      },
+      {
+        "line": "2021-05-24T14:08:43.2804155-04:00  [ERR] Something bad happened!"
+      }
+    ]
+  }
+}
