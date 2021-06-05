@@ -24,6 +24,13 @@ namespace TPP.Core
             IInputFeed inputFeed)
         {
             _logger = logger;
+            if (host is "0.0.0.0" or "::")
+            {
+                logger.LogWarning(
+                    "Configured input server host as '{Host}', but the host is being used as a http listener prefix, " +
+                    "not as a bind address. Assuming '*' instead to listen on all interfaces.", host);
+                host = "*";
+            }
             _host = host;
             _port = port;
             InputFeed = inputFeed;
