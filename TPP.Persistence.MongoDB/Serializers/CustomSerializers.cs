@@ -21,6 +21,7 @@ namespace TPP.Persistence.MongoDB.Serializers
             BsonSerializer.RegisterSerializer(SubscriptionTierSerializer.Instance);
             BsonSerializer.RegisterSerializer(RoleSerializer.Instance);
             BsonSerializer.RegisterSerializer(GameIdSerializer.Instance);
+            BsonSerializer.RegisterSerializer(SwitchingPolicySerializer.Instance);
         }
     }
 }

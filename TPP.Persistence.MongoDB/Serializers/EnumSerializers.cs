@@ -59,4 +59,9 @@ namespace TPP.Persistence.MongoDB.Serializers
     {
         public static readonly GameIdSerializer Instance = new();
     }
+
+    public class SwitchingPolicySerializer : EnumToStringUsingEnumMemberValue<SwitchingPolicy>
+    {
+        public static readonly SwitchingPolicySerializer Instance = new();
+    }
 }
