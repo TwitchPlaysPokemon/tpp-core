@@ -83,7 +83,7 @@ namespace TPP.Model
         string SubPlanName);
 
     /// <summary>
-    /// Transaction logs are read-only entities that get created by <see cref="IBank{T}"/> implementations.
+    /// Transaction logs are read-only entities that get created by <c>IBank&lt;T&gt;</c> implementations.
     /// They are purely for traceability and serve no functional purpose.
     /// </summary>
     public class TransactionLog : PropertyEquatable<TransactionLog>
