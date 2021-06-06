@@ -5,9 +5,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TPP.Common;
-using TPP.Persistence.Models;
+using TPP.Model;
 
-namespace TPP.Persistence.Repos
+namespace TPP.Persistence
 {
     /// <summary>
     /// Exception thrown when a user related operation failed because the user did not exist.

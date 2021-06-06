@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using NodaTime;
-using TPP.Persistence.Models;
+using TPP.Model;
 
 namespace TPP.Core.Commands
 {

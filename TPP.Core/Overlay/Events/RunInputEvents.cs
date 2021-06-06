@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.Serialization;
 using TPP.Inputting;
-using TPP.Persistence.Models;
+using TPP.Model;
 
 namespace TPP.Core.Overlay.Events
 {

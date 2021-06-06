@@ -1,5 +1,5 @@
 using System.Collections.Immutable;
-using TPP.Persistence.Models;
+using TPP.Model;
 
 namespace TPP.Core
 {

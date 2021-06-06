@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using TPP.ArgsParsing.Types;
 using TPP.Match;
-using TPP.Persistence.Models;
+using TPP.Model;
 
 namespace TPP.Core.Commands.Definitions
 {

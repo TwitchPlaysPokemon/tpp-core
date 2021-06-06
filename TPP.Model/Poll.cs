@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using NodaTime;
 using TPP.Common;
 
-namespace TPP.Persistence.Models
+namespace TPP.Model
 {
     // properties need setters for deserialization
     // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local

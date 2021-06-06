@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using System.Runtime.Serialization;
 using TPP.Match;
-using TPP.Persistence.Models;
+using TPP.Model;
 
 namespace TPP.Core.Overlay.Events
 {

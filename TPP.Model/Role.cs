@@ -1,4 +1,4 @@
-namespace TPP.Persistence.Models
+namespace TPP.Model
 {
     public enum Role
     {

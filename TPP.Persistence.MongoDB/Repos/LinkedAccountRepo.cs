@@ -6,9 +6,8 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Driver;
-using TPP.Persistence.Models;
+using TPP.Model;
 using TPP.Persistence.MongoDB.Serializers;
-using TPP.Persistence.Repos;
 
 namespace TPP.Persistence.MongoDB.Repos
 {

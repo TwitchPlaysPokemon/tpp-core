@@ -1,9 +1,8 @@
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using NodaTime;
 using TPP.Common;
 
-namespace TPP.Persistence.Models
+namespace TPP.Model
 {
     public class User : PropertyEquatable<User>
     {

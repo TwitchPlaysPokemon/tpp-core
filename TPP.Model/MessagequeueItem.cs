@@ -1,4 +1,4 @@
-namespace TPP.Persistence.Models
+namespace TPP.Model
 {
     /// <summary>
     /// A message that gets persisted in the database for to the old core to read and execute.

@@ -3,7 +3,7 @@ using Moq;
 using NodaTime;
 using NUnit.Framework;
 using TPP.Core.Moderation;
-using TPP.Persistence.Models;
+using TPP.Model;
 
 namespace TPP.Core.Tests.Moderation
 {

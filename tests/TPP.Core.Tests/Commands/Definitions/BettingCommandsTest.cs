@@ -9,7 +9,7 @@ using TPP.ArgsParsing.TypeParsers;
 using TPP.Core.Commands;
 using TPP.Core.Commands.Definitions;
 using TPP.Match;
-using TPP.Persistence.Models;
+using TPP.Model;
 
 namespace TPP.Core.Tests.Commands.Definitions
 {

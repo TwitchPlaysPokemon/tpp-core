@@ -6,9 +6,8 @@ using MongoDB.Driver;
 using NodaTime;
 using NUnit.Framework;
 using TPP.Common;
-using TPP.Persistence.Models;
+using TPP.Model;
 using TPP.Persistence.MongoDB.Repos;
-using TPP.Persistence.Repos;
 
 namespace TPP.Persistence.MongoDB.Tests.Repos
 {

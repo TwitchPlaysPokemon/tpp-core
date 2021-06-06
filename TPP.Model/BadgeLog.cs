@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using NodaTime;
 using TPP.Common;
 
-namespace TPP.Persistence.Models
+namespace TPP.Model
 {
     public sealed record BadgeLog(
         string Id,

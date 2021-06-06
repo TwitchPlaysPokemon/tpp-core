@@ -11,11 +11,11 @@ using TPP.Core.Commands;
 using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
 using TPP.Core.Overlay;
-using TPP.Persistence.Models;
+using TPP.Model;
+using TPP.Persistence;
 using TPP.Persistence.MongoDB;
 using TPP.Persistence.MongoDB.Repos;
 using TPP.Persistence.MongoDB.Serializers;
-using TPP.Persistence.Repos;
 using static TPP.Core.EventUtils;
 
 namespace TPP.Core

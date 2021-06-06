@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NodaTime;
 
-namespace TPP.Persistence.Models
+namespace TPP.Model
 {
     public sealed record CommandLog(
         string Id,

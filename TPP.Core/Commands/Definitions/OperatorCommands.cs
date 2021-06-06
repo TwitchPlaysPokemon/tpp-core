@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 using TPP.ArgsParsing.Types;
 using TPP.Common;
 using TPP.Core.Chat;
-using TPP.Persistence.Models;
-using TPP.Persistence.Repos;
+using TPP.Model;
+using TPP.Persistence;
 
 namespace TPP.Core.Commands.Definitions
 {

@@ -10,8 +10,8 @@ using NUnit.Framework;
 using TPP.ArgsParsing.TypeParsers;
 using TPP.ArgsParsing.Types;
 using TPP.Common;
-using TPP.Persistence.Models;
-using TPP.Persistence.Repos;
+using TPP.Model;
+using TPP.Persistence;
 
 namespace TPP.ArgsParsing.Tests
 {

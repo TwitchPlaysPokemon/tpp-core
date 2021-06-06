@@ -9,9 +9,8 @@ using NodaTime;
 using NodaTime.Extensions;
 using NodaTime.Text;
 using NUnit.Framework;
-using TPP.Persistence.Models;
+using TPP.Model;
 using TPP.Persistence.MongoDB.Repos;
-using TPP.Persistence.Repos;
 
 namespace TPP.Persistence.MongoDB.Tests.Repos
 {

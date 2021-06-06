@@ -1,8 +1,8 @@
 using System.Collections.Immutable;
 using System.Threading.Tasks;
-using TPP.Persistence.Models;
+using TPP.Model;
 
-namespace TPP.Persistence.Repos
+namespace TPP.Persistence
 {
     public interface ICommandLogger
     {

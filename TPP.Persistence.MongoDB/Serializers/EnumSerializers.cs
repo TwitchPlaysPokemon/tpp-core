@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using TPP.Common;
-using TPP.Persistence.Models;
+using TPP.Model;
 
 namespace TPP.Persistence.MongoDB.Serializers
 {

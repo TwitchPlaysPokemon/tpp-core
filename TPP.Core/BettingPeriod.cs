@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TPP.Match;
-using TPP.Persistence.Repos;
+using TPP.Persistence;
 
 namespace TPP.Core
 {
