@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using TPP.Core.Overlay;
 using TPP.Core.Overlay.Events;
 using TPP.Inputting;
-using TPP.Persistence.Models;
+using TPP.Model;
 using InputMap = System.Collections.Generic.IDictionary<string, object>;
 
 namespace TPP.Core

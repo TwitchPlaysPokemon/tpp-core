@@ -1,9 +1,8 @@
 using System.Collections.Generic;
 using NodaTime;
 using TPP.Common;
-using TPP.Persistence.Repos;
 
-namespace TPP.Persistence.Models
+namespace TPP.Model
 {
     /// <summary>
     /// Transaction logs are read-only entities that get created by <see cref="IBank{T}"/> implementations.

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Moq;
 using NUnit.Framework;
 using TPP.Match;
-using TPP.Persistence.Repos;
+using TPP.Persistence;
 
 namespace TPP.Core.Tests
 {

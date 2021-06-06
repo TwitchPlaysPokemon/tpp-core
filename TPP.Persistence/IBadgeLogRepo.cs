@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using NodaTime;
-using TPP.Persistence.Models;
+using TPP.Model;
 
-namespace TPP.Persistence.Repos
+namespace TPP.Persistence
 {
     public static class BadgeLogType
     {

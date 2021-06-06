@@ -1,7 +1,7 @@
 using NodaTime;
 using TPP.Common;
 
-namespace TPP.Persistence.Repos
+namespace TPP.Persistence
 {
     public readonly struct UserInfo
     {

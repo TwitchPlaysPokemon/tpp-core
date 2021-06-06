@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using TPP.Common.PkmnModels;
+using TPP.Model;
 
 namespace TPP.Core.Overlay.Events
 {

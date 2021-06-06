@@ -11,9 +11,8 @@ using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 using NodaTime;
 using TPP.Common;
-using TPP.Persistence.Models;
+using TPP.Model;
 using TPP.Persistence.MongoDB.Serializers;
-using TPP.Persistence.Repos;
 
 namespace TPP.Persistence.MongoDB.Repos
 {

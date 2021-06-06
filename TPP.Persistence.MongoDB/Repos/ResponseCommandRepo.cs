@@ -3,8 +3,7 @@ using System.Collections.Immutable;
 using System.Threading.Tasks;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
-using TPP.Persistence.Models;
-using TPP.Persistence.Repos;
+using TPP.Model;
 
 namespace TPP.Persistence.MongoDB.Repos
 {

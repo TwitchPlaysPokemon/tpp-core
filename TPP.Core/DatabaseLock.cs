@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson.Serialization.Attributes;
 using NodaTime;
-using TPP.Persistence.Repos;
+using TPP.Persistence;
 
 namespace TPP.Core
 {

@@ -7,8 +7,7 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using NodaTime;
 using TPP.Common;
-using TPP.Persistence.Models;
-using TPP.Persistence.Repos;
+using TPP.Model;
 
 namespace TPP.Persistence.MongoDB.Repos
 {

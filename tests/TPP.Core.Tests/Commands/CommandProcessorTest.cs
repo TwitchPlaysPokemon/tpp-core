@@ -10,8 +10,8 @@ using NodaTime;
 using NUnit.Framework;
 using TPP.ArgsParsing;
 using TPP.Core.Commands;
-using TPP.Persistence.Models;
-using TPP.Persistence.Repos;
+using TPP.Model;
+using TPP.Persistence;
 
 namespace TPP.Core.Tests.Commands
 {

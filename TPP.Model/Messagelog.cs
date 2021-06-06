@@ -1,6 +1,6 @@
 using NodaTime;
 
-namespace TPP.Persistence.Models
+namespace TPP.Model
 {
     /// <summary>
     /// Raw log entry of an incoming message.

@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using TPP.Core.Moderation;
-using TPP.Persistence.Models;
+using TPP.Model;
 
 namespace TPP.Core.Chat
 {
