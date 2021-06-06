@@ -5,6 +5,13 @@
 #   cp tpp-dualcore.service ~/.config/systemd/user/
 #   systemctl --user daemon-reload
 #   systemctl --user enable tpp-dualcore
+#
+# For the service to stay alive even after the user logs out, lingering must be enabled for the user:
+#   sudo loginctl enable-linger USERNAME
+# To see the service's output using e.g. `journalctl --user --unit tpp-dualcore` persistent storage must be enabled.
+# You can do that by adding 'Storage=persistent' to journald.conf
+#   sudo nano /etc/systemd/journald.conf
+#   sudo systemctl restart systemd-journald
 
 [Unit]
 Description=TPP dualcore
