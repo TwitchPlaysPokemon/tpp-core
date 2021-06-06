@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.Serialization;
 
 namespace TPP.Model
@@ -60,5 +61,31 @@ namespace TPP.Model
         [EnumMember(Value = "pbr")] PokemonBattleRevolution,
         [EnumMember(Value = "ps2")] PokemonStadium2,
         [EnumMember(Value = "showdown")] PokemonShowdown,
+    }
+
+    [DataContract]
+    public enum Side
+    {
+        [EnumMember(Value = "blue")] Blue,
+        [EnumMember(Value = "red")] Red,
+    }
+
+    [DataContract]
+    public enum MatchResult
+    {
+        [EnumMember(Value = "blue")] Blue,
+        [EnumMember(Value = "red")] Red,
+        [EnumMember(Value = "draw")] Draw,
+    }
+
+    public static class MatchResultExtensions
+    {
+        public static Side? ToSide(this MatchResult matchResult) => matchResult switch
+        {
+            MatchResult.Blue => Side.Blue,
+            MatchResult.Red => Side.Red,
+            MatchResult.Draw => null,
+            _ => throw new ArgumentOutOfRangeException(nameof(matchResult), matchResult, null)
+        };
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using TPP.Model;
 
 namespace TPP.Match.Tests
 {
