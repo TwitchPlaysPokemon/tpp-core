@@ -41,7 +41,7 @@ namespace TPP.Match
         {
             _logger.LogInformation("Performing coinflip match...");
             await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken: token ?? CancellationToken.None);
-            return new MatchResult(Winner: Random.Next(2) == 0 ? Side.Blue : Side.Red);
+            return Random.Next(2) == 0 ? MatchResult.Blue : MatchResult.Red;
         }
     }
 }

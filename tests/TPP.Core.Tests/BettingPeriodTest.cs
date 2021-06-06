@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Moq;
 using NUnit.Framework;
 using TPP.Match;
+using TPP.Model;
 using TPP.Persistence;
 
 namespace TPP.Core.Tests
@@ -37,7 +38,7 @@ namespace TPP.Core.Tests
             IBettingPeriod<string> bettingPeriod = new BettingPeriod<string>(bankMock.Object, SetupTestBettingShop());
 
             Dictionary<string, long> changesBlueWon = await bettingPeriod
-                .Resolve(1234, new MatchResult(Side.Blue), CancellationToken.None);
+                .Resolve(1234, MatchResult.Blue, CancellationToken.None);
             Assert.That(changesBlueWon.Count, Is.EqualTo(2));
             Assert.That(changesBlueWon["userBlue"], Is.EqualTo(250));
             Assert.That(changesBlueWon["userRed"], Is.EqualTo(-250));
@@ -64,7 +65,7 @@ namespace TPP.Core.Tests
             IBettingPeriod<string> bettingPeriod = new BettingPeriod<string>(bankMock.Object, SetupTestBettingShop());
 
             Dictionary<string, long> changesRedWon = await bettingPeriod
-                .Resolve(1234, new MatchResult(Side.Red), CancellationToken.None);
+                .Resolve(1234, MatchResult.Red, CancellationToken.None);
             Assert.That(changesRedWon.Count, Is.EqualTo(2));
             Assert.That(changesRedWon["userBlue"], Is.EqualTo(-200));
             Assert.That(changesRedWon["userRed"], Is.EqualTo(200));
@@ -90,7 +91,7 @@ namespace TPP.Core.Tests
             IBettingPeriod<string> bettingPeriod = new BettingPeriod<string>(bankMock.Object, SetupTestBettingShop());
 
             Dictionary<string, long> changesDraw = await bettingPeriod
-                .Resolve(1234, new MatchResult(null), CancellationToken.None);
+                .Resolve(1234, MatchResult.Draw, CancellationToken.None);
             Assert.That(changesDraw.Count, Is.EqualTo(2));
             Assert.That(changesDraw["userBlue"], Is.EqualTo(0));
             Assert.That(changesDraw["userRed"], Is.EqualTo(0));

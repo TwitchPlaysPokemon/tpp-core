@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using TPP.ArgsParsing;
-using TPP.Match;
+using TPP.Model;
 
 namespace TPP.Core
 {
