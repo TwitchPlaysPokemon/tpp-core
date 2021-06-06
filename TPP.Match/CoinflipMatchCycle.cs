@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -13,15 +12,12 @@ namespace TPP.Match
     {
         public GameId GameId => GameId.Coinflip;
 
-        private static readonly Random Random = new Random();
+        private static readonly Random Random = new();
 
-        private static readonly IImmutableSet<Features.Capability> AllCapabilities =
-            Enum.GetValues(typeof(Features.Capability)).Cast<Features.Capability>().ToImmutableHashSet();
-
-        public Features.FeatureSet FeatureSet => new Features.FeatureSet(
+        public Features.FeatureSet FeatureSet => new(
             Generation: Features.Generation.Gen8,
             MaxTeamMembers: 3,
-            Capabilities: AllCapabilities
+            Capabilities: Enum.GetValues<Features.Capability>().ToImmutableHashSet()
         );
 
         private readonly ILogger<CoinflipMatchCycle> _logger;
