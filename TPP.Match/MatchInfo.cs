@@ -1,5 +1,5 @@
 using System.Collections.Immutable;
-using TPP.Common.PkmnModels;
+using TPP.Model;
 
 namespace TPP.Match
 {
