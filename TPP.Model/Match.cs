@@ -1,6 +1,6 @@
 using System.Runtime.Serialization;
 
-namespace TPP.Core.Overlay
+namespace TPP.Model
 {
     /// Describes under what circumstances switching is allowed.
     [DataContract]
