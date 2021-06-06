@@ -52,4 +52,13 @@ namespace TPP.Model
         // There's more, e.g. showdown multi-battles, but those aren't supported (yet).
     }
 
+    /// ID of the game played for a match
+    [DataContract]
+    public enum GameId
+    {
+        [EnumMember(Value = "coinflip")] Coinflip,
+        [EnumMember(Value = "pbr")] PokemonBattleRevolution,
+        [EnumMember(Value = "ps2")] PokemonStadium2,
+        [EnumMember(Value = "showdown")] PokemonShowdown,
+    }
 }

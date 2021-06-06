@@ -4,12 +4,15 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using TPP.Model;
 
 namespace TPP.Match
 {
     /// Match cycle for testing purposes that does not run an actual game.
     public class CoinflipMatchCycle : IMatchCycle
     {
+        public GameId GameId => GameId.Coinflip;
+
         private static readonly Random Random = new Random();
 
         private static readonly IImmutableSet<Features.Capability> AllCapabilities =
