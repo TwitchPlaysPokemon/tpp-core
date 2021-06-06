@@ -54,4 +54,9 @@ namespace TPP.Persistence.MongoDB.Serializers
         {
         }
     }
+
+    public class GameIdSerializer : EnumToStringUsingEnumMemberValue<GameId>
+    {
+        public static readonly GameIdSerializer Instance = new();
+    }
 }
