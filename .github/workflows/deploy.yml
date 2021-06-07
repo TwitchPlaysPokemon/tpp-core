@@ -28,5 +28,5 @@ jobs:
         run: |
           echo "$SSHPRIVKEY" > tpp.key
           chmod 600 tpp.key
-          scp -i tpp.key -o StrictHostKeyChecking=no -P ${SSHPORT} bin/Release/net5.0/linux-x64/publish/TPP.Core ${SSHUSER}@${SSHHOST}:core_update
-          ssh -i tpp.key -o StrictHostKeyChecking=no -p ${SSHPORT} ${SSHUSER}@${SSHHOST} 'mv core_update core && systemctl --user restart tpp-dualcore'
+          scp -q -i tpp.key -o StrictHostKeyChecking=no -P ${SSHPORT} bin/Release/net5.0/linux-x64/publish/TPP.Core ${SSHUSER}@${SSHHOST}:core_update
+          ssh -q -i tpp.key -o StrictHostKeyChecking=no -p ${SSHPORT} ${SSHUSER}@${SSHHOST} 'mv core_update core && systemctl --user restart tpp-dualcore'
