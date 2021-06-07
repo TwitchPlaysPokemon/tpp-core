@@ -111,7 +111,7 @@ namespace TPP.Core.Commands.Definitions
 
         private async Task<CommandResult> Polls(CommandContext context)
         {
-            IImmutableList<Poll> polls = await _pollRepo.FindPolls();
+            IImmutableList<Poll> polls = await _pollRepo.FindPolls(onlyActive: true);
             return new CommandResult
             {
                 Response = $"Currently active polls are: {string.Join(", ", polls.Select(p => p.PollCode))}. " +
