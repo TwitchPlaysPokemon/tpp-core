@@ -14,7 +14,7 @@ namespace TPP.Core.Modes
         private readonly StopToken _stopToken;
         private readonly ModeBase _modeBase;
         private readonly WebsocketBroadcastServer _broadcastServer;
-        private readonly DatabaseExclusivity _databaseExclusivity;
+        private readonly DatabaseLock _databaseLock;
 
         public DualcoreMode(ILoggerFactory loggerFactory, BaseConfig baseConfig)
         {
@@ -25,13 +25,13 @@ namespace TPP.Core.Modes
             (_broadcastServer, overlayConnection) = Setups.SetUpOverlayServer(loggerFactory,
                 baseConfig.OverlayWebsocketHost, baseConfig.OverlayWebsocketPort);
             _modeBase = new ModeBase(loggerFactory, repos, baseConfig, _stopToken, overlayConnection);
-            _databaseExclusivity = new DatabaseExclusivity(
-                loggerFactory.CreateLogger<DatabaseExclusivity>(), SystemClock.Instance, repos.KeyValueStore);
+            _databaseLock = new DatabaseLock(
+                loggerFactory.CreateLogger<DatabaseLock>(), SystemClock.Instance, repos.KeyValueStore);
         }
 
         public async Task Run()
         {
-            await using IAsyncDisposable exclusivityToken = await _databaseExclusivity.Acquire();
+            await using IAsyncDisposable dbLock = await _databaseLock.Acquire();
             _logger.LogInformation("Dualcore mode starting");
             _modeBase.Start();
             Task overlayWebsocketTask = _broadcastServer.Listen();
