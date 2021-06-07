@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using NodaTime;
 using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
 using TPP.Core.Overlay;
@@ -13,6 +14,7 @@ namespace TPP.Core.Modes
         private readonly StopToken _stopToken;
         private readonly ModeBase _modeBase;
         private readonly WebsocketBroadcastServer _broadcastServer;
+        private readonly DatabaseExclusivity _databaseExclusivity;
 
         public DualcoreMode(ILoggerFactory loggerFactory, BaseConfig baseConfig)
         {
@@ -23,10 +25,13 @@ namespace TPP.Core.Modes
             (_broadcastServer, overlayConnection) = Setups.SetUpOverlayServer(loggerFactory,
                 baseConfig.OverlayWebsocketHost, baseConfig.OverlayWebsocketPort);
             _modeBase = new ModeBase(loggerFactory, repos, baseConfig, _stopToken, overlayConnection);
+            _databaseExclusivity = new DatabaseExclusivity(
+                loggerFactory.CreateLogger<DatabaseExclusivity>(), SystemClock.Instance, repos.KeyValueStore);
         }
 
         public async Task Run()
         {
+            await using IAsyncDisposable exclusivityToken = await _databaseExclusivity.Acquire();
             _logger.LogInformation("Dualcore mode starting");
             _modeBase.Start();
             Task overlayWebsocketTask = _broadcastServer.Listen();

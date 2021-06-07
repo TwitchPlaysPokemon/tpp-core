@@ -109,7 +109,8 @@ namespace TPP.Core
             ILinkedAccountRepo LinkedAccountRepo,
             ISubscriptionLogRepo SubscriptionLogRepo,
             IModLogRepo ModLogRepo,
-            IResponseCommandRepo ResponseCommandRepo
+            IResponseCommandRepo ResponseCommandRepo,
+            KeyValueStore KeyValueStore
         );
 
         public static Databases SetUpRepositories(ILogger logger, BaseConfig baseConfig)
@@ -157,7 +158,8 @@ namespace TPP.Core
                 LinkedAccountRepo: new LinkedAccountRepo(mongoDatabase, userRepo.Collection),
                 SubscriptionLogRepo: new SubscriptionLogRepo(mongoDatabase),
                 ModLogRepo: new ModLogRepo(mongoDatabase),
-                ResponseCommandRepo: new ResponseCommandRepo(mongoDatabase)
+                ResponseCommandRepo: new ResponseCommandRepo(mongoDatabase),
+                KeyValueStore: new KeyValueStore(mongoDatabase)
             );
         }
 
