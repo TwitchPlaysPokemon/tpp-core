@@ -129,8 +129,10 @@ namespace TPP.Persistence.MongoDB.Repos
         public async Task<Poll?> FindPoll(string pollCode) =>
             await Collection.Find(p => p.PollCode == pollCode).FirstOrDefaultAsync();
 
-        public async Task<IImmutableList<Poll>> FindPolls() =>
-            (await Collection.Find(FilterDefinition<Poll>.Empty).ToListAsync()).ToImmutableList();
+        public async Task<IImmutableList<Poll>> FindPolls(bool onlyActive) =>
+            (await Collection
+                .Find(onlyActive ? Builders<Poll>.Filter.Eq(p => p.Alive, true) : FilterDefinition<Poll>.Empty)
+                .ToListAsync()).ToImmutableList();
 
         public async Task<bool?> SetAlive(string id, bool alive)
         {
