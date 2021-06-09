@@ -128,5 +128,36 @@ namespace TPP.Core.Tests.Moderation
                     "♫ └༼ຈل͜ຈ༽┐♫ O E A E A U I E O E A ♫ └༼ຈل͜ຈ༽┐ ♫")));
             }
         }
+
+        [TestFixture]
+        private class NewUserLink
+        {
+            [Test]
+            public void detects_links_of_new_user()
+            {
+                Mock<IClock> clockMock = new();
+                NewUserLinkRule rule = new(clockMock.Object);
+                Message message = TextMessage("check this out https://i.imgur.com/ZinpOzD.png OhMyDog");
+                Duration age = Duration.FromHours(2);
+                clockMock.Setup(c => c.GetCurrentInstant()).Returns(message.User.FirstActiveAt + age);
+
+                RuleResult result = rule.Check(message);
+                Assert.That(result, Is.InstanceOf<RuleResult.Timeout>());
+                Assert.That(((RuleResult.Timeout)result).Message,
+                    Is.EqualTo("account too new to TPP for posting links"));
+            }
+
+            [Test]
+            public void tolerates_links_of_well_known_user()
+            {
+                Mock<IClock> clockMock = new();
+                NewUserLinkRule rule = new(clockMock.Object);
+                Message message = TextMessage("check this out https://i.imgur.com/ZinpOzD.png OhMyDog");
+                Duration age = Duration.FromDays(50);
+                clockMock.Setup(c => c.GetCurrentInstant()).Returns(message.User.FirstActiveAt + age);
+
+                Assert.That(rule.Check(message), Is.InstanceOf<RuleResult.Nothing>());
+            }
+        }
     }
 }

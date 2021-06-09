@@ -82,7 +82,7 @@ namespace TPP.Core.Modes
 
             IImmutableList<IModerationRule> availableRules = ImmutableList.Create<IModerationRule>(
                 new BannedUrlsRule(),
-                new SpambotRule(),
+                new NewUserLinkRule(_clock),
                 new EmoteRule(),
                 new CopypastaRule(clock),
                 new UnicodeCharacterCategoryRule()

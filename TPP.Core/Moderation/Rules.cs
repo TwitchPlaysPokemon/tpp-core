@@ -26,21 +26,26 @@ namespace TPP.Core.Moderation
                 : new RuleResult.Nothing();
     }
 
-    /// If a person has never interacted with the stream, and their very first message contains an URL,
-    /// it likely is a spambot. Don't ban as that's not worth the false positives, just delete the message.
-    public class SpambotRule : IModerationRule
+    /// Fairly new users are not allowed to post links in chat.
+    /// This is mostly effective against spambots.
+    public class NewUserLinkRule : IModerationRule
     {
-        public string Id => "anti-spambot";
+        public string Id => "new-user-link";
         private static readonly Regex UrllikeRegex =
             new(@"(?:^|\s)((?:\w+://)?(?:[a-zA-Z-]+\.)+[a-zA-Z-]{2,}(?:/[\w._-]+)*)/?(?:\s|$)");
 
+        private static readonly Duration MinAgeForLinkPosting = Duration.FromHours(48);
+
+        private readonly IClock _clock;
+
+        public NewUserLinkRule(IClock clock) => _clock = clock;
+
         public RuleResult Check(Message message)
         {
-            bool isFirstMessage = message.User.LastMessageAt == null ||
-                                  message.User.LastMessageAt == message.User.FirstActiveAt;
-            return isFirstMessage && UrllikeRegex.IsMatch(message.MessageText)
-                ? new RuleResult.DeleteMessage()
-                : new RuleResult.Nothing();
+            Duration knownFor = _clock.GetCurrentInstant() - message.User.FirstActiveAt;
+            if (knownFor < MinAgeForLinkPosting && UrllikeRegex.IsMatch(message.MessageText))
+                return new RuleResult.Timeout("account too new to TPP for posting links");
+            return new RuleResult.Nothing();
         }
     }
 
