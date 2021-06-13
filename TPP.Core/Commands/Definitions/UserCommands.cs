@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using TPP.ArgsParsing.Types;
@@ -70,10 +71,12 @@ namespace TPP.Core.Commands.Definitions
             },
             new Command("showroles", ShowRoles)
             {
-                Aliases = new[] {"roles"},
+                Aliases = new[] { "roles" },
                 Description = "Show which roles a user has. " +
                               "Arguments: <user>"
             },
+            new Command("operators", Ops) { Aliases = new[] { "ops" }, Description = "Alias for '!list operator'" },
+            new Command("moderators", Mods) { Aliases = new[] { "mods" }, Description = "Alias for '!list moderator'" },
         };
 
         private readonly IUserRepo _userRepo;
@@ -279,6 +282,7 @@ namespace TPP.Core.Commands.Definitions
                     : $"There are no users with the '{role.ToString()}' role."
             };
         }
+
         public async Task<CommandResult> ShowRoles(CommandContext context)
         {
             User user = await context.ParseArgs<User>();
@@ -290,5 +294,11 @@ namespace TPP.Core.Commands.Definitions
                     : $"{user.Name} has no roles"
             };
         }
+
+        private Task<CommandResult> Ops(CommandContext context) =>
+            List(new CommandContext(context.Message, ImmutableList.Create("operator"), context.ArgsParser));
+
+        private Task<CommandResult> Mods(CommandContext context) =>
+            List(new CommandContext(context.Message, ImmutableList.Create("moderator"), context.ArgsParser));
     }
 }
