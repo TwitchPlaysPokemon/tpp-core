@@ -164,10 +164,6 @@ namespace TPP.Core.Commands.Definitions
             ["seesubmonths"] = "Show total number of months subbed. Arguments: <username>",
 
             // generic information
-            ["operators"] = "Respond with a list of the current operators.",
-            ["ops"] = "Respond with a list of the current operators.",
-            ["moderators"] = "Respond with a list of the current moderators.",
-            ["mods"] = "Respond with a list of the current moderators.",
             ["getavataruser"] = "See the owners of avatars used in matches. Arguments: Nothing for current match or one of: <datetime of match> (format: YYYY-MM-DD HH:MM), <match ID>",
             ["getavatarusers"] = "See the owners of avatars used in matches. Arguments: Nothing for current match or one of: <datetime of match> (format: YYYY-MM-DD HH:MM), <match ID>",
             ["modes"] = "Provide info on match modes.  Type `!mode <mode name>` for info on a specific mode, or `!modes all` to see all available modes.",
