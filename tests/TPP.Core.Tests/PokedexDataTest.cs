@@ -68,6 +68,7 @@ namespace TPP.Core.Tests
                 Assert.That(PokedexData.NormalizeName("Mr.-Mime"), Is.EqualTo("Mr. Mime"));
                 Assert.That(PokedexData.NormalizeName("Mr.-Rime"), Is.EqualTo("Mr. Rime"));
                 Assert.That(PokedexData.NormalizeName("Mime-Jr."), Is.EqualTo("Mime Jr."));
+                Assert.That(PokedexData.NormalizeName("Mime.Jr"), Is.EqualTo("Mime Jr."));
                 Assert.That(PokedexData.NormalizeName("Type:-Null"), Is.EqualTo("Type: Null"));
                 Assert.That(PokedexData.NormalizeName("Tapu-Koko"), Is.EqualTo("Tapu Koko"));
                 Assert.That(PokedexData.NormalizeName("Tapu-Lele"), Is.EqualTo("Tapu Lele"));

@@ -27,7 +27,7 @@ namespace TPP.Core
             (@"Farfetch'?d",     "Farfetch'd"),
             (@"Mr\.?[ -]?Mime",  "Mr. Mime"),
             (@"Ho-?Oh",          "Ho-Oh"),
-            (@"Mime[ -]?Jr\.?",  "Mime Jr."),
+            (@"Mime[. -]?Jr\.?",  "Mime Jr."),
             (@"Porygon[ -]?Z",   "Porygon-Z"),
             (@"Flab[ée]b[ée]",   "Flabébé"),
             (@"Type:?[ -]?Null", "Type: Null"),
