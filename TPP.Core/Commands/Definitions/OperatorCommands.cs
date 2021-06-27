@@ -72,13 +72,11 @@ namespace TPP.Core.Commands.Definitions
             new Command("addrole", AddRole)
             {
                 Aliases = new[] { "giverole" },
-                Description = "Give a user a role." +
-                              "Arguments: <user> <role>"
+                Description = "Give a user a role. Arguments: <user> <role>"
             },
             new Command("removerole", RemoveRole)
             {
-                Description = "Remove a role from a user." +
-                              "Arguments: <user> <role>"
+                Description = "Remove a role from a user. Arguments: <user> <role>"
             },
         }.Select(cmd => cmd
             .WithCondition(
