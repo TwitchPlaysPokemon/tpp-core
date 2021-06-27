@@ -8,9 +8,6 @@ namespace TPP.Core.Commands.Definitions
     {
         public IEnumerable<Command> Commands => new[]
         {
-            new Command("discord", StaticResponse("https://discord.gg/twitchplayspokemon"))
-                {Description = "Respond with the discord server."},
-
             new Command("reddit", StaticResponse("https://reddit.com/r/twitchplayspokemon"))
                 {Description = "Respond with the subreddit."},
 
