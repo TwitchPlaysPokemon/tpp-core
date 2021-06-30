@@ -16,16 +16,35 @@ using TPP.Persistence.MongoDB.Serializers;
 
 namespace TPP.Persistence.MongoDB.Repos
 {
-    public class BadgeRepo : IBadgeRepo
+    public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo
     {
         private const string CollectionName = "badges";
+        private const string CollectionNameStats = "badgestats";
 
         public readonly IMongoCollection<Badge> Collection;
+        public readonly IMongoCollection<BadgeStat> CollectionStats;
         private readonly IMongoBadgeLogRepo _badgeLogRepo;
         private readonly IClock _clock;
 
+        /// Instant at which some update was deployed that is expected to majorly disrupt badge rarities,
+        /// e.g. if a whole new generation was added to pinball.
+        private readonly Instant _lastRarityUpdate;
+
+        /// Minimum amount of time that must pass before a badge that was created before the last rarity update
+        /// gets ignored for rarity calculations. This is necessary to have a smooth rarity transition period.
+        private readonly Duration _rarityCalculationTransition;
+
+        private readonly Instant _whenGen2WasAddedToPinball = Instant.FromUtc(2018, 3, 28, 12, 00);
+
+        /// Ratio at which badges from all sources are included in the rarity calculation,
+        /// as opposed to only badges from "natural" generation sources (pinball).
+        /// Because the rarity value is used to determine transmutation results, but transmuting directly changes
+        /// how many of a species' badges exist, this is a relatively small percentage to dampen the feedback loop.
+        private const double CountExistingFactor = 0.2;
+
         static BadgeRepo()
         {
+            Debug.Assert(CountExistingFactor >= 0 && CountExistingFactor <= 1, "factor must be a ratio");
             BsonClassMap.RegisterClassMap<Badge>(cm =>
             {
                 cm.MapIdProperty(b => b.Id)
@@ -40,14 +59,32 @@ namespace TPP.Persistence.MongoDB.Repos
                 cm.MapProperty(b => b.SellingSince).SetElementName("selling_since")
                     .SetIgnoreIfNull(true);
             });
+            BsonClassMap.RegisterClassMap<BadgeStat>(cm =>
+            {
+                cm.MapIdProperty(b => b.Species)
+                    .SetSerializer(PkmnSpeciesSerializer.Instance);
+                cm.MapProperty(b => b.Count).SetElementName("count");
+                cm.MapProperty(b => b.CountGenerated).SetElementName("count_generated");
+                cm.MapProperty(b => b.RarityCount).SetElementName("rarity_count");
+                cm.MapProperty(b => b.RarityCountGenerated).SetElementName("rarity_count_generated");
+                cm.MapProperty(b => b.Rarity).SetElementName("rarity");
+            });
         }
 
-        public BadgeRepo(IMongoDatabase database, IMongoBadgeLogRepo badgeLogRepo, IClock clock)
+        public BadgeRepo(
+            IMongoDatabase database,
+            IMongoBadgeLogRepo badgeLogRepo,
+            IClock clock,
+            Instant? lastRarityUpdate = null,
+            Duration? rarityCalculationTransition = null)
         {
             database.CreateCollectionIfNotExists(CollectionName).Wait();
             Collection = database.GetCollection<Badge>(CollectionName);
+            CollectionStats = database.GetCollection<BadgeStat>(CollectionNameStats);
             _badgeLogRepo = badgeLogRepo;
             _clock = clock;
+            _lastRarityUpdate = lastRarityUpdate ?? _whenGen2WasAddedToPinball;
+            _rarityCalculationTransition = rarityCalculationTransition ?? Duration.FromDays(90);
             InitIndexes();
         }
 
@@ -74,6 +111,7 @@ namespace TPP.Persistence.MongoDB.Repos
             );
             await Collection.InsertOneAsync(badge);
             Debug.Assert(badge.Id.Length > 0, "The MongoDB driver injected a generated ID");
+            await RenewBadgeStats(onlyTheseSpecies: ImmutableHashSet.Create(species));
             return badge;
         }
 
@@ -147,6 +185,7 @@ namespace TPP.Persistence.MongoDB.Repos
                     return (object?)null;
                 });
             }
+            await RenewBadgeStats(onlyTheseSpecies: badges.Select(b => b.Species).ToImmutableHashSet());
 
             foreach (var tpl in badges.Select(b => (b.UserId, b.Species)).Distinct())
             {
@@ -156,5 +195,62 @@ namespace TPP.Persistence.MongoDB.Repos
             }
             return updatedBadges.ToImmutableList();
         }
+
+        public async Task RenewBadgeStats(IImmutableSet<PkmnSpecies>? onlyTheseSpecies = null)
+        {
+            Instant now = _clock.GetCurrentInstant();
+            Instant startTime = Instant.Min(_lastRarityUpdate, now - _rarityCalculationTransition);
+
+            IAggregateFluent<Badge> pipeline = Collection.Aggregate();
+            if (onlyTheseSpecies != null)
+                pipeline = pipeline.Match(stat => onlyTheseSpecies.Contains(stat.Species));
+            var stats = await pipeline
+                .Group(b => b.Species, group => new
+                {
+                    Species = group.Key,
+                    Count = group.Count(b => b.UserId != null),
+                    // TODO workaround for https://jira.mongodb.org/browse/CSHARP-3449 - remove Equals() with == once that bug is fixed
+                    CountGenerated = group.Count(b => b.Source.Equals("pinball")),
+                    RarityCount = group.Count(b => b.UserId != null && b.CreatedAt >= startTime),
+                    RarityCountGenerated =
+                        // TODO workaround for https://jira.mongodb.org/browse/CSHARP-3449 - remove Equals() with == once that bug is fixed
+                        group.Count(b => b.Source.Equals("pinball") && b.CreatedAt >= startTime),
+                })
+                .SortBy(stat => stat.Species)
+                .ToListAsync();
+
+            long totalGenerated = await Collection.CountDocumentsAsync(b =>
+                b.Source == Badge.BadgeSource.Pinball && b.CreatedAt >= startTime);
+            long totalExisting = await Collection.CountDocumentsAsync(b =>
+                b.UserId != null && b.CreatedAt >= startTime);
+
+            if (stats.Count == 0) return;
+            await CollectionStats.BulkWriteAsync(stats.Select(stat =>
+                {
+                    double rarityGenerated = stat.RarityCountGenerated / (double)totalGenerated;
+                    double rarityExisting = stat.RarityCount / (double)totalExisting;
+                    double rarity = rarityGenerated * (1 - CountExistingFactor) + rarityExisting * CountExistingFactor;
+                    BadgeStat statEntity = new(
+                        Species: stat.Species,
+                        Count: stat.Count,
+                        CountGenerated: stat.CountGenerated,
+                        RarityCount: stat.RarityCount,
+                        RarityCountGenerated: stat.RarityCountGenerated,
+                        Rarity: rarity);
+                    return new ReplaceOneModel<BadgeStat>(
+                        Builders<BadgeStat>.Filter.Where(b => b.Species == stat.Species),
+                        statEntity)
+                    {
+                        IsUpsert = true
+                    };
+                }),
+                new BulkWriteOptions { IsOrdered = false });
+        }
+
+        public async Task<ImmutableSortedDictionary<PkmnSpecies, BadgeStat>> GetBadgeStats() =>
+            (await CollectionStats
+                .Find(FilterDefinition<BadgeStat>.Empty)
+                .ToListAsync())
+            .ToImmutableSortedDictionary(stat => stat.Species, stat => stat);
     }
 }
