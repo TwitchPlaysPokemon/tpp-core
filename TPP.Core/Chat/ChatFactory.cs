@@ -3,8 +3,8 @@ using Microsoft.Extensions.Logging;
 using NodaTime;
 using TPP.Core.Configuration;
 using TPP.Core.Overlay;
-using TPP.Persistence.Models;
-using TPP.Persistence.Repos;
+using TPP.Model;
+using TPP.Persistence;
 
 namespace TPP.Core.Chat
 {

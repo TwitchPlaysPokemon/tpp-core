@@ -12,8 +12,8 @@ using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
 using TPP.Core.Moderation;
 using TPP.Core.Overlay;
-using TPP.Persistence.Models;
-using TPP.Persistence.Repos;
+using TPP.Model;
+using TPP.Persistence;
 using static TPP.Core.EventUtils;
 
 namespace TPP.Core.Modes

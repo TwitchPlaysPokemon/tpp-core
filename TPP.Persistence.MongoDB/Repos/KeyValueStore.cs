@@ -1,7 +1,6 @@
 using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using TPP.Persistence.Repos;
 
 namespace TPP.Persistence.MongoDB.Repos
 {

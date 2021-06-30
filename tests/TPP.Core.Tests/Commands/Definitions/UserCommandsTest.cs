@@ -12,8 +12,8 @@ using TPP.ArgsParsing.TypeParsers;
 using TPP.Core.Chat;
 using TPP.Core.Commands;
 using TPP.Core.Commands.Definitions;
-using TPP.Persistence.Models;
-using TPP.Persistence.Repos;
+using TPP.Model;
+using TPP.Persistence;
 
 namespace TPP.Core.Tests.Commands.Definitions
 {

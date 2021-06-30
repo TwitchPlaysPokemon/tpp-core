@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using MongoDB.Driver;
 using NodaTime;
 using NUnit.Framework;
-using TPP.Persistence.Models;
+using TPP.Model;
 using TPP.Persistence.MongoDB.Repos;
 
 namespace TPP.Persistence.MongoDB.Tests.Repos

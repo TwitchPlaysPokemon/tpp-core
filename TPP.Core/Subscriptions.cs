@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
 using TPP.Common;
-using TPP.Persistence.Models;
-using TPP.Persistence.Repos;
+using TPP.Model;
+using TPP.Persistence;
 
 namespace TPP.Core
 {
@@ -156,13 +156,13 @@ namespace TPP.Core
                 .Sum();
             int oldLoyaltyLeague = user.LoyaltyLeague;
 
-            SubscriptionLog subscriptionLog = await _subscriptionLogRepo.LogSubscription(
+            await _subscriptionLogRepo.LogSubscription(
                 user.Id, subscriptionInfo.SubscriptionAt,
                 subscriptionInfo.StreakMonths, user.MonthsSubscribed, subscriptionInfo.NumMonths, monthsDifference,
                 oldLoyaltyLeague, newLoyaltyLeague, loyaltyCompletions, tokens,
                 subscriptionInfo.Message, subscriptionInfo.Tier, subscriptionInfo.PlanName);
 
-            TransactionLog transactionLog = await _tokenBank.PerformTransaction(new Transaction<User>(
+            await _tokenBank.PerformTransaction(new Transaction<User>(
                 user, tokens, TransactionType.Subscription, new Dictionary<string, object?>
                 {
                     ["previous_months_subscribed"] = user.MonthsSubscribed,
@@ -173,6 +173,7 @@ namespace TPP.Core
                     ["loyalty_completions"] = loyaltyCompletions
                 }));
             user = await _userRepo.SetIsSubscribed(user, true);
+            // ReSharper disable once RedundantAssignment : overwrite reference to keep usage of stale data impossible
             user = await _userRepo.SetSubscriptionInfo(
                 user, subscriptionInfo.NumMonths, subscriptionInfo.Tier, newLoyaltyLeague,
                 subscriptionInfo.SubscriptionAt);
@@ -202,7 +203,7 @@ namespace TPP.Core
 
             const int tokensPerRank = 10;
             int rewardTokens = subscriptionGiftInfo.NumGiftedMonths * subscriptionInfo.Tier.ToRank() * tokensPerRank;
-            TransactionLog transactionLog = await _tokenBank.PerformTransaction(new Transaction<User>(
+            await _tokenBank.PerformTransaction(new Transaction<User>(
                 subscriptionGiftInfo.Gifter,
                 rewardTokens,
                 TransactionType.SubscriptionGift

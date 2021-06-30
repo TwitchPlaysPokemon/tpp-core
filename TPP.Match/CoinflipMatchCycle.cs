@@ -1,24 +1,23 @@
 using System;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using TPP.Model;
 
 namespace TPP.Match
 {
     /// Match cycle for testing purposes that does not run an actual game.
     public class CoinflipMatchCycle : IMatchCycle
     {
-        private static readonly Random Random = new Random();
+        public GameId GameId => GameId.Coinflip;
 
-        private static readonly IImmutableSet<Features.Capability> AllCapabilities =
-            Enum.GetValues(typeof(Features.Capability)).Cast<Features.Capability>().ToImmutableHashSet();
+        private static readonly Random Random = new();
 
-        public Features.FeatureSet FeatureSet => new Features.FeatureSet(
+        public Features.FeatureSet FeatureSet => new(
             Generation: Features.Generation.Gen8,
             MaxTeamMembers: 3,
-            Capabilities: AllCapabilities
+            Capabilities: Enum.GetValues<Features.Capability>().ToImmutableHashSet()
         );
 
         private readonly ILogger<CoinflipMatchCycle> _logger;
@@ -38,7 +37,7 @@ namespace TPP.Match
         {
             _logger.LogInformation("Performing coinflip match...");
             await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken: token ?? CancellationToken.None);
-            return new MatchResult(Winner: Random.Next(2) == 0 ? Side.Blue : Side.Red);
+            return Random.Next(2) == 0 ? MatchResult.Blue : MatchResult.Red;
         }
     }
 }

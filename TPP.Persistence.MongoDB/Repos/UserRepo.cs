@@ -7,8 +7,7 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using NodaTime;
 using TPP.Common;
-using TPP.Persistence.Models;
-using TPP.Persistence.Repos;
+using TPP.Model;
 
 namespace TPP.Persistence.MongoDB.Repos
 {
@@ -68,7 +67,7 @@ namespace TPP.Persistence.MongoDB.Repos
             Collection = database.GetCollection<User>(CollectionName);
             _startingPokeyen = startingPokeyen;
             _startingTokens = startingTokens;
-            _defaultOperators = defaultOperators.ToImmutableHashSet<string>();
+            _defaultOperators = defaultOperators.ToImmutableHashSet();
             InitIndexes();
 
             foreach (string name in _defaultOperators)
@@ -137,7 +136,7 @@ namespace TPP.Persistence.MongoDB.Repos
                 color: userInfo.Color?.StringWithoutHash,
                 firstActiveAt: userInfo.UpdatedAt,
                 lastActiveAt: userInfo.UpdatedAt,
-                lastMessageAt: userInfo.FromMessage ? userInfo.UpdatedAt : (Instant?)null,
+                lastMessageAt: userInfo.FromMessage ? userInfo.UpdatedAt : null,
                 pokeyen: _startingPokeyen,
                 tokens: _startingTokens,
                 roles: _defaultOperators.Contains(userInfo.SimpleName) ? new HashSet<Role> { Role.Operator } : null

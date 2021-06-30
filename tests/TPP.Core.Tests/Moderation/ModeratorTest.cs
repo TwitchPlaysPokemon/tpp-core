@@ -7,8 +7,8 @@ using Moq;
 using NodaTime;
 using NUnit.Framework;
 using TPP.Core.Moderation;
-using TPP.Persistence.Models;
-using TPP.Persistence.Repos;
+using TPP.Model;
+using TPP.Persistence;
 
 namespace TPP.Core.Tests.Moderation
 {

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using TPP.ArgsParsing;
-using TPP.Persistence.Repos;
+using TPP.Persistence;
 
 namespace TPP.Core.Commands
 {

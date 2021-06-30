@@ -1,10 +1,14 @@
 using System.Threading;
 using System.Threading.Tasks;
+using TPP.Model;
 
 namespace TPP.Match
 {
     public interface IMatchCycle
     {
+        /// ID of the game this match cycle is playing
+        public GameId GameId { get; }
+
         /// information on what features the match implementation supports
         public Features.FeatureSet FeatureSet { get; }
 

@@ -9,8 +9,8 @@ using Moq;
 using NodaTime;
 using NUnit.Framework;
 using TPP.Common;
-using TPP.Persistence.Models;
-using TPP.Persistence.Repos;
+using TPP.Model;
+using TPP.Persistence;
 
 namespace TPP.Core.Tests
 {

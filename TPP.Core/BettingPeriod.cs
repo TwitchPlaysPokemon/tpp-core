@@ -5,7 +5,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TPP.Match;
-using TPP.Persistence.Repos;
+using TPP.Model;
+using TPP.Persistence;
 
 namespace TPP.Core
 {
@@ -62,14 +63,14 @@ namespace TPP.Core
             IImmutableDictionary<Side, double> odds = BettingShop.GetOdds();
 
             Dictionary<T, long> changes = new();
-            if (result.Winner == null)
+            if (result == MatchResult.Draw)
             {
                 foreach (T user in bets[Side.Blue].Keys.Union(bets[Side.Red].Keys))
                     changes[user] = 0;
             }
             else
             {
-                Side winner = result.Winner.Value;
+                Side winner = result.ToSide()!.Value;
                 Side loser = winner == Side.Blue ? Side.Red : Side.Blue;
                 foreach ((T user, long bet) in bets[winner])
                     changes[user] = Math.Max(1, (int)Math.Ceiling(bet * odds[winner]));
