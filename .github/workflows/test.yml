@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         dotnet-sdk-version:
-          - 5.0.102 # currently running on stream
+          - 5.0.300 # currently running on stream
           - 5.0.x
 
     steps:
