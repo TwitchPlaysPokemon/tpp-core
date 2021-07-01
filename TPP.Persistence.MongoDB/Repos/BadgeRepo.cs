@@ -41,6 +41,8 @@ namespace TPP.Persistence.MongoDB.Repos
                     .SetIgnoreIfNull(true);
                 cm.MapProperty(b => b.SellingSince).SetElementName("selling_since")
                     .SetIgnoreIfNull(true);
+                cm.MapProperty(b => b.Shiny).SetElementName("shiny")
+                    .SetDefaultValue(false);
             });
         }
 
@@ -65,7 +67,7 @@ namespace TPP.Persistence.MongoDB.Repos
         }
 
         public async Task<Badge> AddBadge(
-            string? userId, PkmnSpecies species, Badge.BadgeSource source, int form, Instant? createdAt = null)
+            string? userId, PkmnSpecies species, Badge.BadgeSource source, int form, bool shiny, Instant? createdAt = null)
         {
             var badge = new Badge(
                 id: string.Empty,
@@ -73,7 +75,8 @@ namespace TPP.Persistence.MongoDB.Repos
                 species: species,
                 source: source,
                 createdAt: createdAt ?? _clock.GetCurrentInstant(),
-                form: form
+                form: form,
+                shiny: shiny
             );
             await Collection.InsertOneAsync(badge);
             Debug.Assert(badge.Id.Length > 0, "The MongoDB driver injected a generated ID");

@@ -38,7 +38,7 @@ namespace TPP.Persistence.Repos
     public interface IBadgeRepo
     {
         public Task<Badge> AddBadge(
-            string? userId, PkmnSpecies species, Badge.BadgeSource source, int form, Instant? createdAt = null);
+            string? userId, PkmnSpecies species, Badge.BadgeSource source, int form, bool shiny, Instant? createdAt = null);
         public Task<List<Badge>> FindByUser(string? userId);
         public Task<List<Badge>> FindByUserAndSpecies(string? userId, PkmnSpecies species);
         public Task<List<Badge>> FindAllByCustom(string? userId = null, PkmnSpecies? species = null, int? form = null, Badge.BadgeSource? source = null);

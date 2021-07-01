@@ -24,7 +24,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
         {
             BadgeRepo badgeRepo = CreateBadgeRepo();
             // when
-            Badge badge = await badgeRepo.AddBadge(null, PkmnSpecies.OfId("16"), Badge.BadgeSource.ManualCreation, 0);
+            Badge badge = await badgeRepo.AddBadge(null, PkmnSpecies.OfId("16"), Badge.BadgeSource.ManualCreation, 0, false);
 
             // then
             Assert.AreNotEqual(string.Empty, badge.Id);
@@ -43,7 +43,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             IBadgeRepo badgeRepo = new BadgeRepo(
                 CreateTemporaryDatabase(), Mock.Of<IMongoBadgeLogRepo>(), clockMock.Object);
 
-            Badge badge = await badgeRepo.AddBadge(null, PkmnSpecies.OfId("16"), Badge.BadgeSource.ManualCreation, 0);
+            Badge badge = await badgeRepo.AddBadge(null, PkmnSpecies.OfId("16"), Badge.BadgeSource.ManualCreation, 0, false);
             Assert.AreEqual(createdAt, badge.CreatedAt);
         }
 
@@ -57,7 +57,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             BadgeRepo badgeRepo = CreateBadgeRepo();
             // when
             PkmnSpecies randomSpecies = PkmnSpecies.OfId("9001");
-            Badge badge = await badgeRepo.AddBadge(null, randomSpecies, Badge.BadgeSource.RunCaught, 0);
+            Badge badge = await badgeRepo.AddBadge(null, randomSpecies, Badge.BadgeSource.RunCaught, 0, false);
 
             // then
             IMongoCollection<BsonDocument> badgesCollectionBson =
@@ -74,10 +74,10 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
         {
             IBadgeRepo badgeRepo = CreateBadgeRepo();
             // given
-            Badge badgeUserA1 = await badgeRepo.AddBadge("userA", PkmnSpecies.OfId("1"), Badge.BadgeSource.Pinball, 0);
-            Badge badgeUserA2 = await badgeRepo.AddBadge("userA", PkmnSpecies.OfId("2"), Badge.BadgeSource.Pinball, 0);
-            Badge badgeUserB = await badgeRepo.AddBadge("userB", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball, 0);
-            Badge badgeNobody = await badgeRepo.AddBadge(null, PkmnSpecies.OfId("4"), Badge.BadgeSource.Pinball, 0);
+            Badge badgeUserA1 = await badgeRepo.AddBadge("userA", PkmnSpecies.OfId("1"), Badge.BadgeSource.Pinball, 0, false);
+            Badge badgeUserA2 = await badgeRepo.AddBadge("userA", PkmnSpecies.OfId("2"), Badge.BadgeSource.Pinball, 0, false);
+            Badge badgeUserB = await badgeRepo.AddBadge("userB", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball, 0, false);
+            Badge badgeNobody = await badgeRepo.AddBadge(null, PkmnSpecies.OfId("4"), Badge.BadgeSource.Pinball, 0, false);
 
             // when
             List<Badge> resultUserA = await badgeRepo.FindByUser("userA");
@@ -95,13 +95,13 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
         {
             IBadgeRepo badgeRepo = CreateBadgeRepo();
             // given
-            await badgeRepo.AddBadge("user", PkmnSpecies.OfId("2"), Badge.BadgeSource.Pinball, 0);
-            await badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball, 0);
-            await badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball, 0);
-            await badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball, 0);
-            await badgeRepo.AddBadge("userOther", PkmnSpecies.OfId("1"), Badge.BadgeSource.Pinball, 0);
-            await badgeRepo.AddBadge("userOther", PkmnSpecies.OfId("2"), Badge.BadgeSource.Pinball, 0);
-            await badgeRepo.AddBadge("userOther", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball, 0);
+            await badgeRepo.AddBadge("user", PkmnSpecies.OfId("2"), Badge.BadgeSource.Pinball, 0, false);
+            await badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball, 0, false);
+            await badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball, 0, false);
+            await badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball, 0, false);
+            await badgeRepo.AddBadge("userOther", PkmnSpecies.OfId("1"), Badge.BadgeSource.Pinball, 0, false);
+            await badgeRepo.AddBadge("userOther", PkmnSpecies.OfId("2"), Badge.BadgeSource.Pinball, 0, false);
+            await badgeRepo.AddBadge("userOther", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball, 0, false);
 
             // when
             long countHasNone = await badgeRepo.CountByUserAndSpecies("user", PkmnSpecies.OfId("1"));
@@ -119,13 +119,13 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
         {
             IBadgeRepo badgeRepo = CreateBadgeRepo();
             // given
-            await badgeRepo.AddBadge("user", PkmnSpecies.OfId("2"), Badge.BadgeSource.Pinball, 0);
-            await badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball, 0);
-            await badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball, 0);
-            await badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball, 0);
-            await badgeRepo.AddBadge("userOther", PkmnSpecies.OfId("1"), Badge.BadgeSource.Pinball, 0);
-            await badgeRepo.AddBadge("userOther", PkmnSpecies.OfId("2"), Badge.BadgeSource.Pinball, 0);
-            await badgeRepo.AddBadge("userOther", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball, 0);
+            await badgeRepo.AddBadge("user", PkmnSpecies.OfId("2"), Badge.BadgeSource.Pinball, 0, false);
+            await badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball, 0, false);
+            await badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball, 0, false);
+            await badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball, 0, false);
+            await badgeRepo.AddBadge("userOther", PkmnSpecies.OfId("1"), Badge.BadgeSource.Pinball, 0, false);
+            await badgeRepo.AddBadge("userOther", PkmnSpecies.OfId("2"), Badge.BadgeSource.Pinball, 0, false);
+            await badgeRepo.AddBadge("userOther", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball, 0, false);
 
             // when
             ImmutableSortedDictionary<PkmnSpecies, int> result = await badgeRepo.CountByUserPerSpecies("user");
@@ -144,12 +144,12 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
         {
             IBadgeRepo badgeRepo = CreateBadgeRepo();
             // given
-            await badgeRepo.AddBadge("user", PkmnSpecies.OfId("2"), Badge.BadgeSource.Pinball, 0);
-            await badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball, 0);
-            await badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball, 0);
-            await badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball, 0);
-            await badgeRepo.AddBadge("userOther", PkmnSpecies.OfId("1"), Badge.BadgeSource.Pinball, 0);
-            await badgeRepo.AddBadge("userOther", PkmnSpecies.OfId("2"), Badge.BadgeSource.Pinball, 0);
+            await badgeRepo.AddBadge("user", PkmnSpecies.OfId("2"), Badge.BadgeSource.Pinball, 0, false);
+            await badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball, 0, false);
+            await badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball, 0, false);
+            await badgeRepo.AddBadge("user", PkmnSpecies.OfId("3"), Badge.BadgeSource.Pinball, 0, false);
+            await badgeRepo.AddBadge("userOther", PkmnSpecies.OfId("1"), Badge.BadgeSource.Pinball, 0, false);
+            await badgeRepo.AddBadge("userOther", PkmnSpecies.OfId("2"), Badge.BadgeSource.Pinball, 0, false);
 
             // when
             bool hasUserSpecies1 = await badgeRepo.HasUserBadge("user", PkmnSpecies.OfId("1"));
@@ -173,7 +173,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
                 IBadgeRepo badgeRepo = new BadgeRepo(
                     CreateTemporaryDatabase(), Mock.Of<IMongoBadgeLogRepo>(), Mock.Of<IClock>());
                 Badge badge = await badgeRepo.AddBadge(
-                    "user", PkmnSpecies.OfId("1"), Badge.BadgeSource.ManualCreation, 0);
+                    "user", PkmnSpecies.OfId("1"), Badge.BadgeSource.ManualCreation, 0, false);
 
                 IImmutableList<Badge> updatedBadges = await badgeRepo.TransferBadges(
                     ImmutableList.Create(badge), "recipient", "reason", new Dictionary<string, object?>());
@@ -192,7 +192,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             {
                 BadgeRepo badgeRepo = new(CreateTemporaryDatabase(), Mock.Of<IMongoBadgeLogRepo>(), Mock.Of<IClock>());
                 Badge badge = await badgeRepo.AddBadge(
-                    "user", PkmnSpecies.OfId("1"), Badge.BadgeSource.ManualCreation, 0);
+                    "user", PkmnSpecies.OfId("1"), Badge.BadgeSource.ManualCreation, 0, false);
                 await badgeRepo.Collection.UpdateOneAsync(
                     Builders<Badge>.Filter.Where(b => b.Id == badge.Id),
                     Builders<Badge>.Update
@@ -218,7 +218,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
                 Mock<IMongoBadgeLogRepo> mongoBadgeLogRepoMock = new();
                 BadgeRepo badgeRepo = new(CreateTemporaryDatabase(), mongoBadgeLogRepoMock.Object, clockMock.Object);
                 Badge badge = await badgeRepo.AddBadge(
-                    "user", PkmnSpecies.OfId("1"), Badge.BadgeSource.ManualCreation, 0);
+                    "user", PkmnSpecies.OfId("1"), Badge.BadgeSource.ManualCreation, 0, false);
 
                 Instant timestamp = Instant.FromUnixTimeSeconds(123);
                 clockMock.Setup(c => c.GetCurrentInstant()).Returns(timestamp);
@@ -237,8 +237,8 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
                 Mock<IMongoBadgeLogRepo> mongoBadgeLogRepoMock = new();
                 BadgeRepo badgeRepo = new(CreateTemporaryDatabase(), mongoBadgeLogRepoMock.Object, Mock.Of<IClock>());
                 PkmnSpecies species = PkmnSpecies.OfId("1");
-                Badge badge1 = await badgeRepo.AddBadge("user", species, Badge.BadgeSource.ManualCreation, 0);
-                Badge badge2 = await badgeRepo.AddBadge("user", species, Badge.BadgeSource.ManualCreation, 0);
+                Badge badge1 = await badgeRepo.AddBadge("user", species, Badge.BadgeSource.ManualCreation, 0, false);
+                Badge badge2 = await badgeRepo.AddBadge("user", species, Badge.BadgeSource.ManualCreation, 0, false);
                 int userLostBadgeInvocations = 0;
                 badgeRepo.UserLostBadgeSpecies += (_, args) =>
                 {
@@ -261,8 +261,8 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
                 Mock<IMongoBadgeLogRepo> mongoBadgeLogRepoMock = new();
                 BadgeRepo badgeRepo = new(CreateTemporaryDatabase(), mongoBadgeLogRepoMock.Object, Mock.Of<IClock>());
                 PkmnSpecies species = PkmnSpecies.OfId("1");
-                Badge badge1 = await badgeRepo.AddBadge("user", species, Badge.BadgeSource.ManualCreation, 0);
-                Badge badge2 = await badgeRepo.AddBadge("user", species, Badge.BadgeSource.ManualCreation, 0);
+                Badge badge1 = await badgeRepo.AddBadge("user", species, Badge.BadgeSource.ManualCreation, 0, false);
+                Badge badge2 = await badgeRepo.AddBadge("user", species, Badge.BadgeSource.ManualCreation, 0, false);
                 // make in-memory badge reference stale to cause the transfer to fail on the second badge
                 await badgeRepo.Collection.UpdateOneAsync(
                     Builders<Badge>.Filter.Where(b => b.Id == badge2.Id),

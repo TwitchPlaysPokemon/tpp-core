@@ -21,9 +21,11 @@ namespace TPP.Common
             ["shellos"] = new Dictionary<string, int>
             {
                 ["west sea"] = 1,
+                ["westsea"] = 1,
                 ["west"] = 1,
                 ["pink"] = 1,
                 ["east sea"] = 2,
+                ["eastsea"] = 2,
                 ["east"] = 2,
                 ["blue"] = 2,
             },
@@ -31,7 +33,7 @@ namespace TPP.Common
 
         public static string getFormName(PkmnSpecies pokemon, int formid)
         {
-            string pkmnName = pokemon.Name.ToLower();
+            string pkmnName = pokemon.Name.ToLower(); //TODO: use normalize_name from pkmnspecies
             Dictionary<string, int>? forms;
             if (!Forms.TryGetValue(pkmnName, out forms))
                 throw new ArgumentException($"{pokemon.Name} does not have alternate forms.");

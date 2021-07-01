@@ -184,15 +184,14 @@ namespace TPP.Core.Commands.Definitions
 
         public async Task<CommandResult> CreateBadge(CommandContext context)
         {
-            (User recipient, PkmnSpecies species, Optional<PositiveInt> amountOpt, Optional<string> formOpt, Optional<string> formOpt2) =
-                await context.ParseArgs<AnyOrder<User, PkmnSpecies, Optional<PositiveInt>, Optional<string>, Optional<string>>>();
+            (User recipient, PkmnSpecies species, Optional<PositiveInt> amountOpt, Optional<string> formOpt, Optional<bool> shinyOpt) =
+                await context.ParseArgs<AnyOrder<User, PkmnSpecies, Optional<PositiveInt>, Optional<string>, Optional<bool>>>();
             int amount = amountOpt.Map(i => i.Number).OrElse(1);
             int form = PkmnForms.pokemonHasForms(species) ? 0 : 1; // default to the first listed form if form is unspecified
+            bool shiny = shinyOpt.IsPresent ? shinyOpt.Value : false;
             if (formOpt.IsPresent)
             {
                 string formName = formOpt.Value;
-                if (formOpt2.IsPresent)
-                    formName += " " + formOpt2.Value;
                 try
                 {
                     form = PkmnForms.getFormId(species, formName);
@@ -206,7 +205,7 @@ namespace TPP.Core.Commands.Definitions
                 }
             }
             for (int i = 0; i < amount; i++)
-                await _badgeRepo.AddBadge(recipient.Id, species, Badge.BadgeSource.ManualCreation, form);
+                await _badgeRepo.AddBadge(recipient.Id, species, Badge.BadgeSource.ManualCreation, form, shiny);
 
             return new CommandResult
             {

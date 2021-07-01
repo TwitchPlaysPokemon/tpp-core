@@ -49,6 +49,11 @@ namespace TPP.Persistence.Models
         /// </summary>
         public int Form { get; init; }
 
+        /// <summary>
+        /// If this badge is shiny.
+        /// </summary>
+        public bool Shiny { get; init; }
+
         /// If this badge is on sale, for how much.
         public long? SellPrice { get; init; }
         /// If this badge is on sale, since when.
@@ -60,7 +65,8 @@ namespace TPP.Persistence.Models
             PkmnSpecies species,
             BadgeSource source,
             Instant createdAt,
-            int form)
+            int form,
+            bool shiny)
         {
             Id = id;
             UserId = userId;
@@ -68,6 +74,7 @@ namespace TPP.Persistence.Models
             Source = source;
             CreatedAt = createdAt;
             Form = form;
+            Shiny = shiny;
         }
 
         public override string ToString() => $"Badge({Species}@{UserId ?? "<nobody>"})";
