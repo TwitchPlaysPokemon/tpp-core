@@ -3,13 +3,14 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using TPP.Common;
+using TPP.ArgsParsing.Types;
 
 namespace TPP.ArgsParsing.TypeParsers
 {
     /// <summary>
-    /// A parser that finds a badge form by name.
+    /// A parser that determines if something is indicated to be shiny or not.
     /// </summary>
-    public class ShinyParser : BaseArgumentParser<bool>
+    public class ShinyParser : BaseArgumentParser<Shiny>
     {
         string[] shinyWords =
         {
@@ -22,21 +23,21 @@ namespace TPP.ArgsParsing.TypeParsers
             "regular",
             "shiny:false"
         };
-        public override Task<ArgsParseResult<bool>> Parse(IImmutableList<string> args, Type[] genericTypes)
+        public override Task<ArgsParseResult<Shiny>> Parse(IImmutableList<string> args, Type[] genericTypes)
         {
             string s = args[0];
-            ArgsParseResult<bool> result;
+            ArgsParseResult<Shiny> result;
             if (shinyWords.Contains(s))
             {
-                result = ArgsParseResult<bool>.Success(true, args.Skip(1).ToImmutableList());
+                result = ArgsParseResult<Shiny>.Success(new Shiny { Value = true }, args.Skip(1).ToImmutableList());
             }
             else if (plainWords.Contains(s))
             {
-                result = ArgsParseResult<bool>.Success(false, args.Skip(1).ToImmutableList());
+                result = ArgsParseResult<Shiny>.Success(new Shiny { Value = false }, args.Skip(1).ToImmutableList());
             }
             else
             {
-                result = ArgsParseResult<bool>.Failure("The argument couldn't be understood as shiny or not", ErrorRelevanceConfidence.Unlikely);
+                result = ArgsParseResult<Shiny>.Failure("The argument couldn't be understood as shiny or not", ErrorRelevanceConfidence.Unlikely);
             }              
             return Task.FromResult(result);
         }

@@ -184,11 +184,11 @@ namespace TPP.Core.Commands.Definitions
 
         public async Task<CommandResult> CreateBadge(CommandContext context)
         {
-            (User recipient, PkmnSpecies species, Optional<PositiveInt> amountOpt, Optional<string> formOpt, Optional<bool> shinyOpt) =
-                await context.ParseArgs<AnyOrder<User, PkmnSpecies, Optional<PositiveInt>, Optional<string>, Optional<bool>>>();
+            (User recipient, PkmnSpecies species, Optional<PositiveInt> amountOpt, Optional<string> formOpt, Optional<Shiny> shinyOpt) =
+                await context.ParseArgs<AnyOrder<User, PkmnSpecies, Optional<PositiveInt>, Optional<string>, Optional<Shiny>>>();
             int amount = amountOpt.Map(i => i.Number).OrElse(1);
             int form = PkmnForms.pokemonHasForms(species) ? 0 : 1; // default to the first listed form if form is unspecified
-            bool shiny = shinyOpt.IsPresent ? shinyOpt.Value : false;
+            bool shiny = shinyOpt.Value ?? false;
             if (formOpt.IsPresent)
             {
                 string formName = formOpt.Value;

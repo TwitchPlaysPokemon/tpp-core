@@ -42,7 +42,8 @@ namespace TPP.Persistence.MongoDB.Repos
                 cm.MapProperty(b => b.SellingSince).SetElementName("selling_since")
                     .SetIgnoreIfNull(true);
                 cm.MapProperty(b => b.Shiny).SetElementName("shiny")
-                    .SetDefaultValue(false);
+                    .SetDefaultValue(false)
+                    .SetIgnoreIfDefault(true);
             });
         }
 
@@ -89,7 +90,7 @@ namespace TPP.Persistence.MongoDB.Repos
         public async Task<List<Badge>> FindByUserAndSpecies(string? userId, PkmnSpecies species) =>
             await Collection.Find(b => b.UserId == userId && b.Species == species).ToListAsync();
 
-        public async Task<List<Badge>> FindAllByCustom(string? userId = null, PkmnSpecies? species = null, int? form = null, Badge.BadgeSource? source = null)
+        public async Task<List<Badge>> FindAllByCustom(string? userId = null, PkmnSpecies? species = null, int? form = null, Badge.BadgeSource? source = null, bool? shiny = false)
         {
             FilterDefinition<Badge> filter = Builders<Badge>.Filter.Empty;
             if (userId != null)
@@ -102,6 +103,7 @@ namespace TPP.Persistence.MongoDB.Repos
                 filter &= Builders<Badge>.Filter.Eq(b => b.Form, form);
             if (source != null)
                 filter &= Builders<Badge>.Filter.Eq(b => b.Source, source);
+            filter &= Builders<Badge>.Filter.Eq(b => b.Shiny, shiny); // always assigned, defaults to false
 
             return await Collection.Find(filter).ToListAsync();
         }
