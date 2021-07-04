@@ -94,7 +94,6 @@ namespace TPP.Persistence.MongoDB.Repos
             {
                 new CreateIndexModel<Badge>(Builders<Badge>.IndexKeys.Ascending(u => u.UserId)),
                 new CreateIndexModel<Badge>(Builders<Badge>.IndexKeys.Ascending(u => u.Species)),
-                // TODO really ascending...?:
                 new CreateIndexModel<Badge>(Builders<Badge>.IndexKeys.Ascending(u => u.CreatedAt)),
             });
         }
@@ -118,8 +117,8 @@ namespace TPP.Persistence.MongoDB.Repos
         public async Task<List<Badge>> FindByUser(string? userId) =>
             await Collection.Find(b => b.UserId == userId).ToListAsync();
 
-        public async Task<List<Badge>> FindByUserAndSpecies(string? userId, PkmnSpecies species) =>
-            await Collection.Find(b => b.UserId == userId && b.Species == species).ToListAsync();
+        public async Task<List<Badge>> FindByUserAndSpecies(string? userId, PkmnSpecies species, int? limit = null) =>
+            await Collection.Find(b => b.UserId == userId && b.Species == species).Limit(limit).ToListAsync();
 
         public async Task<long> CountByUserAndSpecies(string? userId, PkmnSpecies species) =>
             await Collection.CountDocumentsAsync(b => b.UserId == userId && b.Species == species);
