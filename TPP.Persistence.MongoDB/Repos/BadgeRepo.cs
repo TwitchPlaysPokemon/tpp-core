@@ -168,12 +168,15 @@ namespace TPP.Persistence.MongoDB.Repos
             Instant now = _clock.GetCurrentInstant();
 
             List<Badge> updatedBadges = new();
+            HashSet<PkmnSpecies> subjectToStatChanges = new();
             using (IClientSessionHandle sessionOuter = await Collection.Database.Client.StartSessionAsync())
             {
                 await sessionOuter.WithTransactionAsync(async (txSession, txToken) =>
                 {
                     foreach (Badge badge in badges)
                     {
+                        if ((badge.UserId == null) ^ (recipientUserId == null))
+                            subjectToStatChanges.Add(badge.Species);
                         Badge updatedBadge = await TransferBadge(badge, recipientUserId, txSession, txToken);
                         Debug.Assert(badge.Id == updatedBadge.Id);
                         updatedBadges.Add(updatedBadge);
@@ -185,7 +188,8 @@ namespace TPP.Persistence.MongoDB.Repos
                     return (object?)null;
                 });
             }
-            await RenewBadgeStats(onlyTheseSpecies: badges.Select(b => b.Species).ToImmutableHashSet());
+            if (subjectToStatChanges.Any())
+                await RenewBadgeStats(onlyTheseSpecies: subjectToStatChanges.ToImmutableHashSet());
 
             foreach (var tpl in badges.Select(b => (b.UserId, b.Species)).Distinct())
             {
