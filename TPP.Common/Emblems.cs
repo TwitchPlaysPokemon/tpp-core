@@ -59,7 +59,8 @@ namespace TPP.Common
             [50] = "Chatty Crystal",
             [51] = "Renegade Platinum",
             [52] = "RGB Race Green",
-            [53] = "Randomized Black"
+            [53] = "Randomized Black",
+            [54] = "Randomized Black 2"
         };
 
         public static string FormatEmblem(int emblemNum)
