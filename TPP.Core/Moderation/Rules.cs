@@ -140,7 +140,8 @@ namespace TPP.Core.Moderation
 
         private readonly IClock _clock;
         private readonly Duration _ttl;
-        private readonly int _minMessageLength;
+        private readonly int _minSingleWordMessageLength;
+        private readonly int _minNumWords;
         private readonly double _minSimilarity;
 
         private Dictionary<User, TtlQueue<string>> _recentMessagesPerUser;
@@ -149,13 +150,15 @@ namespace TPP.Core.Moderation
         public PersonalRepetitionRule(
             IClock clock,
             Duration? recentMessagesTtl = null,
-            int minMessageLength = 25,
+            int minSingleWordMessageLength = 25,
+            int minNumWords = 3,
             double minSimilarity = 0.75)
         {
             _clock = clock;
             _ttl = recentMessagesTtl ?? Duration.FromMinutes(2);
             _recentMessagesPerUser = new Dictionary<User, TtlQueue<string>>();
-            _minMessageLength = minMessageLength;
+            _minSingleWordMessageLength = minSingleWordMessageLength;
+            _minNumWords = minNumWords;
             _minSimilarity = minSimilarity;
         }
 
@@ -171,7 +174,10 @@ namespace TPP.Core.Moderation
 
         private int GetNumPersonalRepetitions(User user, string message)
         {
-            if (message.Length < _minMessageLength) return 0;
+            bool isApplicable = message.Length >= _minSingleWordMessageLength ||
+                                message.Count(c => c == ' ') >= _minNumWords - 1;
+            if (!isApplicable)
+                return 0;
             if (!_recentMessagesPerUser.ContainsKey(user))
                 _recentMessagesPerUser[user] = new TtlQueue<string>(_ttl, _clock);
             int numRepetitions = _recentMessagesPerUser[user]

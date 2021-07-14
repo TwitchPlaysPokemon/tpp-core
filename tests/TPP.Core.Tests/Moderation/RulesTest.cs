@@ -118,6 +118,19 @@ namespace TPP.Core.Tests.Moderation
             }
 
             [Test]
+            public void detects_short_non_input_messages()
+            {
+                PersonalRepetitionRule rule = new(Mock.Of<IClock>());
+                Assert.That(rule.Check(TextMessage("I am eternal 1")), Is.InstanceOf<RuleResult.Nothing>());
+                Assert.That(rule.Check(TextMessage("I am eternal 2")), Is.InstanceOf<RuleResult.Nothing>());
+                Assert.That(rule.Check(TextMessage("I am eternal 3")), Is.InstanceOf<RuleResult.DeleteMessage>());
+                RuleResult result = rule.Check(TextMessage("I am eternal 4"));
+                Assert.That(result, Is.InstanceOf<RuleResult.Timeout>());
+                Assert.That(((RuleResult.Timeout)result).Message, Is.EqualTo("excessively repetitious messages"));
+
+            }
+
+            [Test]
             public void ignores_different_messages()
             {
                 PersonalRepetitionRule rule = new(Mock.Of<IClock>());
