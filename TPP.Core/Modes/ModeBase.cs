@@ -85,6 +85,7 @@ namespace TPP.Core.Modes
                 new NewUserLinkRule(_clock),
                 new EmoteRule(),
                 new CopypastaRule(clock),
+                new PersonalRepetitionRule(clock),
                 new UnicodeCharacterCategoryRule()
             );
             foreach (string unknown in baseConfig.DisabledModbotRules.Except(availableRules.Select(rule => rule.Id)))
