@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
@@ -7,6 +8,7 @@ using System.Text.RegularExpressions;
 using F23.StringSimilarity;
 using NodaTime;
 using TPP.Core.Utils;
+using TPP.Model;
 using static System.Globalization.UnicodeCategory;
 
 namespace TPP.Core.Moderation
@@ -126,6 +128,72 @@ namespace TPP.Core.Moderation
                     (int)(_pointsPerCopypastaChar * message.MessageText.Length),
                     "participating in copypasta")
                 : new RuleResult.Nothing();
+    }
+
+    /// Copypastaing your own messages times you out.
+    public class PersonalRepetitionRule : IModerationRule
+    {
+        public string Id => "personal_repetition";
+
+        private static readonly NormalizedLevenshtein NormLevenshtein = new();
+        private static readonly Duration PruneInterval = Duration.FromMinutes(5);
+
+        private readonly IClock _clock;
+        private readonly Duration _ttl;
+        private readonly int _minSingleWordMessageLength;
+        private readonly int _minNumWords;
+        private readonly double _minSimilarity;
+
+        private Dictionary<User, TtlQueue<string>> _recentMessagesPerUser;
+        private Instant _prevPruneTime = Instant.MinValue;
+
+        public PersonalRepetitionRule(
+            IClock clock,
+            Duration? recentMessagesTtl = null,
+            int minSingleWordMessageLength = 25,
+            int minNumWords = 3,
+            double minSimilarity = 0.75)
+        {
+            _clock = clock;
+            _ttl = recentMessagesTtl ?? Duration.FromMinutes(2);
+            _recentMessagesPerUser = new Dictionary<User, TtlQueue<string>>();
+            _minSingleWordMessageLength = minSingleWordMessageLength;
+            _minNumWords = minNumWords;
+            _minSimilarity = minSimilarity;
+        }
+
+        private void PruneIfLapsed()
+        {
+            Instant now = _clock.GetCurrentInstant();
+            if (_prevPruneTime + PruneInterval > now) return;
+            _prevPruneTime = now;
+            _recentMessagesPerUser = _recentMessagesPerUser
+                .Where(kvp => kvp.Value.Count > 0)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        }
+
+        private int GetNumPersonalRepetitions(User user, string message)
+        {
+            bool isApplicable = message.Length >= _minSingleWordMessageLength ||
+                                message.Count(c => c == ' ') >= _minNumWords - 1;
+            if (!isApplicable)
+                return 0;
+            if (!_recentMessagesPerUser.ContainsKey(user))
+                _recentMessagesPerUser[user] = new TtlQueue<string>(_ttl, _clock);
+            int numRepetitions = _recentMessagesPerUser[user]
+                .Count(m => NormLevenshtein.Similarity(m, message) > _minSimilarity);
+            _recentMessagesPerUser[user].Enqueue(message);
+            PruneIfLapsed();
+            return numRepetitions;
+        }
+
+        public RuleResult Check(Message message) =>
+            GetNumPersonalRepetitions(message.User, message.MessageText) switch
+            {
+                >= 3 => new RuleResult.Timeout("excessively repetitious messages"),
+                >= 2 => new RuleResult.DeleteMessage(), // as a warning
+                _ => new RuleResult.Nothing()
+            };
     }
 
     /// Excessive amounts of symbols that are typically rare in regular text accumulate points.

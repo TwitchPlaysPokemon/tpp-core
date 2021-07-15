@@ -1,4 +1,3 @@
-using System;
 using Moq;
 using NodaTime;
 using NUnit.Framework;
@@ -10,7 +9,7 @@ namespace TPP.Core.Tests.Moderation
     public static class RulesTest
     {
         private static User MockUser(string name) => new(
-            id: Guid.NewGuid().ToString(),
+            id: name.GetHashCode().ToString(),
             name: name, twitchDisplayName: "☺" + name, simpleName: name.ToLower(), color: null,
             firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
             lastMessageAt: null, pokeyen: 0, tokens: 0);
@@ -80,6 +79,69 @@ namespace TPP.Core.Tests.Moderation
                 clockMock.Setup(c => c.GetCurrentInstant()).Returns(Instant.FromUnixTimeSeconds(5));
                 RuleResult resultSimilarCopypasted = rule.Check(TextMessage(copypasta2));
                 Assert.IsInstanceOf<RuleResult.Nothing>(resultSimilarCopypasted);
+            }
+        }
+
+        [TestFixture]
+        private class PersonalRepetition
+        {
+            [Test]
+            public void detects_counting_spam()
+            {
+                Mock<IClock> clockMock = new();
+                PersonalRepetitionRule rule = new(clockMock.Object, recentMessagesTtl: Duration.FromSeconds(10));
+
+                clockMock.Setup(c => c.GetCurrentInstant()).Returns(Instant.FromUnixTimeSeconds(0));
+                Assert.That(rule.Check(TextMessage("I AM INVINCIBLE TriHard I AM UNBANNABLE TriHard 1")),
+                    Is.InstanceOf<RuleResult.Nothing>());
+                Assert.That(rule.Check(TextMessage("I AM INVINCIBLE TriHard I AM UNBANNABLE TriHard 2")),
+                    Is.InstanceOf<RuleResult.Nothing>());
+                Assert.That(rule.Check(TextMessage("I AM INVINCIBLE TriHard I AM UNBANNABLE TriHard 3")),
+                    Is.InstanceOf<RuleResult.DeleteMessage>());
+                RuleResult result = rule.Check(TextMessage("I AM INVINCIBLE TriHard I AM UNBANNABLE TriHard 4"));
+                Assert.That(result, Is.InstanceOf<RuleResult.Timeout>());
+                Assert.That(((RuleResult.Timeout)result).Message, Is.EqualTo("excessively repetitious messages"));
+
+                clockMock.Setup(c => c.GetCurrentInstant()).Returns(Instant.FromUnixTimeSeconds(15));
+                Assert.That(rule.Check(TextMessage("I AM INVINCIBLE TriHard I AM UNBANNABLE TriHard 5")),
+                    Is.InstanceOf<RuleResult.Nothing>()); // previous messages expired
+            }
+
+            [Test]
+            public void ignores_short_messages()
+            {
+                PersonalRepetitionRule rule = new(Mock.Of<IClock>());
+                Assert.That(rule.Check(TextMessage("59,95+e+A-")), Is.InstanceOf<RuleResult.Nothing>());
+                Assert.That(rule.Check(TextMessage("59,95+e+A-")), Is.InstanceOf<RuleResult.Nothing>());
+                Assert.That(rule.Check(TextMessage("59,95+e+A-")), Is.InstanceOf<RuleResult.Nothing>());
+                Assert.That(rule.Check(TextMessage("59,95+e+A-")), Is.InstanceOf<RuleResult.Nothing>());
+            }
+
+            [Test]
+            public void detects_short_non_input_messages()
+            {
+                PersonalRepetitionRule rule = new(Mock.Of<IClock>());
+                Assert.That(rule.Check(TextMessage("I am eternal 1")), Is.InstanceOf<RuleResult.Nothing>());
+                Assert.That(rule.Check(TextMessage("I am eternal 2")), Is.InstanceOf<RuleResult.Nothing>());
+                Assert.That(rule.Check(TextMessage("I am eternal 3")), Is.InstanceOf<RuleResult.DeleteMessage>());
+                RuleResult result = rule.Check(TextMessage("I am eternal 4"));
+                Assert.That(result, Is.InstanceOf<RuleResult.Timeout>());
+                Assert.That(((RuleResult.Timeout)result).Message, Is.EqualTo("excessively repetitious messages"));
+
+            }
+
+            [Test]
+            public void ignores_different_messages()
+            {
+                PersonalRepetitionRule rule = new(Mock.Of<IClock>());
+                Assert.That(rule.Check(TextMessage("Lorem ipsum dolor sit amet, consetetur sadipscing elitr")),
+                    Is.InstanceOf<RuleResult.Nothing>());
+                Assert.That(rule.Check(TextMessage("sed diam nonumy eirmod tempor invidunt ut labore et dolore magna")),
+                    Is.InstanceOf<RuleResult.Nothing>());
+                Assert.That(rule.Check(TextMessage("At vero eos et accusam et justo duo dolores et ea rebum")),
+                    Is.InstanceOf<RuleResult.Nothing>());
+                Assert.That(rule.Check(TextMessage("Stet clita kasd gubergren, no sea takimata sanctus est")),
+                    Is.InstanceOf<RuleResult.Nothing>());
             }
         }
 
