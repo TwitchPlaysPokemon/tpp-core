@@ -18,7 +18,8 @@ namespace TPP.Core.Commands.Definitions
             new Command("vote", Vote)
             {
                 Description =
-                    "Vote on a poll. Arguments: <PollCode> <Option1> <OptionX> (optional if multi-choice poll)"
+                    "Vote on a poll. Arguments: <PollCode> <Option1> <OptionX> (optional if multi-choice poll). " +
+                    "Note that votes are not anonymous to avoid fraud."
             },
             new Command(PollCommandName, Poll)
             {
