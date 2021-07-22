@@ -115,8 +115,10 @@ namespace TPP.Core.Commands.Definitions
             IImmutableList<Poll> polls = await _pollRepo.FindPolls(onlyActive: true);
             return new CommandResult
             {
-                Response = $"Currently active polls are: {string.Join(", ", polls.Select(p => p.PollCode))}. " +
-                           $"Use '!{PollCommandName} <code>' for more details on a specific poll"
+                Response = polls.Any()
+                    ? $"Currently active polls are: {string.Join(", ", polls.Select(p => p.PollCode))}. " +
+                      $"Use '!{PollCommandName} <code>' for more details on a specific poll"
+                    : "There currently are no active polls."
             };
         }
     }
