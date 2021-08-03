@@ -71,6 +71,7 @@ namespace TPP.Core
             {
                 new EasterEggCommands().Commands,
                 new StaticResponseCommands().Commands,
+                new MiscCommands().Commands,
                 new UserCommands(
                     databases.UserRepo, pokeyenBank: databases.PokeyenBank, tokenBank: databases.TokensBank,
                     messageSender
