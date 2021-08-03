@@ -268,7 +268,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             Badge badge2 = new("badge2", user.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue);
             Badge badge3 = new("badge3", user.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue);
             _badgeRepoMock.Setup(repo => repo.FindByUserAndSpecies(user.Id, species, 2))
-                .Returns(Task.FromResult(new List<Badge> { badge1, badge2, badge3, }));
+                .Returns(Task.FromResult(new List<Badge> { badge1, badge2, badge3 }));
 
             CommandResult result = await _badgeCommands.GiftBadge(new CommandContext(MockMessage(user),
                 ImmutableList.Create("recipient", "species", "2"), _argsParser));

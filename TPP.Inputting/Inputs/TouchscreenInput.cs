@@ -26,7 +26,7 @@ namespace TPP.Inputting.Inputs
         public override bool Equals(object? obj)
         {
             if (!base.Equals(obj)) return false;
-            var touchscreenInput = (TouchscreenInput)obj!;
+            TouchscreenInput touchscreenInput = (TouchscreenInput)obj;
             return X == touchscreenInput.X && Y == touchscreenInput.Y;
         }
 

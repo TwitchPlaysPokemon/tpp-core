@@ -85,7 +85,7 @@ namespace TPP.Core.Commands.Definitions
             .WithChangedDescription(desc => "Operators only: " + desc)
         );
 
-        private bool IsOperator(User user) =>
+        private static bool IsOperator(User user) =>
             user.Roles.Contains(Role.Operator);
 
         private Task<CommandResult> Stop(CommandContext context)

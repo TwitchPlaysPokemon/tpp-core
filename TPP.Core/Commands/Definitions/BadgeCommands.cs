@@ -78,7 +78,7 @@ namespace TPP.Core.Commands.Definitions
             _messageSender = messageSender;
             _knownSpecies = knownSpecies;
             _whitelist = whitelist;
-            _pokedexModeRegions = new Dictionary<string, RegionInformation>()
+            _pokedexModeRegions = new Dictionary<string, RegionInformation>
             {
                 { "kanto", new RegionInformation(Generation.Gen1, _knownSpecies.Count(pokemon => pokemon.GetGeneration() == Generation.Gen1))},
                 { "johto", new RegionInformation(Generation.Gen2, _knownSpecies.Count(pokemon => pokemon.GetGeneration() == Generation.Gen2))},
@@ -205,7 +205,7 @@ namespace TPP.Core.Commands.Definitions
                     return new CommandResult
                     {
                         Response = isSelf
-                            ? $"You do not own any duplicate Pokémon badges"
+                            ? "You do not own any duplicate Pokémon badges"
                             : $"{user.Name} does not own any duplicate Pokémon badges"
                     };
                 }
@@ -276,7 +276,7 @@ namespace TPP.Core.Commands.Definitions
             else if (_pokedexModeRegions.ContainsKey(mode))
             {
                 RegionInformation regionInformation = _pokedexModeRegions[mode];
-                ImmutableSortedDictionary<PkmnSpecies, int> ownedPokemons = (await _badgeRepo.CountByUserPerSpecies(user.Id));
+                ImmutableSortedDictionary<PkmnSpecies, int> ownedPokemons = await _badgeRepo.CountByUserPerSpecies(user.Id);
                 int userOwnedRegionCount = mode.Equals(PokedexModeNational)
                     ? ownedPokemons.Count(ownedPokemon => ownedPokemon.Key.GetGeneration() != regionInformation.Generation)
                     : ownedPokemons.Count(ownedPokemon => ownedPokemon.Key.GetGeneration() == regionInformation.Generation);
@@ -296,7 +296,7 @@ namespace TPP.Core.Commands.Definitions
                     Response = $"Supported modes are '{PokedexModeDupes}': Show duplicate badges, '{PokedexModeMissing}': Show missing badges, "
                         + $"'{PokedexModeComplementFrom}' Compares missing badges from User A with owned badges from User B, "
                         + $"'{PokedexModeComplementFromDupes}' Compares missing badges from User A with owned duplicate badges from User B, "
-                        + $"'kanto', 'johto,',... Shows how many badges you or the specified user owns from the specified region only"
+                        + "'kanto', 'johto,',... Shows how many badges you or the specified user owns from the specified region only"
                 };
             }
             return new CommandResult

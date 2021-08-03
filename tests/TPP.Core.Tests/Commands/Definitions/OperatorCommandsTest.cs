@@ -169,7 +169,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             Badge badge2 = new("badge2", gifter.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue);
             Badge badge3 = new("badge3", gifter.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue);
             _badgeRepoMock.Setup(repo => repo.FindByUserAndSpecies(gifter.Id, species, 2))
-                .Returns(Task.FromResult(new List<Badge> { badge1, badge2, badge3, }));
+                .Returns(Task.FromResult(new List<Badge> { badge1, badge2, badge3 }));
 
             CommandResult result = await operatorCommands.TransferBadge(new CommandContext(MockMessage(userSelf),
                 ImmutableList.Create("gifter", "recipient", "species", "2", "because", "reason"), _argsParser));

@@ -28,7 +28,7 @@ namespace TPP.ArgsParsing.TypeParsers
         {
             string displayName = args[0];
             bool isPrefixed = displayName.StartsWith('@');
-            if (isPrefixed) displayName = displayName.Substring(1);
+            if (isPrefixed) displayName = displayName[1..];
             User? user = await _userRepo.FindByDisplayName(displayName);
             user ??= await _userRepo.FindBySimpleName(displayName.ToLower());
             return user == null

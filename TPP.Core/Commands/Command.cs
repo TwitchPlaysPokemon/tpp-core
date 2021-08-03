@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace TPP.Core.Commands
 {
-    public struct Command
+    public readonly struct Command
     {
         public delegate Task<CommandResult> Execute(CommandContext context);
 

@@ -137,7 +137,7 @@ namespace TPP.Core.Tests.Commands.Definitions
         public async Task TestSetGlow()
         {
             var user = MockUser(glowColorUnlocked: true);
-            string glowColor = "123456";
+            const string glowColor = "123456";
 
             CommandResult result = await _userCommands.SetGlow(new CommandContext(MockMessage(user),
                 ImmutableList.Create('#' + glowColor), _argsParser));

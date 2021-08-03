@@ -397,8 +397,8 @@ namespace TPP.ArgsParsing.Tests
                 .Parse<TimeSpan>(args: ImmutableList.Create("5s3d")))!;
             ArgsParseFailure ex2 = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
                 .Parse<TimeSpan>(args: ImmutableList.Create("asdasdasd")))!;
-            Assert.IsTrue(ex1.Message.Contains("did not recognize '5s3d' as a duration"));
-            Assert.IsTrue(ex2.Message.Contains("did not recognize 'asdasdasd' as a duration"));
+            Assert.That(ex1.Message, Does.Contain("did not recognize '5s3d' as a duration"));
+            Assert.That(ex2.Message, Does.Contain("did not recognize 'asdasdasd' as a duration"));
         }
 
         [Test]

@@ -60,7 +60,7 @@ namespace TPP.Inputting.Parsing
         private static bool HasDuplicationExceptTouchscreen(InputSet inputSet)
         {
             var seen = new HashSet<string>();
-            return inputSet.Inputs.Where(i => !(i is TouchscreenInput)).Any(input =>
+            return inputSet.Inputs.Where(i => i is not TouchscreenInput).Any(input =>
             {
                 bool alreadyExisted = !seen.Add(input.ButtonName);
                 return alreadyExisted;

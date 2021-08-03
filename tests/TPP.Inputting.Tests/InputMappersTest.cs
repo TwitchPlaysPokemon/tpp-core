@@ -25,7 +25,7 @@ namespace TPP.Inputting.Tests
         public void proper_representation()
         {
             IInputMapper inputMapper = new DefaultTppInputMapper();
-            var expectedInputMap = new Dictionary<string, object>()
+            var expectedInputMap = new Dictionary<string, object>
             {
                 ["Touch_Screen_X"] = 10,
                 ["Touch_Screen_Y"] = 20,

@@ -15,7 +15,7 @@ namespace TPP.Core.Overlay
         public Task Send(string message, CancellationToken cancellationToken);
     }
 
-    internal struct Connection : IAsyncDisposable
+    internal readonly struct Connection : IAsyncDisposable
     {
         internal IPEndPoint RemoteEndPoint { get; init; }
         internal WebSocket WebSocket { get; init; }
@@ -83,8 +83,7 @@ namespace TPP.Core.Overlay
                     }
                     catch (WebSocketException ex)
                     {
-                        if (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely
-                            || ex.WebSocketErrorCode == WebSocketError.InvalidState)
+                        if (ex.WebSocketErrorCode is WebSocketError.ConnectionClosedPrematurely or WebSocketError.InvalidState)
                         {
                             // the connection might unexpectedly die, but that's not our problem.
                             _logger.LogWarning(ex, "Could not send message to client");

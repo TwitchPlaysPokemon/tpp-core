@@ -12,7 +12,7 @@ namespace TPP.Model
     // (e.g. JSON.net does by default).
 
     [DataContract]
-    public struct Ability
+    public readonly struct Ability
     {
         [DataMember(Name = "id")] public int Id { get; init; }
         [DataMember(Name = "name")] public string Name { get; init; }
@@ -35,7 +35,7 @@ namespace TPP.Model
     }
 
     [DataContract]
-    public struct Item
+    public readonly struct Item
     {
         [DataMember(Name = "id")] public int Id { get; init; }
         [DataMember(Name = "name")] public string Name { get; init; }
@@ -43,7 +43,7 @@ namespace TPP.Model
     }
 
     [DataContract]
-    public struct Move
+    public readonly struct Move
     {
         [DataMember(Name = "id")] public int Id { get; init; }
         [DataMember(Name = "name_id")] public string NameId { get; init; }
@@ -77,7 +77,7 @@ namespace TPP.Model
     }
 
     [DataContract]
-    public struct Nature
+    public readonly struct Nature
     {
         [DataMember(Name = "id")] public int Id { get; init; }
         [DataMember(Name = "name")] public string Name { get; init; }
@@ -113,7 +113,7 @@ namespace TPP.Model
     }
 
     [DataContract]
-    public struct Pokemon
+    public readonly struct Pokemon
     {
         [DataMember(Name = "displayname")] public string Name { get; init; }
         [DataMember(Name = "setname")] public string Setname { get; init; }
@@ -167,7 +167,7 @@ namespace TPP.Model
     }
 
     [DataContract]
-    public struct Species
+    public readonly struct Species
     {
         [DataMember(Name = "id")] public int Id { get; init; }
         [DataMember(Name = "name")] public string Name { get; init; }
@@ -190,7 +190,7 @@ namespace TPP.Model
     }
 
     [DataContract]
-    public struct Stats
+    public readonly struct Stats
     {
         [DataMember(Name = "hp")] public int Hp { get; init; }
         [DataMember(Name = "atk")] public int Atk { get; init; }
@@ -201,7 +201,7 @@ namespace TPP.Model
     }
 
     [DataContract]
-    public struct NonvolatileStatus
+    public readonly struct NonvolatileStatus
     {
         [DataMember(Name = "brn")] public bool Burn { get; init; }
         [DataMember(Name = "frz")] public bool Freeze { get; init; }

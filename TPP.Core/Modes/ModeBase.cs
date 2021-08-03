@@ -134,9 +134,9 @@ namespace TPP.Core.Modes
             {
                 null => null,
                 var name when message.MessageSource == MessageSource.Whisper
-                    => name.StartsWith('!') ? name.Substring(startIndex: 1) : name,
+                    => name.StartsWith('!') ? name[1..] : name,
                 var name when message.MessageSource == MessageSource.Chat && name.StartsWith('!')
-                    => name.Substring(startIndex: 1),
+                    => name[1..],
                 _ => null
             };
             bool wasProcessed = false;

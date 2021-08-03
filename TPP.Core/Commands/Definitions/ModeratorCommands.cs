@@ -142,7 +142,7 @@ namespace TPP.Core.Commands.Definitions
                         : $"No static response command '{command}' exists."
                 };
             }
-            else if (subcommand == "add" || subcommand == "update")
+            else if (subcommand is "add" or "update")
             {
                 string command = context.Args[1];
                 string response = string.Join(' ', context.Args.Skip(2));

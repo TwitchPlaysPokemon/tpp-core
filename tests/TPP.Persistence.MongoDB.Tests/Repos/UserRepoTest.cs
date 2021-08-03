@@ -173,7 +173,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             // then
             Assert.NotNull(deserializedUser);
             Assert.NotNull(deserializedUser!.ParticipationEmblems);
-            Assert.That(deserializedUser!.ParticipationEmblems, Is.EqualTo(new SortedSet<int>()));
+            Assert.That(deserializedUser.ParticipationEmblems, Is.EqualTo(new SortedSet<int>()));
         }
 
         /// <summary>

@@ -102,7 +102,7 @@ namespace TPP.Core
 
         public void Stop()
         {
-            if (_httpListener != null && _httpListener.IsListening)
+            if (_httpListener is { IsListening: true })
             {
                 _httpListener.Stop();
             }

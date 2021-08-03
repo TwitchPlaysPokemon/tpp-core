@@ -31,7 +31,7 @@ namespace TPP.Core.Tests.Overlay
             _broadcastServerMock.Verify(s => s.Send(json, CancellationToken.None), Times.Once);
         }
 
-        private struct EventWithEnum : IOverlayEvent
+        private readonly struct EventWithEnum : IOverlayEvent
         {
             internal enum TestEnum
             {
