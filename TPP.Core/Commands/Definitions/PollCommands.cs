@@ -100,13 +100,15 @@ namespace TPP.Core.Commands.Definitions
                 ? "0" // avoid division by zero
                 : $"{100 * (option.VoterIds.Count / (double)poll.Voters.Count):0.#}";
 
+            IEnumerable<string> results = poll.PollOptions.Select(option =>
+                $"#{option.Id} {option.Option} " +
+                $"({(option.VoterIds.Count == 1 ? "1 vote" : $"{option.VoterIds.Count} votes")}, " +
+                $"{Percentage(option)}%)");
             return new CommandResult
             {
-                Response = $"Poll '{poll.PollCode}': {poll.PollTitle} - " + string.Join(", ",
-                    poll.PollOptions.Select(option =>
-                        $"#{option.Id} {option.Option} " +
-                        $"({(option.VoterIds.Count == 1 ? "1 vote" : $"{option.VoterIds.Count} votes")}, " +
-                        $"{Percentage(option)}%)"))
+                Response = $"Poll '{poll.PollCode}': {poll.PollTitle}" +
+                           $" - {string.Join(", ", results)}" +
+                           $" - Vote with '!vote {poll.PollCode} <option(s)>'"
             };
         }
 
