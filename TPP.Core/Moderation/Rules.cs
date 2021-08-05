@@ -174,6 +174,9 @@ namespace TPP.Core.Moderation
 
         private int GetNumPersonalRepetitions(User user, string message)
         {
+            if (message.StartsWith('!'))
+                // need to tolerate repetitious commands to avoid excessive false positives
+                return 0;
             bool isApplicable = message.Length >= _minSingleWordMessageLength ||
                                 message.Count(c => c == ' ') >= _minNumWords - 1;
             if (!isApplicable)

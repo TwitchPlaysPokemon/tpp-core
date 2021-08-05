@@ -131,6 +131,17 @@ namespace TPP.Core.Tests.Moderation
             }
 
             [Test]
+            public void ignores_commands()
+            {
+                PersonalRepetitionRule rule = new(Mock.Of<IClock>());
+                Assert.That(rule.Check(TextMessage("!buybadge pidgey 20 t2 90d")), Is.InstanceOf<RuleResult.Nothing>());
+                Assert.That(rule.Check(TextMessage("!buybadge pidgey 20 t2 90d")), Is.InstanceOf<RuleResult.Nothing>());
+                Assert.That(rule.Check(TextMessage("!buybadge pidgey 20 t2 90d")), Is.InstanceOf<RuleResult.Nothing>());
+                Assert.That(rule.Check(TextMessage("!buybadge pidgey 20 t2 90d")), Is.InstanceOf<RuleResult.Nothing>());
+
+            }
+
+            [Test]
             public void ignores_different_messages()
             {
                 PersonalRepetitionRule rule = new(Mock.Of<IClock>());
