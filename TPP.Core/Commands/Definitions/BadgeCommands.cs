@@ -199,8 +199,9 @@ namespace TPP.Core.Commands.Definitions
             }
             else if (mode.Equals(PokedexModeDupes))
             {
-                var dupeList = numBadgesPerSpecies.Where(kvp => kvp.Value > 1).ToList();
-                if (!dupeList.Any())
+                var dupes = numBadgesPerSpecies.Where(kvp => kvp.Value > 1)
+                    .ToImmutableSortedDictionary(kvp => kvp.Key, kvp => kvp.Value);
+                if (!dupes.Any())
                 {
                     return new CommandResult
                     {
@@ -209,12 +210,12 @@ namespace TPP.Core.Commands.Definitions
                             : $"{user.Name} does not own any duplicate Pokémon badges"
                     };
                 }
-                IEnumerable<string> badgesFormatted = dupeList.Select(kvp => $"{kvp.Key}");
+                IEnumerable<string> badgesFormatted = dupes.Select(kvp => $"{kvp.Value - 1}x {kvp.Key}");
                 return new CommandResult
                 {
                     Response = isSelf
-                        ? $"You are owning duplicates of the following badge(s): {string.Join(", ", badgesFormatted)}"
-                        : $"{user.Name} owns duplicates of the following badge(s): {string.Join(", ", badgesFormatted)}",
+                        ? $"You are owning the following duplicate badge(s): {string.Join(", ", badgesFormatted)}"
+                        : $"{user.Name} owns the following duplicate badge(s): {string.Join(", ", badgesFormatted)}",
                     ResponseTarget = ResponseTarget.WhisperIfLong
                 };
             }
