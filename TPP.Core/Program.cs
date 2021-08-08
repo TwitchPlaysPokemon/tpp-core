@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using DocoptNet;
 using JsonNet.ContractResolvers;
@@ -44,9 +46,24 @@ Options:
             ["dummy"] = null,
         };
 
+        /// Ensures different environments don't change the application's behaviour.
+        private static void NormalizeRuntimeEnvironment()
+        {
+            // Just always use UTF-8, don't bother with weird encodings.
+            Console.InputEncoding = Encoding.UTF8;
+            Console.OutputEncoding = Encoding.UTF8;
+            // Stuff like double.Parse(str) is culture dependent, which is a great way to introduce subtle bugs.
+            // Sadly we can't use the 'InvariantGlobalization' project property for this, since it additionally silently
+            // makes string unicode normalization be a no-op, which is another great way to introduce subtle bugs.
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+            CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
+            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+        }
+
         private static void Main(string[] argv)
         {
-            Console.OutputEncoding = Encoding.UTF8;
+            NormalizeRuntimeEnvironment();
+
             IDictionary<string, ValueObject> args = new Docopt().Apply(Usage, argv, exit: true);
             string? mode = null;
             string modeConfigFilename = args["--mode-config"].ToString();
