@@ -239,7 +239,7 @@ namespace TPP.Core.Tests.Moderation
             public void detects_banned_word()
             {
                 BannedWordsRule rule = new(new[] { "penis" });
-                Message message = TextMessage("Pénis haha");
+                Message message = TextMessage("𝓟énis haha");
 
                 RuleResult result = rule.Check(message);
                 Assert.That(result, Is.InstanceOf<RuleResult.Timeout>());

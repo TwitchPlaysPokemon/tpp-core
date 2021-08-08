@@ -16,9 +16,9 @@ namespace TPP.Core.Moderation
 {
     internal static class Utils
     {
-        internal static string RemoveDiacritics(string str) =>
+        internal static string NormalizeAndRemoveDiacritics(string str) =>
             string.Concat(str
-                .Normalize(NormalizationForm.FormD)
+                .Normalize(NormalizationForm.FormKD)
                 .Where(c => char.GetUnicodeCategory(c) != NonSpacingMark));
     }
 
@@ -269,7 +269,7 @@ namespace TPP.Core.Moderation
         public RuleResult Check(Message message)
         {
             if (!_bannedWords.Any()) return new RuleResult.Nothing();
-            bool hasBannedWord = Utils.RemoveDiacritics(message.MessageText)
+            bool hasBannedWord = Utils.NormalizeAndRemoveDiacritics(message.MessageText)
                 .ToLowerInvariant()
                 .Split().Intersect(_bannedWords).Any();
             return hasBannedWord
