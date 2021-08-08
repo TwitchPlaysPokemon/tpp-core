@@ -14,7 +14,8 @@ namespace TPP.Core.Tests.Moderation
             firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
             lastMessageAt: null, pokeyen: 0, tokens: 0);
 
-        private static Message TextMessage(string text) => new(MockUser("MockUser"), text, MessageSource.Chat, string.Empty);
+        private static Message TextMessage(string text) =>
+            new(MockUser("MockUser"), text, MessageSource.Chat, string.Empty);
 
         [TestFixture]
         private class Copypasta
@@ -127,7 +128,6 @@ namespace TPP.Core.Tests.Moderation
                 RuleResult result = rule.Check(TextMessage("I am eternal 4"));
                 Assert.That(result, Is.InstanceOf<RuleResult.Timeout>());
                 Assert.That(((RuleResult.Timeout)result).Message, Is.EqualTo("excessively repetitious messages"));
-
             }
 
             [Test]
@@ -138,7 +138,6 @@ namespace TPP.Core.Tests.Moderation
                 Assert.That(rule.Check(TextMessage("!buybadge pidgey 20 t2 90d")), Is.InstanceOf<RuleResult.Nothing>());
                 Assert.That(rule.Check(TextMessage("!buybadge pidgey 20 t2 90d")), Is.InstanceOf<RuleResult.Nothing>());
                 Assert.That(rule.Check(TextMessage("!buybadge pidgey 20 t2 90d")), Is.InstanceOf<RuleResult.Nothing>());
-
             }
 
             [Test]
@@ -229,6 +228,30 @@ namespace TPP.Core.Tests.Moderation
                 Duration age = Duration.FromDays(50);
                 clockMock.Setup(c => c.GetCurrentInstant()).Returns(message.User.FirstActiveAt + age);
 
+                Assert.That(rule.Check(message), Is.InstanceOf<RuleResult.Nothing>());
+            }
+        }
+
+        [TestFixture]
+        private class BannedWords
+        {
+            [Test]
+            public void detects_banned_word()
+            {
+                BannedWordsRule rule = new(new[] { "penis" });
+                Message message = TextMessage("Pénis haha");
+
+                RuleResult result = rule.Check(message);
+                Assert.That(result, Is.InstanceOf<RuleResult.Timeout>());
+                Assert.That(((RuleResult.Timeout)result).Message,
+                    Is.EqualTo("usage of banned word"));
+            }
+
+            [Test]
+            public void ignored_not_banned_word()
+            {
+                BannedWordsRule rule = new(new[] { "penis" });
+                Message message = TextMessage("boobs haha");
                 Assert.That(rule.Check(message), Is.InstanceOf<RuleResult.Nothing>());
             }
         }
