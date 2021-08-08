@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
@@ -13,6 +14,14 @@ using static System.Globalization.UnicodeCategory;
 
 namespace TPP.Core.Moderation
 {
+    internal static class Utils
+    {
+        internal static string RemoveDiacritics(string str) =>
+            string.Concat(str
+                .Normalize(NormalizationForm.FormD)
+                .Where(c => char.GetUnicodeCategory(c) != NonSpacingMark));
+    }
+
     /// Some hardcoded URLs that are immediately timeout-worthy. These are mostly screamer-sites.
     public class BannedUrlsRule : IModerationRule
     {
@@ -243,6 +252,29 @@ namespace TPP.Core.Moderation
                     "suspiciously excessive usage of special characters");
             }
             return new RuleResult.Nothing();
+        }
+    }
+
+    public class BannedWordsRule : IModerationRule
+    {
+        public string Id => "banned-words";
+
+        private readonly IImmutableSet<string> _bannedWords;
+
+        public BannedWordsRule(IEnumerable<string> bannedWords)
+        {
+            _bannedWords = bannedWords.Select(w => w.ToLowerInvariant()).ToImmutableHashSet();
+        }
+
+        public RuleResult Check(Message message)
+        {
+            if (!_bannedWords.Any()) return new RuleResult.Nothing();
+            bool hasBannedWord = Utils.RemoveDiacritics(message.MessageText)
+                .ToLowerInvariant()
+                .Split().Intersect(_bannedWords).Any();
+            return hasBannedWord
+                ? new RuleResult.Timeout("usage of banned word")
+                : new RuleResult.Nothing();
         }
     }
 }

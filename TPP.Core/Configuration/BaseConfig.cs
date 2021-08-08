@@ -32,6 +32,7 @@ namespace TPP.Core.Configuration
         public DiscordLoggingConfig? DiscordLoggingConfig { get; init; } = null;
 
         public ImmutableHashSet<string> DisabledModbotRules { get; init; } = ImmutableHashSet.Create<string>();
+        public ImmutableHashSet<string> ModbotBannedWords { get; init; } = ImmutableHashSet.Create<string>();
 
         public Duration AdvertisePollsInterval { get; init; } = Duration.FromHours(1);
     }

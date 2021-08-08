@@ -149,6 +149,18 @@
         ]
       }
     },
+    "ModbotBannedWords": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
     "AdvertisePollsInterval": {
       "type": "string"
     }

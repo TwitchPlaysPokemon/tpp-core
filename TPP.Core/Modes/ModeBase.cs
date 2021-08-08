@@ -87,6 +87,7 @@ namespace TPP.Core.Modes
                 new EmoteRule(),
                 new CopypastaRule(clock),
                 new PersonalRepetitionRule(clock),
+                new BannedWordsRule(baseConfig.ModbotBannedWords),
                 new UnicodeCharacterCategoryRule()
             );
             foreach (string unknown in baseConfig.DisabledModbotRules.Except(availableRules.Select(rule => rule.Id)))
