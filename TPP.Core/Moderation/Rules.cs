@@ -151,7 +151,7 @@ namespace TPP.Core.Moderation
             IClock clock,
             Duration? recentMessagesTtl = null,
             int minSingleWordMessageLength = 25,
-            int minNumWords = 2,
+            int minNumWords = 3,
             double minSimilarity = 0.75)
         {
             _clock = clock;
