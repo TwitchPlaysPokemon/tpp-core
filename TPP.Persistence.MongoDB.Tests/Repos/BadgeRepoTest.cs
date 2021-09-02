@@ -80,9 +80,9 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             Badge badgeNobody = await badgeRepo.AddBadge(null, PkmnSpecies.OfId("4"), Badge.BadgeSource.Pinball, 0, false);
 
             // when
-            List<Badge> resultUserA = await badgeRepo.FindByUser("userA");
-            List<Badge> resultUserB = await badgeRepo.FindByUser("userB");
-            List<Badge> resultNobody = await badgeRepo.FindByUser(null);
+            List<Badge> resultUserA = await badgeRepo.FindAllByUser("userA");
+            List<Badge> resultUserB = await badgeRepo.FindAllByUser("userB");
+            List<Badge> resultNobody = await badgeRepo.FindAllByUser(null);
 
             // then
             Assert.AreEqual(new List<Badge> { badgeUserA1, badgeUserA2 }, resultUserA);
@@ -162,6 +162,32 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             Assert.IsTrue(hasUserSpecies2);
             Assert.IsTrue(hasUserSpecies3);
             Assert.IsFalse(hasUserSpecies4);
+        }
+
+        [Test]
+        public async Task can_set_badge_sell_price()
+        {
+            IBadgeRepo badgeRepo = CreateBadgeRepo();
+            Badge badge = await badgeRepo.AddBadge("user", PkmnSpecies.OfId("1"), Badge.BadgeSource.Pinball, 0, false);
+
+            Badge forSale = await badgeRepo.SetBadgeSellPrice(badge, 10);
+
+            Assert.AreEqual(10, forSale.SellPrice);
+        }
+
+        [Test]
+        public async Task FindAllForSaleByCustom_only_returns_badges_for_sale()
+        {
+            IBadgeRepo badgeRepo = CreateBadgeRepo();
+            PkmnSpecies species = PkmnSpecies.OfId("1");
+            Badge notForSale = await badgeRepo.AddBadge("user", species, Badge.BadgeSource.Pinball, 0, false);
+            await badgeRepo.AddBadge("user", species, Badge.BadgeSource.Pinball, 0, false); 
+
+            Badge forSale = await badgeRepo.SetBadgeSellPrice(notForSale, 1);
+
+            List<Badge> saleList = await badgeRepo.FindAllForSaleByCustom(null, species, null, null, null);
+
+            Assert.AreEqual(new List<Badge>() { forSale }, saleList);
         }
 
         [TestFixture]

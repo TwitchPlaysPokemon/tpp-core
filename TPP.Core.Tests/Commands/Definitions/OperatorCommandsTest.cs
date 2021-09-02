@@ -256,10 +256,10 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await operatorCommands.CreateBadge(new CommandContext(MockMessage(user),
                 ImmutableList.Create("recipient", "species", "123"), _argsParser));
 
-            Assert.AreEqual("123 Normal #001 Species badges created for Recipient.", result.Response);
+            Assert.AreEqual("123 #001 Species badges created for Recipient.", result.Response);
             Assert.AreEqual(ResponseTarget.Source, result.ResponseTarget);
             _badgeRepoMock.Verify(repo =>
-                    repo.AddBadge(recipient.Id, species, Badge.BadgeSource.ManualCreation, 0, false, null),
+                    repo.AddBadge(recipient.Id, species, Badge.BadgeSource.ManualCreation, 1, false, null),
                 Times.Exactly(123));
         }
     }

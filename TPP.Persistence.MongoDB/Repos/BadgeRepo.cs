@@ -84,13 +84,13 @@ namespace TPP.Persistence.MongoDB.Repos
             return badge;
         }
 
-        public async Task<List<Badge>> FindByUser(string? userId) =>
+        public async Task<List<Badge>> FindAllByUser(string? userId) =>
             await Collection.Find(b => b.UserId == userId).ToListAsync();
 
         public async Task<List<Badge>> FindByUserAndSpecies(string? userId, PkmnSpecies species) =>
             await Collection.Find(b => b.UserId == userId && b.Species == species).ToListAsync();
 
-        public async Task<List<Badge>> FindAllByCustom(string? userId = null, PkmnSpecies? species = null, int? form = null, Badge.BadgeSource? source = null, bool? shiny = false)
+        public async Task<List<Badge>> FindAllByCustom(string? userId = null, PkmnSpecies? species = null, int? form = null, Badge.BadgeSource? source = null, bool? shiny = null)
         {
             FilterDefinition<Badge> filter = Builders<Badge>.Filter.Empty;
             if (userId != null)
@@ -103,9 +103,16 @@ namespace TPP.Persistence.MongoDB.Repos
                 filter &= Builders<Badge>.Filter.Eq(b => b.Form, form);
             if (source != null)
                 filter &= Builders<Badge>.Filter.Eq(b => b.Source, source);
-            filter &= Builders<Badge>.Filter.Eq(b => b.Shiny, shiny); // always assigned, defaults to false
+            if (shiny != null)
+                filter &= Builders<Badge>.Filter.Eq(b => b.Shiny, shiny);
 
             return await Collection.Find(filter).ToListAsync();
+        }
+
+        public async Task<List<Badge>> FindAllForSaleByCustom(string? userId, PkmnSpecies? species, int? form, Badge.BadgeSource? source, bool? shiny)
+        {
+            List<Badge> all = await FindAllByCustom(userId, species, form, source, shiny);
+            return all.Where(b => b.SellPrice > 0).ToList();
         }
 
         public async Task<long> CountByUserAndSpecies(string? userId, PkmnSpecies species) =>
@@ -180,6 +187,19 @@ namespace TPP.Persistence.MongoDB.Repos
                     UserLostBadgeSpecies?.Invoke(this, new UserLostBadgeSpeciesEventArgs(previousOwnerUserId, species));
             }
             return updatedBadges.ToImmutableList();
+        }
+
+        public async Task<Badge> SetBadgeSellPrice(Badge badge, int price)
+        {
+            if (price <= 0)
+                throw new ArgumentOutOfRangeException("price", "Price must be positive");
+            return await Collection.FindOneAndUpdateAsync<Badge>(
+                Builders<Badge>.Filter
+                           .Where(b => b.Id == badge.Id && b.UserId == badge.UserId),
+                Builders<Badge>.Update
+                    .Set(b => b.SellPrice, price),
+                new FindOneAndUpdateOptions<Badge> { ReturnDocument = ReturnDocument.After, IsUpsert = false }
+                ) ?? throw new OwnedBadgeNotFoundException(badge);
         }
     }
 }

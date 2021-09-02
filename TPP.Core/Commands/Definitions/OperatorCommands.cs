@@ -188,7 +188,7 @@ namespace TPP.Core.Commands.Definitions
                 await context.ParseArgs<AnyOrder<User, PkmnSpecies, Optional<PositiveInt>, Optional<string>, Optional<Shiny>>>();
             int amount = amountOpt.Map(i => i.Number).OrElse(1);
             int form = PkmnForms.pokemonHasForms(species) ? 0 : 1; // default to the first listed form if form is unspecified
-            bool shiny = shinyOpt.Value ?? false;
+            bool shiny = shinyOpt.IsPresent ? shinyOpt.Value : false;
             if (formOpt.IsPresent)
             {
                 string formName = formOpt.Value;

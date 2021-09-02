@@ -39,9 +39,9 @@ namespace TPP.Persistence.Repos
     {
         public Task<Badge> AddBadge(
             string? userId, PkmnSpecies species, Badge.BadgeSource source, int form, bool shiny, Instant? createdAt = null);
-        public Task<List<Badge>> FindByUser(string? userId);
+        public Task<List<Badge>> FindAllByUser(string? userId);
         public Task<List<Badge>> FindByUserAndSpecies(string? userId, PkmnSpecies species);
-        public Task<List<Badge>> FindAllByCustom(string? userId = null, PkmnSpecies? species = null, int? form = null, Badge.BadgeSource? source = null, bool? shiny = false);
+        public Task<List<Badge>> FindAllByCustom(string? userId = null, PkmnSpecies? species = null, int? form = null, Badge.BadgeSource? source = null, bool? shiny = null);
         public Task<long> CountByUserAndSpecies(string? userId, PkmnSpecies species);
         public Task<ImmutableSortedDictionary<PkmnSpecies, int>> CountByUserPerSpecies(string? userId);
         public Task<bool> HasUserBadge(string? userId, PkmnSpecies species);
@@ -51,5 +51,8 @@ namespace TPP.Persistence.Repos
         public Task<IImmutableList<Badge>> TransferBadges(
             IImmutableList<Badge> badges, string? recipientUserId, string reason,
             IDictionary<string, object?> additionalData);
+
+        public Task<Badge> SetBadgeSellPrice(Badge badge, int price);
+        public Task<List<Badge>> FindAllForSaleByCustom(string? userId, PkmnSpecies? species, int? form, Badge.BadgeSource? source, bool? shiny);
     }
 }
