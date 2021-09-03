@@ -210,7 +210,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             await bsonBadgeCollection.InsertOneAsync(BsonDocument.Create(new Dictionary<string, object?>
             {
                 ["_id"] = ObjectId.Parse(id),
-                ["userid"] = "mogi",
+                ["user"] = "mogi",
                 ["species"] = "1",
                 ["source"] = "manual_creation",
                 ["created_at"] = instant.ToDateTimeUtc(),
@@ -220,8 +220,10 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             IMongoCollection<Badge> badgeCollection = db.GetCollection<Badge>("badges"); ;
 
             Badge b = await badgeCollection.Find(b => b.Id == id).FirstAsync();
-
             Assert.AreEqual(false, b.Shiny);
+
+            List<Badge> badges = await badgeRepo.FindAllByCustom(null, null, null, null, false);
+            Assert.AreEqual(1, badges.Count);
         }
 
         [TestFixture]

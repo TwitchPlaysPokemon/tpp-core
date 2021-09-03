@@ -90,7 +90,7 @@ namespace TPP.Persistence.MongoDB.Repos
         public async Task<List<Badge>> FindByUserAndSpecies(string? userId, PkmnSpecies species) =>
             await Collection.Find(b => b.UserId == userId && b.Species == species).ToListAsync();
 
-        public async Task<List<Badge>> FindAllByCustom(string? userId = null, PkmnSpecies? species = null, int? form = null, Badge.BadgeSource? source = null, bool? shiny = null)
+        public async Task<List<Badge>> FindAllByCustom(string? userId, PkmnSpecies? species, int? form, Badge.BadgeSource? source, bool? shiny)
         {
             FilterDefinition<Badge> filter = Builders<Badge>.Filter.Empty;
             if (userId != null)
@@ -103,8 +103,10 @@ namespace TPP.Persistence.MongoDB.Repos
                 filter &= Builders<Badge>.Filter.Eq(b => b.Form, form);
             if (source != null)
                 filter &= Builders<Badge>.Filter.Eq(b => b.Source, source);
-            if (shiny != null)
-                filter &= Builders<Badge>.Filter.Eq(b => b.Shiny, shiny);
+            if (shiny == true)
+                filter &= Builders<Badge>.Filter.Eq(b => b.Shiny, true);
+            else
+                filter &= Builders<Badge>.Filter.Ne(b => b.Shiny, true);
 
             return await Collection.Find(filter).ToListAsync();
         }
