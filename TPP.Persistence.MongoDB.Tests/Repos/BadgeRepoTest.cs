@@ -5,6 +5,7 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using Moq;
 using NodaTime;
+using NodaTime.Text;
 using NUnit.Framework;
 using TPP.Common;
 using TPP.Persistence.Models;
@@ -18,6 +19,12 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
     {
         public BadgeRepo CreateBadgeRepo() =>
             new BadgeRepo(CreateTemporaryDatabase(), Mock.Of<IMongoBadgeLogRepo>(), Mock.Of<IClock>());
+
+        internal class MockClock : IClock
+        {
+            public Instant FixedCurrentInstant = Instant.FromUnixTimeSeconds(1234567890);
+            public Instant GetCurrentInstant() => FixedCurrentInstant;
+        }
 
         [Test]
         public async Task insert_then_read_are_equal()
@@ -188,6 +195,33 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             List<Badge> saleList = await badgeRepo.FindAllForSaleByCustom(null, species, null, null, null);
 
             Assert.AreEqual(new List<Badge>() { forSale }, saleList);
+        }
+
+        [Test]
+        public async Task can_handle_null_shiny_fields()
+        {
+            IMongoDatabase db = CreateTemporaryDatabase();
+
+            const string id = "590df61373b975210006fcdf";
+            Instant instant = InstantPattern.ExtendedIso.Parse("2017-05-06T16:13:07.314Z").Value;
+
+            BadgeRepo badgeRepo = new BadgeRepo(db, new BadgeLogRepo(db), new MockClock());
+            IMongoCollection<BsonDocument> bsonBadgeCollection = db.GetCollection<BsonDocument>("badges");
+            await bsonBadgeCollection.InsertOneAsync(BsonDocument.Create(new Dictionary<string, object?>
+            {
+                ["_id"] = ObjectId.Parse(id),
+                ["userid"] = "mogi",
+                ["species"] = "1",
+                ["source"] = "manual_creation",
+                ["created_at"] = instant.ToDateTimeUtc(),
+                ["form"] = 0,
+            }));
+
+            IMongoCollection<Badge> badgeCollection = db.GetCollection<Badge>("badges"); ;
+
+            Badge b = await badgeCollection.Find(b => b.Id == id).FirstAsync();
+
+            Assert.AreEqual(false, b.Shiny);
         }
 
         [TestFixture]
