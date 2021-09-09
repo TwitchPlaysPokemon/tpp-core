@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -93,7 +92,6 @@ namespace TPP.ArgsParsing
                 {
                     throw new MissingParserException(typeWithoutParser: type);
                 }
-                Debug.Assert(parser != null, "try-get succeeded and the dictionary does not contain null values");
                 Type[] genericTypes = type.IsGenericType ? type.GenericTypeArguments : Array.Empty<Type>();
                 ArgsParseResult<object> parseResult;
                 try

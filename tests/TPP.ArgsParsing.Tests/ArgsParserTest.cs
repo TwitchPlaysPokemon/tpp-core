@@ -30,6 +30,17 @@ namespace TPP.ArgsParsing.Tests
             Assert.That(ex.Message, Is.EqualTo("too many arguments"));
         }
 
+        [Test]
+        public void TestMissingParser()
+        {
+            var argsParser = new ArgsParser();
+
+            MissingParserException ex = Assert.ThrowsAsync<MissingParserException>(() => argsParser
+                .Parse<int>(args: ImmutableList.Create("123")))!;
+            Assert.That(ex.Message, Is.EqualTo("No parser found for type System.Int32"));
+            Assert.That(ex.TypeWithoutParser, Is.EqualTo(typeof(int)));
+        }
+
         /// <summary>
         /// Tests that the error message with the highest relevance gets displayed,
         /// even if it originated from a parsing that succeeded, that being an empty Optional in this case.
@@ -64,13 +75,14 @@ namespace TPP.ArgsParsing.Tests
             ArgsParseFailure ex = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
                 .Parse<AnyOrder<Optional<NonNegativeInt>, Optional<Instant>>>(args: ImmutableList.Create("X", "Y")))!;
             Assert.That(ex.Message, Is.Not.EqualTo("too many arguments"));
-            Assert.That(ex.Message, Is.EqualTo("did not recognize 'X' as a number, or did not recognize 'X' as a UTC-instant"));
+            Assert.That(ex.Message, Is.EqualTo(
+                "did not recognize 'X' as a number, or did not recognize 'X' as a UTC-instant"));
             Assert.That(ex.Failures, Is.EqualTo(new[]
-                {
-                    new Failure(ErrorRelevanceConfidence.Default, "did not recognize 'X' as a number"),
-                    new Failure(ErrorRelevanceConfidence.Default, "did not recognize 'X' as a UTC-instant"),
-                    new Failure(ErrorRelevanceConfidence.Unlikely, "too many arguments")
-                }));
+            {
+                new Failure(ErrorRelevanceConfidence.Default, "did not recognize 'X' as a number"),
+                new Failure(ErrorRelevanceConfidence.Default, "did not recognize 'X' as a UTC-instant"),
+                new Failure(ErrorRelevanceConfidence.Unlikely, "too many arguments")
+            }));
         }
 
         /// <summary>
@@ -90,7 +102,8 @@ namespace TPP.ArgsParsing.Tests
                 .Parse<AnyOrder<NonNegativeInt, NonNegativeInt>>(ImmutableList.Create("1", "x")))!;
             Assert.That(ex.Message, Is.EqualTo("did not recognize 'x' as a number"));
             // this is how it used to be:
-            Assert.That(ex.Message, Is.Not.EqualTo("did not recognize 'x' as a number, or did not recognize 'x' as a number"));
+            Assert.That(ex.Message, Is.Not.EqualTo(
+                "did not recognize 'x' as a number, or did not recognize 'x' as a number"));
         }
     }
 }
