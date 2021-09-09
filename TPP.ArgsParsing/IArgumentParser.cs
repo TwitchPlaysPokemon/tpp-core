@@ -15,7 +15,6 @@ namespace TPP.ArgsParsing
 
     /// <summary>
     /// Interface describing the ability to turn a list of strings into instances of a list of given types.
-    /// Do not implement this interface! Instead, inherit from <see cref="BaseArgumentParser{T}"/>.
     /// </summary>
     /// <typeparam name="T">type this parser can create instances of using the supplied string arguments.
     /// If the type is supposed to be generic, e.g. <c>Foo&lt;T&gt;</c>, the generic type needs to have a non-generic
@@ -36,17 +35,6 @@ namespace TPP.ArgsParsing
         /// Implementations are advised that they may access arguments by index without prior check, e.g. <c>args[0]</c>,
         /// which will just throw this exception for them if they run out of arguments.</exception>
         new Task<ArgsParseResult<T>> Parse(IImmutableList<string> args, Type[] genericTypes);
-    }
-
-    /// <summary>
-    /// Base class for implementing an <see cref="IArgumentParser{T}"/>.
-    /// Use this base class instead of implementing the interface directly to avoid boilerplate introduced
-    /// by the fact that the generic interface also has a non-generic version for implementation reasons.
-    /// </summary>
-    /// <typeparam name="T">type this parser can create instances of using the supplied string arguments</typeparam>
-    public abstract class BaseArgumentParser<T> : IArgumentParser<T>
-    {
-        public abstract Task<ArgsParseResult<T>> Parse(IImmutableList<string> args, Type[] genericTypes);
 
         async Task<ArgsParseResult<object>> IArgumentParser.Parse(IImmutableList<string> args, Type[] genericTypes)
         {

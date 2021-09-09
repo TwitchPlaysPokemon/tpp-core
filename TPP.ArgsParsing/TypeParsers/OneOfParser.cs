@@ -16,7 +16,7 @@ namespace TPP.ArgsParsing.TypeParsers
     /// <c>"123"</c> and <c>"foo"</c>, and fill in the first or second item respectively.
     /// In case of multiple possible matches, the first match gets returned.
     /// </summary>
-    public class OneOfParser : BaseArgumentParser<OneOf>
+    public class OneOfParser : IArgumentParser<OneOf>
     {
         private readonly ArgsParser _argsParser;
 
@@ -25,7 +25,7 @@ namespace TPP.ArgsParsing.TypeParsers
             _argsParser = argsParser;
         }
 
-        public override async Task<ArgsParseResult<OneOf>> Parse(
+        public async Task<ArgsParseResult<OneOf>> Parse(
             IImmutableList<string> args,
             Type[] genericTypes)
         {

@@ -11,11 +11,11 @@ namespace TPP.ArgsParsing.TypeParsers
     /// Parser capable of parsing colors represented as a 6-digit hexadecimal string optionally prefixed with '#',
     /// for example <c>#ff0000</c> for pure red, which will result in a <see cref="HexColor"/> of <c>#FF0000</c>.
     /// </summary>
-    public class HexColorParser : BaseArgumentParser<HexColor>
+    public class HexColorParser : IArgumentParser<HexColor>
     {
         private static readonly Regex Regex = new(@"^#?[0-9a-f]{6}$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-        public override Task<ArgsParseResult<HexColor>> Parse(IImmutableList<string> args, Type[] genericTypes)
+        public Task<ArgsParseResult<HexColor>> Parse(IImmutableList<string> args, Type[] genericTypes)
         {
             Match colorMatch = Regex.Match(args[0]);
             if (colorMatch.Success)

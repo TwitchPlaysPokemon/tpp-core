@@ -13,7 +13,7 @@ namespace TPP.ArgsParsing.TypeParsers
     /// but returns an empty instance of <see cref="Optional{T}"/> if parsing failed, instead of failing itself.
     /// If parsing succeeded, the result is also wrapped inside a <see cref="Optional{T}"/>.
     /// </summary>
-    public class OptionalParser : BaseArgumentParser<Optional>
+    public class OptionalParser : IArgumentParser<Optional>
     {
         private readonly ArgsParser _argsParser;
 
@@ -22,7 +22,7 @@ namespace TPP.ArgsParsing.TypeParsers
             _argsParser = argsParser;
         }
 
-        public override async Task<ArgsParseResult<Optional>> Parse(
+        public async Task<ArgsParseResult<Optional>> Parse(
             IImmutableList<string> args,
             Type[] genericTypes)
         {

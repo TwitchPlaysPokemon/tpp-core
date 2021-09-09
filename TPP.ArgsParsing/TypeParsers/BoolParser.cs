@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 
 namespace TPP.ArgsParsing.TypeParsers
 {
-    public class BoolParser : BaseArgumentParser<bool>
+    public class BoolParser : IArgumentParser<bool>
     {
-        public override Task<ArgsParseResult<bool>> Parse(IImmutableList<string> args, Type[] genericTypes) =>
+        public Task<ArgsParseResult<bool>> Parse(IImmutableList<string> args, Type[] genericTypes) =>
             Task.FromResult(args[0].ToLower() switch
             {
                 "y" or "yes" or "true" => ArgsParseResult<bool>.Success(true, args.Skip(1).ToImmutableList()),

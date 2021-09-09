@@ -7,9 +7,9 @@ using TPP.Model;
 
 namespace TPP.Core
 {
-    public class SideParser : BaseArgumentParser<Side>
+    public class SideParser : IArgumentParser<Side>
     {
-        public override Task<ArgsParseResult<Side>> Parse(IImmutableList<string> args, Type[] genericTypes) =>
+        public Task<ArgsParseResult<Side>> Parse(IImmutableList<string> args, Type[] genericTypes) =>
             Task.FromResult(args[0].ToLower() switch
             {
                 "blue" => ArgsParseResult<Side>.Success(Side.Blue, args.Skip(1).ToImmutableList()),

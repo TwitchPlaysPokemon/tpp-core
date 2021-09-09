@@ -16,7 +16,7 @@ namespace TPP.ArgsParsing.TypeParsers
     /// <c>{"123", "foo"}</c> and <c>{"foo", "123"}</c>, but not for <c>{"foo", "bar"}</c>.
     /// In case of multiple possible permutations, the first matching permutation gets returned.
     /// </summary>
-    public class AnyOrderParser : BaseArgumentParser<AnyOrder>
+    public class AnyOrderParser : IArgumentParser<AnyOrder>
     {
         private readonly ArgsParser _argsParser;
 
@@ -49,7 +49,7 @@ namespace TPP.ArgsParsing.TypeParsers
             }
         }
 
-        public override async Task<ArgsParseResult<AnyOrder>> Parse(
+        public async Task<ArgsParseResult<AnyOrder>> Parse(
             IImmutableList<string> args,
             Type[] genericTypes)
         {

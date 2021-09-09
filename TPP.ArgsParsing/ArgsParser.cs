@@ -39,7 +39,7 @@ namespace TPP.ArgsParsing
     ///     // failure
     /// }
     /// </code>
-    /// Custom types can be specified by inheriting from <see cref="BaseArgumentParser{T}"/> and registering
+    /// Custom types can be specified by inheriting from <see cref="IArgumentParser{T}"/> and registering
     /// that parser using <see cref="AddArgumentParser{T}"/>.
     /// </summary>
     public class ArgsParser

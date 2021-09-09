@@ -12,7 +12,7 @@ namespace TPP.ArgsParsing.TypeParsers
     /// and return instances of <see cref="User"/>, if a user with that name was found.
     /// Names may optionally be prefixed with '@' to allow for disambiguation if needed.
     /// </summary>
-    public class UserParser : BaseArgumentParser<User>
+    public class UserParser : IArgumentParser<User>
     {
         private readonly IUserRepo _userRepo;
 
@@ -24,7 +24,7 @@ namespace TPP.ArgsParsing.TypeParsers
             _userRepo = userRepo;
         }
 
-        public override async Task<ArgsParseResult<User>> Parse(IImmutableList<string> args, Type[] genericTypes)
+        public async Task<ArgsParseResult<User>> Parse(IImmutableList<string> args, Type[] genericTypes)
         {
             string displayName = args[0];
             bool isPrefixed = displayName.StartsWith('@');

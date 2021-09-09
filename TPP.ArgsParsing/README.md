@@ -25,7 +25,7 @@ var result = await argsParser.Parse<AnyOrder<PkmnSpecies, int, Tokens>>(args);
 ```
 
 This project already includes parser implementations for a bunch of commonly used types,
-but can be extended by deriving from [BaseArgumentParser](IArgumentParser.cs)
+but can be extended by deriving from [IArgumentParser](IArgumentParser.cs)
 and adding that parser to your `ArgsParser`-instance.
 
 Take a look at the [tests](../tests/TPP.ArgsParsing.Tests) for more in-depth usage examples.

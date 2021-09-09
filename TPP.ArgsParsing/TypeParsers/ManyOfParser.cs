@@ -27,7 +27,7 @@ namespace TPP.ArgsParsing.TypeParsers
     ///   </li>
     /// </ul>
     /// </summary>
-    public class ManyOfParser : BaseArgumentParser<ManyOf>
+    public class ManyOfParser : IArgumentParser<ManyOf>
     {
         private readonly ArgsParser _argsParser;
 
@@ -36,7 +36,7 @@ namespace TPP.ArgsParsing.TypeParsers
             _argsParser = argsParser;
         }
 
-        public override async Task<ArgsParseResult<ManyOf>> Parse(
+        public async Task<ArgsParseResult<ManyOf>> Parse(
             IImmutableList<string> args,
             Type[] genericTypes)
         {
