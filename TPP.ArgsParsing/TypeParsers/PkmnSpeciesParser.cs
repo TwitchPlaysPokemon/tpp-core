@@ -10,7 +10,7 @@ namespace TPP.ArgsParsing.TypeParsers
     /// <summary>
     /// A parser that recognizes a pokemon species, either by name or by a #-prefixed species id.
     /// </summary>
-    public class PkmnSpeciesParser : BaseArgumentParser<PkmnSpecies>
+    public class PkmnSpeciesParser : IArgumentParser<PkmnSpecies>
     {
         private readonly ImmutableDictionary<string, PkmnSpecies> _nameLookup;
         private readonly IImmutableDictionary<string, PkmnSpecies> _idLookup;
@@ -32,7 +32,7 @@ namespace TPP.ArgsParsing.TypeParsers
 
         private string NormalizeName(string name) => _normalizeName(name).ToLowerInvariant();
 
-        public override Task<ArgsParseResult<PkmnSpecies>> Parse(IImmutableList<string> args, Type[] genericTypes)
+        public Task<ArgsParseResult<PkmnSpecies>> Parse(IImmutableList<string> args, Type[] genericTypes)
         {
             if (!args[0].StartsWith("#"))
             {

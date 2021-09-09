@@ -12,9 +12,9 @@ namespace TPP.ArgsParsing.TypeParsers
     /// The timezone specifier 'Z' is mandatory for explicitness.
     /// A space may also be used instead of 'T' for better readability.
     /// </summary>
-    public class InstantParser : BaseArgumentParser<Instant>
+    public class InstantParser : IArgumentParser<Instant>
     {
-        public override Task<ArgsParseResult<Instant>> Parse(IImmutableList<string> args, Type[] genericTypes)
+        public Task<ArgsParseResult<Instant>> Parse(IImmutableList<string> args, Type[] genericTypes)
         {
             if (args.Count >= 2)
             {

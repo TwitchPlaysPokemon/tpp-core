@@ -9,9 +9,9 @@ namespace TPP.ArgsParsing.TypeParsers
     /// <summary>
     /// A parser that finds a role by name.
     /// </summary>
-    public class RoleParser : BaseArgumentParser<Role>
+    public class RoleParser : IArgumentParser<Role>
     {
-        public override Task<ArgsParseResult<Role>> Parse(IImmutableList<string> args, Type[] genericTypes)
+        public Task<ArgsParseResult<Role>> Parse(IImmutableList<string> args, Type[] genericTypes)
         {
             string roleToParse = args[0];
             ArgsParseResult<Role> result;

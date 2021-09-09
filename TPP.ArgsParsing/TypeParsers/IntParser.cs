@@ -9,7 +9,7 @@ namespace TPP.ArgsParsing.TypeParsers
     /// <summary>
     /// A parser capable of parsing numbers.
     /// </summary>
-    public abstract class IntParser<T> : BaseArgumentParser<T> where T : ImplicitNumber, new()
+    public abstract class IntParser<T> : IArgumentParser<T> where T : ImplicitNumber, new()
     {
         private readonly int _minValue;
         private readonly int _maxValue;
@@ -20,7 +20,7 @@ namespace TPP.ArgsParsing.TypeParsers
             _maxValue = maxValue;
         }
 
-        public override Task<ArgsParseResult<T>> Parse(IImmutableList<string> args, Type[] genericTypes)
+        public Task<ArgsParseResult<T>> Parse(IImmutableList<string> args, Type[] genericTypes)
         {
             string str = args[0];
             try

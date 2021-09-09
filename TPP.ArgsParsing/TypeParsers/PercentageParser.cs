@@ -9,9 +9,9 @@ namespace TPP.ArgsParsing.TypeParsers
     /// <summary>
     /// Parses floating point numbers suffixed with '%' into <see cref="Percentage"/> instances, e.g. '12.34%'.
     /// </summary>
-    public class PercentageParser : BaseArgumentParser<Percentage>
+    public class PercentageParser : IArgumentParser<Percentage>
     {
-        public override Task<ArgsParseResult<Percentage>> Parse(IImmutableList<string> args, Type[] genericTypes)
+        public Task<ArgsParseResult<Percentage>> Parse(IImmutableList<string> args, Type[] genericTypes)
         {
             string percentageStr = args[0];
             if (!percentageStr.EndsWith('%'))
