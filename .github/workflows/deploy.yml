@@ -18,7 +18,7 @@ jobs:
           dotnet-version: 5.0.x
       - uses: actions/checkout@v2
       - name: Publish the core
-        run: dotnet publish -c Release -r linux-x64 -p:PublishSingleFile=true --no-self-contained
+        run: dotnet publish -c Release -r linux-x64 -p:PublishSingleFile=true --no-self-contained -p:IncludeNativeLibrariesForSelfExtract=true
       - name: Deploy the core to TPP
         env:
           SSHUSER: ${{ secrets.TPP_SSH_USER }}
