@@ -25,7 +25,7 @@ namespace TPP.ArgsParsing.TypeParsers
         };
         public override Task<ArgsParseResult<Shiny>> Parse(IImmutableList<string> args, Type[] genericTypes)
         {
-            string s = args[0];
+            string s = args[0].ToLower();
             ArgsParseResult<Shiny> result;
             if (shinyWords.Contains(s))
             {
@@ -38,7 +38,7 @@ namespace TPP.ArgsParsing.TypeParsers
             else
             {
                 result = ArgsParseResult<Shiny>.Failure("The argument couldn't be understood as shiny or not", ErrorRelevanceConfidence.Unlikely);
-            }              
+            }
             return Task.FromResult(result);
         }
     }

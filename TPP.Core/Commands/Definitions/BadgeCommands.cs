@@ -49,12 +49,12 @@ namespace TPP.Core.Commands.Definitions
             new Command("giftbadge", GiftBadge)
             {
                 Description =
-                    "Gift a badge you own to another user with no price. Arguments: <pokemon> <number of badges>(Optional) <username>" //TODO also update this before merge
+                    "Gift a badge you own to another user with no price. Arguments: <pokemon> <number of badges> (Optional) <username> <shiny> (optional) <source> (optional) <form> (optional)"
             },
             new Command("listsellbadge", ListSellBadge)
             {
                 Description =
-                    "List the badges someone is selling. Arguments: <pokemon> <username> (optional) <shiny> <source> (optional) (optional) <form> (optional)"
+                    "List the badges someone is selling. Arguments: <pokemon> <username> (optional) <shiny> (optional) <source> (optional) <form> (optional)"
             }
         };
 
@@ -77,6 +77,17 @@ namespace TPP.Core.Commands.Definitions
             _messageSender = messageSender;
             _knownSpecies = knownSpecies;
             _whitelist = whitelist;
+        }
+
+        /// <summary>
+        /// Convineintly handles many optional arguments for badge commands. May throw an exception when given faulty form informaton, so this should be surrounded by a try/catch
+        /// </summary>
+        private (Badge.BadgeSource?, string?, bool?) InterpretBadgeInfoArgs(Optional<Badge.BadgeSource> sourceOpt, Optional<Form> formOpt, Optional<Shiny> shinyOpt)
+        {
+            Badge.BadgeSource? source = sourceOpt.IsPresent ? sourceOpt.Value : null;
+            string? form = formOpt.IsPresent ? formOpt.Value.Name : null;
+            bool? shiny = shinyOpt.IsPresent ? shinyOpt.Value : false;
+            return (source, form, shiny);
         }
 
         public async Task<CommandResult> Badges(CommandContext context)
@@ -277,27 +288,11 @@ namespace TPP.Core.Commands.Definitions
         public async Task<CommandResult> GiftBadge(CommandContext context)
         {
             User gifter = context.Message.User;
-            (User recipient, PkmnSpecies species, Optional<PositiveInt> amountOpt, Optional<Badge.BadgeSource> sourceOpt, Optional<Shiny> shinyOpt, Optional<string> formOpt) =
-                await context.ParseArgs<AnyOrder<User, PkmnSpecies, Optional<PositiveInt>, Optional<Badge.BadgeSource>, Optional<Shiny>, Optional<string>>>();
+            (User recipient, PkmnSpecies species, Optional<PositiveInt> amountOpt, Optional<Badge.BadgeSource> sourceOpt, Optional<Shiny> shinyOpt, Optional<Form> formOpt) =
+                await context.ParseArgs<AnyOrder<User, PkmnSpecies, Optional<PositiveInt>, Optional<Badge.BadgeSource>, Optional<Shiny>, Optional<Form>>>();
             int amount = amountOpt.Map(i => i.Number).OrElse(1);
-            Badge.BadgeSource? source = sourceOpt.IsPresent ? sourceOpt.Value : null;
-            int? form = null;
-            bool? shiny = shinyOpt.IsPresent ? shinyOpt.Value : false;
-            if (formOpt.IsPresent)
-            {
-                string formName = formOpt.Value;
-                try
-                {
-                    form = PkmnForms.getFormId(species, formName);
-                }
-                catch (ArgumentException e)
-                {
-                    return new CommandResult
-                    {
-                        Response = e.Message
-                    };
-                }
-            }
+            (Badge.BadgeSource? source, string? form, bool? shiny) = InterpretBadgeInfoArgs(sourceOpt, formOpt, shinyOpt);
+
             if (recipient == gifter)
                 return new CommandResult { Response = "You cannot gift to yourself" };
 
@@ -327,28 +322,11 @@ namespace TPP.Core.Commands.Definitions
 
         public async Task<CommandResult> ListSellBadge(CommandContext context)
         {
-            (Optional<User> userOpt, PkmnSpecies species, Optional<Badge.BadgeSource> sourceOpt, Optional<Shiny> shinyOpt, Optional<string> formOpt) =
-                await context.ParseArgs<AnyOrder<Optional<User>, PkmnSpecies, Optional<Badge.BadgeSource>, Optional<Shiny>, Optional<string>>>();
+            (Optional<User> userOpt, PkmnSpecies species, Optional<Badge.BadgeSource> sourceOpt, Optional<Shiny> shinyOpt, Optional<Form> formOpt) =
+                await context.ParseArgs<AnyOrder<Optional<User>, PkmnSpecies, Optional<Badge.BadgeSource>, Optional<Shiny>, Optional<Form>>>();
 
             User user = userOpt.IsPresent ? userOpt.Value : context.Message.User;
-            Badge.BadgeSource? source = sourceOpt.IsPresent ? sourceOpt.Value : null;
-            bool shiny = shinyOpt.IsPresent ? shinyOpt.Value : false;
-            int? form = null;
-            if (formOpt.IsPresent)
-            {
-                string formName = formOpt.Value;
-                try
-                {
-                    form = PkmnForms.getFormId(species, formName);
-                }
-                catch (ArgumentException e)
-                {
-                    return new CommandResult
-                    {
-                        Response = e.Message
-                    };
-                }
-            }
+            (Badge.BadgeSource? source, string? form, bool? shiny) = InterpretBadgeInfoArgs(sourceOpt, formOpt, shinyOpt);
 
             List<Badge> forSale = await _badgeRepo.FindAllForSaleByCustom(user.Id, species, form, source, shiny);
 
@@ -357,7 +335,6 @@ namespace TPP.Core.Commands.Definitions
                 response = "No badges found.";
             else
             {
-                bool hasForms = PkmnForms.pokemonHasForms(species);
                 response = string.Format("{0} badges found:", forSale.Count);
                 foreach (Badge b in forSale)
                 {
@@ -367,9 +344,9 @@ namespace TPP.Core.Commands.Definitions
                     if (seller == null)
                         throw new OwnedBadgeNotFoundException(b);
 
-                    response += string.Format("\n{0}{1}{2} sold by {3} for T{4}",
-                        shiny ? "Shiny " : "",
-                        hasForms ? PkmnForms.getFormName(b.Species, b.Form) : "",
+                    response += string.Format(" {0}{1}{2} sold by {3} for T{4}",
+                        shiny == true ? "Shiny " : "",
+                        form ?? "",
                         b.Species.Name,
                         seller.SimpleName,
                         b.SellPrice);

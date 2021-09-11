@@ -184,38 +184,21 @@ namespace TPP.Core.Commands.Definitions
 
         public async Task<CommandResult> CreateBadge(CommandContext context)
         {
-            (User recipient, PkmnSpecies species, Optional<PositiveInt> amountOpt, Optional<string> formOpt, Optional<Shiny> shinyOpt) =
-                await context.ParseArgs<AnyOrder<User, PkmnSpecies, Optional<PositiveInt>, Optional<string>, Optional<Shiny>>>();
+            (User recipient, PkmnSpecies species, Optional<PositiveInt> amountOpt, Optional<Form> formOpt, Optional<Shiny> shinyOpt) =
+                await context.ParseArgs<AnyOrder<User, PkmnSpecies, Optional<PositiveInt>, Optional<Form>, Optional<Shiny>>>();
             int amount = amountOpt.Map(i => i.Number).OrElse(1);
-            int form = PkmnForms.pokemonHasForms(species) ? 0 : 1; // default to the first listed form if form is unspecified
+            string? form = formOpt.IsPresent ? formOpt.Value.Name : null;
             bool shiny = shinyOpt.IsPresent ? shinyOpt.Value : false;
-            if (formOpt.IsPresent)
-            {
-                string formName = formOpt.Value;
-                try
-                {
-                    form = PkmnForms.getFormId(species, formName);
-                }
-                catch (ArgumentException e)
-                {
-                    return new CommandResult
-                    {
-                        Response = e.Message
-                    };
-                }
-            }
+
             for (int i = 0; i < amount; i++)
                 await _badgeRepo.AddBadge(recipient.Id, species, Badge.BadgeSource.ManualCreation, form, shiny);
 
+            form = form == null ? "" : form + " ";
             return new CommandResult
             {
-                Response = PkmnForms.pokemonHasForms(species)
-                    ? amount > 1
-                        ? $"{amount} {PkmnForms.getFormName(species, form)} {species} badges created for {recipient.Name}."
-                        : $"{PkmnForms.getFormName(species, form)} {species} badge created for {recipient.Name}."
-                    : amount > 1
-                        ? $"{amount} {species} badges created for {recipient.Name}."
-                        : $"{species} badge created for {recipient.Name}."
+                Response = amount > 1
+                    ? $"{amount} {form}{species} badges created for {recipient.Name}."
+                    : $"{form}{species} badge created for {recipient.Name}."
             };
         }
     }

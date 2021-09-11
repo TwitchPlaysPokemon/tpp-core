@@ -264,9 +264,9 @@ namespace TPP.Core.Tests.Commands.Definitions
             User user = MockUser("MockUser");
             User recipient = MockUser("Recipient");
             _userRepoMock.Setup(repo => repo.FindBySimpleName("recipient")).Returns(Task.FromResult((User?)recipient));
-            Badge badge1 = new("badge1", user.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue, 0, false);
-            Badge badge2 = new("badge2", user.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue, 0, false);
-            Badge badge3 = new("badge3", user.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue, 0, false);
+            Badge badge1 = new("badge1", user.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue, null, false);
+            Badge badge2 = new("badge2", user.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue, null, false);
+            Badge badge3 = new("badge3", user.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue, null, false);
             _badgeRepoMock.Setup(repo => repo.FindAllByCustom(user.Id, species, null, null, false))
                 .Returns(Task.FromResult(new List<Badge> { badge1, badge2, badge3, }));
 
@@ -312,7 +312,7 @@ namespace TPP.Core.Tests.Commands.Definitions
         {
             User user1 = MockUser("u1");
             PkmnSpecies speciesA = PkmnSpecies.RegisterName("1", "a");
-            Badge badgeA = new("badgeA", user1.Id, speciesA, Badge.BadgeSource.Pinball, Instant.MinValue, 0, false) {SellPrice = 1 };
+            Badge badgeA = new("badgeA", user1.Id, speciesA, Badge.BadgeSource.Pinball, Instant.MinValue, null, false) { SellPrice = 1 };
 
             _badgeRepoMock.Setup(repo => repo.FindAllForSaleByCustom(user1.Id, speciesA, null, null, false)).Returns(Task.FromResult(new List<Badge>() { badgeA }));
             _userRepoMock.Setup(repo => repo.FindById(user1.Id)).Returns(Task.FromResult((User?)user1));
@@ -322,11 +322,9 @@ namespace TPP.Core.Tests.Commands.Definitions
             _argsParser.AddArgumentParser(new BadgeSourceParser());
             _argsParser.AddArgumentParser(new StringParser());
 
-            await _badgeRepoMock.Object.SetBadgeSellPrice(badgeA, 1);
-
             CommandResult result = await _badgeCommands.ListSellBadge(new CommandContext(MockMessage(user1), ImmutableList.Create("a"), _argsParser));
 
-            Assert.AreEqual("1 badges found:\na sold by u1 for T1", result.Response);
+            Assert.AreEqual("1 badges found: a sold by u1 for T1", result.Response);
         }
     }
 }

@@ -68,7 +68,7 @@ namespace TPP.Persistence.MongoDB.Repos
         }
 
         public async Task<Badge> AddBadge(
-            string? userId, PkmnSpecies species, Badge.BadgeSource source, int form, bool shiny, Instant? createdAt = null)
+            string? userId, PkmnSpecies species, Badge.BadgeSource source, string? form, bool shiny, Instant? createdAt = null)
         {
             var badge = new Badge(
                 id: string.Empty,
@@ -90,7 +90,7 @@ namespace TPP.Persistence.MongoDB.Repos
         public async Task<List<Badge>> FindByUserAndSpecies(string? userId, PkmnSpecies species) =>
             await Collection.Find(b => b.UserId == userId && b.Species == species).ToListAsync();
 
-        public async Task<List<Badge>> FindAllByCustom(string? userId, PkmnSpecies? species, int? form, Badge.BadgeSource? source, bool? shiny)
+        public async Task<List<Badge>> FindAllByCustom(string? userId, PkmnSpecies? species, string? form, Badge.BadgeSource? source, bool? shiny)
         {
             FilterDefinition<Badge> filter = Builders<Badge>.Filter.Empty;
             if (userId != null)
@@ -106,12 +106,13 @@ namespace TPP.Persistence.MongoDB.Repos
             if (shiny == true)
                 filter &= Builders<Badge>.Filter.Eq(b => b.Shiny, true);
             else
+                //match everything not true, including null/nonexistance. (querying for shiny==false misses these)
                 filter &= Builders<Badge>.Filter.Ne(b => b.Shiny, true);
 
             return await Collection.Find(filter).ToListAsync();
         }
 
-        public async Task<List<Badge>> FindAllForSaleByCustom(string? userId, PkmnSpecies? species, int? form, Badge.BadgeSource? source, bool? shiny)
+        public async Task<List<Badge>> FindAllForSaleByCustom(string? userId, PkmnSpecies? species, string? form, Badge.BadgeSource? source, bool? shiny)
         {
             List<Badge> all = await FindAllByCustom(userId, species, form, source, shiny);
             return all.Where(b => b.SellPrice > 0).ToList();

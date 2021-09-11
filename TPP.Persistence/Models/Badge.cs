@@ -47,7 +47,7 @@ namespace TPP.Persistence.Models
         /// <summary>
         /// If this pokemon has multiple forms, which form it is.
         /// </summary>
-        public int Form { get; init; }
+        public string? Form { get; init; }
 
         /// <summary>
         /// If this badge is shiny.
@@ -65,7 +65,7 @@ namespace TPP.Persistence.Models
             PkmnSpecies species,
             BadgeSource source,
             Instant createdAt,
-            int form,
+            string? form,
             bool shiny)
         {
             Id = id;

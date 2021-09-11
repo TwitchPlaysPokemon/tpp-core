@@ -42,7 +42,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
 
             IBadgeBuyOfferRepo badgeBuyOfferRepo = CreateBadgeBuyOfferRepo();
 
-            BadgeBuyOffer offer =  await badgeBuyOfferRepo.CreateBuyOffer(userId, species, form, source, shiny, price, amount, Instant.MaxValue);
+            BadgeBuyOffer offer = await badgeBuyOfferRepo.CreateBuyOffer(userId, species, form, source, shiny, price, amount, Instant.MaxValue);
 
             Assert.AreEqual(userId, offer.UserId);
             Assert.AreEqual(species, offer.Species);

@@ -35,7 +35,8 @@ namespace TPP.Persistence.MongoDB.Repos
                 cm.MapProperty(o => o.Source).SetElementName("source");
                 cm.MapProperty(o => o.CreatedAt).SetElementName("created_at");
                 cm.MapProperty(o => o.Form).SetElementName("form")
-                    .SetDefaultValue(0);
+                    .SetDefaultValue(0)
+                    .SetIgnoreIfDefault(true);
                 cm.MapProperty(o => o.Shiny).SetElementName("shiny")
                     .SetDefaultValue(false)
                     .SetIgnoreIfDefault(true);
@@ -51,7 +52,7 @@ namespace TPP.Persistence.MongoDB.Repos
             _clock = clock;
         }
 
-        public async Task<BadgeBuyOffer> CreateBuyOffer(string userId, PkmnSpecies species, int? form, Badge.BadgeSource? source, bool? shiny, int price, int amount, Instant? createdAt=null)
+        public async Task<BadgeBuyOffer> CreateBuyOffer(string userId, PkmnSpecies species, int? form, Badge.BadgeSource? source, bool? shiny, int price, int amount, Instant? createdAt = null)
         {
             BadgeBuyOffer buyOffer = new BadgeBuyOffer(
                 id: string.Empty,

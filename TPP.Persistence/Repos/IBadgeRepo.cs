@@ -38,10 +38,10 @@ namespace TPP.Persistence.Repos
     public interface IBadgeRepo
     {
         public Task<Badge> AddBadge(
-            string? userId, PkmnSpecies species, Badge.BadgeSource source, int form, bool shiny, Instant? createdAt = null);
+            string? userId, PkmnSpecies species, Badge.BadgeSource source, string? form, bool shiny, Instant? createdAt = null);
         public Task<List<Badge>> FindAllByUser(string? userId);
         public Task<List<Badge>> FindByUserAndSpecies(string? userId, PkmnSpecies species);
-        public Task<List<Badge>> FindAllByCustom(string? userId = null, PkmnSpecies? species = null, int? form = null, Badge.BadgeSource? source = null, bool? shiny = null);
+        public Task<List<Badge>> FindAllByCustom(string? userId, PkmnSpecies? species, string? form, Badge.BadgeSource? source, bool? shiny);
         public Task<long> CountByUserAndSpecies(string? userId, PkmnSpecies species);
         public Task<ImmutableSortedDictionary<PkmnSpecies, int>> CountByUserPerSpecies(string? userId);
         public Task<bool> HasUserBadge(string? userId, PkmnSpecies species);
@@ -53,6 +53,6 @@ namespace TPP.Persistence.Repos
             IDictionary<string, object?> additionalData);
 
         public Task<Badge> SetBadgeSellPrice(Badge badge, int price);
-        public Task<List<Badge>> FindAllForSaleByCustom(string? userId, PkmnSpecies? species, int? form, Badge.BadgeSource? source, bool? shiny);
+        public Task<List<Badge>> FindAllForSaleByCustom(string? userId, PkmnSpecies? species, string? form, Badge.BadgeSource? source, bool? shiny);
     }
 }
