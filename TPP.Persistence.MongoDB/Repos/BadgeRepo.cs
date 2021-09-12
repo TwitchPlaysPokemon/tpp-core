@@ -62,8 +62,11 @@ namespace TPP.Persistence.MongoDB.Repos
             {
                 new CreateIndexModel<Badge>(Builders<Badge>.IndexKeys.Ascending(u => u.UserId)),
                 new CreateIndexModel<Badge>(Builders<Badge>.IndexKeys.Ascending(u => u.Species)),
+                new CreateIndexModel<Badge>(Builders<Badge>.IndexKeys.Ascending(u => u.Source)),
                 // TODO really ascending...?:
                 new CreateIndexModel<Badge>(Builders<Badge>.IndexKeys.Ascending(u => u.CreatedAt)),
+                new CreateIndexModel<Badge>(Builders<Badge>.IndexKeys.Ascending(u => u.Form)),
+                new CreateIndexModel<Badge>(Builders<Badge>.IndexKeys.Ascending(u => u.Shiny)),
             });
         }
 
