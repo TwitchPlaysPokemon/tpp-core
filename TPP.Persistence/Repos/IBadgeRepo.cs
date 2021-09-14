@@ -52,7 +52,9 @@ namespace TPP.Persistence.Repos
             IImmutableList<Badge> badges, string? recipientUserId, string reason,
             IDictionary<string, object?> additionalData);
 
-        public Task<Badge> SetBadgeSellPrice(Badge badge, int price);
+        public Task<Badge> SetBadgeSellPrice(Badge badge, long price);
         public Task<List<Badge>> FindAllForSaleByCustom(string? userId, PkmnSpecies? species, string? form, Badge.BadgeSource? source, bool? shiny);
+
+        public Task<List<Badge>> FindAllNotForSaleByCustom(string? userId, PkmnSpecies? species, string? form, Badge.BadgeSource? source, bool? shiny);
     }
 }

@@ -28,7 +28,7 @@ namespace TPP.Persistence.Models
         /// <summary>
         /// The form of pokemon to buy.
         /// </summary>
-        public int? Form { get; init; }
+        public string? Form { get; init; }
 
         /// <summary>
         /// The source of the badge to buy.
@@ -62,7 +62,7 @@ namespace TPP.Persistence.Models
 
         //duration and expires_at depricated from old core
 
-        public BadgeBuyOffer(string id, string userId, PkmnSpecies species, int? form, Badge.BadgeSource? source, bool? shiny, int price, int amount, Instant createdAt)
+        public BadgeBuyOffer(string id, string userId, PkmnSpecies species, string? form, Badge.BadgeSource? source, bool? shiny, int price, int amount, Instant createdAt)
         {
             Id = id;
             UserId = userId;

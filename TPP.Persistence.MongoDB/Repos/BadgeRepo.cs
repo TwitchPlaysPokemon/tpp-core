@@ -121,6 +121,12 @@ namespace TPP.Persistence.MongoDB.Repos
             return all.Where(b => b.SellPrice > 0).ToList();
         }
 
+        public async Task<List<Badge>> FindAllNotForSaleByCustom(string? userId, PkmnSpecies? species, string? form, Badge.BadgeSource? source, bool? shiny)
+        {
+            List<Badge> all = await FindAllByCustom(userId, species, form, source, shiny);
+            return all.Where(b => b.SellPrice == 0).ToList();
+        }
+
         public async Task<long> CountByUserAndSpecies(string? userId, PkmnSpecies species) =>
             await Collection.CountDocumentsAsync(b => b.UserId == userId && b.Species == species);
 
@@ -194,8 +200,7 @@ namespace TPP.Persistence.MongoDB.Repos
             }
             return updatedBadges.ToImmutableList();
         }
-
-        public async Task<Badge> SetBadgeSellPrice(Badge badge, int price)
+        public async Task<Badge> SetBadgeSellPrice(Badge badge, long price)
         {
             if (price <= 0)
                 throw new ArgumentOutOfRangeException("price", "Price must be positive");
@@ -203,7 +208,8 @@ namespace TPP.Persistence.MongoDB.Repos
                 Builders<Badge>.Filter
                            .Where(b => b.Id == badge.Id && b.UserId == badge.UserId),
                 Builders<Badge>.Update
-                    .Set(b => b.SellPrice, price),
+                    .Set(b => b.SellPrice, price)
+                    .Set(b => b.SellingSince, _clock.GetCurrentInstant()),
                 new FindOneAndUpdateOptions<Badge> { ReturnDocument = ReturnDocument.After, IsUpsert = false }
                 ) ?? throw new OwnedBadgeNotFoundException(badge);
         }

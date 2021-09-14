@@ -11,6 +11,8 @@ namespace TPP.Persistence.Repos
 {
     public interface IBadgeBuyOfferRepo
     {
-        public Task<BadgeBuyOffer> CreateBuyOffer(string userId, PkmnSpecies species, int? form, Badge.BadgeSource? source, bool? shiny, int price, int amount, Instant? createdAt);
+        Task<List<BadgeBuyOffer>> FindAllByCustom(string? userId, PkmnSpecies species, string? form, Badge.BadgeSource? source, bool? shiny);
+        Task<BadgeBuyOffer> CreateBuyOffer(string userId, PkmnSpecies species, string? form, Badge.BadgeSource? source, bool? shiny, int price, int amount, Instant? createdAt);
+        Task<Badge> CreateSellOffer(string userId, PkmnSpecies species, string? form, Badge.BadgeSource? source, bool? shiny, int price);
     }
 }
