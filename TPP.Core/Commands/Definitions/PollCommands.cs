@@ -89,39 +89,39 @@ namespace TPP.Core.Commands.Definitions
             };
         }
 
+        public static string FormatSinglePollAdvertisement(Poll poll)
+        {
+            string Percentage(PollOption option) => poll.Voters.Count == 0
+                ? "0" // avoid division by zero
+                : $"{100 * (option.VoterIds.Count / (double)poll.Voters.Count):0.#}";
+            IEnumerable<string> results = poll.PollOptions.Select(option =>
+                $"#{option.Id} {option.Option} " +
+                $"({(option.VoterIds.Count == 1 ? "1 vote" : $"{option.VoterIds.Count} votes")}, " +
+                $"{Percentage(option)}%)");
+            return $"Poll '{poll.PollCode}': {poll.PollTitle}" +
+                   $" - {string.Join(", ", results)}" +
+                   $" - Vote with '!vote {poll.PollCode} <option(s)>'";
+        }
+
         public async Task<CommandResult> Poll(CommandContext context)
         {
             string pollCode = await context.ParseArgs<string>();
             Poll? poll = await _pollRepo.FindPoll(pollCode);
             if (poll == null)
                 return new CommandResult { Response = $"No poll with the code '{pollCode}' was found." };
-
-            string Percentage(PollOption option) => poll.Voters.Count == 0
-                ? "0" // avoid division by zero
-                : $"{100 * (option.VoterIds.Count / (double)poll.Voters.Count):0.#}";
-
-            IEnumerable<string> results = poll.PollOptions.Select(option =>
-                $"#{option.Id} {option.Option} " +
-                $"({(option.VoterIds.Count == 1 ? "1 vote" : $"{option.VoterIds.Count} votes")}, " +
-                $"{Percentage(option)}%)");
-            return new CommandResult
-            {
-                Response = $"Poll '{poll.PollCode}': {poll.PollTitle}" +
-                           $" - {string.Join(", ", results)}" +
-                           $" - Vote with '!vote {poll.PollCode} <option(s)>'"
-            };
+            return new CommandResult { Response = FormatSinglePollAdvertisement(poll) };
         }
+
+        public static string FormatPollsAdvertisement(IImmutableList<Poll> polls) =>
+            polls.Any()
+                ? $"Currently active polls are: {string.Join(", ", polls.Select(p => p.PollCode))}. " +
+                  $"Use '!{PollCommandName} <code>' for more details on a specific poll"
+                : "There currently are no active polls.";
 
         private async Task<CommandResult> Polls(CommandContext context)
         {
             IImmutableList<Poll> polls = await _pollRepo.FindPolls(onlyActive: true);
-            return new CommandResult
-            {
-                Response = polls.Any()
-                    ? $"Currently active polls are: {string.Join(", ", polls.Select(p => p.PollCode))}. " +
-                      $"Use '!{PollCommandName} <code>' for more details on a specific poll"
-                    : "There currently are no active polls."
-            };
+            return new CommandResult { Response = FormatPollsAdvertisement(polls) };
         }
     }
 }

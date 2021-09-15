@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using NodaTime;
 
 namespace TPP.Core.Configuration
 {
@@ -31,5 +32,7 @@ namespace TPP.Core.Configuration
         public DiscordLoggingConfig? DiscordLoggingConfig { get; init; } = null;
 
         public ImmutableHashSet<string> DisabledModbotRules { get; init; } = ImmutableHashSet.Create<string>();
+
+        public Duration AdvertisePollsInterval { get; init; } = Duration.FromHours(1);
     }
 }
