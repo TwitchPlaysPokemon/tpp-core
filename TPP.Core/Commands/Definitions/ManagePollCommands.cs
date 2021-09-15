@@ -19,7 +19,7 @@ namespace TPP.Core.Commands.Definitions
                 Aliases = new[] { "startpoll" },
                 Description = "Starts a new poll. " +
                               "Arguments: <PollName> <PollCode> <MultipleChoice> <AllowChangeVote> <Option1> <Option2> <OptionX> (optional). " +
-                              "Underscores in the poll name will be replaced with spaces."
+                              "Underscores in the poll name and options will be replaced with spaces."
             },
             new Command("closepoll", ClosePoll)
             {
@@ -43,7 +43,7 @@ namespace TPP.Core.Commands.Definitions
                 await context.ParseArgs<string, string, bool, bool, ManyOf<string>>();
 
             ImmutableList<string> options = optionsArgs.Values
-                .Select(str => str.ToLower().Trim())
+                .Select(str => str.ToLower().Trim().Replace('_', ' '))
                 .Distinct().ToImmutableList();
             if (optionsArgs.Values.Count > options.Count)
                 return new CommandResult { Response = "Options must be case-insensitively unique" };
