@@ -27,6 +27,7 @@ namespace TPP.Core.Modes
         private readonly IImmutableDictionary<string, ICommandResponder> _commandResponders;
         private readonly IImmutableDictionary<string, CommandProcessor> _commandProcessors;
         private readonly IImmutableDictionary<string, IModerator> _moderators;
+        private readonly IImmutableDictionary<string, AdvertisePollsWorker> _advertisePollsWorkers;
         private readonly IMessagequeueRepo _messagequeueRepo;
         private readonly bool _forwardUnprocessedMessages;
         private readonly IMessagelogRepo _messagelogRepo;
@@ -97,6 +98,9 @@ namespace TPP.Core.Modes
             _moderators = _chats.Values.ToImmutableDictionary(
                 c => c.Name,
                 c => (IModerator)new Moderator(moderatorLogger, c, rules, repos.ModLogRepo, clock));
+            _advertisePollsWorkers = _chats.Values.ToImmutableDictionary(
+                c => c.Name,
+                c => new AdvertisePollsWorker(baseConfig.AdvertisePollsInterval, repos.PollRepo, c));
         }
 
         public void InstallAdditionalCommand(Command command)
@@ -170,6 +174,8 @@ namespace TPP.Core.Modes
         {
             foreach (IChat chat in _chats.Values)
                 chat.Connect();
+            foreach (var advertisePollsWorker in _advertisePollsWorkers.Values)
+                advertisePollsWorker.Start();
         }
 
         public void Dispose()
@@ -179,6 +185,8 @@ namespace TPP.Core.Modes
                 chat.Dispose();
                 chat.IncomingMessage -= MessageReceived;
             }
+            foreach (var advertisePollsWorker in _advertisePollsWorkers.Values)
+                advertisePollsWorker.Dispose();
         }
     }
 }

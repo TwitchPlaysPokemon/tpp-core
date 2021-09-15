@@ -148,6 +148,9 @@
           "null"
         ]
       }
+    },
+    "AdvertisePollsInterval": {
+      "type": "string"
     }
   }
 }
