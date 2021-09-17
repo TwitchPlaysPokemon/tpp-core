@@ -135,7 +135,7 @@ namespace TPP.Persistence.MongoDB.Repos
         }
         public async Task DeleteSellOffer(string userId, PkmnSpecies species, string? form, Badge.BadgeSource? source, bool? shiny, int amount)
         {
-            List<Badge> badgesForSale = await _badgeRepo.FindAllForSaleByCustom(userId, species, form, source, shiny);
+            List<Badge> badgesForSale = await FindAllBadgesForSale(userId, species, form, source, shiny);
             if (amount > badgesForSale.Count)
                 throw new ArgumentException(string.Format("Tried to cancel {0} offers but only {1} were found", amount, badgesForSale.Count));
 
@@ -149,7 +149,7 @@ namespace TPP.Persistence.MongoDB.Repos
 
         public async Task ResolveBuyOffers(PkmnSpecies species, bool? shiny)
         {
-            List<Badge> badgesForSale = await _badgeRepo.FindAllForSaleByCustom(null, species, null, null, shiny);
+            List<Badge> badgesForSale = await FindAllBadgesForSale(null, species, null, null, shiny);
 
             badgesForSale = badgesForSale.OrderByDescending(b => b.SellingSince).ToList();
 
@@ -232,7 +232,7 @@ namespace TPP.Persistence.MongoDB.Repos
         /// </summary>
         private async Task ResetUserSellOffers(string userId, PkmnSpecies species, string? form, bool shiny)
         {
-            List<Badge> forSale = await _badgeRepo.FindAllForSaleByCustom(userId, species, form, null, shiny);
+            List<Badge> forSale = await FindAllBadgesForSale(userId, species, form, null, shiny);
             foreach (Badge b in forSale)
             {
                 if (b.SellPrice == null)
