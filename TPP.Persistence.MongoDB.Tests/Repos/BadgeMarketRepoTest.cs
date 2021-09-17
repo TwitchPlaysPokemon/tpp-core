@@ -14,22 +14,22 @@ using TPP.Persistence.Repos;
 
 namespace TPP.Persistence.MongoDB.Tests.Repos
 {
-    class BadgeBuyOfferRepoTest : MongoTestBase
+    class BadgeMarketRepoTest : MongoTestBase
     {
 
         private Mock<IUserRepo> _mockUserRepo = null!;
         private Mock<IBank<User>> _mockBank = null!;
         private Mock<IBadgeRepo> _mockBadgeRepo = null!;
 
-        public IBadgeBuyOfferRepo CreateBadgeBuyOfferRepo()
+        public IBadgeMarketRepo CreateBadgeMarketRepo()
         {
             IMongoDatabase db = CreateTemporaryDatabase();
             _mockUserRepo = new Mock<IUserRepo>();
             _mockBank = new Mock<IBank<User>>();
             _mockBadgeRepo = new Mock<IBadgeRepo>();
 
-            BadgeBuyOfferRepo badgeBuyOfferRepo = new BadgeBuyOfferRepo(db, _mockBadgeRepo.Object, _mockUserRepo.Object, _mockBank.Object, Mock.Of<IClock>());
-            return badgeBuyOfferRepo;
+            BadgeMarketRepo badgeMarketRepo = new BadgeMarketRepo(db, _mockBadgeRepo.Object, _mockUserRepo.Object, _mockBank.Object, Mock.Of<IClock>());
+            return badgeMarketRepo;
         }
 
         internal class MockClock : IClock
@@ -49,9 +49,11 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             int price = 999;
             int amount = 1;
 
-            IBadgeBuyOfferRepo badgeBuyOfferRepo = CreateBadgeBuyOfferRepo();
+            IBadgeMarketRepo badgeMarketRepo = CreateBadgeMarketRepo();
 
-            BadgeBuyOffer offer = await badgeBuyOfferRepo.CreateBuyOffer(userId, species, form, source, shiny, price, amount, Instant.MaxValue);
+            _mockBadgeRepo.Setup(r => r.FindAllForSaleByCustom(null, species, null, null, shiny)).Returns(Task.FromResult(new List<Badge>()));
+
+            BadgeBuyOffer offer = await badgeMarketRepo.CreateBuyOffer(userId, species, form, source, shiny, price, amount, Instant.MaxValue);
 
             Assert.AreEqual(userId, offer.UserId);
             Assert.AreEqual(species, offer.Species);
@@ -74,7 +76,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             Instant before = Instant.FromUtc(2000, 1, 1, 0, 0);
             Instant after = before.PlusNanoseconds(69);
 
-            IBadgeBuyOfferRepo badgeBuyOfferRepo = CreateBadgeBuyOfferRepo();
+            IBadgeMarketRepo badgeMarketRepo = CreateBadgeMarketRepo();
 
             Badge badgeA = new Badge("A", userId, species, source, before, form, shiny);
             Badge badgeB = new Badge("B", userId, species, source, after, form, shiny);
@@ -85,7 +87,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             _mockBadgeRepo.Setup(m => m.FindAllForSaleByCustom(null, species, null, null, shiny)).Returns(Task.FromResult(new List<Badge>()));
             _mockBadgeRepo.Setup(m => m.SetBadgeSellPrice(badgeB, price)).Returns(Task.FromResult(badgeBForSale));
 
-            Badge selling = await badgeBuyOfferRepo.CreateSellOffer(userId, species, form, source, shiny, price);
+            Badge selling = await badgeMarketRepo.CreateSellOffer(userId, species, form, source, shiny, price);
 
             Assert.AreEqual(after, selling.CreatedAt);
         }
@@ -107,7 +109,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             Badge shellosEastNewer = new Badge("C", userId, species, source, time.PlusNanoseconds(1), formEast, shiny);
             Badge shellosEastSelling = new Badge("C_sell", userId, species, source, time.PlusNanoseconds(1), formEast, shiny) { SellPrice = price };
 
-            IBadgeBuyOfferRepo badgeBuyOfferRepo = CreateBadgeBuyOfferRepo();
+            IBadgeMarketRepo badgeMarketRepo = CreateBadgeMarketRepo();
 
             List<Badge> notForSale = new List<Badge>() { shellosWest, shellosEastOlder, shellosEastNewer };
 
@@ -115,13 +117,13 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             _mockBadgeRepo.Setup(m => m.FindAllForSaleByCustom(null, species, null, null, shiny)).Returns(Task.FromResult(new List<Badge>()));
             _mockBadgeRepo.Setup(m => m.SetBadgeSellPrice(shellosEastNewer, price)).Returns(Task.FromResult(shellosEastSelling));
 
-            Badge selling = await badgeBuyOfferRepo.CreateSellOffer(userId, species, null, source, shiny, price);
+            Badge selling = await badgeMarketRepo.CreateSellOffer(userId, species, null, source, shiny, price);
 
             Assert.AreEqual(selling.Id, shellosEastSelling.Id);
         }
 
         [Test]
-        public async Task new_buy_offer_is_filled_if_possible()
+        public async Task ResolveBuyOffers_fills_outstanding_buy_offer()
         {
             string sellerId = "seller";
             string buyerId = "buyer";
@@ -131,21 +133,81 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             bool shiny = false;
             Instant time = Instant.FromUtc(1996, 2, 27, 0, 0);
             int price = 1;
-
+            int amount = 1;
+            User buyer = new User(buyerId, buyerId, buyerId, buyerId, null, Instant.MinValue, Instant.MinValue, null, 1000, price);
+            User seller = new User(sellerId, sellerId, sellerId, sellerId, null, Instant.MinValue, Instant.MinValue, null, 1000, 0);
             Badge badgeA = new Badge("A", sellerId, species, source, time, form, shiny);
             Badge badgeASelling = new Badge("A", sellerId, species, source, time, form, shiny) { SellPrice = price, SellingSince = time };
 
-            IBadgeBuyOfferRepo badgeBuyOfferRepo = CreateBadgeBuyOfferRepo();
+            IBadgeMarketRepo badgeMarketRepo = CreateBadgeMarketRepo();
 
             List<Badge> sellerBadgesNotForSale = new List<Badge>() { badgeA };
             _mockBadgeRepo.Setup(m => m.FindAllNotForSaleByCustom(sellerId, species, form, source, shiny)).Returns(Task.FromResult(sellerBadgesNotForSale));
             _mockBadgeRepo.Setup(m => m.FindAllForSaleByCustom(null, species, null, null, shiny)).Returns(Task.FromResult(new List<Badge>()));
             _mockBadgeRepo.Setup(m => m.SetBadgeSellPrice(badgeA, price)).Returns(Task.FromResult(badgeASelling));
-            await badgeBuyOfferRepo.CreateSellOffer(sellerId, species, null, source, shiny, price);
-            await badgeBuyOfferRepo.CreateBuyOffer(buyerId, species, sellerId, source, shiny, price, 1, time.PlusNanoseconds(2));
+            Badge selling = await badgeMarketRepo.CreateSellOffer(sellerId, species, form, source, shiny, price);
 
-            int remainingBuyOffers = badgeBuyOfferRepo.FindAllByCustom(buyerId, species, null, source, shiny).Result.Count();
-            Assert.AreEqual(0, remainingBuyOffers);
+            _mockBadgeRepo.Setup(m => m.FindAllForSaleByCustom(null, species, null, null, shiny)).Returns(Task.FromResult(new List<Badge>() { selling }));
+            _mockUserRepo.Setup(m => m.FindById(buyerId)).Returns(Task.FromResult((User?)buyer));
+            _mockUserRepo.Setup(m => m.FindById(sellerId)).Returns(Task.FromResult((User?)seller));
+            _mockBadgeRepo.Setup(m => m.FindAllForSaleByCustom(sellerId, species, form, null, shiny)).Returns(Task.FromResult(new List<Badge>()));
+
+            await badgeMarketRepo.CreateBuyOffer(buyerId, species, form, source, shiny, price, amount, time.PlusNanoseconds(2));
+            
+            List<BadgeBuyOffer> remainingBuyOffers = await badgeMarketRepo.FindAllBuyOffers(buyerId, species, form, source, shiny);
+            Assert.AreEqual(1, remainingBuyOffers.Count);
+
+            await badgeMarketRepo.ResolveBuyOffers(species, shiny);
+            
+            remainingBuyOffers = await badgeMarketRepo.FindAllBuyOffers(buyerId, species, form, source, shiny);
+            Assert.AreEqual(0, remainingBuyOffers.Count);
+        }
+
+        [Test]
+        public async Task DeleteBuyOffer_removes_outstanding_buy_offer()
+        {
+            string buyerId = "buyer";
+            PkmnSpecies species = PkmnSpecies.OfId("1");
+            Badge.BadgeSource? source = null;
+            string? form = null;
+            bool shiny = false;
+            Instant time = Instant.FromUtc(0,1,1,0,0);
+            int price = 1;
+            int amount = 1;
+
+            IBadgeMarketRepo badgeMarketRepo = CreateBadgeMarketRepo();
+            _mockBadgeRepo.Setup(r => r.FindAllForSaleByCustom(null, species, null, null, shiny)).Returns(Task.FromResult(new List<Badge>()));
+
+            await badgeMarketRepo.CreateBuyOffer(buyerId, species, form, source, shiny, price, amount, time);
+            Assert.AreEqual(1, badgeMarketRepo.FindAllBuyOffers(buyerId, species, form, source, shiny).Result.Count);
+
+            await badgeMarketRepo.DeleteBuyOffer(buyerId, species, form, source, shiny, amount);
+            Assert.AreEqual(0, badgeMarketRepo.FindAllBuyOffers(buyerId, species, form, source, shiny).Result.Count);
+        }
+
+        [Test]
+        public async Task DeleteSellOffer_removes_outstanding_sell_offer()
+        {
+            string sellerId = "buyer";
+            PkmnSpecies species = PkmnSpecies.OfId("1");
+            Badge.BadgeSource source = Badge.BadgeSource.Pinball;
+            string? form = null;
+            bool shiny = false;
+            Instant time = Instant.FromUtc(0,1,1,0,0);
+            long price = 1;
+            Badge badgeForSale = new Badge("A", sellerId, species, source, time, form, shiny){ SellingSince=time, SellPrice=price};
+            Badge badgeNotForSale = new Badge("A", sellerId, species, source, time, form, shiny);
+
+            IBadgeMarketRepo badgeMarketRepo = CreateBadgeMarketRepo();
+
+            _mockBadgeRepo.Setup(r => r.FindAllForSaleByCustom(sellerId, species, form, source, shiny)).Returns(Task.FromResult(new List<Badge>() { badgeForSale } ));
+            _mockBadgeRepo.Setup(r => r.SetBadgeSellPrice(badgeForSale, 0)).Returns(Task.FromResult(badgeNotForSale));
+            await badgeMarketRepo.DeleteSellOffer(sellerId, species, form, source, shiny, 1);
+
+            _mockBadgeRepo.Setup(r => r.FindAllForSaleByCustom(sellerId, species, form, source, shiny)).Returns(Task.FromResult(new List<Badge>()));
+            List<Badge> badgesForSale = await badgeMarketRepo.FindAllBadgesForSale(sellerId, species, form, source, shiny);
+
+            Assert.AreEqual(0, badgesForSale.Count);
         }
     }
 }

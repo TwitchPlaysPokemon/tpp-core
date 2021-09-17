@@ -16,19 +16,16 @@ using TPP.Persistence.Repos;
 
 namespace TPP.Persistence.MongoDB.Repos
 {
-    public class BadgeBuyOfferRepo : IBadgeBuyOfferRepo
+    public class BadgeMarketRepo : IBadgeMarketRepo
     {
-        private const string CollectionName = "badgebuyoffers";
-
-        public readonly IMongoCollection<BadgeBuyOffer> Collection;
+        private const string BuyOfferCollectionName = "badgebuyoffers";
+        public readonly IMongoCollection<BadgeBuyOffer> BuyOfferCollection;
         private readonly IBadgeRepo _badgeRepo;
         private readonly IClock _clock;
         private readonly IUserRepo _userRepo;
         private readonly IBank<User> _tokenBank;
-        private event EventHandler<MarketChangedEventArgs> _MarketChangedEventHandler;
 
-
-        static BadgeBuyOfferRepo()
+        static BadgeMarketRepo()
         {
             BsonClassMap.RegisterClassMap<BadgeBuyOffer>(cm =>
             {
@@ -39,9 +36,10 @@ namespace TPP.Persistence.MongoDB.Repos
                 cm.MapProperty(o => o.Species).SetElementName("species");
                 cm.MapProperty(o => o.Source).SetElementName("source");
                 cm.MapProperty(o => o.CreatedAt).SetElementName("created_at");
+                cm.MapProperty(o => o.Price).SetElementName("price");
+                cm.MapProperty(o => o.Amount).SetElementName("amount");
                 cm.MapProperty(o => o.Form).SetElementName("form")
-                    .SetDefaultValue(null)
-                    .SetIgnoreIfDefault(true);
+                   .SetIgnoreIfNull(true);
                 cm.MapProperty(o => o.Shiny).SetElementName("shiny")
                     .SetDefaultValue(false)
                     .SetIgnoreIfDefault(true);
@@ -50,7 +48,7 @@ namespace TPP.Persistence.MongoDB.Repos
 
         private void InitIndexes()
         {
-            Collection.Indexes.CreateMany(new[]
+            BuyOfferCollection.Indexes.CreateMany(new[]
             {
                 new CreateIndexModel<BadgeBuyOffer>(Builders<BadgeBuyOffer>.IndexKeys.Ascending(u => u.UserId)),
                 new CreateIndexModel<BadgeBuyOffer>(Builders<BadgeBuyOffer>.IndexKeys.Ascending(u => u.Species)),
@@ -61,27 +59,18 @@ namespace TPP.Persistence.MongoDB.Repos
             });
         }
 
-        public BadgeBuyOfferRepo(IMongoDatabase database, IBadgeRepo badgeRepo, IUserRepo userRepo, IBank<User> bank, IClock clock)
+        public BadgeMarketRepo(IMongoDatabase database, IBadgeRepo badgeRepo, IUserRepo userRepo, IBank<User> bank, IClock clock)
         {
             _badgeRepo = badgeRepo;
             _userRepo = userRepo;
             _tokenBank = bank;
-            database.CreateCollectionIfNotExists(CollectionName).Wait();
-            Collection = database.GetCollection<BadgeBuyOffer>(CollectionName);
+            database.CreateCollectionIfNotExists(BuyOfferCollectionName).Wait();
+            BuyOfferCollection = database.GetCollection<BadgeBuyOffer>(BuyOfferCollectionName);
             _clock = clock;
-            _MarketChangedEventHandler += MarketChanged;
             InitIndexes();
         }
 
-        private void OnMarketChangedEvent(MarketChangedEventArgs args)
-        {
-            EventHandler<MarketChangedEventArgs> handler = _MarketChangedEventHandler;
-            handler.Invoke(this, args);
-        }
-
-        private async void MarketChanged(object? sender, MarketChangedEventArgs args) => await ResolveBuyOffers(args.Species, args.Shiny);
-
-        public async Task<List<BadgeBuyOffer>> FindAllByCustom(string? userId, PkmnSpecies species, string? form, Badge.BadgeSource? source, bool? shiny)
+        public async Task<List<BadgeBuyOffer>> FindAllBuyOffers(string? userId, PkmnSpecies species, string? form, Badge.BadgeSource? source, bool? shiny)
         {
             FilterDefinition<BadgeBuyOffer> filter = Builders<BadgeBuyOffer>.Filter.Empty;
             if (userId != null)
@@ -95,9 +84,14 @@ namespace TPP.Persistence.MongoDB.Repos
             if (shiny == true)
                 filter &= Builders<BadgeBuyOffer>.Filter.Eq(b => b.Shiny, true);
             else
-                filter &= Builders<BadgeBuyOffer>.Filter.Eq(b => b.Shiny, false);
+                filter &= Builders<BadgeBuyOffer>.Filter.Ne(b => b.Shiny, true);
 
-            return await Collection.Find(filter).ToListAsync();
+            return await BuyOfferCollection.Find(filter).ToListAsync();
+        }
+
+        public async Task<List<Badge>> FindAllBadgesForSale(string? userId, PkmnSpecies species, string? form, Badge.BadgeSource? source, bool? shiny)
+        {
+            return await _badgeRepo.FindAllForSaleByCustom(userId, species, form, source, shiny);
         }
 
         public async Task<BadgeBuyOffer> CreateBuyOffer(string userId, PkmnSpecies species, string? form, Badge.BadgeSource? source, bool? shiny, int price, int amount, Instant? createdAt = null)
@@ -114,31 +108,56 @@ namespace TPP.Persistence.MongoDB.Repos
                 createdAt: createdAt ?? _clock.GetCurrentInstant()
                 );
 
-            await Collection.InsertOneAsync(buyOffer);
+            await BuyOfferCollection.InsertOneAsync(buyOffer);
             Debug.Assert(buyOffer.Id.Length > 0, "The MongoDB driver injected a generated ID");
-            OnMarketChangedEvent(new MarketChangedEventArgs(species, shiny));
             return buyOffer;
         }
 
         public async Task<Badge> CreateSellOffer(string userId, PkmnSpecies species, string? form, Badge.BadgeSource? source, bool? shiny, int price)
         {
             List<Badge> notSellingOwnedByUser = await _badgeRepo.FindAllNotForSaleByCustom(userId, species, form, source, shiny);
-            Badge toSell = sortBySpecialness(notSellingOwnedByUser).First();
+            Badge toSell = SortBySpecialness(notSellingOwnedByUser).First();
             Badge selling = await _badgeRepo.SetBadgeSellPrice(toSell, price);
-            OnMarketChangedEvent(new MarketChangedEventArgs(species, shiny));
             return selling;
         }
 
-        private async Task ResolveBuyOffers(PkmnSpecies species, bool? shiny)
+        public async Task DeleteBuyOffer(string userId, PkmnSpecies species, string? form, Badge.BadgeSource? source, bool? shiny, int amount)
         {
-            List<BadgeBuyOffer> buyOffers = await FindAllByCustom(null, species, null, null, shiny);
+            List<BadgeBuyOffer> offers = await FindAllBuyOffers(userId, species, form, source, shiny);
+            if(offers.Count() < amount)
+                throw new ArgumentException(string.Format("Tried to cancel {0} offers but only {1} were found", amount, offers.Count));
+            
+            offers = offers.OrderByDescending(o => o.CreatedAt).ToList();
+            for(int i=0; i < amount; i++)
+            {
+                await BuyOfferCollection.FindOneAndDeleteAsync(o => o.Id == offers[i].Id);
+            }
+        }
+        public async Task DeleteSellOffer(string userId, PkmnSpecies species, string? form, Badge.BadgeSource? source, bool? shiny, int amount)
+        {
+            List<Badge> badgesForSale = await _badgeRepo.FindAllForSaleByCustom(userId, species, form, source, shiny);
+            if (amount > badgesForSale.Count)
+                throw new ArgumentException(string.Format("Tried to cancel {0} offers but only {1} were found", amount, badgesForSale.Count));
+
+            badgesForSale = SortBySpecialness(badgesForSale);
+            badgesForSale.Reverse();
+            for(int i=0; i<amount; i++)
+            {
+                await _badgeRepo.SetBadgeSellPrice(badgesForSale[i], 0);
+            }
+        }
+
+        public async Task ResolveBuyOffers(PkmnSpecies species, bool? shiny)
+        {
             List<Badge> badgesForSale = await _badgeRepo.FindAllForSaleByCustom(null, species, null, null, shiny);
 
             badgesForSale = badgesForSale.OrderByDescending(b => b.SellingSince).ToList();
 
-            bool badgeSold = false;
             foreach (Badge badge in badgesForSale)
             {
+                List<BadgeBuyOffer> buyOffers = await FindAllBuyOffers(null, species, null, null, shiny);
+                buyOffers = buyOffers.Where(o => o.Price >= badge.SellPrice).ToList();
+
                 foreach (BadgeBuyOffer offer in buyOffers)
                 {
                     if (offer.UserId == badge.UserId)
@@ -164,29 +183,22 @@ namespace TPP.Persistence.MongoDB.Repos
                     );
 
                     await _badgeRepo.TransferBadges(new List<Badge> { badge }.ToImmutableList(), buyer.Id, "BadgeSale", new Dictionary<string, object?>() { });
-                    badgeSold = true;
                     await ResetUserSellOffers(badge.UserId, badge.Species, badge.Form, badge.Shiny);
 
                     offer.decrement(_clock.GetCurrentInstant());
                     if (offer.Amount > 0)
-                        await Collection.FindOneAndReplaceAsync(o => o.Id == offer.Id, offer);
+                        await BuyOfferCollection.FindOneAndReplaceAsync(o => o.Id == offer.Id, offer);
                     else
-                    {
-                        await Collection.FindOneAndDeleteAsync(o => o.Id == offer.Id);
-                        break;
-                    }
+                        await BuyOfferCollection.FindOneAndDeleteAsync(o => o.Id == offer.Id);
+                    break; //this badge has been sold, ignore the rest of the offers
                 }
-                if (badgeSold)
-                    break; //the market info we have is now out of date
             }
-            if (badgeSold)
-                await ResolveBuyOffers(species, shiny); //get new market info and continue resolving offers
         }
         /// <summary>
         /// Sorts badges according to the priority in which they should be sold.
         /// Current sorting rule: prioritize keeping 1 of each form, then sell newer badges first. Top priority badge will be selected for sale when fufilling offers.
         /// </summary>
-        private IEnumerable<Badge> sortBySpecialness(IEnumerable<Badge> toSort)
+        private static List<Badge> SortBySpecialness(IEnumerable<Badge> toSort)
         {
             IEnumerable<Badge> duplicates;
             IEnumerable<Badge> uniques = new List<Badge>();
@@ -212,7 +224,7 @@ namespace TPP.Persistence.MongoDB.Repos
             {
                 result = result.Append(b);
             }
-            return result;
+            return result.ToList();
         }
 
         /// <summary>
@@ -227,18 +239,6 @@ namespace TPP.Persistence.MongoDB.Repos
                     throw new OwnedBadgeNotFoundException(b);
                 await _badgeRepo.SetBadgeSellPrice(b, (long)b.SellPrice);
             }
-        }
-    }
-
-    public class MarketChangedEventArgs : EventArgs
-    {
-        public PkmnSpecies Species { get; init; }
-        public bool? Shiny { get; init; }
-
-        public MarketChangedEventArgs(PkmnSpecies species, bool? shiny)
-        {
-            Species = species;
-            Shiny = shiny;
         }
     }
 }

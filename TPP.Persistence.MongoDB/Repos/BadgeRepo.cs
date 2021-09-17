@@ -201,15 +201,19 @@ namespace TPP.Persistence.MongoDB.Repos
             return updatedBadges.ToImmutableList();
         }
         public async Task<Badge> SetBadgeSellPrice(Badge badge, long price)
-        {
+        {    
             if (price <= 0)
                 throw new ArgumentOutOfRangeException("price", "Price must be positive");
+
+            long? sellPrice = price == 0 ? null : price;
+            Instant? sellingSince = sellPrice == null ? null : _clock.GetCurrentInstant();
+
             return await Collection.FindOneAndUpdateAsync<Badge>(
                 Builders<Badge>.Filter
                            .Where(b => b.Id == badge.Id && b.UserId == badge.UserId),
                 Builders<Badge>.Update
-                    .Set(b => b.SellPrice, price)
-                    .Set(b => b.SellingSince, _clock.GetCurrentInstant()),
+                    .Set(b => b.SellPrice, sellPrice)
+                    .Set(b => b.SellingSince, sellingSince),
                 new FindOneAndUpdateOptions<Badge> { ReturnDocument = ReturnDocument.After, IsUpsert = false }
                 ) ?? throw new OwnedBadgeNotFoundException(badge);
         }
