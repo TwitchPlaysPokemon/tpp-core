@@ -151,12 +151,13 @@ namespace TPP.Persistence.MongoDB.Repos
         {
             List<Badge> badgesForSale = await FindAllBadgesForSale(null, species, null, null, shiny);
 
-            badgesForSale = badgesForSale.OrderByDescending(b => b.SellingSince).ToList();
+            badgesForSale = badgesForSale.OrderByDescending(b => b.SellPrice).ThenBy(b => b.SellingSince).ToList();
 
             foreach (Badge badge in badgesForSale)
             {
                 List<BadgeBuyOffer> buyOffers = await FindAllBuyOffers(null, species, null, null, shiny);
                 buyOffers = buyOffers.Where(o => o.Price >= badge.SellPrice).ToList();
+                buyOffers = buyOffers.OrderBy(o => o.WaitingSince).ToList();
 
                 foreach (BadgeBuyOffer offer in buyOffers)
                 {
