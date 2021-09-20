@@ -73,7 +73,7 @@ namespace TPP.Core.Tests.Commands
 
             Assert.That(result?.Response, Is.EqualTo("An error occurred."));
             string errorTextRegex = @"^An exception occured while executing command 'broken'\. " +
-                                     $@"User: {Regex.Escape(_mockUser.ToString())}, Original text: bla$";
+                                    $@"User: {Regex.Escape(_mockUser.ToString())}, Original text: bla$";
             loggerMock.VerifyLog(logger => logger.LogError(
                 new InvalidOperationException("this command is busted!"), It.IsRegex(errorTextRegex)));
         }
@@ -98,7 +98,9 @@ namespace TPP.Core.Tests.Commands
             var commandProcessor = new CommandProcessor(
                 _nullLogger, _commandLoggerMock.Object, new ArgsParser(), Mock.Of<IClock>());
             commandProcessor.InstallCommand(new Command("main", CommandUtils.StaticResponse("Hi!"))
-            { Aliases = new[] { "alias1", "alias2" } });
+            {
+                Aliases = new[] { "alias1", "alias2" }
+            });
 
             foreach (string command in ImmutableList.Create("main", "alias1", "ALIAS2"))
             {
@@ -126,7 +128,9 @@ namespace TPP.Core.Tests.Commands
                 _nullLogger, _commandLoggerMock.Object, new ArgsParser(), Mock.Of<IClock>());
 
             commandProcessor.InstallCommand(new Command("a", CommandUtils.StaticResponse("Hi!"))
-            { Aliases = new[] { "x" } });
+            {
+                Aliases = new[] { "x" }
+            });
             ArgumentException ex = Assert.Throws<ArgumentException>(() => commandProcessor
                 .InstallCommand(new Command("b", CommandUtils.StaticResponse("Hi!")) { Aliases = new[] { "X" } }))!;
             Assert.That(ex.Message, Is.EqualTo("The alias 'x' conflicts with: a(x): <no description>"));
@@ -139,7 +143,9 @@ namespace TPP.Core.Tests.Commands
                 _nullLogger, _commandLoggerMock.Object, new ArgsParser(), Mock.Of<IClock>());
 
             commandProcessor.InstallCommand(new Command("a", CommandUtils.StaticResponse("Hi!"))
-            { Aliases = new[] { "b" } });
+            {
+                Aliases = new[] { "b" }
+            });
             ArgumentException ex = Assert.Throws<ArgumentException>(() => commandProcessor
                 .InstallCommand(new Command("b", CommandUtils.StaticResponse("Hi!")) { Aliases = new[] { "x" } }))!;
             Assert.That(ex.Message, Is.EqualTo("The command name 'b' conflicts with: a(b): <no description>"));
@@ -150,21 +156,24 @@ namespace TPP.Core.Tests.Commands
         {
             var commandProcessor = new CommandProcessor(
                 _nullLogger, _commandLoggerMock.Object, new ArgsParser(), Mock.Of<IClock>());
-            commandProcessor.InstallCommand(new Command("opsonly", CommandUtils.StaticResponse("you are an operator")).WithCondition(
-            canExecute: ctx => IsOperator(ctx.Message.User),
-            ersatzResult: new CommandResult { Response = "Only operators can use that command" }));
+            commandProcessor.InstallCommand(
+                new Command("opsonly", CommandUtils.StaticResponse("you are an operator")).WithCondition(
+                    canExecute: ctx => IsOperator(ctx.Message.User),
+                    ersatzResult: new CommandResult { Response = "Only operators can use that command" }));
             bool IsOperator(User user) =>
                 user.Roles.Contains(Role.Operator);
-            User op = new User(
-            id: Guid.NewGuid().ToString(),
-            name: "operator", twitchDisplayName: "operator", simpleName: "mockoperator", color: null,
-            firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
-            lastMessageAt: null, pokeyen: 0, tokens: 0, roles: new HashSet<Role> { Role.Operator });
+            User op = new(
+                id: Guid.NewGuid().ToString(),
+                name: "operator", twitchDisplayName: "operator", simpleName: "mockoperator", color: null,
+                firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
+                lastMessageAt: null, pokeyen: 0, tokens: 0, roles: new HashSet<Role> { Role.Operator });
 
-            CommandResult? userResult = await commandProcessor.Process("opsonly", _noArgs, new Message(_mockUser, "", MessageSource.Chat, ""));
+            CommandResult? userResult = await commandProcessor.Process(
+                "opsonly", _noArgs, new Message(_mockUser, "", MessageSource.Chat, ""));
             Assert.That(userResult?.Response, Is.EqualTo("Only operators can use that command"));
 
-            CommandResult? opResult = await commandProcessor.Process("opsonly", _noArgs, new Message(op, "", MessageSource.Chat, ""));
+            CommandResult? opResult = await commandProcessor.Process(
+                "opsonly", _noArgs, new Message(op, "", MessageSource.Chat, ""));
             Assert.That(opResult?.Response, Is.EqualTo("you are an operator"));
         }
 
@@ -178,7 +187,7 @@ namespace TPP.Core.Tests.Commands
                 additionalLoadFactorAtHighThreshold: 6);
 
             commandProcessor.InstallCommand(new Command("foo",
-                _ => Task.FromResult(new CommandResult {Response = "yes!"})));
+                _ => Task.FromResult(new CommandResult { Response = "yes!" })));
 
             clockMock.Setup(clock => clock.GetCurrentInstant()).Returns(Instant.FromUnixTimeSeconds(0));
             CommandResult? resultOk1 = await commandProcessor.Process(
