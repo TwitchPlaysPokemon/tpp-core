@@ -70,7 +70,7 @@ namespace TPP.Core
         {
             ICommandProcessor commandProcessor = new CommandProcessor(
                 loggerFactory.CreateLogger<CommandProcessor>(),
-                databases.CommandLogger, argsParser);
+                databases.CommandLogger, argsParser, SystemClock.Instance);
 
             IEnumerable<Command> commands = new[]
             {
