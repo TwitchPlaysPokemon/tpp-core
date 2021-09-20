@@ -59,7 +59,7 @@ namespace TPP.Core
             return argsParser;
         }
 
-        public static CommandProcessor SetUpCommandProcessor(
+        public static ICommandProcessor SetUpCommandProcessor(
             ILoggerFactory loggerFactory,
             ArgsParser argsParser,
             Databases databases,
@@ -68,7 +68,7 @@ namespace TPP.Core
             IChatModeChanger chatModeChanger,
             IImmutableSet<Common.PkmnSpecies> knownSpecies)
         {
-            var commandProcessor = new CommandProcessor(
+            ICommandProcessor commandProcessor = new CommandProcessor(
                 loggerFactory.CreateLogger<CommandProcessor>(),
                 databases.CommandLogger, argsParser);
 
@@ -180,7 +180,7 @@ namespace TPP.Core
         }
 
         private static void SetUpDynamicCommands(
-            ILogger logger, CommandProcessor commandProcessor, IResponseCommandRepo responseCommandRepo)
+            ILogger logger, ICommandProcessor commandProcessor, IResponseCommandRepo responseCommandRepo)
         {
             IImmutableList<ResponseCommand> commands = responseCommandRepo.GetCommands().Result;
 

@@ -10,11 +10,19 @@ using TPP.Persistence;
 
 namespace TPP.Core.Commands
 {
+    public interface ICommandProcessor
+    {
+        public Task<CommandResult?> Process(string commandName, IImmutableList<string> args, Message message);
+        public Command? FindCommand(string commandName);
+        public void InstallCommand(Command command);
+        public void UninstallCommand(params string[] commandOrAlias);
+    }
+
     /// <summary>
     /// The command processor can be configured using <see cref="Command"/> instances to have commands,
     /// which then get executed using the <see cref="CommandProcessor.Process"/> method.
     /// </summary>
-    public class CommandProcessor
+    public class CommandProcessor : ICommandProcessor
     {
         /// <summary>
         /// maximum execution time for a command before a warning is logged.

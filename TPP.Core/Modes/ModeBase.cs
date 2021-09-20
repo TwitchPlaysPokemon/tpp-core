@@ -25,7 +25,7 @@ namespace TPP.Core.Modes
         private readonly ILogger<ModeBase> _logger;
         private readonly IImmutableDictionary<string, IChat> _chats;
         private readonly IImmutableDictionary<string, ICommandResponder> _commandResponders;
-        private readonly IImmutableDictionary<string, CommandProcessor> _commandProcessors;
+        private readonly IImmutableDictionary<string, ICommandProcessor> _commandProcessors;
         private readonly IImmutableDictionary<string, IModerator> _moderators;
         private readonly IImmutableDictionary<string, AdvertisePollsWorker> _advertisePollsWorkers;
         private readonly IMessagequeueRepo _messagequeueRepo;
@@ -105,7 +105,7 @@ namespace TPP.Core.Modes
 
         public void InstallAdditionalCommand(Command command)
         {
-            foreach (CommandProcessor commandProcessor in _commandProcessors.Values)
+            foreach (ICommandProcessor commandProcessor in _commandProcessors.Values)
                 commandProcessor.InstallCommand(command);
         }
 
