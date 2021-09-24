@@ -73,7 +73,12 @@ namespace TPP.Core.Chat
             _overlayConnection = overlayConnection;
 
             _twitchClient = new TwitchClient(
-                client: new WebSocketClient(new ClientOptions()),
+                client: new WebSocketClient(new ClientOptions
+                {
+                    MessagesAllowedInPeriod = 1000,
+                    WhispersAllowedInPeriod = 1000,
+                    SendDelay = 5,
+                }),
                 logger: loggerFactory.CreateLogger<TwitchClient>());
             var credentials = new ConnectionCredentials(
                 twitchUsername: chatConfig.Username,
