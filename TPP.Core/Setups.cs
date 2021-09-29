@@ -172,7 +172,8 @@ namespace TPP.Core
                 database: mongoDatabase,
                 startingPokeyen: baseConfig.StartingPokeyen,
                 startingTokens: baseConfig.StartingTokens,
-                defaultOperators: baseConfig.Chat.DefaultOperatorNames);
+                defaultOperators: baseConfig.Chat.DefaultOperatorNames,
+                clock: clock);
             IMongoBadgeLogRepo badgeLogRepo = new BadgeLogRepo(mongoDatabase);
             IBadgeRepo badgeRepo = new BadgeRepo(mongoDatabase, badgeLogRepo, clock);
             badgeRepo.UserLostBadgeSpecies += (_, args) => TaskToVoidSafely(logger, () =>
