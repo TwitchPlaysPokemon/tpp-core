@@ -1,5 +1,3 @@
-using System;
-
 namespace TPP.ArgsParsing.Types;
 
 /// <summary>
