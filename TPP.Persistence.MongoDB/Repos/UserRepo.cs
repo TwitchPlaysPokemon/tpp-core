@@ -20,6 +20,7 @@ namespace TPP.Persistence.MongoDB.Repos
         private readonly long _startingPokeyen;
         private readonly long _startingTokens;
         private readonly ImmutableHashSet<string> _defaultOperators;
+        private readonly IClock _clock;
 
         static UserRepo()
         {
@@ -64,13 +65,15 @@ namespace TPP.Persistence.MongoDB.Repos
         }
 
         public UserRepo(
-            IMongoDatabase database, long startingPokeyen, long startingTokens, IImmutableList<string> defaultOperators)
+            IMongoDatabase database, long startingPokeyen, long startingTokens, IImmutableList<string> defaultOperators,
+            IClock clock)
         {
             database.CreateCollectionIfNotExists(CollectionName).Wait();
             Collection = database.GetCollection<User>(CollectionName);
             _startingPokeyen = startingPokeyen;
             _startingTokens = startingTokens;
             _defaultOperators = defaultOperators.ToImmutableHashSet();
+            _clock = clock;
             InitIndexes();
 
             foreach (string name in _defaultOperators)
@@ -104,17 +107,18 @@ namespace TPP.Persistence.MongoDB.Repos
 
         public async Task<User> RecordUser(UserInfo userInfo)
         {
+            Instant updatedAt = userInfo.UpdatedAt ?? _clock.GetCurrentInstant();
             UpdateDefinition<User> update = Builders<User>.Update
                 .Set(u => u.TwitchDisplayName, userInfo.TwitchDisplayName)
                 .Set(u => u.SimpleName, userInfo.SimpleName)
-                .Set(u => u.LastActiveAt, userInfo.UpdatedAt);
+                .Set(u => u.LastActiveAt, updatedAt);
             if (userInfo.Color != null)
             {
                 update = update.Set(u => u.Color, userInfo.Color.StringWithoutHash);
             }
             if (userInfo.FromMessage)
             {
-                update = update.Set(u => u.LastMessageAt, userInfo.UpdatedAt);
+                update = update.Set(u => u.LastMessageAt, updatedAt);
             }
 
             async Task<User?> UpdateExistingUser() => await Collection.FindOneAndUpdateAsync<User>(
@@ -137,9 +141,9 @@ namespace TPP.Persistence.MongoDB.Repos
                 twitchDisplayName: userInfo.TwitchDisplayName,
                 simpleName: userInfo.SimpleName,
                 color: userInfo.Color?.StringWithoutHash,
-                firstActiveAt: userInfo.UpdatedAt,
-                lastActiveAt: userInfo.UpdatedAt,
-                lastMessageAt: userInfo.FromMessage ? userInfo.UpdatedAt : null,
+                firstActiveAt: updatedAt,
+                lastActiveAt: updatedAt,
+                lastMessageAt: userInfo.FromMessage ? updatedAt : null,
                 pokeyen: _startingPokeyen,
                 tokens: _startingTokens,
                 roles: _defaultOperators.Contains(userInfo.SimpleName) ? new HashSet<Role> { Role.Operator } : null
