@@ -92,8 +92,8 @@ public class CommandProcessorTest
     public async Task TestAliases()
     {
         var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock.Object, new ArgsParser());
-        commandProcessor.InstallCommand(new Command("main", CommandUtils.StaticResponse("Hi!"))
-            { Aliases = new[] { "alias1", "alias2" } });
+        commandProcessor.InstallCommand(new Command(
+            "main", CommandUtils.StaticResponse("Hi!")) { Aliases = new[] { "alias1", "alias2" } });
 
         foreach (string command in ImmutableList.Create("main", "alias1", "ALIAS2"))
         {
@@ -118,8 +118,8 @@ public class CommandProcessorTest
     {
         var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock.Object, new ArgsParser());
 
-        commandProcessor.InstallCommand(new Command("a", CommandUtils.StaticResponse("Hi!"))
-            { Aliases = new[] { "x" } });
+        commandProcessor.InstallCommand(new Command(
+            "a", CommandUtils.StaticResponse("Hi!")) { Aliases = new[] { "x" } });
         ArgumentException ex = Assert.Throws<ArgumentException>(() => commandProcessor
             .InstallCommand(new Command("b", CommandUtils.StaticResponse("Hi!")) { Aliases = new[] { "X" } }))!;
         Assert.That(ex.Message, Is.EqualTo("The alias 'x' conflicts with: a(x): <no description>"));
@@ -130,8 +130,8 @@ public class CommandProcessorTest
     {
         var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock.Object, new ArgsParser());
 
-        commandProcessor.InstallCommand(new Command("a", CommandUtils.StaticResponse("Hi!"))
-            { Aliases = new[] { "b" } });
+        commandProcessor.InstallCommand(new Command(
+            "a", CommandUtils.StaticResponse("Hi!")) { Aliases = new[] { "b" } });
         ArgumentException ex = Assert.Throws<ArgumentException>(() => commandProcessor
             .InstallCommand(new Command("b", CommandUtils.StaticResponse("Hi!")) { Aliases = new[] { "x" } }))!;
         Assert.That(ex.Message, Is.EqualTo("The command name 'b' conflicts with: a(b): <no description>"));

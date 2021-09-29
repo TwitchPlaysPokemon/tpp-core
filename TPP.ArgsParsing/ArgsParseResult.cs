@@ -47,7 +47,7 @@ public readonly record struct ArgsParseResult<T>(Success<T>? SuccessResult, IImm
         T result,
         IImmutableList<string> remainingArgs)
     {
-        return new ArgsParseResult<T>(new Success<T>{Result = result, RemainingArgs = remainingArgs}, failures);
+        return new ArgsParseResult<T>(new Success<T> { Result = result, RemainingArgs = remainingArgs }, failures);
     }
 
     /// <summary>
