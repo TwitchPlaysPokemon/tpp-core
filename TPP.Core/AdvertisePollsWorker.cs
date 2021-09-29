@@ -8,72 +8,70 @@ using TPP.Core.Commands.Definitions;
 using TPP.Model;
 using TPP.Persistence;
 
-namespace TPP.Core
+namespace TPP.Core;
+
+/// <summary>
+/// Advertises polls in chat on an interval.
+/// </summary>
+public sealed class AdvertisePollsWorker : IDisposable
 {
-    /// <summary>
-    /// Advertises polls in chat on an interval.
-    /// </summary>
-    public sealed class AdvertisePollsWorker : IDisposable
+    private readonly Duration _interval;
+    private readonly IPollRepo _pollRepo;
+    private readonly IMessageSender _messageSender;
+
+    private readonly CancellationTokenSource _cancellationTokenSource;
+    private Task? _runTask = null;
+
+    public AdvertisePollsWorker(Duration interval, IPollRepo pollRepo, IMessageSender messageSender)
     {
-        private readonly Duration _interval;
-        private readonly IPollRepo _pollRepo;
-        private readonly IMessageSender _messageSender;
+        _interval = interval;
+        _pollRepo = pollRepo;
+        _messageSender = messageSender;
+        _cancellationTokenSource = new CancellationTokenSource();
+    }
 
-        private readonly CancellationTokenSource _cancellationTokenSource;
-        private Task? _runTask = null;
+    public void Start()
+    {
+        if (_runTask != null) throw new InvalidOperationException("the worker is already running!");
+        _runTask = Run();
+    }
 
-        public AdvertisePollsWorker(Duration interval, IPollRepo pollRepo, IMessageSender messageSender)
+    private async Task Stop()
+    {
+        if (_runTask == null) throw new InvalidOperationException("the worker is not running!");
+        _cancellationTokenSource.Cancel();
+        try
         {
-            _interval = interval;
-            _pollRepo = pollRepo;
-            _messageSender = messageSender;
-            _cancellationTokenSource = new CancellationTokenSource();
+            await _runTask;
         }
-
-        public void Start()
+        catch (OperationCanceledException)
         {
-            if (_runTask != null) throw new InvalidOperationException("the worker is already running!");
-            _runTask = Run();
         }
+    }
 
-        private async Task Stop()
+    public async Task Run()
+    {
+        while (!_cancellationTokenSource.Token.IsCancellationRequested)
         {
-            if (_runTask == null) throw new InvalidOperationException("the worker is not running!");
-            _cancellationTokenSource.Cancel();
-            try
+            await Task.Delay(_interval.ToTimeSpan(), _cancellationTokenSource.Token);
+            IImmutableList<Poll> polls = await _pollRepo.FindPolls(onlyActive: true);
+            if (polls.Count == 0) continue;
+            if (polls.Count == 1)
             {
-                await _runTask;
+                await _messageSender.SendMessage("Please vote in the currently active poll: " +
+                                                 PollCommands.FormatSinglePollAdvertisement(polls[0]));
             }
-            catch (OperationCanceledException)
+            else
             {
-            }
-        }
-
-        public async Task Run()
-        {
-            while (!_cancellationTokenSource.Token.IsCancellationRequested)
-            {
-                await Task.Delay(_interval.ToTimeSpan(), _cancellationTokenSource.Token);
-                IImmutableList<Poll> polls = await _pollRepo.FindPolls(onlyActive: true);
-                if (polls.Count == 0) continue;
-                if (polls.Count == 1)
-                {
-                    await _messageSender.SendMessage(
-                        "Please vote in the currently active poll: " +
-                        PollCommands.FormatSinglePollAdvertisement(polls[0]));
-                }
-                else
-                {
-                    await _messageSender.SendMessage(PollCommands.FormatPollsAdvertisement(polls));
-                }
+                await _messageSender.SendMessage(PollCommands.FormatPollsAdvertisement(polls));
             }
         }
+    }
 
-        public void Dispose()
-        {
-            if (_runTask != null) Stop().Wait();
-            _cancellationTokenSource.Dispose();
-            _runTask?.Dispose();
-        }
+    public void Dispose()
+    {
+        if (_runTask != null) Stop().Wait();
+        _cancellationTokenSource.Dispose();
+        _runTask?.Dispose();
     }
 }

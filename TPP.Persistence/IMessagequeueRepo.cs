@@ -1,10 +1,9 @@
 using System.Threading.Tasks;
 using TPP.Model;
 
-namespace TPP.Persistence
+namespace TPP.Persistence;
+
+public interface IMessagequeueRepo
 {
-    public interface IMessagequeueRepo
-    {
-        Task<MessagequeueItem> EnqueueMessage(string ircLine);
-    }
+    Task<MessagequeueItem> EnqueueMessage(string ircLine);
 }

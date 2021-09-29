@@ -1,45 +1,45 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace TPP.Core.Commands.Definitions
+namespace TPP.Core.Commands.Definitions;
+
+public class HelpCommand
 {
-    public class HelpCommand
+    public Command Command => new("help", ctx => Task.FromResult(Execute(ctx)))
     {
-        public Command Command => new("help", ctx => Task.FromResult(Execute(ctx)))
-        {
-            Aliases = new[] { "info" },
-            Description = "Get general help, or info on a specific command like: \"!help balance\""
-        };
+        Aliases = new[] { "info" },
+        Description = "Get general help, or info on a specific command like: \"!help balance\""
+    };
 
-        private readonly CommandProcessor _commandProcessor;
-        public HelpCommand(CommandProcessor commandProcessor) => _commandProcessor = commandProcessor;
+    private readonly CommandProcessor _commandProcessor;
+    public HelpCommand(CommandProcessor commandProcessor) => _commandProcessor = commandProcessor;
 
-        private CommandResult Execute(CommandContext context)
-        {
-            if (context.Args.Count == 0)
-                return new CommandResult
-                {
-                    Response =
-                        "Read the description for more info! Or get info on a specific command like: " +
-                        "\"!help balance\". Command reference: https://twitchplayspokemon.tv/commands"
-                };
-            if (context.Args.Count > 1)
-                return new CommandResult { Response = "Commands do not contain spaces. Ex: \"!help selectbadge\"" };
+    private CommandResult Execute(CommandContext context)
+    {
+        if (context.Args.Count == 0)
+            return new CommandResult
+            {
+                Response =
+                    "Read the description for more info! Or get info on a specific command like: " +
+                    "\"!help balance\". Command reference: https://twitchplayspokemon.tv/commands"
+            };
+        if (context.Args.Count > 1)
+            return new CommandResult { Response = "Commands do not contain spaces. Ex: \"!help selectbadge\"" };
 
-            string commandName = context.Args[0];
-            Command? command = _commandProcessor.FindCommand(commandName);
-            if (command != null)
-                return new CommandResult { Response = command.Value.Description };
+        string commandName = context.Args[0];
+        Command? command = _commandProcessor.FindCommand(commandName);
+        if (command != null)
+            return new CommandResult { Response = command.Value.Description };
 
-            // dual core compatibility: supply help messages for commands that still live in the old core
-            if (_oldCoreCommandDescriptions.TryGetValue(commandName.ToLower(), out string? desc))
-                return new CommandResult { Response = desc };
+        // dual core compatibility: supply help messages for commands that still live in the old core
+        if (_oldCoreCommandDescriptions.TryGetValue(commandName.ToLower(), out string? desc))
+            return new CommandResult { Response = desc };
 
-            return new CommandResult { Response = $"Command not found: {commandName}" };
-        }
+        return new CommandResult { Response = $"Command not found: {commandName}" };
+    }
 
-        private readonly Dictionary<string, string> _oldCoreCommandDescriptions = new()
-        {
+    private readonly Dictionary<string, string> _oldCoreCommandDescriptions = new()
+    {
             // @formatter:off
 
             // operator commands
@@ -211,7 +211,6 @@ namespace TPP.Core.Commands.Definitions
             ["bet"] = "Chat only: bet on PBR using Pokéyen. Arguments: <team> <amount or percent>",
             ["match"] = "Bid your own matches like this: !match <modes> <teams> t1. Modes and teams are optional.  Omit \"t1\" for a dry run.  For more info, type \"!match modes\" or \"!match teams\".",
 
-            // @formatter:on
-        };
-    }
+        // @formatter:on
+    };
 }

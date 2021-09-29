@@ -3,35 +3,34 @@ using System.Threading.Tasks;
 using TPP.Core.Moderation;
 using TPP.Model;
 
-namespace TPP.Core.Chat
+namespace TPP.Core.Chat;
+
+public class MessageEventArgs : EventArgs
 {
-    public class MessageEventArgs : EventArgs
-    {
-        public Message Message { get; }
-        public MessageEventArgs(Message message) => Message = message;
-    }
+    public Message Message { get; }
+    public MessageEventArgs(Message message) => Message = message;
+}
 
-    public interface IMessageSender
-    {
-        Task SendMessage(string message, Message? responseTo = null);
-        Task SendWhisper(User target, string message);
-    }
+public interface IMessageSender
+{
+    Task SendMessage(string message, Message? responseTo = null);
+    Task SendWhisper(User target, string message);
+}
 
-    public interface IChatModeChanger
-    {
-        public Task EnableEmoteOnly();
-        public Task DisableEmoteOnly();
-    }
+public interface IChatModeChanger
+{
+    public Task EnableEmoteOnly();
+    public Task DisableEmoteOnly();
+}
 
-    public interface IChat : IMessageSender, IChatModeChanger, IExecutor, IDisposable
-    {
-        string Name { get; }
+public interface IChat : IMessageSender, IChatModeChanger, IExecutor, IDisposable
+{
+    string Name { get; }
 
-        event EventHandler<MessageEventArgs> IncomingMessage;
+    event EventHandler<MessageEventArgs> IncomingMessage;
 
-        /// Establishes the connection.
-        /// All subsequent repeated invocations on this instance will fail.
-        /// The connection gets closed by disposing this instance.
-        void Connect();
-    }
+    /// Establishes the connection.
+    /// All subsequent repeated invocations on this instance will fail.
+    /// The connection gets closed by disposing this instance.
+    void Connect();
 }

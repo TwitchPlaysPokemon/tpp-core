@@ -2,11 +2,10 @@ using System.Threading.Tasks;
 using NodaTime;
 using TPP.Model;
 
-namespace TPP.Persistence
+namespace TPP.Persistence;
+
+public interface IModLogRepo
 {
-    public interface IModLogRepo
-    {
-        Task<ModLog> LogModAction(User user, string reason, string rule, Instant timestamp);
-        Task<long> CountRecentBans(User user, Instant cutoff);
-    }
+    Task<ModLog> LogModAction(User user, string reason, string rule, Instant timestamp);
+    Task<long> CountRecentBans(User user, Instant cutoff);
 }

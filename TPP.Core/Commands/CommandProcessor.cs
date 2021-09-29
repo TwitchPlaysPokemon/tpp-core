@@ -8,102 +8,101 @@ using Microsoft.Extensions.Logging;
 using TPP.ArgsParsing;
 using TPP.Persistence;
 
-namespace TPP.Core.Commands
+namespace TPP.Core.Commands;
+
+/// <summary>
+/// The command processor can be configured using <see cref="Command"/> instances to have commands,
+/// which then get executed using the <see cref="CommandProcessor.Process"/> method.
+/// </summary>
+public class CommandProcessor
 {
     /// <summary>
-    /// The command processor can be configured using <see cref="Command"/> instances to have commands,
-    /// which then get executed using the <see cref="CommandProcessor.Process"/> method.
+    /// maximum execution time for a command before a warning is logged.
     /// </summary>
-    public class CommandProcessor
+    private static readonly TimeSpan CommandWarnTimeLimit = TimeSpan.FromMilliseconds(1000);
+
+    private readonly ILogger<CommandProcessor> _logger;
+    private readonly ICommandLogger _commandLogger;
+    private readonly ArgsParser _argsParser;
+    private readonly Dictionary<string, Command> _commands = new();
+
+    public CommandProcessor(
+        ILogger<CommandProcessor> logger,
+        ICommandLogger commandLogger,
+        ArgsParser argsParser)
     {
-        /// <summary>
-        /// maximum execution time for a command before a warning is logged.
-        /// </summary>
-        private static readonly TimeSpan CommandWarnTimeLimit = TimeSpan.FromMilliseconds(1000);
+        _logger = logger;
+        _commandLogger = commandLogger;
+        _argsParser = argsParser;
+    }
 
-        private readonly ILogger<CommandProcessor> _logger;
-        private readonly ICommandLogger _commandLogger;
-        private readonly ArgsParser _argsParser;
-        private readonly Dictionary<string, Command> _commands = new();
-
-        public CommandProcessor(
-            ILogger<CommandProcessor> logger,
-            ICommandLogger commandLogger,
-            ArgsParser argsParser)
+    public void InstallCommand(Command command)
+    {
+        string commandName = command.Name.ToLower();
+        if (_commands.ContainsKey(commandName))
         {
-            _logger = logger;
-            _commandLogger = commandLogger;
-            _argsParser = argsParser;
+            throw new ArgumentException(
+                $"The command name '{commandName}' conflicts with: {_commands[commandName]}");
         }
-
-        public void InstallCommand(Command command)
+        foreach (string alias in command.Aliases.Select(a => a.ToLower()))
         {
-            string commandName = command.Name.ToLower();
-            if (_commands.ContainsKey(commandName))
+            if (_commands.ContainsKey(alias))
             {
-                throw new ArgumentException(
-                    $"The command name '{commandName}' conflicts with: {_commands[commandName]}");
-            }
-            foreach (string alias in command.Aliases.Select(a => a.ToLower()))
-            {
-                if (_commands.ContainsKey(alias))
-                {
-                    throw new ArgumentException($"The alias '{alias}' conflicts with: {_commands[alias]}");
-                }
-            }
-            _commands[commandName] = command;
-            foreach (string alias in command.Aliases.Select(a => a.ToLower()))
-            {
-                _commands[alias] = command;
+                throw new ArgumentException($"The alias '{alias}' conflicts with: {_commands[alias]}");
             }
         }
-
-        public void UninstallCommand(params string[] commandOrAlias)
+        _commands[commandName] = command;
+        foreach (string alias in command.Aliases.Select(a => a.ToLower()))
         {
-            foreach (string name in commandOrAlias.Select(a => a.ToLower()))
-            {
-                _commands.Remove(name);
-            }
+            _commands[alias] = command;
         }
+    }
 
-        public Command? FindCommand(string commandName) =>
-            _commands.TryGetValue(commandName.ToLower(), out Command command) ? command : null;
-
-        public async Task<CommandResult?> Process(string commandName, IImmutableList<string> args, Message message)
+    public void UninstallCommand(params string[] commandOrAlias)
+    {
+        foreach (string name in commandOrAlias.Select(a => a.ToLower()))
         {
-            if (!_commands.TryGetValue(commandName.ToLower(), out Command command))
-            {
-                _logger.LogDebug("unknown command '{Command}'", commandName);
-                return null;
-            }
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-            CommandResult result;
-            try
-            {
-                result = await command.Execution(new CommandContext(message, args, _argsParser));
-                await _commandLogger.Log(message.User.Id, commandName, args, result.Response);
-            }
-            catch (ArgsParseFailure ex)
-            {
-                result = new CommandResult { Response = ex.Message };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex,
-                    "An exception occured while executing command '{Command}'. User: {User}, Original text: {MessageText}",
-                    command.Name, message.User, message.MessageText);
-                result = new CommandResult { Response = "An error occurred." };
-            }
-            stopwatch.Stop();
-            if (stopwatch.Elapsed >= CommandWarnTimeLimit)
-            {
-                _logger.LogWarning(
-                    "Command '{Command}' took unusually long ({Duration}ms) to finish! " +
-                    "User: {User:l}, Original text: {MessageText}",
-                    command.Name, stopwatch.ElapsedMilliseconds, message.User, message.MessageText);
-            }
-            return result;
+            _commands.Remove(name);
         }
+    }
+
+    public Command? FindCommand(string commandName) =>
+        _commands.TryGetValue(commandName.ToLower(), out Command command) ? command : null;
+
+    public async Task<CommandResult?> Process(string commandName, IImmutableList<string> args, Message message)
+    {
+        if (!_commands.TryGetValue(commandName.ToLower(), out Command command))
+        {
+            _logger.LogDebug("unknown command '{Command}'", commandName);
+            return null;
+        }
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
+        CommandResult result;
+        try
+        {
+            result = await command.Execution(new CommandContext(message, args, _argsParser));
+            await _commandLogger.Log(message.User.Id, commandName, args, result.Response);
+        }
+        catch (ArgsParseFailure ex)
+        {
+            result = new CommandResult { Response = ex.Message };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "An exception occured while executing command '{Command}'. User: {User}, Original text: {MessageText}",
+                command.Name, message.User, message.MessageText);
+            result = new CommandResult { Response = "An error occurred." };
+        }
+        stopwatch.Stop();
+        if (stopwatch.Elapsed >= CommandWarnTimeLimit)
+        {
+            _logger.LogWarning(
+                "Command '{Command}' took unusually long ({Duration}ms) to finish! " +
+                "User: {User:l}, Original text: {MessageText}",
+                command.Name, stopwatch.ElapsedMilliseconds, message.User, message.MessageText);
+        }
+        return result;
     }
 }
