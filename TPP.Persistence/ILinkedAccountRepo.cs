@@ -1,8 +1,3 @@
-using System.Collections.Immutable;
-using System.Linq;
-using System.Threading.Tasks;
-using TPP.Model;
-
 namespace TPP.Persistence;
 
 public interface ILinkedAccountRepo
