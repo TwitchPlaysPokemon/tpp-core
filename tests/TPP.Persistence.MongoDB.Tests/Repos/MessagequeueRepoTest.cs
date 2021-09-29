@@ -1,10 +1,3 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using MongoDB.Driver;
-using NUnit.Framework;
-using TPP.Model;
-using TPP.Persistence.MongoDB.Repos;
-
 namespace TPP.Persistence.MongoDB.Tests.Repos;
 
 public class MessagequeueRepoTest : MongoTestBase

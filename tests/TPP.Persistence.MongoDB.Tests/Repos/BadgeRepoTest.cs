@@ -1,14 +1,4 @@
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Threading.Tasks;
-using MongoDB.Bson;
-using MongoDB.Driver;
-using Moq;
-using NodaTime;
-using NUnit.Framework;
 using TPP.Common;
-using TPP.Model;
-using TPP.Persistence.MongoDB.Repos;
 
 namespace TPP.Persistence.MongoDB.Tests.Repos;
 

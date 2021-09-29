@@ -1,16 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
-using MongoDB.Driver;
-using NodaTime;
 using NodaTime.Extensions;
 using NodaTime.Text;
-using NUnit.Framework;
-using TPP.Model;
-using TPP.Persistence.MongoDB.Repos;
 
 namespace TPP.Persistence.MongoDB.Tests.Repos;
 
