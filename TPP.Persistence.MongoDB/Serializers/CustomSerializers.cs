@@ -1,7 +1,3 @@
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
-using NodaTime;
-
 namespace TPP.Persistence.MongoDB.Serializers;
 
 /// <summary>

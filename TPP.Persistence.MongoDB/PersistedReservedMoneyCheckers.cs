@@ -1,10 +1,3 @@
-using System.Linq;
-using System.Threading.Tasks;
-using MongoDB.Bson;
-using MongoDB.Driver;
-using MongoDB.Driver.Linq;
-using TPP.Model;
-
 namespace TPP.Persistence.MongoDB;
 
 /// <summary>

@@ -1,8 +1,3 @@
-using System.Threading;
-using System.Threading.Tasks;
-using MongoDB.Bson;
-using MongoDB.Driver;
-
 namespace TPP.Persistence.MongoDB;
 
 public static class MongoDatabaseExtensions

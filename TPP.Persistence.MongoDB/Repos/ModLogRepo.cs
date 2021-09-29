@@ -1,11 +1,4 @@
 using System.Diagnostics;
-using System.Threading.Tasks;
-using MongoDB.Bson.Serialization;
-using MongoDB.Bson.Serialization.IdGenerators;
-using MongoDB.Driver;
-using NodaTime;
-using TPP.Model;
-using TPP.Persistence.MongoDB.Serializers;
 
 namespace TPP.Persistence.MongoDB.Repos;
 
