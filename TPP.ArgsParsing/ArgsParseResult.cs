@@ -22,56 +22,21 @@ public enum ErrorRelevanceConfidence
     Likely,
 }
 
-public readonly struct Success<T>
-{
-    public T Result { get; }
-    public IImmutableList<string> RemainingArgs { get; }
+public readonly record struct Success<T>(T Result, IImmutableList<string> RemainingArgs);
 
-    public Success(T result, IImmutableList<string> remainingArgs)
-    {
-        Result = result;
-        RemainingArgs = remainingArgs;
-    }
-}
-
-public readonly struct Failure
-{
-    public ErrorRelevanceConfidence Relevance { get; }
-    public string Error { get; }
-
-    public Failure(ErrorRelevanceConfidence relevance, string error)
-    {
-        Relevance = relevance;
-        Error = error;
-    }
-}
+public readonly record struct Failure(ErrorRelevanceConfidence Relevance, string Error);
 
 /// <summary>
 /// A result object that can either be successful or not,
 /// and contains an instance of <typeparamref name="T"/> on success.
 /// </summary>
+/// <param name="Failures">The result object, if successful.</param>
+/// <param name="SuccessResult">All failures that occured during parsing.
+/// Note that even successful results may contain failures, which is needed for better error reporting,
+/// e.g. to be able to pick the most relevant error message if parsing fails at a later, less relevant point.</param>
 /// <typeparam name="T">type of the success object that will be contained on success.</typeparam>
-public readonly struct ArgsParseResult<T>
+public readonly record struct ArgsParseResult<T>(Success<T>? SuccessResult, IImmutableList<Failure> Failures)
 {
-    /// <summary>
-    /// The result object, if successful.
-    /// </summary>
-    public Success<T>? SuccessResult { get; }
-    /// <summary>
-    /// All failures that occured during parsing.
-    /// Note that even successful results may contain failures, which is needed for better error reporting,
-    /// e.g. to be able to pick the most relevant error message if parsing fails at a later, less relevant point.
-    /// </summary>
-    public IImmutableList<Failure> Failures { get; }
-
-    private ArgsParseResult(
-        Success<T>? successResult,
-        IImmutableList<Failure> failures)
-    {
-        SuccessResult = successResult;
-        Failures = failures;
-    }
-
     /// <summary>
     /// Create a successful parse result object.
     /// </summary>
@@ -84,7 +49,7 @@ public readonly struct ArgsParseResult<T>
         T result,
         IImmutableList<string> remainingArgs)
     {
-        return new ArgsParseResult<T>(new Success<T>(result, remainingArgs), failures);
+        return new ArgsParseResult<T>(new Success<T>{Result = result, RemainingArgs = remainingArgs}, failures);
     }
 
     /// <summary>

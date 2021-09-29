@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using MongoDB.Driver;
+using Moq;
+using NodaTime;
 using NUnit.Framework;
 using TPP.Model;
 using TPP.Persistence.MongoDB.Repos;
@@ -14,7 +16,7 @@ public class LinkedAccountRepoTest : MongoTestBase
     public async Task link_accounts()
     {
         IMongoDatabase database = CreateTemporaryDatabase();
-        UserRepo userRepo = new(database, 0, 0, ImmutableList<string>.Empty);
+        UserRepo userRepo = new(database, 0, 0, ImmutableList<string>.Empty, Mock.Of<IClock>());
         User user1 = await userRepo.RecordUser(new UserInfo("user1", "User1", "user1"));
         User user2 = await userRepo.RecordUser(new UserInfo("user2", "User2", "user2"));
         User user3 = await userRepo.RecordUser(new UserInfo("user3", "User3", "user3"));

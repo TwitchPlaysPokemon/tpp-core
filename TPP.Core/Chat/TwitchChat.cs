@@ -339,12 +339,12 @@ public sealed class TwitchChat : IChat
     {
         string? colorHex = message.ColorHex;
         return new UserInfo(
-            id: message.UserId,
-            twitchDisplayName: message.DisplayName,
-            simpleName: message.Username,
-            color: string.IsNullOrEmpty(colorHex) ? null : HexColor.FromWithHash(colorHex),
-            fromMessage: true,
-            updatedAt: _clock.GetCurrentInstant()
+            Id: message.UserId,
+            TwitchDisplayName: message.DisplayName,
+            SimpleName: message.Username,
+            Color: string.IsNullOrEmpty(colorHex) ? null : HexColor.FromWithHash(colorHex),
+            FromMessage: true,
+            UpdatedAt: _clock.GetCurrentInstant()
         );
     }
 
