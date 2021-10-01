@@ -5,7 +5,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="NodaTime" Version="3.0.5" />
+      <PackageReference Include="NodaTime" Version="3.0.6" />
     </ItemGroup>
 
 </Project>
