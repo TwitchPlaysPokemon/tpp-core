@@ -25,15 +25,19 @@ var result = await argsParser.Parse<AnyOrder<PkmnSpecies, int, Tokens>>(args);
 ```
 
 This project already includes parser implementations for a bunch of commonly used types,
-but can be extended by deriving from [BaseArgumentParser](IArgumentParser.cs)
+but can be extended by deriving from [IArgumentParser](IArgumentParser.cs)
 and adding that parser to your `ArgsParser`-instance.
 
-Take a look at the [tests](../TPP.ArgsParsing.Tests) for more in-depth usage examples.
+Take a look at the [tests](../tests/TPP.ArgsParsing.Tests) for more in-depth usage examples.
 
 # built-in types
 
 Parser implementations for the following types are included in this project (their names are `<type>Parser` by convention):
 
+- `bool`: a boolean representable by true/false and some variations (yes/no, y/n)
+  ```c#
+  bool enabled = await argsParser.Parse<bool>(ImmutableList.Create("yes"))
+  ```
 - `HexColor`: 6 hexadecimal digits optionally prefixed with `#`
   ```c#
   HexColor color = await argsParser.Parse<HexColor>(ImmutableList.Create("#ff0000"))
@@ -54,6 +58,10 @@ Parser implementations for the following types are included in this project (the
   ```c#
   int number = await argsParser.Parse<PositiveInt>(ImmutableList.Create("42"))
   ```
+- `Percentage`: a `%`-suffixed percentage
+  ```c#
+  double third = await argsParser.Parse<Percentage>(ImmutableList.Create("33.3%")).AsDecimal
+  ```
 - `PkmnSpecies`: a pokemon species
   ```c#
   PkmnSpecies species = await argsParser.Parse<PkmnSpecies>(ImmutableList.Create("Pikachu"))
@@ -73,6 +81,10 @@ Parser implementations for the following types are included in this project (the
 - `SignedTokens`: a `T`-prefixed unrestricted amount of tokens
   ```c#
   int tokens = await argsParser.Parse<SignedTokens>(ImmutableList.Create("-42"))
+  ```
+- `Role`: a user role, e.g. "operator"
+  ```c#
+  Role role = await argsParser.Parse<Role>(ImmutableList.Create("moderator"))
   ```
 - `string`: the raw input argument
   ```c#

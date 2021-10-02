@@ -1,0 +1,40 @@
+name: inspect
+
+on: [pull_request]
+
+jobs:
+  inspect:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup .NET 5
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+      - uses: actions/checkout@v2
+      - name: install resharper
+        run: dotnet tool install -g JetBrains.ReSharper.GlobalTools
+      - name: install dotnet-format
+        run: dotnet tool install -g dotnet-format
+      - name: build solution before analysis
+        run: dotnet build
+      - name: determine changed files
+        uses: lots0logs/gh-action-get-changed-files@2.1.4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: run resharper
+        run: |
+          changed_files=$(jq --raw-output 'join(";")' "${HOME}/files.json")
+          echo "Changed files: $changed_files"
+          jb inspectcode --severity=WARNING --format=Json --output=_rs_inspections --include="$changed_files" tpp-core.sln || echo "ReSharper failed, likely because the filter resulted in no files being analyzed"
+      - name: process resharper inspections
+        run: |
+          if [ -d "./_rs_inspections" ]; then
+            for filename in ./_rs_inspections/*.json; do
+              jq --raw-output '.problems[] | "::\(.problem_class.severity) file=\(.file | gsub("\\\\";"/") | sub("\\$PROJECT_DIR\\$/";"")),line=\(.line),col=\(.offset)::\(.description)"' "$filename"
+            done
+          fi
+      - name: check code formatting
+        run: |
+          dotnet format --check --report=_format_report.json || python .github/workflows/process_format_report.py

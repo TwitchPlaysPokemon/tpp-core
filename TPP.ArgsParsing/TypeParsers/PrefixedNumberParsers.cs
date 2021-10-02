@@ -24,7 +24,7 @@ namespace TPP.ArgsParsing.TypeParsers
     /// int pokeyen = argsParser.Parse&lt;Pokeyen&gt;(...);
     /// </code>
     /// </summary>
-    public class PrefixedNumberParser<T> : BaseArgumentParser<T> where T : ImplicitNumber, new()
+    public class PrefixedNumberParser<T> : IArgumentParser<T> where T : ImplicitNumber, new()
     {
         private readonly string _prefix;
         private readonly int _minValue;
@@ -45,7 +45,7 @@ namespace TPP.ArgsParsing.TypeParsers
             _regex = new Regex(@$"^{Regex.Escape(prefix)}(?<number>[+-]?[0-9]+)$", options);
         }
 
-        public override Task<ArgsParseResult<T>> Parse(IImmutableList<string> args, Type[] genericTypes)
+        public Task<ArgsParseResult<T>> Parse(IImmutableList<string> args, Type[] genericTypes)
         {
             string str = args[0];
             Match match = _regex.Match(str);

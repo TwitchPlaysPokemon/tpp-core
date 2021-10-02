@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using TPP.ArgsParsing;
-using TPP.Persistence.Repos;
+using TPP.Persistence;
 
 namespace TPP.Core.Commands
 {
@@ -24,7 +24,7 @@ namespace TPP.Core.Commands
         private readonly ILogger<CommandProcessor> _logger;
         private readonly ICommandLogger _commandLogger;
         private readonly ArgsParser _argsParser;
-        private readonly Dictionary<string, Command> _commands = new Dictionary<string, Command>();
+        private readonly Dictionary<string, Command> _commands = new();
 
         public CommandProcessor(
             ILogger<CommandProcessor> logger,
@@ -58,12 +58,11 @@ namespace TPP.Core.Commands
             }
         }
 
-        public void UninstallCommand(Command command)
+        public void UninstallCommand(params string[] commandOrAlias)
         {
-            _commands.Remove(command.Name.ToLower());
-            foreach (string alias in command.Aliases.Select(a => a.ToLower()))
+            foreach (string name in commandOrAlias.Select(a => a.ToLower()))
             {
-                _commands.Remove(alias);
+                _commands.Remove(name);
             }
         }
 

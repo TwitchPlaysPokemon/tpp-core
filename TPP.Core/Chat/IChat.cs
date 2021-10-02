@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
-using TPP.Persistence.Models;
+using TPP.Core.Moderation;
+using TPP.Model;
 
 namespace TPP.Core.Chat
 {
@@ -22,7 +23,7 @@ namespace TPP.Core.Chat
         public Task DisableEmoteOnly();
     }
 
-    public interface IChat : IMessageSender, IChatModeChanger, IDisposable
+    public interface IChat : IMessageSender, IChatModeChanger, IExecutor, IDisposable
     {
         string Name { get; }
 

@@ -1,11 +1,12 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using TPP.ArgsParsing.Types;
 using TPP.Common;
 using TPP.Core.Chat;
-using TPP.Persistence.Models;
-using TPP.Persistence.Repos;
+using TPP.Model;
+using TPP.Persistence;
 
 namespace TPP.Core.Commands.Definitions
 {
@@ -19,6 +20,10 @@ namespace TPP.Core.Commands.Definitions
             {
                 Aliases = new[] { "pokeyen", "tokens", "currency", "money", "rank" },
                 Description = "Show a user's pokeyen and tokens. Argument: <username> (optional)"
+            },
+            new Command("highscore", CheckHighScore)
+            {
+                Description = "Show a user's pokeyen high score for this season. Argument: <username> (optional)"
             },
             new Command("setglow", SetGlow)
             {
@@ -59,6 +64,19 @@ namespace TPP.Core.Commands.Definitions
                 Aliases = new[] { "gifttokens" },
                 Description = "Donate another user tokens. Arguments: <user to donate to> <amount of tokens>"
             },
+            new Command("list", List)
+            {
+                Description = "List all of the people who have a given role. " +
+                              "Arguments: <role>"
+            },
+            new Command("showroles", ShowRoles)
+            {
+                Aliases = new[] { "roles" },
+                Description = "Show which roles a user has. " +
+                              "Arguments: <user>"
+            },
+            new Command("operators", Ops) { Aliases = new[] { "ops" }, Description = "Alias for '!list operator'" },
+            new Command("moderators", Mods) { Aliases = new[] { "mods" }, Description = "Alias for '!list moderator'" },
         };
 
         private readonly IUserRepo _userRepo;
@@ -103,13 +121,32 @@ namespace TPP.Core.Commands.Definitions
             return new CommandResult { Response = response };
         }
 
+        public async Task<CommandResult> CheckHighScore(CommandContext context)
+        {
+            var optionalUser = await context.ParseArgs<Optional<User>>();
+            bool isSelf = !optionalUser.IsPresent;
+            User user = isSelf ? context.Message.User : optionalUser.Value;
+            return new CommandResult
+            {
+                Response = user.PokeyenHighScore > 0
+                    ? isSelf
+                        ? $"Your high score is P{user.PokeyenHighScore}"
+                        : $"{user.Name}'s high score is P{user.PokeyenHighScore}"
+                    : isSelf
+                        ? "You don't have a high score"
+                        : $"{user.Name} doesn't have a high score."
+            };
+        }
+
         public async Task<CommandResult> SetGlow(CommandContext context)
         {
             User user = context.Message.User;
             if (!user.GlowColorUnlocked)
             {
                 return new CommandResult
-                { Response = $"glow color is still locked, use '{UnlockGlowCommandName}' to unlock (costs T1)" };
+                {
+                    Response = $"glow color is still locked, use '{UnlockGlowCommandName}' to unlock (costs T1)"
+                };
             }
             string color = (await context.ParseArgs<HexColor>()).StringWithoutHash;
             await _userRepo.SetGlowColor(user, color);
@@ -153,7 +190,9 @@ namespace TPP.Core.Commands.Definitions
             if (newName.ToLower() != user.SimpleName)
             {
                 return new CommandResult
-                { Response = "your new display name may only differ from your login name in capitalization" };
+                {
+                    Response = "your new display name may only differ from your login name in capitalization"
+                };
             }
             await _userRepo.SetDisplayName(user, newName);
             return new CommandResult { Response = $"your display name has been updated to '{newName}'" };
@@ -196,7 +235,9 @@ namespace TPP.Core.Commands.Definitions
             }
             await _userRepo.SetSelectedEmblem(user, emblem);
             return new CommandResult
-            { Response = $"color of participation badge {Emblems.FormatEmblem(emblem)} successfully equipped" };
+            {
+                Response = $"color of participation badge {Emblems.FormatEmblem(emblem)} successfully equipped"
+            };
         }
 
         public async Task<CommandResult> Donate(CommandContext context)
@@ -228,5 +269,36 @@ namespace TPP.Core.Commands.Definitions
                 ResponseTarget = ResponseTarget.Chat
             };
         }
+
+        public async Task<CommandResult> List(CommandContext context)
+        {
+            Role role = await context.ParseArgs<Role>();
+            List<User> users = await _userRepo.FindAllByRole(role);
+
+            return new CommandResult
+            {
+                Response = users.Count > 0
+                    ? $"The users with the '{role.ToString()}' role are: {string.Join(", ", users.Select(u => u.Name))}"
+                    : $"There are no users with the '{role.ToString()}' role."
+            };
+        }
+
+        public async Task<CommandResult> ShowRoles(CommandContext context)
+        {
+            User user = await context.ParseArgs<User>();
+
+            return new CommandResult
+            {
+                Response = user.Roles.Count > 0
+                    ? $"{user.Name} has the roles: {string.Join(", ", user.Roles)}"
+                    : $"{user.Name} has no roles"
+            };
+        }
+
+        private Task<CommandResult> Ops(CommandContext context) =>
+            List(new CommandContext(context.Message, ImmutableList.Create("operator"), context.ArgsParser));
+
+        private Task<CommandResult> Mods(CommandContext context) =>
+            List(new CommandContext(context.Message, ImmutableList.Create("moderator"), context.ArgsParser));
     }
 }

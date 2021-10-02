@@ -9,9 +9,8 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Driver;
 using NodaTime;
-using TPP.Persistence.Models;
+using TPP.Model;
 using TPP.Persistence.MongoDB.Serializers;
-using TPP.Persistence.Repos;
 
 namespace TPP.Persistence.MongoDB.Repos
 {
@@ -110,19 +109,24 @@ namespace TPP.Persistence.MongoDB.Repos
             T entityAfter = await _currencyCollection.FindOneAndUpdateAsync(session, filter, update, options, token)
                             ?? throw new UserNotFoundException<T>(transaction.User);
             long oldBalance = _currencyFieldAccessor(transaction.User);
-            long newBalance = _currencyFieldAccessor(entityAfter);
-            if (oldBalance + transaction.Change != newBalance)
+            long actualNewBalance = _currencyFieldAccessor(entityAfter);
+            long expectedNewBalance = oldBalance + transaction.Change;
+            if (actualNewBalance < expectedNewBalance)
             {
+                // This can happen for multiple concurrent modifications.
+                // Since we update the numeric field with an $inc operation, the resulting amount is correct.
+                // But to prevent overspending, abort if the actual new balance is _below_ the expected one.
+                // An unexpectedly high balance is okay, because that cannot lead to overspending.
                 throw new InvalidOperationException(
                     "Tried to perform transaction with stale user data: " +
                     $"old balance {oldBalance} plus change {transaction.Change} " +
-                    $"does not equal new balance {newBalance} for user {transaction.User}");
+                    $"does not equal new balance {actualNewBalance} for user {transaction.User}");
             }
             var transactionLog = new TransactionLog(
                 id: string.Empty,
                 userId: userId,
                 oldBalance: oldBalance,
-                newBalance: newBalance,
+                newBalance: actualNewBalance,
                 change: transaction.Change,
                 createdAt: _clock.GetCurrentInstant(),
                 type: transaction.Type,

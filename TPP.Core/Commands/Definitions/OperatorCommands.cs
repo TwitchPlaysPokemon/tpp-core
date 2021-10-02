@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using TPP.ArgsParsing.Types;
 using TPP.Common;
 using TPP.Core.Chat;
-using TPP.Persistence.Models;
-using TPP.Persistence.Repos;
+using TPP.Model;
+using TPP.Persistence;
 
 namespace TPP.Core.Commands.Definitions
 {
@@ -19,62 +19,75 @@ namespace TPP.Core.Commands.Definitions
     public class OperatorCommands : ICommandCollection
     {
         private readonly StopToken _stopToken;
-        private readonly ImmutableHashSet<string> _operatorNamesLower;
         private readonly IBank<User> _pokeyenBank;
         private readonly IBank<User> _tokensBank;
         private readonly IMessageSender _messageSender;
         private readonly IBadgeRepo _badgeRepo;
+        private readonly IUserRepo _userRepo;
 
         public OperatorCommands(
             StopToken stopToken,
-            IEnumerable<string> operatorNames,
             IBank<User> pokeyenBank,
             IBank<User> tokensBank,
             IMessageSender messageSender,
-            IBadgeRepo badgeRepo)
+            IBadgeRepo badgeRepo,
+            IUserRepo userRepo)
         {
             _stopToken = stopToken;
-            _operatorNamesLower = operatorNames.Select(s => s.ToLowerInvariant()).ToImmutableHashSet();
             _pokeyenBank = pokeyenBank;
             _tokensBank = tokensBank;
             _messageSender = messageSender;
             _badgeRepo = badgeRepo;
+            _userRepo = userRepo;
         }
 
         public IEnumerable<Command> Commands => new[]
         {
             new Command("stopnew", Stop)
             {
-                Description = "Operators only: Stop the core, or cancel a previously issued stop command. " +
+                Description = "Stop the core, or cancel a previously issued stop command. " +
                               "Argument: cancel(optional)"
             },
             new Command("pokeyenadjust", AdjustPokeyen)
             {
                 Aliases = new[] { "adjustpokeyen" },
-                Description = "Operators only: Add or remove pokeyen from an user. " +
+                Description = "Add or remove pokeyen from an user. " +
                               "Arguments: p<amount>(can be negative) <user> <reason>"
             },
             new Command("tokensadjust", AdjustTokens)
             {
                 Aliases = new[] { "adjusttokens" },
-                Description = "Operators only: Add or remove tokens from an user. " +
+                Description = "Add or remove tokens from an user. " +
                               "Arguments: t<amount>(can be negative) <user> <reason>"
             },
             new Command("transferbadge", TransferBadge)
             {
-                Description = "Operators only: Transfer badges from one user to another user. " +
+                Description = "Transfer badges from one user to another user. " +
                               "Arguments: <gifter> <recipient> <pokemon> <number of badges>(Optional) <reason>"
             },
             new Command("createbadge", CreateBadge)
             {
-                Description = "Operators only: Create a badge for a user. " +
+                Description = "Create a badge for a user. " +
                               "Arguments: <recipient> <pokemon> <number of badges>(Optional)"
             },
-        }.Select(cmd => cmd.WithCondition(
-            canExecute: ctx => IsOperator(ctx.Message.User),
-            ersatzResult: new CommandResult { Response = "Only operators can use that command" }));
+            new Command("addrole", AddRole)
+            {
+                Aliases = new[] { "giverole" },
+                Description = "Give a user a role. Arguments: <user> <role>"
+            },
+            new Command("removerole", RemoveRole)
+            {
+                Description = "Remove a role from a user. Arguments: <user> <role>"
+            },
+        }.Select(cmd => cmd
+            .WithCondition(
+                canExecute: ctx => IsOperator(ctx.Message.User),
+                ersatzResult: new CommandResult { Response = "Only operators can use that command" })
+            .WithChangedDescription(desc => "Operators only: " + desc)
+        );
 
-        private bool IsOperator(User user) => _operatorNamesLower.Contains(user.SimpleName);
+        private static bool IsOperator(User user) =>
+            user.Roles.Contains(Role.Operator);
 
         private Task<CommandResult> Stop(CommandContext context)
         {
@@ -109,6 +122,11 @@ namespace TPP.Core.Commands.Definitions
             string reason = string.Join(' ', reasonParts.Values);
             int delta = deltaObj;
 
+            if (string.IsNullOrEmpty(reason))
+            {
+                return new CommandResult { Response = $"Must provide a reason for the {currencyName} adjustment" };
+            }
+
             var additionalData = new Dictionary<string, object?> { ["responsible_user"] = context.Message.User.Id };
             await bank.PerformTransaction(new Transaction<User>(
                 user, delta, TransactionType.ManualAdjustment, additionalData));
@@ -123,10 +141,6 @@ namespace TPP.Core.Commands.Definitions
             }
             else
             {
-                if (string.IsNullOrEmpty(reason))
-                {
-                    return new CommandResult { Response = $"Must provide a reason for the {currencyName} adjustment" };
-                }
                 await _messageSender.SendWhisper(user,
                     $"{context.Message.User.Name} adjusted your {currencyName} balance by {delta:+#;-#}. Reason: {reason}");
                 return new CommandResult
@@ -153,7 +167,7 @@ namespace TPP.Core.Commands.Definitions
             if (recipient == gifter)
                 return new CommandResult { Response = "Gifter cannot be equal to recipient" };
 
-            List<Badge> badges = await _badgeRepo.FindByUserAndSpecies(gifter.Id, species);
+            List<Badge> badges = await _badgeRepo.FindByUserAndSpecies(gifter.Id, species, amount);
             if (badges.Count < amount)
                 return new CommandResult
                 {
@@ -199,6 +213,56 @@ namespace TPP.Core.Commands.Definitions
                 Response = amount > 1
                     ? $"{amount} {form}{species} badges created for {recipient.Name}."
                     : $"{form}{species} badge created for {recipient.Name}."
+            };
+        }
+
+        public async Task<CommandResult> AddRole(CommandContext context)
+        {
+            (User user, Role role) = await context.ParseArgs<User, Role>();
+            string response;
+
+            HashSet<Role> roles = new HashSet<Role>(user.Roles);
+            bool roleAssigned = roles.Add(role);
+
+            if (roleAssigned)
+            {
+                await _userRepo.SetRoles(user, roles);
+                response = $"{user.Name} now has the roles: {string.Join(", ", roles)}";
+            }
+            else
+            {
+                response = $"{user.Name} already has the role {role.ToString()}";
+            }
+            return new CommandResult
+            {
+                Response = response
+            };
+        }
+
+        public async Task<CommandResult> RemoveRole(CommandContext context)
+        {
+            (User user, Role role) = await context.ParseArgs<User, Role>();
+            string response;
+
+            HashSet<Role> roles = new HashSet<Role>(user.Roles);
+            bool roleRemoved = roles.Remove(role);
+            if (roleRemoved)
+            {
+                await _userRepo.SetRoles(user, roles);
+                response = roles.Count > 0
+                    ? $"{user.Name} now has the roles: {string.Join(", ", roles)}"
+                    : $"{user.Name} now has no roles";
+            }
+            else
+            {
+                response = user.Roles.Count > 0
+                    ? $"{user.Name} didn't have the role {role.ToString()}. {user.Name}'s roles are: {string.Join(", ", user.Roles)}"
+                    : $"{user.Name} has no roles";
+            }
+
+            return new CommandResult
+            {
+                Response = response
             };
         }
     }

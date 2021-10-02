@@ -10,7 +10,7 @@ namespace TPP.ArgsParsing.TypeParsers
     /// <summary>
     /// A parser that determines if something is indicated to be shiny or not.
     /// </summary>
-    public class ShinyParser : BaseArgumentParser<Shiny>
+    public class ShinyParser : IArgumentParser<Shiny>
     {
         string[] shinyWords =
         {
@@ -23,7 +23,7 @@ namespace TPP.ArgsParsing.TypeParsers
             "regular",
             "shiny:false"
         };
-        public override Task<ArgsParseResult<Shiny>> Parse(IImmutableList<string> args, Type[] genericTypes)
+        public Task<ArgsParseResult<Shiny>> Parse(IImmutableList<string> args, Type[] genericTypes)
         {
             string s = args[0].ToLower();
             ArgsParseResult<Shiny> result;

@@ -15,7 +15,7 @@ namespace TPP.Core.Overlay
         public Task Send(string message, CancellationToken cancellationToken);
     }
 
-    internal struct Connection : IAsyncDisposable
+    internal readonly struct Connection : IAsyncDisposable
     {
         internal IPEndPoint RemoteEndPoint { get; init; }
         internal WebSocket WebSocket { get; init; }
@@ -47,10 +47,18 @@ namespace TPP.Core.Overlay
         private readonly SemaphoreSlim _connectionsSemaphore = new SemaphoreSlim(initialCount: 1, maxCount: 1);
 
         private HttpListener? _httpListener;
+        private CancellationTokenSource? _stopListenerToken;
 
         public WebsocketBroadcastServer(ILogger<WebsocketBroadcastServer> logger, string host, int port)
         {
             _logger = logger;
+            if (host is "0.0.0.0" or "::")
+            {
+                logger.LogWarning(
+                    "Configured websocket host as '{Host}', but the host is being used as a http listener prefix, " +
+                    "not as a bind address. Assuming '*' instead to listen on all interfaces.", host);
+                host = "*";
+            }
             _host = host;
             _port = port;
         }
@@ -75,8 +83,7 @@ namespace TPP.Core.Overlay
                     }
                     catch (WebSocketException ex)
                     {
-                        if (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely
-                            || ex.WebSocketErrorCode == WebSocketError.InvalidState)
+                        if (ex.WebSocketErrorCode is WebSocketError.ConnectionClosedPrematurely or WebSocketError.InvalidState)
                         {
                             // the connection might unexpectedly die, but that's not our problem.
                             _logger.LogWarning(ex, "Could not send message to client");
@@ -150,6 +157,24 @@ namespace TPP.Core.Overlay
             _logger.LogInformation("New websocket connection from: {IP}", remoteEndPoint);
         }
 
+        /// Using listener.GetContextAsync does not support passing a cancellation token
+        /// and closes uncleanly when the listener is stopped, e.g. with an ObjectDisposedException.
+        /// Using BeginGetContext and EndGetContext lets us abort in-between using a cancellation token.
+        private static Task<HttpListenerContext> GetContextAsync(
+            HttpListener listener, CancellationToken cancellationToken)
+        {
+            var taskCompletionSource = new TaskCompletionSource<HttpListenerContext>();
+            void Accept(IAsyncResult result)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    taskCompletionSource.SetCanceled(cancellationToken);
+                else
+                    taskCompletionSource.SetResult(listener.EndGetContext(result));
+            }
+            listener.BeginGetContext(Accept, null);
+            return taskCompletionSource.Task;
+        }
+
         /// Keeps accepting new incoming websocket connections until the server is stopped with <see cref="Stop"/>.
         public async Task Listen()
         {
@@ -158,25 +183,19 @@ namespace TPP.Core.Overlay
             _httpListener = new HttpListener();
             _httpListener.Prefixes.Add($"http://{_host}:{_port}/");
             _httpListener.Start();
+            _stopListenerToken = new CancellationTokenSource();
 
             while (_httpListener.IsListening)
             {
                 HttpListenerContext context;
                 try
                 {
-                    context = await _httpListener.GetContextAsync();
+                    context = await GetContextAsync(_httpListener, _stopListenerToken.Token);
                 }
-                catch (HttpListenerException)
+                catch (SystemException ex) when (ex is OperationCanceledException or HttpListenerException)
                 {
-                    _logger.LogInformation("Websocket listener was stopped");
-                    return;
-                }
-                catch (ObjectDisposedException)
-                {
-                    // GetContextAsync doesn't take a cancellation token,
-                    // and stopping the http server can cause it to trip over itself for some reason.
-                    _logger.LogError("Encountered ObjectDisposedException while accepting a websocket connection");
-                    return;
+                    _logger.LogDebug("Websocket listener was stopped");
+                    break;
                 }
                 if (!context.Request.IsWebSocketRequest)
                 {
@@ -225,8 +244,9 @@ namespace TPP.Core.Overlay
             {
                 _connectionsSemaphore.Release();
             }
-            if (_httpListener != null && _httpListener.IsListening)
+            if (_httpListener is { IsListening: true })
             {
+                _stopListenerToken?.Cancel();
                 _httpListener.Stop();
             }
             _httpListener = null;

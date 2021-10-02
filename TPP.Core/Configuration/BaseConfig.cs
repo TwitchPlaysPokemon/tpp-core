@@ -1,3 +1,6 @@
+using System.Collections.Immutable;
+using NodaTime;
+
 namespace TPP.Core.Configuration
 {
     /// <summary>
@@ -22,7 +25,14 @@ namespace TPP.Core.Configuration
         public int StartingPokeyen { get; init; } = 100;
         public int StartingTokens { get; init; } = 0;
 
+        public string OverlayWebsocketHost { get; init; } = "localhost";
+        public int OverlayWebsocketPort { get; init; } = 5001;
+
         /* Required information to post log messages to discord. Logging to discord is disabled if null. */
         public DiscordLoggingConfig? DiscordLoggingConfig { get; init; } = null;
+
+        public ImmutableHashSet<string> DisabledModbotRules { get; init; } = ImmutableHashSet.Create<string>();
+
+        public Duration AdvertisePollsInterval { get; init; } = Duration.FromHours(1);
     }
 }

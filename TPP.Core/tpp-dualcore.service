@@ -1,0 +1,29 @@
+# This systemd user service runs the tpp new core in dualcore mode.
+# The new core must be present as an executable called 'core' in the home directory.
+# Install the service using the following commands:
+#   mkdir -p ~/.config/systemd/user
+#   cp tpp-dualcore.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable tpp-dualcore
+#
+# For the service to stay alive even after the user logs out, lingering must be enabled for the user:
+#   sudo loginctl enable-linger USERNAME
+# To see the service's output using e.g. `journalctl --user --unit tpp-dualcore` persistent storage must be enabled.
+# You can do that by adding 'Storage=persistent' to journald.conf
+#   sudo nano /etc/systemd/journald.conf
+#   sudo systemctl restart systemd-journald
+
+[Unit]
+Description=TPP dualcore
+After=network.target
+Wants=network-online.target
+
+[Service]
+# SIGTERM (normal shutdown) results in exit code 143 (128 + SIGTERM/15)
+SuccessExitStatus=143
+Restart=on-failure
+Type=simple
+ExecStart=%h/core start --mode=dualcore
+
+[Install]
+WantedBy=default.target

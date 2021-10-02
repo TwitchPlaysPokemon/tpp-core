@@ -52,7 +52,6 @@ namespace TPP.Core.Commands.Definitions
             ["cancelleaderboard"] = "Operators only: Cancel the season's leaderboard.",
             ["subscriptionadjust"] = "Operators only: Adjust a user's internal subscription count. Also gives them tokens. Arguments: <username> <months> <message>",
             ["subadjust"] = "Operators only: Adjust a user's internal subscription count. Also gives them tokens. Arguments: <username> <months> <message>",
-            ["seesubmonths"] = "Operators only: Show total number of months subbed. Arguments: <username>",
             ["setsubmonths"] = "Operators only: Override the stored number of months subbed. Arguments: <username> <number of months>",
             ["adjustxp"] = "Operators only: Add or remove exp. Will cause users to have negative exp, but not delevel. Arguments: <username> <amount of exp>",
             ["adjustexp"] = "Operators only: Add or remove exp. Will cause users to have negative exp, but not delevel. Arguments: <username> <amount of exp>",
@@ -147,14 +146,6 @@ namespace TPP.Core.Commands.Definitions
             ["panicrestore"] = "Moderators only: Restore an earlier savestate in the current run.",
             ["panicreset"] = "Moderators only: Restore an earlier savestate in the current run.",
             ["getid"] = "Moderators only: See someones user id, or your own if none is specified. Argument: <username>(Optional)",
-            ["linkaccount"] = "Moderators only: link 2 accounts together to enforce restrictions on alt accounts. Arguments: <target user> (any number, at least 2)",
-            ["linkaccounts"] = "Moderators only: link 2 accounts together to enforce restrictions on alt accounts. Arguments: <target user> (any number, at least 2)",
-            ["unlinkaccount"] = "Moderators only: undo linkaccount for 1 or more users. Arguments: <target user(s)>(any number)",
-            ["unlinkaccounts"] = "Moderators only: undo linkaccount for 1 or more users. Arguments: <target user(s)>(any number)",
-            ["checklinkaccount"] = "Moderators only: Check the accounts linked to a user, and the last person to link/unlink them. Arguments: <target user>",
-            ["checklink"] = "Moderators only: Check the accounts linked to a user, and the last person to link/unlink them. Arguments: <target user>",
-            ["checkalt"] = "Moderators only: Check the accounts linked to a user, and the last person to link/unlink them. Arguments: <target user>",
-            ["checklinkedaccount"] = "Moderators only: Check the accounts linked to a user, and the last person to link/unlink them. Arguments: <target user>",
 
             // trusted commands
             ["announcer"] = "Trusted only: Turn the announcer on and off. Takes immediate effect, even mid-battle, and persists for subsequent matches. Argument: \"on\" or \"off\" (optional: replies with current value if omitted)",
@@ -170,12 +161,9 @@ namespace TPP.Core.Commands.Definitions
             ["xp"] = "Show your level and experience.",
             ["loyalty"] = "Show your current subscription Loyalty League. See the description for more info about Leagues. Argument: <username> (optional)",
             ["league"] = "Show your current subscription Loyalty League. See the description for more info about Leagues. Argument: <username> (optional)",
+            ["seesubmonths"] = "Show total number of months subbed. Arguments: <username>",
 
             // generic information
-            ["operators"] = "Respond with a list of the current operators.",
-            ["ops"] = "Respond with a list of the current operators.",
-            ["moderators"] = "Respond with a list of the current moderators.",
-            ["mods"] = "Respond with a list of the current moderators.",
             ["getavataruser"] = "See the owners of avatars used in matches. Arguments: Nothing for current match or one of: <datetime of match> (format: YYYY-MM-DD HH:MM), <match ID>",
             ["getavatarusers"] = "See the owners of avatars used in matches. Arguments: Nothing for current match or one of: <datetime of match> (format: YYYY-MM-DD HH:MM), <match ID>",
             ["modes"] = "Provide info on match modes.  Type `!mode <mode name>` for info on a specific mode, or `!modes all` to see all available modes.",

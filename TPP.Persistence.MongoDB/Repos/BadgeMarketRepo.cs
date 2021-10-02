@@ -10,7 +10,7 @@ using System.Text;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using TPP.Common;
-using TPP.Persistence.Models;
+using TPP.Model;
 using TPP.Persistence.MongoDB.Serializers;
 using TPP.Persistence.Repos;
 

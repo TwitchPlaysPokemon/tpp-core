@@ -10,28 +10,52 @@ using TPP.Core.Chat;
 using TPP.Core.Commands;
 using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
-using TPP.Persistence.Repos;
+using TPP.Core.Moderation;
+using TPP.Core.Overlay;
+using TPP.Model;
+using TPP.Persistence;
+using static TPP.Core.EventUtils;
 
 namespace TPP.Core.Modes
 {
     public sealed class ModeBase : IDisposable
     {
+        private static readonly Role[] ExemptionRoles = { Role.Operator, Role.Moderator, Role.ModbotExempt };
+
+        private readonly ILogger<ModeBase> _logger;
         private readonly IImmutableDictionary<string, IChat> _chats;
         private readonly IImmutableDictionary<string, ICommandResponder> _commandResponders;
         private readonly IImmutableDictionary<string, CommandProcessor> _commandProcessors;
+        private readonly IImmutableDictionary<string, IModerator> _moderators;
+        private readonly IImmutableDictionary<string, AdvertisePollsWorker> _advertisePollsWorkers;
         private readonly IMessagequeueRepo _messagequeueRepo;
         private readonly bool _forwardUnprocessedMessages;
         private readonly IMessagelogRepo _messagelogRepo;
         private readonly IClock _clock;
+        private readonly ProcessMessage _processMessage;
 
-        public ModeBase(ILoggerFactory loggerFactory, BaseConfig baseConfig, StopToken stopToken)
+        /// Processes a message that wasn't already processed by the mode base,
+        /// and returns whether the message was actively processed.
+        public delegate Task<bool> ProcessMessage(Message message);
+
+        public ModeBase(
+            ILoggerFactory loggerFactory,
+            Setups.Databases repos,
+            BaseConfig baseConfig,
+            StopToken stopToken,
+            OverlayConnection overlayConnection,
+            ProcessMessage? processMessage = null)
         {
+            IClock clock = SystemClock.Instance;
+            _logger = loggerFactory.CreateLogger<ModeBase>();
             PokedexData pokedexData = PokedexData.Load();
-            Setups.Databases repos = Setups.SetUpRepositories(baseConfig);
             ArgsParser argsParser = Setups.SetUpArgsParser(repos.UserRepo, pokedexData);
+            _processMessage = processMessage ?? (_ => Task.FromResult(false));
 
             var chats = new Dictionary<string, IChat>();
-            var chatFactory = new ChatFactory(loggerFactory, SystemClock.Instance, repos.UserRepo);
+            var chatFactory = new ChatFactory(loggerFactory, clock,
+                repos.UserRepo, repos.TokensBank, repos.SubscriptionLogRepo, repos.LinkedAccountRepo,
+                overlayConnection);
             foreach (ConnectionConfig connectorConfig in baseConfig.Chat.Connections)
             {
                 IChat chat = chatFactory.Create(connectorConfig);
@@ -47,21 +71,65 @@ namespace TPP.Core.Modes
                 c => (ICommandResponder)new CommandResponder(c));
             _commandProcessors = _chats.Values.ToImmutableDictionary(
                 c => c.Name,
-                c => Setups.SetUpCommandProcessor(loggerFactory, argsParser, repos, stopToken, baseConfig.Chat, c, c, pokedexData.KnownSpecies));
+                c => Setups.SetUpCommandProcessor(loggerFactory, argsParser, repos, stopToken, c, c,
+                    pokedexData.KnownSpecies));
 
             _messagequeueRepo = repos.MessagequeueRepo;
             _messagelogRepo = repos.MessagelogRepo;
             _forwardUnprocessedMessages = baseConfig.Chat.ForwardUnprocessedMessages;
             _clock = SystemClock.Instance;
+
+            ILogger<Moderator> moderatorLogger = loggerFactory.CreateLogger<Moderator>();
+
+            IImmutableList<IModerationRule> availableRules = ImmutableList.Create<IModerationRule>(
+                new BannedUrlsRule(),
+                new NewUserLinkRule(_clock),
+                new EmoteRule(),
+                new CopypastaRule(clock),
+                new PersonalRepetitionRule(clock),
+                new UnicodeCharacterCategoryRule()
+            );
+            foreach (string unknown in baseConfig.DisabledModbotRules.Except(availableRules.Select(rule => rule.Id)))
+                moderatorLogger.LogWarning("unknown modbot rule '{UnknownRule}' marked as disabled", unknown);
+            IImmutableList<IModerationRule> rules = availableRules
+                .Where(rule => !baseConfig.DisabledModbotRules.Contains(rule.Id))
+                .ToImmutableList();
+
+            _moderators = _chats.Values.ToImmutableDictionary(
+                c => c.Name,
+                c => (IModerator)new Moderator(moderatorLogger, c, rules, repos.ModLogRepo, clock));
+            _advertisePollsWorkers = _chats.Values.ToImmutableDictionary(
+                c => c.Name,
+                c => new AdvertisePollsWorker(baseConfig.AdvertisePollsInterval, repos.PollRepo, c));
         }
 
-        private async void MessageReceived(object? sender, MessageEventArgs e) =>
-            await ProcessIncomingMessage((IChat)sender!, e.Message);
+        public void InstallAdditionalCommand(Command command)
+        {
+            foreach (CommandProcessor commandProcessor in _commandProcessors.Values)
+                commandProcessor.InstallCommand(command);
+        }
+
+        private void MessageReceived(object? sender, MessageEventArgs e)
+        {
+            TaskToVoidSafely(_logger, async () =>
+            {
+                await ProcessIncomingMessage((IChat)sender!, e.Message);
+            });
+        }
 
         private async Task ProcessIncomingMessage(IChat chat, Message message)
         {
             await _messagelogRepo.LogChat(
                 message.User.Id, message.RawIrcMessage, message.MessageText, _clock.GetCurrentInstant());
+
+            bool isOk = message.Details.IsStaff
+                        || message.User.Roles.Intersect(ExemptionRoles).Any()
+                        || message.MessageSource != MessageSource.Chat
+                        || await _moderators[chat.Name].Check(message);
+            if (!isOk)
+            {
+                return;
+            }
 
             List<string> parts = message.MessageText.Split(" ")
                 .Where(s => !string.IsNullOrEmpty(s)).ToList();
@@ -70,9 +138,9 @@ namespace TPP.Core.Modes
             {
                 null => null,
                 var name when message.MessageSource == MessageSource.Whisper
-                    => name.StartsWith('!') ? name.Substring(startIndex: 1) : name,
+                    => name.StartsWith('!') ? name[1..] : name,
                 var name when message.MessageSource == MessageSource.Chat && name.StartsWith('!')
-                    => name.Substring(startIndex: 1),
+                    => name[1..],
                 _ => null
             };
             bool wasProcessed = false;
@@ -95,6 +163,7 @@ namespace TPP.Core.Modes
                     wasProcessed = true;
                 }
             }
+            wasProcessed |= await _processMessage(message);
             if (!wasProcessed && _forwardUnprocessedMessages)
             {
                 await _messagequeueRepo.EnqueueMessage(message.RawIrcMessage);
@@ -105,6 +174,8 @@ namespace TPP.Core.Modes
         {
             foreach (IChat chat in _chats.Values)
                 chat.Connect();
+            foreach (var advertisePollsWorker in _advertisePollsWorkers.Values)
+                advertisePollsWorker.Start();
         }
 
         public void Dispose()
@@ -114,6 +185,8 @@ namespace TPP.Core.Modes
                 chat.Dispose();
                 chat.IncomingMessage -= MessageReceived;
             }
+            foreach (var advertisePollsWorker in _advertisePollsWorkers.Values)
+                advertisePollsWorker.Dispose();
         }
     }
 }

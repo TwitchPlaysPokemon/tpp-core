@@ -50,7 +50,7 @@ Options:
             IDictionary<string, ValueObject> args = new Docopt().Apply(Usage, argv, exit: true);
             string? mode = null;
             string modeConfigFilename = args["--mode-config"].ToString();
-            if (args["--mode"] != null && !args["--mode"].IsNullOrEmpty)
+            if (args["--mode"] is { IsNullOrEmpty: false })
             {
                 mode = args["--mode"].ToString();
                 if (!DefaultConfigs.ContainsKey(mode))
@@ -100,7 +100,8 @@ Options:
             LoggerFactory.Create(builder =>
             {
                 builder.AddConsole().SetMinimumLevel(LogLevel.Debug);
-                if (baseConfig.LogPath != null) builder.AddFile(Path.Combine(baseConfig.LogPath, "tpp-{Date}.log"));
+                if (baseConfig.LogPath != null) builder.AddFile(Path.Combine(baseConfig.LogPath, "tpp-{Date}.log"),
+                    outputTemplate: "{Timestamp:o} [{Level:u3}] {Message}{NewLine}{Exception}");
                 if (baseConfig.DiscordLoggingConfig != null)
                 {
                     builder.AddSerilog(new LoggerConfiguration()
@@ -113,16 +114,17 @@ Options:
         private static void Mode(string modeName, string baseConfigFilename, string modeConfigFilename)
         {
             BaseConfig baseConfig = ReadConfig<BaseConfig>(baseConfigFilename);
-            using ILoggerFactory loggerFactory = BuildLoggerFactory(baseConfig);
+            ILoggerFactory loggerFactory = BuildLoggerFactory(baseConfig);
             ILogger logger = loggerFactory.CreateLogger("main");
             IMode mode = modeName switch
             {
-                "run" => new Runmode(loggerFactory, baseConfig, ReadConfig<RunmodeConfig>(modeConfigFilename)),
+                "run" => new Runmode(loggerFactory, baseConfig, () => ReadConfig<RunmodeConfig>(modeConfigFilename)),
                 "match" => new Matchmode(loggerFactory, baseConfig, ReadConfig<MatchmodeConfig>(modeConfigFilename)),
                 "dualcore" => new DualcoreMode(loggerFactory, baseConfig),
                 "dummy" => new DummyMode(loggerFactory, baseConfig),
                 _ => throw new NotSupportedException($"Invalid mode '{modeName}'")
             };
+            TaskCompletionSource<bool> cleanupDone = new();
             try
             {
                 Task modeTask = mode.Run();
@@ -130,7 +132,7 @@ Options:
                 {
                     logger.LogInformation("Aborting mode...");
                     mode.Cancel();
-                    modeTask.Wait();
+                    cleanupDone.Task.Wait();
                 }
                 AppDomain.CurrentDomain.ProcessExit += Abort; // SIGTERM
                 Console.CancelKeyPress += Abort; // CTRL-C / SIGINT
@@ -140,6 +142,8 @@ Options:
             {
                 logger.LogCritical(ex, "uncaught exception! TPP is crashing now, goodbye");
             }
+            loggerFactory.Dispose();
+            cleanupDone.SetResult(true);
         }
 
         private static void TestConfig(

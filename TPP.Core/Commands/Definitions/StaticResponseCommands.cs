@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using static TPP.Core.Commands.CommandUtils;
 
@@ -9,17 +8,17 @@ namespace TPP.Core.Commands.Definitions
     {
         public IEnumerable<Command> Commands => new[]
         {
-            new Command("discord", StaticResponse("https://discord.gg/twitchplayspokemon"))
-                {Description = "Respond with the discord server."},
-
             new Command("reddit", StaticResponse("https://reddit.com/r/twitchplayspokemon"))
                 {Description = "Respond with the subreddit."},
 
             new Command("github", StaticResponse("https://github.com/TwitchPlaysPokemon"))
                 {Aliases = new[] {"source"}, Description = "Respond with the github."},
 
-            new Command("twitter", StaticResponse("https://twitter.com/Twitch_Plays"))
+            new Command("twitter", StaticResponse("https://twitter.com/TwitchPokemon"))
                 {Aliases = new[] {"tweet"}, Description = "Respond with the twitter handle."},
+
+            new Command("discord", StaticResponse("https://discord.gg/sZ8Aj6MU58"))
+                {Description = "Respond with an invite to the community Discord server."},
 
             new Command("rewards", StaticResponse("Season rewards: https://twitchplayspokemon.tv/season_rewards"))
             {
@@ -36,7 +35,7 @@ namespace TPP.Core.Commands.Definitions
 
         private static Task<CommandResult> W(CommandContext context)
         {
-            string cmdName = context.Args.FirstOrDefault() ?? "command";
+            string cmdName = context.Args.Count > 1 ? context.Args[1] : "command";
             return Task.FromResult(new CommandResult
             {
                 Response = context.Message.MessageSource switch

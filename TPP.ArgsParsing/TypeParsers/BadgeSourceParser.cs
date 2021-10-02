@@ -2,13 +2,13 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using TPP.Persistence.Models;
+using TPP.Model;
 
 namespace TPP.ArgsParsing.TypeParsers
 {
-    public class BadgeSourceParser : BaseArgumentParser<Badge.BadgeSource>
+    public class BadgeSourceParser : IArgumentParser<Badge.BadgeSource>
     {
-        public override Task<ArgsParseResult<Badge.BadgeSource>> Parse(IImmutableList<string> args, Type[] genericTypes)
+        public Task<ArgsParseResult<Badge.BadgeSource>> Parse(IImmutableList<string> args, Type[] genericTypes)
         {
             string source = args[0];
             ArgsParseResult<Badge.BadgeSource> result;

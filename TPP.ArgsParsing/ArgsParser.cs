@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -39,7 +38,7 @@ namespace TPP.ArgsParsing
     ///     // failure
     /// }
     /// </code>
-    /// Custom types can be specified by inheriting from <see cref="BaseArgumentParser{T}"/> and registering
+    /// Custom types can be specified by inheriting from <see cref="IArgumentParser{T}"/> and registering
     /// that parser using <see cref="AddArgumentParser{T}"/>.
     /// </summary>
     public class ArgsParser
@@ -93,7 +92,6 @@ namespace TPP.ArgsParsing
                 {
                     throw new MissingParserException(typeWithoutParser: type);
                 }
-                Debug.Assert(parser != null, "try-get succeeded and the dictionary does not contain null values");
                 Type[] genericTypes = type.IsGenericType ? type.GenericTypeArguments : Array.Empty<Type>();
                 ArgsParseResult<object> parseResult;
                 try

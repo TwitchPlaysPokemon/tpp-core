@@ -34,7 +34,7 @@ namespace TPP.Inputting.Inputs
         public override bool Equals(object? obj)
         {
             if (!base.Equals(obj)) return false;
-            var analogInput = (AnalogInput)obj!;
+            AnalogInput analogInput = (AnalogInput)obj;
             return Math.Abs(Math.Abs(Strength - analogInput.Strength)) < float.Epsilon;
         }
 

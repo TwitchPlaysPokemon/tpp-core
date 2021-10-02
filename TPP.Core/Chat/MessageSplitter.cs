@@ -41,7 +41,7 @@ namespace TPP.Core.Chat
                 yield return message.Substring(pos, partLength) + _messageSplitAppendix;
                 pos += partLength;
             }
-            yield return message.Substring(pos);
+            yield return message[pos..];
         }
     }
 }

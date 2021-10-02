@@ -9,6 +9,7 @@ namespace TPP.Core.Configuration
     [JsonConverter(typeof(JsonSubtypes), nameof(Type))]
     [JsonSubtypes.KnownSubTypeAttribute(typeof(Console), "console")]
     [JsonSubtypes.KnownSubTypeAttribute(typeof(Twitch), "twitch")]
+    [JsonSubtypes.KnownSubTypeAttribute(typeof(Simulation), "simulation")]
     public abstract class ConnectionConfig : ConfigBase
     {
         public abstract string Type { get; init; }
@@ -42,6 +43,14 @@ namespace TPP.Core.Configuration
                 .ToImmutableHashSet(); // all by default
             // list of usernames and channels that may receive outbound messages even with suppression enabled
             public ImmutableHashSet<string> SuppressionOverrides { get; init; } = ImmutableHashSet.Create<string>();
+        }
+
+        public sealed class Simulation : ConnectionConfig
+        {
+            public override string Type { get; init; } = "simulation";
+            public override string Name { get; init; } = "simulation-1";
+
+            public double InputsPerSecond { get; init; } = 5;
         }
     }
 }

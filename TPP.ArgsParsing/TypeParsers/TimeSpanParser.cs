@@ -11,7 +11,7 @@ namespace TPP.ArgsParsing.TypeParsers
     /// <c>&lt;weeks&gt;w&lt;days&gt;d&lt;hours&gt;h&lt;minutes&gt;m&lt;seconds&gt;s</c>
     /// and turning them into instances of <see cref="TimeSpan"/>.
     /// </summary>
-    public class TimeSpanParser : BaseArgumentParser<TimeSpan>
+    public class TimeSpanParser : IArgumentParser<TimeSpan>
     {
         private static readonly Regex Regex = new Regex(
             @"^
@@ -23,7 +23,7 @@ namespace TPP.ArgsParsing.TypeParsers
             $",
             RegexOptions.Compiled | RegexOptions.IgnorePatternWhitespace | RegexOptions.IgnoreCase);
 
-        public override Task<ArgsParseResult<TimeSpan>> Parse(IImmutableList<string> args, Type[] genericTypes)
+        public Task<ArgsParseResult<TimeSpan>> Parse(IImmutableList<string> args, Type[] genericTypes)
         {
             string str = args[0];
             Match match = Regex.Match(str);

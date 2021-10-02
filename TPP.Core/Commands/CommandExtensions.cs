@@ -19,12 +19,12 @@ namespace TPP.Core.Commands
         public static Task<(T1, T2, T3, T4)> ParseArgs<T1, T2, T3, T4>(this CommandContext ctx) =>
             ctx.ArgsParser.Parse<T1, T2, T3, T4>(ctx.Args);
 
+        public static Task<(T1, T2, T3, T4, T5)> ParseArgs<T1, T2, T3, T4, T5>(this CommandContext ctx) =>
+            ctx.ArgsParser.Parse<T1, T2, T3, T4, T5>(ctx.Args);
+
         /// Replace the command execution with a different one.
-        public static Command WithExecution(this Command command, Command.Execute newExecution)
-        {
-            return new Command(command.Name, newExecution)
-            { Aliases = command.Aliases, Description = command.Description };
-        }
+        public static Command WithExecution(this Command command, Command.Execute newExecution) =>
+            new(command.Name, newExecution) { Aliases = command.Aliases, Description = command.Description };
 
         /// Replace the command execution with one that only executes the original execution
         /// if a condition is met, and returns some ersatz result otherwise.
@@ -44,7 +44,7 @@ namespace TPP.Core.Commands
         public static Command WithGlobalCooldown(this Command command, Duration duration)
         {
             var cooldown = new GlobalCooldown(SystemClock.Instance, duration);
-            return command.WithCondition(ctx => cooldown.CheckLapsedThenReset());
+            return command.WithCondition(_ => cooldown.CheckLapsedThenReset());
         }
 
         /// Replace the command execution with one that does nothing
@@ -55,5 +55,13 @@ namespace TPP.Core.Commands
             var cooldown = new PerUserCooldown(SystemClock.Instance, duration);
             return command.WithCondition(ctx => cooldown.CheckLapsedThenReset(ctx.Message.User));
         }
+
+        /// Modify the command description through a modification function
+        public static Command WithChangedDescription(this Command command, Func<string?, string?> change) =>
+            new(command.Name, command.Execution)
+            {
+                Aliases = command.Aliases,
+                Description = change(command.Description)
+            };
     }
 }

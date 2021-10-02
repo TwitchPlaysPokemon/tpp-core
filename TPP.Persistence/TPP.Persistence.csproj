@@ -2,6 +2,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\TPP.Common\TPP.Common.csproj" />
+      <ProjectReference Include="..\TPP.Model\TPP.Model.csproj" />
     </ItemGroup>
 
     <ItemGroup>

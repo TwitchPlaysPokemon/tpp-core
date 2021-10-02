@@ -27,7 +27,7 @@ namespace TPP.Inputting.Inputs
         public override bool Equals(object? obj)
         {
             if (!base.Equals(obj)) return false;
-            var touchscreenDragInput = (TouchscreenDragInput)obj!;
+            TouchscreenDragInput touchscreenDragInput = (TouchscreenDragInput)obj;
             return X2 == touchscreenDragInput.X2 && Y2 == touchscreenDragInput.Y2;
         }
 

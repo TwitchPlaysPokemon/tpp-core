@@ -10,7 +10,7 @@ namespace TPP.ArgsParsing.TypeParsers
     /// <summary>
     /// A parser that recognizes a pokemon species, either by name or by a #-prefixed species id.
     /// </summary>
-    public class PkmnSpeciesParser : BaseArgumentParser<PkmnSpecies>
+    public class PkmnSpeciesParser : IArgumentParser<PkmnSpecies>
     {
         private readonly ImmutableDictionary<string, PkmnSpecies> _nameLookup;
         private readonly IImmutableDictionary<string, PkmnSpecies> _idLookup;
@@ -32,7 +32,7 @@ namespace TPP.ArgsParsing.TypeParsers
 
         private string NormalizeName(string name) => _normalizeName(name).ToLowerInvariant();
 
-        public override Task<ArgsParseResult<PkmnSpecies>> Parse(IImmutableList<string> args, Type[] genericTypes)
+        public Task<ArgsParseResult<PkmnSpecies>> Parse(IImmutableList<string> args, Type[] genericTypes)
         {
             if (!args[0].StartsWith("#"))
             {
@@ -40,7 +40,7 @@ namespace TPP.ArgsParsing.TypeParsers
                 if (_nameLookup.TryGetValue(normalizedName, out PkmnSpecies? speciesFromName))
                 {
                     return Task.FromResult(ArgsParseResult<PkmnSpecies>.Success(
-                        speciesFromName!, args.Skip(1).ToImmutableList()));
+                        speciesFromName, args.Skip(1).ToImmutableList()));
                 }
                 if (args.Count >= 2)
                 {
@@ -63,7 +63,7 @@ namespace TPP.ArgsParsing.TypeParsers
                         "Please supply a valid name, or prefix with '#' to supply and pokedex number instead"));
                 }
             }
-            string speciesId = args[0].Substring(startIndex: 1);
+            string speciesId = args[0][1..];
             return Task.FromResult(_idLookup.TryGetValue(speciesId.TrimStart('0'), out var species)
                 ? ArgsParseResult<PkmnSpecies>.Success(species, args.Skip(1).ToImmutableList())
                 : ArgsParseResult<PkmnSpecies>.Failure($"did not recognize species '{args[0]}'",

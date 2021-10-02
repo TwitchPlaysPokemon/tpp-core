@@ -8,7 +8,7 @@ using TPP.ArgsParsing.Types;
 
 namespace TPP.ArgsParsing.TypeParsers
 {
-    class FormParser : BaseArgumentParser<Form>
+    class FormParser : IArgumentParser<Form>
     {
         /// <summary>
         /// Keys and values are in the format: lowercase unspaced name | Capitalized display name.
@@ -355,7 +355,7 @@ namespace TPP.ArgsParsing.TypeParsers
             #endregion
             // compiled from https://bulbapedia.bulbagarden.net/wiki/List_of_Pok%C3%A9mon_with_form_differences on 11/9/21
         };
-        public override Task<ArgsParseResult<Form>> Parse(IImmutableList<string> args, Type[] genericTypes)
+        public Task<ArgsParseResult<Form>> Parse(IImmutableList<string> args, Type[] genericTypes)
         {
             string toValidate = args[0].ToLower();
             ArgsParseResult<Form> result;

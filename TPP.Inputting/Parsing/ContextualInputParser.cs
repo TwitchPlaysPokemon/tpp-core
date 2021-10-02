@@ -37,10 +37,8 @@ namespace TPP.Inputting.Parsing
 
         public InputSequence? Parse(string text)
         {
-            InputSequence? baseInputSequenceNullable = _baseInputParser.Parse(text);
-            if (baseInputSequenceNullable == null) return null;
-
-            InputSequence baseInputSequence = baseInputSequenceNullable.Value;
+            InputSequence? baseInputSequence = _baseInputParser.Parse(text);
+            if (baseInputSequence == null) return null;
 
             IImmutableList<InputSet> inputSets = baseInputSequence.InputSets;
             bool hasWaitConflict = inputSets.Any(HasNonLoneWait);
@@ -62,7 +60,7 @@ namespace TPP.Inputting.Parsing
         private static bool HasDuplicationExceptTouchscreen(InputSet inputSet)
         {
             var seen = new HashSet<string>();
-            return inputSet.Inputs.Where(i => !(i is TouchscreenInput)).Any(input =>
+            return inputSet.Inputs.Where(i => i is not TouchscreenInput).Any(input =>
             {
                 bool alreadyExisted = !seen.Add(input.ButtonName);
                 return alreadyExisted;

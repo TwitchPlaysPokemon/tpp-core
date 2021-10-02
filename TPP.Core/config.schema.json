@@ -7,19 +7,7 @@
       ],
       "additionalProperties": false,
       "properties": {
-        "OperatorNames": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "type": [
-              "string",
-              "null"
-            ]
-          }
-        },
-        "ModeratorNames": {
+        "DefaultOperatorNames": {
           "type": [
             "array",
             "null"
@@ -137,8 +125,32 @@
     "StartingTokens": {
       "type": "integer"
     },
+    "OverlayWebsocketHost": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "OverlayWebsocketPort": {
+      "type": "integer"
+    },
     "DiscordLoggingConfig": {
       "$ref": "#/definitions/DiscordLoggingConfig"
+    },
+    "DisabledModbotRules": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "AdvertisePollsInterval": {
+      "type": "string"
     }
   }
 }

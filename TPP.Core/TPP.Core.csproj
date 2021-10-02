@@ -6,20 +6,23 @@
 
     <ItemGroup>
         <PackageReference Include="docopt.net" Version="0.6.1.10" />
-        <PackageReference Include="JsonNet.ContractResolvers" Version="1.1.0" />
+        <PackageReference Include="JsonNet.ContractResolvers" Version="2.0.0" />
         <PackageReference Include="JsonSubTypes" Version="1.8.0" />
         <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="5.0.1" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="5.0.0" />
-        <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-        <PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.13" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+        <PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.14" />
         <PackageReference Include="Serilog.Extensions.Logging.File" Version="2.0.0" />
-        <PackageReference Include="Serilog.Sinks.Discord" Version="1.0.1" />
-        <PackageReference Include="TwitchLib.Client" Version="3.2.0" />
+        <PackageReference Include="Serilog.Sinks.Discord" Version="1.1.1" />
+        <PackageReference Include="String.Similarity" Version="3.0.0" />
+        <!-- Earliest version to include this fix: https://github.com/TwitchLib/TwitchLib.Client/pull/170 -->
+        <PackageReference Include="TwitchLib.Client" Version="3.2.3" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\TPP.ArgsParsing\TPP.ArgsParsing.csproj" />
+        <ProjectReference Include="..\TPP.Inputting\TPP.Inputting.csproj" />
         <ProjectReference Include="..\TPP.Match\TPP.Match.csproj" />
         <ProjectReference Include="..\TPP.Persistence.MongoDB\TPP.Persistence.MongoDB.csproj" />
     </ItemGroup>

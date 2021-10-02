@@ -1,4 +1,4 @@
-﻿This is the core executable project that ties all components together.
+This is the core executable project that ties all components together.
 
 You can set yourself up and run it to connect to twitch chat
 and execute a bunch of basic commands, like `!reddit` or `!stopnew`.
@@ -27,7 +27,7 @@ If you want to connect to an actual Twitch chat you need to keep the `twitch` en
   To change this, in the `twitch` entry set `Channel` to some unpopulated twitch channel,
   preferably the bot's own channel, and add the channel name to `SuppressionOverrides`.
   You may also add your own name to `SuppressionOverrides` to be able to receive whispers.
-- Add your name to `Chat.OperatorNames` to be able to do stuff requiring elevated privileges,
+- Add your name to `Chat.DefaultOperatorNames` to be able to do stuff requiring elevated privileges,
   for example issuing the `!stopnew` command.
 
 All unchanged entries can be deleted. Missing configurations revert to their default value.
