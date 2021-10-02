@@ -157,10 +157,15 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             List<BadgeBuyOffer> remainingBuyOffers = await badgeMarketRepo.FindAllBuyOffers(buyerId, species, form, source, shiny);
             Assert.AreEqual(1, remainingBuyOffers.Count);
 
-            await badgeMarketRepo.ResolveBuyOffers(species, shiny);
+            var soldBadges = await badgeMarketRepo.ResolveBuyOffers(species, shiny);
             
             remainingBuyOffers = await badgeMarketRepo.FindAllBuyOffers(buyerId, species, form, source, shiny);
             Assert.AreEqual(0, remainingBuyOffers.Count);
+            Assert.AreEqual(1, soldBadges.Count);
+            Assert.AreEqual(seller, soldBadges[0].seller);
+            Assert.AreEqual(buyer, soldBadges[0].buyer);
+            Assert.AreEqual(badgeASelling, soldBadges[0].soldBadge);
+            Assert.AreEqual(price, soldBadges[0].price);
         }
 
         [Test]

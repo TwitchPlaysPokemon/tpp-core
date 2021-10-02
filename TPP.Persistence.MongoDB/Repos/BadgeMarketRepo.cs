@@ -147,17 +147,20 @@ namespace TPP.Persistence.MongoDB.Repos
             }
         }
 
-        public async Task ResolveBuyOffers(PkmnSpecies species, bool? shiny)
+        public async Task<ImmutableList<IBadgeMarketRepo.BadgeSale>> ResolveBuyOffers(PkmnSpecies species, bool? shiny)
         {
             List<Badge> badgesForSale = await FindAllBadgesForSale(null, species, null, null, shiny);
-
             badgesForSale = badgesForSale.OrderByDescending(b => b.SellPrice).ThenBy(b => b.SellingSince).ToList();
+            List<IBadgeMarketRepo.BadgeSale> soldBadges = new List<IBadgeMarketRepo.BadgeSale>();
 
             foreach (Badge badge in badgesForSale)
             {
                 List<BadgeBuyOffer> buyOffers = await FindAllBuyOffers(null, species, null, null, shiny);
                 buyOffers = buyOffers.Where(o => o.Price >= badge.SellPrice).ToList();
                 buyOffers = buyOffers.OrderBy(o => o.WaitingSince).ToList();
+
+                if(badge.SellPrice == null)
+                    throw new InvalidOperationException("Tried to sell a badge with no sell price");
 
                 foreach (BadgeBuyOffer offer in buyOffers)
                 {
@@ -175,6 +178,8 @@ namespace TPP.Persistence.MongoDB.Repos
                         throw new UserNotFoundException<string>(offer.UserId);
                     if (seller == null)
                         throw new UserNotFoundException<string>(badge.UserId);
+                    
+                    soldBadges.Add(new IBadgeMarketRepo.BadgeSale(seller, buyer, badge, (long)badge.SellPrice));
                     await _tokenBank.PerformTransactions(
                         new Transaction<User>[]
                         {
@@ -182,10 +187,8 @@ namespace TPP.Persistence.MongoDB.Repos
                             new Transaction<User>(seller, offer.Price, "BadgeSale")
                         }
                     );
-
                     await _badgeRepo.TransferBadges(new List<Badge> { badge }.ToImmutableList(), buyer.Id, "BadgeSale", new Dictionary<string, object?>() { });
                     await ResetUserSellOffers(badge.UserId, badge.Species, badge.Form, badge.Shiny);
-
                     offer.decrement(_clock.GetCurrentInstant());
                     if (offer.Amount > 0)
                         await BuyOfferCollection.FindOneAndReplaceAsync(o => o.Id == offer.Id, offer);
@@ -194,6 +197,7 @@ namespace TPP.Persistence.MongoDB.Repos
                     break; //this badge has been sold, ignore the rest of the offers
                 }
             }
+            return soldBadges.ToImmutableList();
         }
         /// <summary>
         /// Sorts badges according to the priority in which they should be sold.
