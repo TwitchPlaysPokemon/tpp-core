@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.FileProviders;
 using TPP.Common;
 
 namespace TPP.Core
@@ -77,8 +75,9 @@ namespace TPP.Core
 
         private static IEnumerable<PkmnSpecies> LoadSpeciesNames()
         {
-            var embeddedProvider = new EmbeddedFileProvider(Assembly.GetExecutingAssembly());
-            using Stream stream = embeddedProvider.GetFileInfo("Resources/pokemon_names.csv").CreateReadStream();
+            const string resourceName = "Resources/pokemon_names.csv";
+            using Stream stream = Resources.GetEmbeddedResource(resourceName) ?? throw new Exception(
+                $"could not load pokemon data because resource '{resourceName}' is missing");
             using var streamReader = new StreamReader(stream);
             string? line;
             while ((line = streamReader.ReadLine()) != null)
