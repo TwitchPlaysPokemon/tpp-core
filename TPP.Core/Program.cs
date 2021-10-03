@@ -219,17 +219,15 @@ Options:
             generator.DefaultRequired = Required.Default;
             generator.ContractResolver = new PrivateSetterContractResolver();
             IRootConfig baseConfig = new BaseConfig();
-            string baseSchemaText = generator.Generate(typeof(BaseConfig))
-                .ToString().Replace("\r\n", "\n");
-            File.WriteAllText(baseConfig.Schema, baseSchemaText, Encoding.UTF8);
+            string GetSchemaText(Type type) =>
+                generator.Generate(type).ToString().Replace("\r\n", "\n") + '\n';
+            File.WriteAllText(baseConfig.Schema, GetSchemaText(typeof(BaseConfig)), Encoding.UTF8);
             Console.Error.WriteLine($"Wrote base json schema to '{baseConfig.Schema}',");
 
             foreach ((string modeName, IRootConfig? defaultModeConfig) in DefaultConfigs)
             {
                 if (defaultModeConfig == null) continue;
-                string modeSchemaText = generator.Generate(defaultModeConfig.GetType())
-                    .ToString().Replace("\r\n", "\n");
-                File.WriteAllText(defaultModeConfig.Schema, modeSchemaText, Encoding.UTF8);
+                File.WriteAllText(defaultModeConfig.Schema, GetSchemaText(defaultModeConfig.GetType()), Encoding.UTF8);
                 Console.Error.WriteLine($"Wrote mode '{modeName}' json schema to '{defaultModeConfig.Schema}'");
             }
         }
