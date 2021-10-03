@@ -42,9 +42,9 @@ namespace TPP.Core
             argsParser.AddArgumentParser(new TokensParser());
             argsParser.AddArgumentParser(new SignedPokeyenParser());
             argsParser.AddArgumentParser(new SignedTokensParser());
-            argsParser.AddArgumentParser(new PkmnSpeciesParser(pokedexData.KnownSpecies, PokedexData.NormalizeName));
             argsParser.AddArgumentParser(new ShinyParser());
             argsParser.AddArgumentParser(new BadgeSourceParser());
+            argsParser.AddArgumentParser(new FormParser());
             argsParser.AddArgumentParser(new RoleParser());
             argsParser.AddArgumentParser(new PercentageParser());
             argsParser.AddArgumentParser(new SideParser());
@@ -86,7 +86,7 @@ namespace TPP.Core
                 ).Commands,
                 new PollCommands(databases.PollRepo).Commands,
                 new ManagePollCommands(databases.PollRepo).Commands,
-                new BadgeCommands(databases.BadgeRepo, databases.UserRepo, messageSender, knownSpecies).Commands,
+                new BadgeCommands(databases.BadgeRepo, databases.UserRepo, databases.BadgeMarketRepo, messageSender, knownSpecies).Commands,
                 new OperatorCommands(
                     stopToken, databases.PokeyenBank, databases.TokensBank,
                     messageSender: messageSender, databases.BadgeRepo, databases.UserRepo
@@ -119,7 +119,8 @@ namespace TPP.Core
             ISubscriptionLogRepo SubscriptionLogRepo,
             IModLogRepo ModLogRepo,
             IResponseCommandRepo ResponseCommandRepo,
-            KeyValueStore KeyValueStore
+            KeyValueStore KeyValueStore,
+            IBadgeMarketRepo BadgeMarketRepo
         );
 
         public static Databases SetUpRepositories(ILogger logger, BaseConfig baseConfig)
@@ -154,6 +155,7 @@ namespace TPP.Core
                 clock: clock);
             tokenBank.AddReservedMoneyChecker(
                 new PersistedReservedMoneyCheckers(mongoDatabase).AllDatabaseReservedTokens);
+            IBadgeMarketRepo badgeMarketRepo = new BadgeMarketRepo(mongoDatabase, badgeRepo, userRepo, tokenBank, clock);
             return new Databases
             (
                 UserRepo: userRepo,
@@ -168,7 +170,8 @@ namespace TPP.Core
                 SubscriptionLogRepo: new SubscriptionLogRepo(mongoDatabase),
                 ModLogRepo: new ModLogRepo(mongoDatabase),
                 ResponseCommandRepo: new ResponseCommandRepo(mongoDatabase),
-                KeyValueStore: new KeyValueStore(mongoDatabase)
+                KeyValueStore: new KeyValueStore(mongoDatabase),
+                BadgeMarketRepo: badgeMarketRepo
             );
         }
 

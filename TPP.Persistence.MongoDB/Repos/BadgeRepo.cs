@@ -243,7 +243,7 @@ namespace TPP.Persistence.MongoDB.Repos
             return updatedBadges.ToImmutableList();
         }
         public async Task<Badge> SetBadgeSellPrice(Badge badge, long price)
-        {    
+        {
             if (price <= 0)
                 throw new ArgumentOutOfRangeException("price", "Price must be positive");
 

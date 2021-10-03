@@ -8,7 +8,7 @@ using TPP.ArgsParsing.Types;
 
 namespace TPP.ArgsParsing.TypeParsers
 {
-    class FormParser : IArgumentParser<Form>
+    public class FormParser : IArgumentParser<Form>
     {
         /// <summary>
         /// Keys and values are in the format: lowercase unspaced name | Capitalized display name.

@@ -31,7 +31,7 @@ namespace TPP.Core.Commands.Definitions
             new Command("badges", Badges)
             {
                 Aliases = new[] { "badge" },
-                Description = "Show a user's badges. Argument: <Pokemon> (optional) <Username> (optional)"
+                Description = "Show a user's badges. Arguments: <Pokemon> (optional) <Username> (optional)"
             },
 
             new Command("unselectbadge", UnselectBadge)
@@ -55,17 +55,18 @@ namespace TPP.Core.Commands.Definitions
             new Command("giftbadge", GiftBadge)
             {
                 Description =
-                    "Gift a badge you own to another user with no price. Arguments: <pokemon> <number of badges> (Optional) <username> <shiny> (optional) <source> (optional) <form> (optional)"
+                    "Gift a badge you own to another user with no price. Arguments: <pokemon> <username> <number of badges> (Optional) <shiny> (optional) <source> (optional) <form> (optional)"
             },
             new Command("listsellbadge", ListSellBadge)
             {
                 Description =
-                    "List the badges someone is selling. Arguments: <pokemon> <username> (optional) <shiny> (optional) <source> (optional) <form> (optional)"
+                    "List the badges someone is selling. Arguments:  <username> (optional) <pokemon> (optional) <shiny> (optional) <source> (optional) <form> (optional)"
             }
         };
 
         private readonly IBadgeRepo _badgeRepo;
         private readonly IUserRepo _userRepo;
+        private readonly IBadgeMarketRepo _badgeMarketRepo;
         private readonly IMessageSender _messageSender;
         private readonly HashSet<PkmnSpecies>? _whitelist;
         private readonly IImmutableSet<PkmnSpecies> _knownSpecies;
@@ -74,6 +75,7 @@ namespace TPP.Core.Commands.Definitions
         public BadgeCommands(
             IBadgeRepo badgeRepo,
             IUserRepo userRepo,
+            IBadgeMarketRepo badgeMarketRepo,
             IMessageSender messageSender,
             IImmutableSet<PkmnSpecies> knownSpecies,
             HashSet<PkmnSpecies>? whitelist = null
@@ -81,6 +83,7 @@ namespace TPP.Core.Commands.Definitions
         {
             _badgeRepo = badgeRepo;
             _userRepo = userRepo;
+            _badgeMarketRepo = badgeMarketRepo;
             _messageSender = messageSender;
             _knownSpecies = knownSpecies;
             _whitelist = whitelist;
@@ -102,55 +105,83 @@ namespace TPP.Core.Commands.Definitions
         /// <summary>
         /// Convineintly handles many optional arguments for badge commands. May throw an exception when given faulty form informaton, so this should be surrounded by a try/catch
         /// </summary>
-        private (Badge.BadgeSource?, string?, bool?) InterpretBadgeInfoArgs(Optional<Badge.BadgeSource> sourceOpt, Optional<Form> formOpt, Optional<Shiny> shinyOpt)
+        private static (Badge.BadgeSource?, string?, bool) InterpretBadgeInfoArgs(Optional<Badge.BadgeSource> sourceOpt, Optional<Form> formOpt, Optional<Shiny> shinyOpt)
         {
             Badge.BadgeSource? source = sourceOpt.IsPresent ? sourceOpt.Value : null;
             string? form = formOpt.IsPresent ? formOpt.Value.Name : null;
-            bool? shiny = shinyOpt.IsPresent ? shinyOpt.Value : false;
+            bool shiny = shinyOpt.IsPresent ? shinyOpt.Value : false;
             return (source, form, shiny);
+        }
+        private static string describeBadge(PkmnSpecies? species, Badge.BadgeSource? source, string? form, bool shiny)
+        {
+            string speciesStr = species != null ? species.ToString() : "";
+            string formStr = form != null ? form + " " : "";
+            string shinyStr = shiny ? "shiny " : "";
+            string sourceStr = "";
+            switch (source)
+            {
+                case Badge.BadgeSource.Pinball:
+                    sourceStr = "pinball caught ";
+                    break;
+                case Badge.BadgeSource.RunCaught:
+                    sourceStr = "run caught ";
+                    break;
+                case Badge.BadgeSource.ManualDistribution:
+                    sourceStr = "manually distributed ";
+                    break;
+                case Badge.BadgeSource.ManualCreation:
+                    sourceStr = "admin created ";
+                    break;
+                case Badge.BadgeSource.Crate:
+                    sourceStr = "crate dropped ";
+                    break;
+                case Badge.BadgeSource.Breaking:
+                    sourceStr = "badge breaker dropped ";
+                    break;
+                case Badge.BadgeSource.Transmutation:
+                    sourceStr = "transmuted ";
+                    break;
+                default:
+                    break;
+            }
+            return $"{sourceStr}{shinyStr}{formStr}{speciesStr}".TrimEnd();
         }
 
         public async Task<CommandResult> Badges(CommandContext context)
         {
-            (Optional<PkmnSpecies> optionalSpecies, Optional<User> optionalUser) =
-                await context.ParseArgs<AnyOrder<Optional<PkmnSpecies>, Optional<User>>>();
+            (Optional<PkmnSpecies> optionalSpecies, Optional<User> optionalUser, Optional<Badge.BadgeSource> sourceOpt, Optional<Form> formOpt, Optional<Shiny> shinyOpt) =
+                await context.ParseArgs<AnyOrder<Optional<PkmnSpecies>, Optional<User>, Optional<Badge.BadgeSource>, Optional<Form>, Optional<Shiny>>>();
             bool isSelf = !optionalUser.IsPresent;
             User user = isSelf ? context.Message.User : optionalUser.Value;
-            if (optionalSpecies.IsPresent)
+            PkmnSpecies? species = optionalSpecies.IsPresent ? optionalSpecies.Value : null;
+            (Badge.BadgeSource? source, string? form, bool? shiny) = InterpretBadgeInfoArgs(sourceOpt, formOpt, shinyOpt);
+
+            List<Badge> badges = await _badgeRepo.FindAllByCustom(user.Id, species, form, source, shiny);
+            if (!badges.Any())
             {
-                PkmnSpecies species = optionalSpecies.Value;
-                long numBadges = await _badgeRepo.CountByUserAndSpecies(user.Id, species);
                 return new CommandResult
                 {
-                    Response = numBadges == 0
-                        ? isSelf
-                            ? $"You have no {species} badges."
-                            : $"{user.Name} has no {species} badges."
-                        : isSelf
-                            ? $"You have {numBadges}x {species} badges."
-                            : $"{user.Name} has {numBadges}x {species} badges."
+                    Response = isSelf ? "You have no badges." : $"{user.Name} has no badges."
                 };
             }
-            else
+            badges = badges.OrderBy(b => b.Species).ThenBy(b => b.Shiny).ThenBy(b => b.Source).ThenBy(b => b.Form).ToList();
+            Dictionary<string, int> countPerMetadata = new Dictionary<string, int>();
+            foreach (Badge b in badges)
             {
-                ImmutableSortedDictionary<PkmnSpecies, int> numBadgesPerSpecies =
-                    await _badgeRepo.CountByUserPerSpecies(user.Id);
-                if (!numBadgesPerSpecies.Any())
-                {
-                    return new CommandResult
-                    {
-                        Response = isSelf ? "You have no badges." : $"{user.Name} has no badges."
-                    };
-                }
-                IEnumerable<string> badgesFormatted = numBadgesPerSpecies.Select(kvp => $"{kvp.Value}x {kvp.Key}");
-                return new CommandResult
-                {
-                    Response = isSelf
-                        ? $"Your badges: {string.Join(", ", badgesFormatted)}"
-                        : $"{user.Name}'s badges: {string.Join(", ", badgesFormatted)}",
-                    ResponseTarget = ResponseTarget.WhisperIfLong
-                };
+                string metadadaAsString = describeBadge(b.Species, b.Source, b.Form, b.Shiny);
+                if (countPerMetadata.Keys.Contains(metadadaAsString))
+                    countPerMetadata[metadadaAsString] += 1;
+                else
+                    countPerMetadata.Add(metadadaAsString, 1);
             }
+            IEnumerable<string> badgesFormatted = countPerMetadata.Select(kvp => $"{kvp.Value}x {kvp.Key}");
+            return new CommandResult
+            {
+                Response = isSelf
+                    ? $"Your badges: {string.Join(", ", badgesFormatted)}"
+                    : $"{user.Name}'s badges: {string.Join(", ", badgesFormatted)}",
+                ResponseTarget = ResponseTarget.WhisperIfLong
+            };
         }
 
         public async Task<CommandResult> UnselectBadge(CommandContext context)
@@ -330,7 +361,7 @@ namespace TPP.Core.Commands.Definitions
             (User recipient, PkmnSpecies species, Optional<PositiveInt> amountOpt, Optional<Badge.BadgeSource> sourceOpt, Optional<Shiny> shinyOpt, Optional<Form> formOpt) =
                 await context.ParseArgs<AnyOrder<User, PkmnSpecies, Optional<PositiveInt>, Optional<Badge.BadgeSource>, Optional<Shiny>, Optional<Form>>>();
             int amount = amountOpt.Map(i => i.Number).OrElse(1);
-            (Badge.BadgeSource? source, string? form, bool? shiny) = InterpretBadgeInfoArgs(sourceOpt, formOpt, shinyOpt);
+            (Badge.BadgeSource? source, string? form, bool shiny) = InterpretBadgeInfoArgs(sourceOpt, formOpt, shinyOpt);
 
             if (recipient == gifter)
                 return new CommandResult { Response = "You cannot gift to yourself" };
@@ -340,7 +371,7 @@ namespace TPP.Core.Commands.Definitions
                 //TODO big improve before merge
                 return new CommandResult
                 {
-                    Response = $"You tried to gift {amount} {species} badges, but you only have {badges.Count}."
+                    Response = $"You tried to gift {amount} {describeBadge(species, source, form, shiny)} badges, but you only have {badges.Count}."
                 };
 
             IImmutableList<Badge> badgesToGift = badges.Take(amount).ToImmutableList();
@@ -348,33 +379,34 @@ namespace TPP.Core.Commands.Definitions
             await _badgeRepo.TransferBadges(badgesToGift, recipient.Id, BadgeLogType.TransferGift, data);
 
             await _messageSender.SendWhisper(recipient, amount > 1
-                ? $"You have been gifted {amount} {species} badges from {gifter.Name}!"
-                : $"You have been gifted a {species} badge from {gifter.Name}!");
+                ? $"You have been gifted {amount} {describeBadge(species, source, form, shiny)} badges from {gifter.Name}!"
+                : $"You have been gifted a {describeBadge(species, source, form, shiny)} badge from {gifter.Name}!");
             return new CommandResult
             {
                 Response = amount > 1
-                    ? $"has gifted {amount} {species} badges to {recipient.Name}!"
-                    : $"has gifted a {species} badge to {recipient.Name}!",
+                    ? $"has gifted {amount} {describeBadge(species, source, form, shiny)} badges to {recipient.Name}!"
+                    : $"has gifted a {describeBadge(species, source, form, shiny)} badge to {recipient.Name}!",
                 ResponseTarget = ResponseTarget.Chat
             };
         }
 
         public async Task<CommandResult> ListSellBadge(CommandContext context)
         {
-            (Optional<User> userOpt, PkmnSpecies species, Optional<Badge.BadgeSource> sourceOpt, Optional<Shiny> shinyOpt, Optional<Form> formOpt) =
-                await context.ParseArgs<AnyOrder<Optional<User>, PkmnSpecies, Optional<Badge.BadgeSource>, Optional<Shiny>, Optional<Form>>>();
+            (Optional<User> userOpt, Optional<PkmnSpecies> speciesOpt, Optional<Badge.BadgeSource> sourceOpt, Optional<Shiny> shinyOpt, Optional<Form> formOpt) =
+                await context.ParseArgs<AnyOrder<Optional<User>, Optional<PkmnSpecies>, Optional<Badge.BadgeSource>, Optional<Shiny>, Optional<Form>>>();
 
             User user = userOpt.IsPresent ? userOpt.Value : context.Message.User;
+            PkmnSpecies? species = speciesOpt.IsPresent ? speciesOpt.Value : null;
             (Badge.BadgeSource? source, string? form, bool? shiny) = InterpretBadgeInfoArgs(sourceOpt, formOpt, shinyOpt);
 
-            List<Badge> forSale = await _badgeRepo.FindAllForSaleByCustom(user.Id, species, form, source, shiny);
+            List<Badge> forSale = await _badgeMarketRepo.FindAllBadgesForSale(user.Id, species, form, source, shiny);
 
             string response;
             if (forSale.Count == 0)
                 response = "No badges found.";
             else
             {
-                response = string.Format("{0} badges found:", forSale.Count);
+                Dictionary<string, int> countPerMetadata = new Dictionary<string, int>();
                 foreach (Badge b in forSale)
                 {
                     if (b.UserId == null)
@@ -383,13 +415,14 @@ namespace TPP.Core.Commands.Definitions
                     if (seller == null)
                         throw new OwnedBadgeNotFoundException(b);
 
-                    response += string.Format(" {0}{1}{2} sold by {3} for T{4}",
-                        shiny == true ? "Shiny " : "",
-                        form ?? "",
-                        b.Species.Name,
-                        seller.SimpleName,
-                        b.SellPrice);
+                    string metadadaAsString = describeBadge(b.Species, b.Source, b.Form, b.Shiny) + $" sold by {seller.SimpleName} for T{b.SellPrice}";
+                    if (countPerMetadata.Keys.Contains(metadadaAsString))
+                        countPerMetadata[metadadaAsString] += 1;
+                    else
+                        countPerMetadata.Add(metadadaAsString, 1);
                 }
+                IEnumerable<string> badgesFormatted = countPerMetadata.Select(kvp => $"{kvp.Value}x {kvp.Key}");
+                response = $"{forSale.Count} badges found: " + string.Join(", ", badgesFormatted);
             }
 
             return new CommandResult

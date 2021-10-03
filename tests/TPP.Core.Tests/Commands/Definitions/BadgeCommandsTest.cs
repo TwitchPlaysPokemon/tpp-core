@@ -31,6 +31,7 @@ namespace TPP.Core.Tests.Commands.Definitions
 
         private Mock<IBadgeRepo> _badgeRepoMock = null!;
         private Mock<IUserRepo> _userRepoMock = null!;
+        private Mock<IBadgeMarketRepo> _badgeMarketRepoMock = null!;
         private Mock<IMessageSender> _messageSender = null!;
         private ArgsParser _argsParser = null!;
 
@@ -42,13 +43,17 @@ namespace TPP.Core.Tests.Commands.Definitions
             _badgeRepoMock = new Mock<IBadgeRepo>();
             _userRepoMock = new Mock<IUserRepo>();
             _messageSender = new Mock<IMessageSender>();
-            _badgeCommands = new BadgeCommands(_badgeRepoMock.Object, _userRepoMock.Object, _messageSender.Object,
-                ImmutableHashSet<PkmnSpecies>.Empty);
+            _badgeMarketRepoMock = new Mock<IBadgeMarketRepo>();
+            _badgeCommands = new BadgeCommands(_badgeRepoMock.Object, _userRepoMock.Object, _badgeMarketRepoMock.Object,
+                _messageSender.Object, ImmutableHashSet<PkmnSpecies>.Empty);
             _argsParser = new ArgsParser();
             _argsParser.AddArgumentParser(new OptionalParser(_argsParser));
             _argsParser.AddArgumentParser(new UserParser(_userRepoMock.Object));
             _argsParser.AddArgumentParser(new AnyOrderParser(_argsParser));
             _argsParser.AddArgumentParser(new PositiveIntParser());
+            _argsParser.AddArgumentParser(new BadgeSourceParser());
+            _argsParser.AddArgumentParser(new FormParser());
+            _argsParser.AddArgumentParser(new ShinyParser());
         }
 
         [TestFixture]
@@ -61,22 +66,21 @@ namespace TPP.Core.Tests.Commands.Definitions
                 var species1 = PkmnSpecies.RegisterName("1", "Einsmon");
                 var species2 = PkmnSpecies.RegisterName("22", "Zwozwomon");
                 var species3 = PkmnSpecies.RegisterName("13", "Drölfmon");
+
+                Badge badge1 = new Badge("1", user.Id, species1, Badge.BadgeSource.ManualCreation, Instant.FromUtc(1, 1, 1, 1, 1), null, false);
+                Badge badge2 = new Badge("2", user.Id, species2, Badge.BadgeSource.ManualCreation, Instant.FromUtc(1, 1, 1, 1, 1), "hisuian", false);
+                Badge badge3 = new Badge("3", user.Id, species3, Badge.BadgeSource.ManualCreation, Instant.FromUtc(1, 1, 1, 1, 1), null, true);
+                _badgeRepoMock.Setup(repo => repo.FindAllByCustom(user.Id, null, null, null, false)).Returns(
+                    Task.FromResult(new List<Badge>() { badge1, badge2, badge2, badge3, badge3, badge3 }));
+
                 _userRepoMock
                     .Setup(repo => repo.FindBySimpleName(user.SimpleName))
                     .ReturnsAsync(user);
-                _badgeRepoMock
-                    .Setup(repo => repo.CountByUserPerSpecies(user.Id))
-                    .ReturnsAsync(new Dictionary<PkmnSpecies, int>
-                    {
-                        [species1] = 3,
-                        [species2] = 6,
-                        [species3] = 9,
-                    }.ToImmutableSortedDictionary());
 
                 CommandResult result = await _badgeCommands.Badges(new CommandContext(MockMessage(user),
                     ImmutableList<string>.Empty, _argsParser));
 
-                const string response = "Your badges: 3x #001 Einsmon, 9x #013 Drölfmon, 6x #022 Zwozwomon";
+                const string response = "Your badges: 1x admin created #001 Einsmon, 3x admin created shiny #013 Drölfmon, 2x admin created hisuian #022 Zwozwomon";
                 Assert.That(result.Response, Is.EqualTo(response));
             }
 
@@ -84,28 +88,28 @@ namespace TPP.Core.Tests.Commands.Definitions
             public async Task TestBadgesOther()
             {
                 User user = MockUser("MockUser");
+                User otherUser = MockUser("Someone_Else");
                 var species1 = PkmnSpecies.RegisterName("1", "Einsmon");
                 var species2 = PkmnSpecies.RegisterName("22", "Zwozwomon");
                 var species3 = PkmnSpecies.RegisterName("13", "Drölfmon");
+
+                Badge badge1 = new Badge("1", otherUser.Id, species1, Badge.BadgeSource.ManualCreation, Instant.MinValue, null, false);
+                Badge badge2 = new Badge("2", otherUser.Id, species2, Badge.BadgeSource.ManualCreation, Instant.MinValue, "hisuian", false);
+                Badge badge3 = new Badge("3", otherUser.Id, species3, Badge.BadgeSource.ManualCreation, Instant.MinValue, null, true);
+
                 _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species1, species2, species3 }));
-                User otherUser = MockUser("Someone_Else");
                 _userRepoMock
                     .Setup(repo => repo.FindBySimpleName(otherUser.SimpleName))
                     .ReturnsAsync(otherUser);
-                _badgeRepoMock
-                    .Setup(repo => repo.CountByUserPerSpecies(otherUser.Id))
-                    .ReturnsAsync(new Dictionary<PkmnSpecies, int>
-                    {
-                        [species1] = 12,
-                        [species2] = 23,
-                        [species3] = 34,
-                    }.ToImmutableSortedDictionary());
+
+                _badgeRepoMock.Setup(repo => repo.FindAllByCustom(otherUser.Id, null, null, null, false)).Returns(
+                    Task.FromResult(new List<Badge>() { badge1, badge2, badge3 }));
 
                 CommandResult result = await _badgeCommands.Badges(new CommandContext(MockMessage(user),
                     ImmutableList.Create("sOmeOnE_eLsE"), _argsParser));
 
                 const string response =
-                    "Someone_Else's badges: 12x #001 Einsmon, 34x #013 Drölfmon, 23x #022 Zwozwomon";
+                    "Someone_Else's badges: 1x admin created #001 Einsmon, 1x admin created shiny #013 Drölfmon, 1x admin created hisuian #022 Zwozwomon";
                 Assert.That(result.Response, Is.EqualTo(response));
             }
 
@@ -124,21 +128,21 @@ namespace TPP.Core.Tests.Commands.Definitions
             {
                 User user = MockUser("MockUser");
                 PkmnSpecies species = PkmnSpecies.RegisterName("1", "PersonMon");
+                Badge badge = new Badge("", user.Id, species, Badge.BadgeSource.RunCaught, Instant.MinValue, null, false);
                 _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
                 User otherUser = MockUser("PersonMon");
                 _userRepoMock
                     .Setup(repo => repo.FindBySimpleName(otherUser.SimpleName))
                     .ReturnsAsync(otherUser);
-                _badgeRepoMock
-                    .Setup(repo => repo.CountByUserAndSpecies(user.Id, species))
-                    .ReturnsAsync(1);
-                _badgeRepoMock
-                    .Setup(repo => repo.CountByUserPerSpecies(otherUser.Id))
-                    .ReturnsAsync(ImmutableSortedDictionary<PkmnSpecies, int>.Empty);
+                _badgeRepoMock.Setup(repo => repo.FindAllByCustom(user.Id, species, null, null, false)).Returns(
+                    Task.FromResult(new List<Badge>() { badge }));
+                _badgeRepoMock.Setup(repo => repo.FindAllByCustom(otherUser.Id, null, null, null, false)).Returns(
+                    Task.FromResult(new List<Badge>()));
+
 
                 CommandResult resultAmbiguous = await _badgeCommands.Badges(new CommandContext(MockMessage(user),
                     ImmutableList.Create("PersonMon"), _argsParser));
-                Assert.That(resultAmbiguous.Response, Is.EqualTo("You have 1x #001 PersonMon badges."));
+                Assert.That(resultAmbiguous.Response, Is.EqualTo("Your badges: 1x run caught #001 PersonMon"));
 
                 CommandResult resultDisambiguated = await _badgeCommands.Badges(new CommandContext(MockMessage(user),
                     ImmutableList.Create("@PersonMon"), _argsParser));
@@ -150,6 +154,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             {
                 User user = MockUser("User");
                 PkmnSpecies species = PkmnSpecies.RegisterName("1", "Species");
+                Badge badge = new Badge("", user.Id, species, Badge.BadgeSource.Pinball, Instant.MinValue, null, false);
                 _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
                 _userRepoMock
                     .Setup(repo => repo.FindBySimpleName(user.SimpleName))
@@ -160,6 +165,10 @@ namespace TPP.Core.Tests.Commands.Definitions
                 _badgeRepoMock
                     .Setup(repo => repo.CountByUserPerSpecies(user.Id))
                     .ReturnsAsync(ImmutableSortedDictionary<PkmnSpecies, int>.Empty);
+                _badgeRepoMock.Setup(repo => repo.FindAllByCustom(user.Id, species, null, null, false)).Returns(
+                    Task.FromResult(new List<Badge>() { badge }));
+                _badgeRepoMock.Setup(repo => repo.FindAllByCustom(user.Id, null, null, null, false)).Returns(
+                    Task.FromResult(new List<Badge>() { badge }));
 
                 CommandResult result1 = await _badgeCommands.Badges(new CommandContext(MockMessage(user),
                     ImmutableList.Create("Species", "User"), _argsParser));
@@ -167,7 +176,7 @@ namespace TPP.Core.Tests.Commands.Definitions
                     ImmutableList.Create("User", "Species"), _argsParser));
 
                 Assert.That(result2.Response, Is.EqualTo(result1.Response));
-                Assert.That(result1.Response, Is.EqualTo("User has 1x #001 Species badges."));
+                Assert.That(result1.Response, Is.EqualTo("User's badges: 1x pinball caught #001 Species"));
             }
         }
 
@@ -314,17 +323,38 @@ namespace TPP.Core.Tests.Commands.Definitions
             PkmnSpecies speciesA = PkmnSpecies.RegisterName("1", "a");
             Badge badgeA = new("badgeA", user1.Id, speciesA, Badge.BadgeSource.Pinball, Instant.MinValue, null, false) { SellPrice = 1 };
 
-            _badgeRepoMock.Setup(repo => repo.FindAllForSaleByCustom(user1.Id, speciesA, null, null, false)).Returns(Task.FromResult(new List<Badge>() { badgeA }));
+            _badgeRepoMock.Setup(repo => repo.FindAllForSaleByCustom(user1.Id, speciesA, null, null, false))
+                .Returns(Task.FromResult(new List<Badge>() { badgeA }));
             _userRepoMock.Setup(repo => repo.FindById(user1.Id)).Returns(Task.FromResult((User?)user1));
 
             _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { speciesA }));
-            _argsParser.AddArgumentParser(new ShinyParser());
-            _argsParser.AddArgumentParser(new BadgeSourceParser());
-            _argsParser.AddArgumentParser(new StringParser());
 
             CommandResult result = await _badgeCommands.ListSellBadge(new CommandContext(MockMessage(user1), ImmutableList.Create("a"), _argsParser));
 
-            Assert.That(result.Response, Is.EqualTo("1 badges found: a sold by u1 for T1"));
+            Assert.That(result.Response, Is.EqualTo("1 badges found: pinball caught #001 a sold by u1 for T1"));
+        }
+
+        [Test]
+        public async Task ListSellBadge_lists_others_sold_badges()
+        {
+            User caller = MockUser("streamer");
+            User seller = MockUser("notstreamer");
+            PkmnSpecies species = PkmnSpecies.OfId("69");
+            Badge.BadgeSource source = Badge.BadgeSource.Transmutation;
+            string? form = null;
+            bool shiny = false;
+            Badge badgeA = new Badge("A", seller.Id, species, source, Instant.MinValue, form, shiny) { SellPrice = 1 };
+            Badge badgeB = new Badge("B", seller.Id, species, source, Instant.MinValue, form, shiny) { SellPrice = 1 };
+
+            _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
+            _userRepoMock.Setup(repo => repo.FindBySimpleName("notstreamer")).Returns(Task.FromResult((User?)seller));
+            _userRepoMock.Setup(repo => repo.FindById(seller.Id)).Returns(Task.FromResult((User?)seller));
+            _badgeMarketRepoMock.Setup(repo => repo.FindAllBadgesForSale(seller.Id, null, null, null, shiny))
+                .Returns(Task.FromResult(new List<Badge>() { badgeA, badgeB }));
+
+            CommandResult result = await _badgeCommands.ListSellBadge(new CommandContext(MockMessage(caller), ImmutableList.Create("notstreamer"), _argsParser));
+
+            Assert.That(result.Response, Is.EqualTo("2 badges found: 2x transmuted #069 ??? sold by notstreamer for T1"));
         }
     }
 }

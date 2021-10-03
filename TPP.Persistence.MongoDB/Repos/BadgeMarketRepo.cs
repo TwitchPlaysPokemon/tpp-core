@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 using TPP.Common;
 using TPP.Model;
 using TPP.Persistence.MongoDB.Serializers;
-using TPP.Persistence.Repos;
+using TPP.Persistence;
 
 namespace TPP.Persistence.MongoDB.Repos
 {
@@ -89,7 +89,7 @@ namespace TPP.Persistence.MongoDB.Repos
             return await BuyOfferCollection.Find(filter).ToListAsync();
         }
 
-        public async Task<List<Badge>> FindAllBadgesForSale(string? userId, PkmnSpecies species, string? form, Badge.BadgeSource? source, bool? shiny)
+        public async Task<List<Badge>> FindAllBadgesForSale(string? userId, PkmnSpecies? species, string? form, Badge.BadgeSource? source, bool? shiny)
         {
             return await _badgeRepo.FindAllForSaleByCustom(userId, species, form, source, shiny);
         }
@@ -124,11 +124,11 @@ namespace TPP.Persistence.MongoDB.Repos
         public async Task DeleteBuyOffer(string userId, PkmnSpecies species, string? form, Badge.BadgeSource? source, bool? shiny, int amount)
         {
             List<BadgeBuyOffer> offers = await FindAllBuyOffers(userId, species, form, source, shiny);
-            if(offers.Count() < amount)
+            if (offers.Count() < amount)
                 throw new ArgumentException(string.Format("Tried to cancel {0} offers but only {1} were found", amount, offers.Count));
-            
+
             offers = offers.OrderByDescending(o => o.CreatedAt).ToList();
-            for(int i=0; i < amount; i++)
+            for (int i = 0; i < amount; i++)
             {
                 await BuyOfferCollection.FindOneAndDeleteAsync(o => o.Id == offers[i].Id);
             }
@@ -141,7 +141,7 @@ namespace TPP.Persistence.MongoDB.Repos
 
             badgesForSale = SortBySpecialness(badgesForSale);
             badgesForSale.Reverse();
-            for(int i=0; i<amount; i++)
+            for (int i = 0; i < amount; i++)
             {
                 await _badgeRepo.SetBadgeSellPrice(badgesForSale[i], 0);
             }
@@ -159,7 +159,7 @@ namespace TPP.Persistence.MongoDB.Repos
                 buyOffers = buyOffers.Where(o => o.Price >= badge.SellPrice).ToList();
                 buyOffers = buyOffers.OrderBy(o => o.WaitingSince).ToList();
 
-                if(badge.SellPrice == null)
+                if (badge.SellPrice == null)
                     throw new InvalidOperationException("Tried to sell a badge with no sell price");
 
                 foreach (BadgeBuyOffer offer in buyOffers)
@@ -178,7 +178,7 @@ namespace TPP.Persistence.MongoDB.Repos
                         throw new UserNotFoundException<string>(offer.UserId);
                     if (seller == null)
                         throw new UserNotFoundException<string>(badge.UserId);
-                    
+
                     soldBadges.Add(new IBadgeMarketRepo.BadgeSale(seller, buyer, badge, (long)badge.SellPrice));
                     await _tokenBank.PerformTransactions(
                         new Transaction<User>[]
