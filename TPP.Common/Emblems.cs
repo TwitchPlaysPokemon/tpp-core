@@ -61,7 +61,8 @@ namespace TPP.Common
             [52] = "RGB Race Green",
             [53] = "Randomized Black",
             [54] = "Randomized Black 2",
-            [55] = "Blazing Emerald"
+            [55] = "Blazing Emerald",
+            [56] = "Spaceworld Gold Reforged"
         };
 
         public static string FormatEmblem(int emblemNum)
