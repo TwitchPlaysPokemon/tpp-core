@@ -7,6 +7,7 @@ using TPP.Common;
 using TPP.Core.Chat;
 using TPP.Model;
 using TPP.Persistence;
+using NodaTime;
 
 namespace TPP.Core.Commands.Definitions
 {
@@ -75,8 +76,8 @@ namespace TPP.Core.Commands.Definitions
                 Description = "Show which roles a user has. " +
                               "Arguments: <user>"
             },
-            new Command("operators", Ops) { Aliases = new[] { "ops" }, Description = "Alias for '!list operator'" },
-            new Command("moderators", Mods) { Aliases = new[] { "mods" }, Description = "Alias for '!list moderator'" },
+            new Command("operators", Ops) { Aliases = new[] { "ops" }, Description = "Alias for '!list operator'" }.WithGlobalCooldown(Duration.FromSeconds(30)),
+            new Command("moderators", Mods) { Aliases = new[] { "mods" }, Description = "Alias for '!list moderator'" }.WithGlobalCooldown(Duration.FromSeconds(30)),
         };
 
         private readonly IUserRepo _userRepo;
