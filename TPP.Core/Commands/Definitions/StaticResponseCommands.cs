@@ -31,7 +31,7 @@ namespace TPP.Core.Commands.Definitions
 
             new Command("w", W)
                 {Description = "Tell new players how to whisper."},
-        };
+        }.Select(cmd => cmd.WithGlobalCooldown(Duration.FromSeconds(10)));
 
         private static Task<CommandResult> W(CommandContext context)
         {
