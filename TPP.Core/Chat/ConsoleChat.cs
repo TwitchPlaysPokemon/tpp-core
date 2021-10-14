@@ -28,7 +28,7 @@ namespace TPP.Core.Chat
             _userRepo = userRepo;
         }
 
-        public Task SendMessage(string message)
+        public Task SendMessage(string? message, Message? responseTo = null)
         {
             Console.WriteLine(message);
             return Task.CompletedTask;

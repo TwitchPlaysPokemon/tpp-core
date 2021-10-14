@@ -14,7 +14,8 @@ namespace TPP.Core.Commands
         private readonly IMessageSender _messageSender;
         private readonly int _whisperIfLongThreshold;
 
-        public CommandResponder(IMessageSender messageSender, int whisperIfLongThreshold = 100)
+        public CommandResponder(
+            IMessageSender messageSender, int whisperIfLongThreshold = 100)
         {
             _messageSender = messageSender;
             _whisperIfLongThreshold = whisperIfLongThreshold;
@@ -23,42 +24,44 @@ namespace TPP.Core.Commands
         public async Task ProcessResponse(Message message, CommandResult result)
         {
             if (result.Response == null) return;
+            Task RespondViaChat(string? customMessage = null) =>
+                _messageSender.SendMessage(customMessage ?? result.Response, responseTo: message);
+            Task RespondViaWhisper() => _messageSender.SendWhisper(message.User, result.Response);
             switch (result.ResponseTarget)
             {
                 case ResponseTarget.Source:
                     if (message.MessageSource == MessageSource.Chat)
-                        await _messageSender.SendMessage($"@{message.User.Name} {result.Response}");
+                        await RespondViaChat();
                     else if (message.MessageSource == MessageSource.Whisper)
-                        await _messageSender.SendWhisper(message.User, result.Response);
+                        await RespondViaWhisper();
                     break;
                 case ResponseTarget.Chat:
-                    await _messageSender.SendMessage($"@{message.User.Name} {result.Response}");
+                    await RespondViaChat();
                     break;
                 case ResponseTarget.Whisper:
-                    await _messageSender.SendWhisper(message.User, result.Response);
+                    await RespondViaWhisper();
                     break;
                 case ResponseTarget.WhisperIfLong:
                     if (message.MessageSource == MessageSource.Chat)
                     {
                         if (result.Response.Length > _whisperIfLongThreshold)
                         {
-                            await _messageSender.SendMessage(
-                                $"@{message.User.Name} The reply has been whispered to you.");
-                            await _messageSender.SendWhisper(message.User, result.Response);
+                            await RespondViaChat(customMessage: "The reply has been whispered to you.");
+                            await RespondViaWhisper();
                         }
                         else
                         {
-                            await _messageSender.SendMessage($"@{message.User.Name} {result.Response}");
+                            await RespondViaChat();
                         }
                     }
                     else
                     {
-                        await _messageSender.SendWhisper(message.User, result.Response);
+                        await RespondViaWhisper();
                     }
                     break;
                 case ResponseTarget.NoneIfChat:
                     if (message.MessageSource != MessageSource.Chat)
-                        await _messageSender.SendWhisper(message.User, result.Response);
+                        await RespondViaWhisper();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(result.ResponseTarget));

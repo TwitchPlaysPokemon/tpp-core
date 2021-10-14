@@ -49,6 +49,8 @@ namespace TPP.Core.Chat
         private readonly TwitchLibSubscriptionWatcher _subscriptionWatcher;
         private readonly OverlayConnection _overlayConnection;
 
+        private readonly bool _useTwitchReplies;
+
         private bool _connected = false;
         private Action? _connectivityWorkerCleanup;
 
@@ -59,7 +61,8 @@ namespace TPP.Core.Chat
             ConnectionConfig.Twitch chatConfig,
             IUserRepo userRepo,
             ISubscriptionProcessor subscriptionProcessor,
-            OverlayConnection overlayConnection)
+            OverlayConnection overlayConnection,
+            bool useTwitchReplies = true)
         {
             Name = name;
             _logger = loggerFactory.CreateLogger<TwitchChat>();
@@ -71,6 +74,7 @@ namespace TPP.Core.Chat
             _userRepo = userRepo;
             _subscriptionProcessor = subscriptionProcessor;
             _overlayConnection = overlayConnection;
+            _useTwitchReplies = useTwitchReplies;
 
             _twitchClient = new TwitchClient(
                 client: new WebSocketClient(new ClientOptions
@@ -195,7 +199,7 @@ namespace TPP.Core.Chat
             });
         }
 
-        public async Task SendMessage(string message)
+        public async Task SendMessage(string message, Message? responseTo = null)
         {
             if (_suppressions.Contains(SuppressionType.Message) &&
                 !_suppressionOverrides.Contains(_ircChannel))
@@ -206,9 +210,14 @@ namespace TPP.Core.Chat
             _logger.LogDebug(">#{Channel}: {Message}", _ircChannel, message);
             await Task.Run(() =>
             {
+                if (responseTo != null && !_useTwitchReplies)
+                    message = $"@{responseTo.User.Name} " + message;
                 foreach (string part in MessageSplitterRegular.FitToMaxLength(message))
                 {
-                    _twitchClient.SendMessage(_ircChannel, "/me " + part);
+                    if (_useTwitchReplies && responseTo?.Details.MessageId != null)
+                        _twitchClient.SendReply(_ircChannel, responseTo.Details.MessageId, part);
+                    else
+                        _twitchClient.SendMessage(_ircChannel, "/me " + part);
                 }
             });
         }

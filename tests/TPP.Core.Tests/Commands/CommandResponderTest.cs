@@ -34,7 +34,7 @@ namespace TPP.Core.Tests.Commands
                 new CommandResult { Response = "Whisper response!", ResponseTarget = ResponseTarget.Source });
 
             // then
-            messageSenderMock.Verify(ms => ms.SendMessage($"@{user.Name} Chat response!"), Times.Once);
+            messageSenderMock.Verify(ms => ms.SendMessage("Chat response!", chatMessage), Times.Once);
             messageSenderMock.Verify(ms => ms.SendWhisper(user, "Whisper response!"), Times.Once);
         }
 
@@ -59,8 +59,8 @@ namespace TPP.Core.Tests.Commands
                 new CommandResult { Response = "Whisper response 2!", ResponseTarget = ResponseTarget.Whisper });
 
             // then
-            messageSenderMock.Verify(ms => ms.SendMessage($"@{user.Name} Chat response 1!"), Times.Once);
-            messageSenderMock.Verify(ms => ms.SendMessage($"@{user.Name} Chat response 2!"), Times.Once);
+            messageSenderMock.Verify(ms => ms.SendMessage("Chat response 1!", chatMessage), Times.Once);
+            messageSenderMock.Verify(ms => ms.SendMessage("Chat response 2!", whisperMessage), Times.Once);
             messageSenderMock.Verify(ms => ms.SendWhisper(user, "Whisper response 1!"), Times.Once);
             messageSenderMock.Verify(ms => ms.SendWhisper(user, "Whisper response 2!"), Times.Once);
         }
@@ -88,7 +88,7 @@ namespace TPP.Core.Tests.Commands
                 new CommandResult { Response = "Whisper response 2!", ResponseTarget = ResponseTarget.WhisperIfLong });
 
             // then
-            messageSenderMock.Verify(ms => ms.SendMessage($"@{user.Name} Chat response!"), Times.Once);
+            messageSenderMock.Verify(ms => ms.SendMessage("Chat response!", chatMessageShort), Times.Once);
             messageSenderMock.Verify(ms => ms.SendWhisper(user, "Too long chat response!"), Times.Once);
             messageSenderMock.Verify(ms => ms.SendWhisper(user, "Whisper response 1!"), Times.Once);
             messageSenderMock.Verify(ms => ms.SendWhisper(user, "Whisper response 2!"), Times.Once);
