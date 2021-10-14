@@ -30,6 +30,7 @@ namespace TPP.Core.Chat
 
         public Task SendMessage(string? message, Message? responseTo = null)
         {
+            if (responseTo != null) message = $"@{responseTo.User.Name} " + message;
             Console.WriteLine(message);
             return Task.CompletedTask;
         }
