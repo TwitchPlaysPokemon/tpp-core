@@ -48,11 +48,12 @@ namespace TPP.Core.Chat
         private readonly TwitchClient _twitchClient;
         private readonly TwitchLibSubscriptionWatcher _subscriptionWatcher;
         private readonly OverlayConnection _overlayConnection;
+        private readonly TwitchChatQueue _queue;
 
         private readonly bool _useTwitchReplies;
 
         private bool _connected = false;
-        private Action? _connectivityWorkerCleanup;
+        private Action? _workersCleanup;
 
         public TwitchChat(
             string name,
@@ -79,6 +80,7 @@ namespace TPP.Core.Chat
             _twitchClient = new TwitchClient(
                 client: new WebSocketClient(new ClientOptions
                 {
+                    // very liberal throttle values because we use our own queue beforehand
                     MessagesAllowedInPeriod = 1000,
                     WhispersAllowedInPeriod = 1000,
                     SendDelay = 5,
@@ -102,6 +104,8 @@ namespace TPP.Core.Chat
                 loggerFactory.CreateLogger<TwitchLibSubscriptionWatcher>(), _userRepo, _twitchClient, clock);
             _subscriptionWatcher.Subscribed += OnSubscribed;
             _subscriptionWatcher.SubscriptionGifted += OnSubscriptionGifted;
+
+            _queue = new TwitchChatQueue(loggerFactory.CreateLogger<TwitchChatQueue>(), _twitchClient);
         }
 
         private void Connected(object? sender, OnConnectedArgs e) => _twitchClient.JoinChannel(_ircChannel);
@@ -215,9 +219,10 @@ namespace TPP.Core.Chat
                 foreach (string part in MessageSplitterRegular.FitToMaxLength(message))
                 {
                     if (_useTwitchReplies && responseTo?.Details.MessageId != null)
-                        _twitchClient.SendReply(_ircChannel, responseTo.Details.MessageId, part);
+                        _queue.Enqueue(responseTo.User, new OutgoingMessage
+                            .Reply(_ircChannel, Message: part, ReplyToId: responseTo.Details.MessageId));
                     else
-                        _twitchClient.SendMessage(_ircChannel, "/me " + part);
+                        _queue.Enqueue(responseTo?.User, new OutgoingMessage.Chat(_ircChannel, "/me " + part));
                 }
             });
         }
@@ -235,7 +240,7 @@ namespace TPP.Core.Chat
             {
                 foreach (string part in MessageSplitterWhisper.FitToMaxLength(message))
                 {
-                    _twitchClient.SendWhisper(target.SimpleName, part);
+                    _queue.Enqueue(target, new OutgoingMessage.Whisper(target.SimpleName, part));
                 }
             });
         }
@@ -249,10 +254,12 @@ namespace TPP.Core.Chat
             _connected = true;
             _twitchClient.Connect();
             var tokenSource = new CancellationTokenSource();
+            Task sendWorker = _queue.StartSendWorker(tokenSource.Token);
             Task checkConnectivityWorker = CheckConnectivityWorker(tokenSource.Token);
-            _connectivityWorkerCleanup = () =>
+            _workersCleanup = () =>
             {
                 tokenSource.Cancel();
+                if (!sendWorker.IsCanceled) sendWorker.Wait();
                 if (!checkConnectivityWorker.IsCanceled) checkConnectivityWorker.Wait();
             };
         }
@@ -349,7 +356,7 @@ namespace TPP.Core.Chat
         {
             if (_connected)
             {
-                _connectivityWorkerCleanup?.Invoke();
+                _workersCleanup?.Invoke();
                 _twitchClient.Disconnect();
             }
             _twitchClient.OnConnected -= Connected;
@@ -397,7 +404,7 @@ namespace TPP.Core.Chat
             }
 
             _logger.LogDebug($"deleting message {messageId} in #{_ircChannel}");
-            await Task.Run(() => _twitchClient.SendMessage(_ircChannel, ".delete " + messageId));
+            await Task.Run(() => _queue.Enqueue(null, new OutgoingMessage.Chat(_ircChannel, ".delete " + messageId)));
         }
 
         public async Task Timeout(User user, string? message, Duration duration)
