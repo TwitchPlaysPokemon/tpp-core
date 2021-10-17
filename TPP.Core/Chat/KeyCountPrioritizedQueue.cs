@@ -13,8 +13,11 @@ namespace TPP.Core.Chat
 
         public void Enqueue(K key, V value)
         {
-            _store.Add((key, value));
-            Sort();
+            lock (_store)
+            {
+                _store.Add((key, value));
+                Sort();
+            }
         }
 
         private void Sort()
@@ -27,18 +30,24 @@ namespace TPP.Core.Chat
 
         public (K, V)? Dequeue()
         {
-            if (_store.Count == 0) return null;
-            (K, V) kvp = _store.First();
-            _store.RemoveAt(0);
-            return kvp;
+            lock (_store)
+            {
+                if (_store.Count == 0) return null;
+                (K, V) kvp = _store.First();
+                _store.RemoveAt(0);
+                return kvp;
+            }
         }
 
         public (K, V)? DequeueLast()
         {
-            if (_store.Count == 0) return null;
-            (K, V) kvp = _store.Last();
-            _store.RemoveAt(_store.Count - 1);
-            return kvp;
+            lock (_store)
+            {
+                if (_store.Count == 0) return null;
+                (K, V) kvp = _store.Last();
+                _store.RemoveAt(_store.Count - 1);
+                return kvp;
+            }
         }
     }
 }
