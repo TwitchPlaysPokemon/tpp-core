@@ -58,8 +58,9 @@ namespace TPP.Core
                 if (polls.Count == 0) continue;
                 if (polls.Count == 1)
                 {
-                    await _messageSender.SendMessage("Please vote in the currently active poll: " +
-                                                     PollCommands.FormatSinglePollAdvertisement(polls[0]));
+                    await _messageSender.SendMessage(
+                        "Please vote in the currently active poll: " +
+                        PollCommands.FormatSinglePollAdvertisement(polls[0]));
                 }
                 else
                 {

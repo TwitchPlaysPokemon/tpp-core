@@ -79,7 +79,7 @@ namespace TPP.Core.Chat
             });
         }
 
-        public Task SendMessage(string message) => throw new NotImplementedException();
+        public Task SendMessage(string message, Message? responseTo = null) => throw new NotImplementedException();
         public Task SendWhisper(User target, string message) => throw new NotImplementedException();
         public Task EnableEmoteOnly() => throw new NotImplementedException();
         public Task DisableEmoteOnly() => throw new NotImplementedException();

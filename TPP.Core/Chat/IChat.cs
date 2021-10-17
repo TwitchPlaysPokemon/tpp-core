@@ -13,7 +13,7 @@ namespace TPP.Core.Chat
 
     public interface IMessageSender
     {
-        Task SendMessage(string message);
+        Task SendMessage(string message, Message? responseTo = null);
         Task SendWhisper(User target, string message);
     }
 
