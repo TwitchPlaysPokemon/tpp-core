@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using TPP.ArgsParsing.Types;
@@ -21,7 +22,7 @@ namespace TPP.ArgsParsing.TypeParsers
             string doubleStr = percentageStr[..^1];
             try
             {
-                double percentage = double.Parse(doubleStr);
+                double percentage = double.Parse(doubleStr, CultureInfo.InvariantCulture);
                 if (percentage < 0)
                     return Task.FromResult(ArgsParseResult<Percentage>.Failure("percentage cannot be negative",
                         ErrorRelevanceConfidence.Likely));
