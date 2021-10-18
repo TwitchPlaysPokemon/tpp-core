@@ -63,7 +63,8 @@ public sealed class TwitchChat : IChat
         IUserRepo userRepo,
         ISubscriptionProcessor subscriptionProcessor,
         OverlayConnection overlayConnection,
-    bool useTwitchReplies = true){
+    bool useTwitchReplies = true)
+    {
         Name = name;
         _logger = loggerFactory.CreateLogger<TwitchChat>();
         _clock = clock;
@@ -73,7 +74,8 @@ public sealed class TwitchChat : IChat
             .Select(s => s.ToLowerInvariant()).ToImmutableHashSet();
         _userRepo = userRepo;
         _subscriptionProcessor = subscriptionProcessor;
-        _overlayConnection = overlayConnection;_useTwitchReplies = useTwitchReplies;
+        _overlayConnection = overlayConnection;
+        _useTwitchReplies = useTwitchReplies;
 
         _twitchClient = new TwitchClient(
             client: new WebSocketClient(new ClientOptions
@@ -103,7 +105,7 @@ public sealed class TwitchChat : IChat
         _subscriptionWatcher.SubscriptionGifted += OnSubscriptionGifted;
 
         _queue = new TwitchChatQueue(loggerFactory.CreateLogger<TwitchChatQueue>(), _twitchClient);
-        }
+    }
 
     private void Connected(object? sender, OnConnectedArgs e) => _twitchClient.JoinChannel(_ircChannel);
 
@@ -212,7 +214,8 @@ public sealed class TwitchChat : IChat
         await Task.Run(() =>
         {
             if (responseTo != null && !_useTwitchReplies)
-                    message = $"@{responseTo.User.Name} " + message;foreach (string part in MessageSplitterRegular.FitToMaxLength(message))
+                message = $"@{responseTo.User.Name} " + message;
+            foreach (string part in MessageSplitterRegular.FitToMaxLength(message))
             {
                 if (_useTwitchReplies && responseTo?.Details.MessageId != null)
                     _queue.Enqueue(responseTo.User, new OutgoingMessage
