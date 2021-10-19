@@ -220,7 +220,7 @@ namespace TPP.Core.Chat
                 {
                     if (_useTwitchReplies && responseTo?.Details.MessageId != null)
                         _queue.Enqueue(responseTo.User, new OutgoingMessage
-                            .Reply(_ircChannel, Message: part, ReplyToId: responseTo.Details.MessageId));
+                            .Reply(_ircChannel, Message: "/me " + part, ReplyToId: responseTo.Details.MessageId));
                     else
                         _queue.Enqueue(responseTo?.User, new OutgoingMessage.Chat(_ircChannel, "/me " + part));
                 }
