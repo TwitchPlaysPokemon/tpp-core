@@ -61,7 +61,6 @@ namespace TPP.Core.Commands.Definitions
         private readonly IBadgeRepo _badgeRepo;
         private readonly IUserRepo _userRepo;
         private readonly IMessageSender _messageSender;
-        private readonly HashSet<PkmnSpecies>? _whitelist;
         private readonly IImmutableSet<PkmnSpecies> _knownSpecies;
         private readonly Dictionary<string, RegionInformation> _pokedexModeRegions;
 
@@ -69,15 +68,13 @@ namespace TPP.Core.Commands.Definitions
             IBadgeRepo badgeRepo,
             IUserRepo userRepo,
             IMessageSender messageSender,
-            IImmutableSet<PkmnSpecies> knownSpecies,
-            HashSet<PkmnSpecies>? whitelist = null
+            IImmutableSet<PkmnSpecies> knownSpecies
         )
         {
             _badgeRepo = badgeRepo;
             _userRepo = userRepo;
             _messageSender = messageSender;
             _knownSpecies = knownSpecies;
-            _whitelist = whitelist;
             _pokedexModeRegions = new Dictionary<string, RegionInformation>
             {
                 { "kanto", new RegionInformation(Generation.Gen1, _knownSpecies.Count(pokemon => pokemon.GetGeneration() == Generation.Gen1))},
@@ -154,10 +151,6 @@ namespace TPP.Core.Commands.Definitions
             if (!isOwned)
             {
                 return new CommandResult { Response = $"{species} is not an owned badge." };
-            }
-            if (_whitelist != null && !_whitelist.Contains(species))
-            {
-                return new CommandResult { Response = $"Oi mate, you got a loicense for that there {species}?" };
             }
             await _userRepo.SetSelectedBadge(context.Message.User, species);
             return new CommandResult { Response = $"{species} selected as badge." };
