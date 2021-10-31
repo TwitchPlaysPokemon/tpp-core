@@ -177,7 +177,7 @@ namespace TPP.Core.Commands.Definitions
             // items
             ["inventory"] = "Show your inventory. Argument: update(optional, updates out of date items to the modern method if provided)",
             ["items"] = "Show your inventory. Argument: update(optional, updates out of date items to the modern method if provided)",
-            ["useitem"] = "Use an item from your inventory. Items may require additional Arguments. Argument: #<slot number>",
+            ["useitem"] = "Use an item from your inventory. Items may require additional Arguments. Argument: <#slot number, or item name without spaces>",
             ["checkitem"] = "See details of a type of item. Argument: <itemname or item number>",
             ["buyitem"] = "Buy an item on the market, or put a buy order up. Arguments: t<tokens> <itemname> <quantity> <duration>(s(seconds)/m(minutes)/h(hours)/d(days)/w(weeks)). Optional: if not provided will not put up a buy order.) <pack size>pack(optional: only needed for items bought and sold in packs)",
             ["listbuyitem"] = "List the items you are buying.",
