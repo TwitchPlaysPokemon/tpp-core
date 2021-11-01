@@ -103,21 +103,27 @@ public class TransmuterTest
         bankMock.Setup(b => b.PerformTransaction(Capture.In(transactionData), CancellationToken.None))
             .ReturnsAsync(default(TransactionLog)!); // result is not used, no need to mock a response
 
-        ITransmuter transmuter = new Transmuter(
-            badgeRepoMock.Object, transmutationCalculatorMock.Object, bankMock.Object);
+        List<TransmuteEventArgs> transmuteEventArgsList = new();
+
+            ITransmuter transmuter = new Transmuter(
+                badgeRepoMock.Object, transmutationCalculatorMock.Object, bankMock.Object);
+            transmuter.Transmuted += (_, args) => transmuteEventArgsList.Add(args);
         Badge result = await transmuter.Transmute(user, 1, inputSpeciesList);
 
-        Assert.That(result, Is.SameAs(outputBadge));
-        Assert.That(transferData.Single(), Is.EqualTo(new Dictionary<string, object?>()));
-        Assert.That(transactionData.Single().User, Is.EqualTo(user));
-        Assert.That(transactionData.Single().Change, Is.EqualTo(-1));
-        Assert.That(transactionData.Single().Type, Is.EqualTo("transmutation"));
-        Assert.That(transactionData.Single().AdditionalData, Is.EqualTo(new Dictionary<string, object?>
-        {
-            ["input_badges"] = inputBadges.Select(b => b.Id).ToImmutableList(),
-            ["output_badge"] = outputBadge.Id,
-        }));
-    }
+            Assert.That(result, Is.SameAs(outputBadge));
+            Assert.That(transferData.Single(), Is.EqualTo(new Dictionary<string, object?>()));
+            Assert.That(transactionData.Single().User, Is.EqualTo(user));
+            Assert.That(transactionData.Single().Change, Is.EqualTo(-1));
+            Assert.That(transactionData.Single().Type, Is.EqualTo("transmutation"));
+            Assert.That(transactionData.Single().AdditionalData, Is.EqualTo(new Dictionary<string, object?>
+            {
+                ["input_badges"] = inputBadges.Select(b => b.Id).ToImmutableList(),
+                ["output_badge"] = outputBadge.Id,
+            }));
+            Assert.That(transmuteEventArgsList.Single().User, Is.EqualTo(user));
+            Assert.That(transmuteEventArgsList.Single().InputSpecies, Is.EqualTo(inputSpeciesList));
+            Assert.That(transmuteEventArgsList.Single().OutputSpecies, Is.EqualTo(speciesOut));
+        }
 
     [Test]
     public void TestTransmuteBadgeNotOwned()

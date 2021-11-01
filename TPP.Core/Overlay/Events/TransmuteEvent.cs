@@ -22,7 +22,7 @@ public class TransmuteEvent : IOverlayEvent
         IEnumerable<PkmnSpecies> inputs,
         PkmnSpecies output,
         IEnumerable<PkmnSpecies> outputCandidates,
-        int durationSeconds)
+        int durationSeconds = 15)
     {
         Username = username;
         Inputs = inputs.Select(s => s.Id).ToImmutableList();

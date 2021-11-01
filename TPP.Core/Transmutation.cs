@@ -35,17 +35,17 @@ public class TransmutationCalculator : ITransmutationCalculator
 
     private readonly IBadgeStatsRepo _badgeStatsRepo;
     private readonly Func<double> _random;
-    private readonly ImmutableSortedSet<PkmnSpecies> _transmutableBadges;
+    private readonly IImmutableSet<PkmnSpecies> _transmutableBadges;
 
     public TransmutationCalculator(
         IBadgeStatsRepo badgeStatsRepo,
-        ImmutableSortedSet<PkmnSpecies> transmutableBadges,
+        IImmutableSet<PkmnSpecies> transmutableBadges,
         Func<double> random)
     {
         _badgeStatsRepo = badgeStatsRepo;
         _transmutableBadges = transmutableBadges;
         _random = random;
-        if (transmutableBadges.IsEmpty)
+        if (!transmutableBadges.Any())
             throw new ArgumentException("must provide at least 1 transmutable", nameof(transmutableBadges));
     }
 
@@ -108,8 +108,8 @@ public class TransmutationCalculator : ITransmutationCalculator
             throw new TransmuteException(
                 $"Must transmute at least {ITransmutationCalculator.MinTransmuteBadges} badges");
         IDictionary<PkmnSpecies, BadgeStat> stats = await _badgeStatsRepo.GetBadgeStats();
-        ImmutableSortedSet<PkmnSpecies> transmutables = _transmutableBadges.Except(inputSpecies);
-        if (transmutables.IsEmpty)
+        IImmutableSet<PkmnSpecies> transmutables = _transmutableBadges.Except(inputSpecies);
+        if (!transmutables.Any())
         {
             throw new TransmuteException(
                 "there are no transmutables left after removing all input species from the pool");
@@ -118,7 +118,7 @@ public class TransmutationCalculator : ITransmutationCalculator
         double totalExisting = transmutables.Select(t => stats.ContainsKey(t) ? stats[t].RarityCount : 0).Sum();
         double totalGenerated = transmutables.Select(t => stats.ContainsKey(t) ? stats[t].RarityCountGenerated : 0)
             .Sum();
-        var rarities =
+        ImmutableSortedDictionary<PkmnSpecies, double> rarities =
             transmutables.ToImmutableSortedDictionary(t => t, t => stats.ContainsKey(t) ? stats[t].Rarity : 0);
 
         const double factor = BadgeRepo.CountExistingFactor;
@@ -129,26 +129,52 @@ public class TransmutationCalculator : ITransmutationCalculator
     }
 }
 
-public interface ITransmuter
-{
-    Task<Badge> Transmute(User user, int tokens, IImmutableList<PkmnSpecies> speciesList);
-}
+public class TransmuteEventArgs : EventArgs
+    {
+        public User User { get; }
+        public IImmutableList<PkmnSpecies> InputSpecies { get; }
+        public PkmnSpecies OutputSpecies { get; }
+        public IImmutableList<PkmnSpecies> Candidates { get; }
+
+        public TransmuteEventArgs(
+            User user,
+            IImmutableList<PkmnSpecies> inputSpecies,
+            PkmnSpecies outputSpecies,
+            IImmutableList<PkmnSpecies> candidates)
+        {
+            User = user;
+            InputSpecies = inputSpecies;
+            OutputSpecies = outputSpecies;
+            Candidates = candidates;
+        }
+    }
+
+    public interface ITransmuter
+    {
+        Task<Badge> Transmute(User user, int tokens, IImmutableList<PkmnSpecies> speciesList);
+
+        event EventHandler<TransmuteEventArgs> Transmuted;
+    }
 
 /// <summary>
 /// Performs actual transmutation: removing the consumed badges, creating the new badge, deducting tokens etc.
 /// </summary>
 public class Transmuter : ITransmuter
 {
-    private readonly IBadgeRepo _badgeRepo;
+    private static readonly Random Random = new();
+
+        private readonly IBadgeRepo _badgeRepo;
     private readonly ITransmutationCalculator _transmutationCalculator;
     private readonly IBank<User> _tokenBank;
 
-    public Transmuter(IBadgeRepo badgeRepo, ITransmutationCalculator transmutationCalculator, IBank<User> tokenBank)
-    {
-        _badgeRepo = badgeRepo;
-        _transmutationCalculator = transmutationCalculator;
-        _tokenBank = tokenBank;
-    }
+    public event EventHandler<TransmuteEventArgs>? Transmuted;
+
+        public Transmuter(IBadgeRepo badgeRepo, ITransmutationCalculator transmutationCalculator, IBank<User> tokenBank)
+        {
+            _badgeRepo = badgeRepo;
+            _transmutationCalculator = transmutationCalculator;
+            _tokenBank = tokenBank;
+        }
 
     public async Task<Badge> Transmute(User user, int tokens, IImmutableList<PkmnSpecies> speciesList)
     {
@@ -189,6 +215,18 @@ public class Transmuter : ITransmuter
                 ["output_badge"] = resultBadge.Id
             }));
 
-        return resultBadge;
+            await OnTransmuted(user, speciesList, resultSpecies);
+            return resultBadge;
+        }
+
+        private async Task OnTransmuted(User user, IImmutableList<PkmnSpecies> inputs, PkmnSpecies output)
+        {
+            List<PkmnSpecies> candidates = new();
+            for (int i = 0; i < 5; i++)
+                candidates.Add(await _transmutationCalculator.Transmute(inputs));
+            candidates.Insert(Random.Next(0, candidates.Count), output);
+            var args = new TransmuteEventArgs(user, inputs, output, candidates.ToImmutableList());
+            Transmuted?.Invoke(this, args);
+        }
     }
 }
