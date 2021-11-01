@@ -130,31 +130,31 @@ public class TransmutationCalculator : ITransmutationCalculator
 }
 
 public class TransmuteEventArgs : EventArgs
+{
+    public User User { get; }
+    public IImmutableList<PkmnSpecies> InputSpecies { get; }
+    public PkmnSpecies OutputSpecies { get; }
+    public IImmutableList<PkmnSpecies> Candidates { get; }
+
+    public TransmuteEventArgs(
+        User user,
+        IImmutableList<PkmnSpecies> inputSpecies,
+        PkmnSpecies outputSpecies,
+        IImmutableList<PkmnSpecies> candidates)
     {
-        public User User { get; }
-        public IImmutableList<PkmnSpecies> InputSpecies { get; }
-        public PkmnSpecies OutputSpecies { get; }
-        public IImmutableList<PkmnSpecies> Candidates { get; }
-
-        public TransmuteEventArgs(
-            User user,
-            IImmutableList<PkmnSpecies> inputSpecies,
-            PkmnSpecies outputSpecies,
-            IImmutableList<PkmnSpecies> candidates)
-        {
-            User = user;
-            InputSpecies = inputSpecies;
-            OutputSpecies = outputSpecies;
-            Candidates = candidates;
-        }
+        User = user;
+        InputSpecies = inputSpecies;
+        OutputSpecies = outputSpecies;
+        Candidates = candidates;
     }
+}
 
-    public interface ITransmuter
-    {
-        Task<Badge> Transmute(User user, int tokens, IImmutableList<PkmnSpecies> speciesList);
+public interface ITransmuter
+{
+    Task<Badge> Transmute(User user, int tokens, IImmutableList<PkmnSpecies> speciesList);
 
-        event EventHandler<TransmuteEventArgs> Transmuted;
-    }
+    event EventHandler<TransmuteEventArgs> Transmuted;
+}
 
 /// <summary>
 /// Performs actual transmutation: removing the consumed badges, creating the new badge, deducting tokens etc.
@@ -163,18 +163,18 @@ public class Transmuter : ITransmuter
 {
     private static readonly Random Random = new();
 
-        private readonly IBadgeRepo _badgeRepo;
+    private readonly IBadgeRepo _badgeRepo;
     private readonly ITransmutationCalculator _transmutationCalculator;
     private readonly IBank<User> _tokenBank;
 
     public event EventHandler<TransmuteEventArgs>? Transmuted;
 
-        public Transmuter(IBadgeRepo badgeRepo, ITransmutationCalculator transmutationCalculator, IBank<User> tokenBank)
-        {
-            _badgeRepo = badgeRepo;
-            _transmutationCalculator = transmutationCalculator;
-            _tokenBank = tokenBank;
-        }
+    public Transmuter(IBadgeRepo badgeRepo, ITransmutationCalculator transmutationCalculator, IBank<User> tokenBank)
+    {
+        _badgeRepo = badgeRepo;
+        _transmutationCalculator = transmutationCalculator;
+        _tokenBank = tokenBank;
+    }
 
     public async Task<Badge> Transmute(User user, int tokens, IImmutableList<PkmnSpecies> speciesList)
     {
@@ -215,18 +215,17 @@ public class Transmuter : ITransmuter
                 ["output_badge"] = resultBadge.Id
             }));
 
-            await OnTransmuted(user, speciesList, resultSpecies);
-            return resultBadge;
-        }
+        await OnTransmuted(user, speciesList, resultSpecies);
+        return resultBadge;
+    }
 
-        private async Task OnTransmuted(User user, IImmutableList<PkmnSpecies> inputs, PkmnSpecies output)
-        {
-            List<PkmnSpecies> candidates = new();
-            for (int i = 0; i < 5; i++)
-                candidates.Add(await _transmutationCalculator.Transmute(inputs));
-            candidates.Insert(Random.Next(0, candidates.Count), output);
-            var args = new TransmuteEventArgs(user, inputs, output, candidates.ToImmutableList());
-            Transmuted?.Invoke(this, args);
-        }
+    private async Task OnTransmuted(User user, IImmutableList<PkmnSpecies> inputs, PkmnSpecies output)
+    {
+        List<PkmnSpecies> candidates = new();
+        for (int i = 0; i < 5; i++)
+            candidates.Add(await _transmutationCalculator.Transmute(inputs));
+        candidates.Insert(Random.Next(0, candidates.Count), output);
+        var args = new TransmuteEventArgs(user, inputs, output, candidates.ToImmutableList());
+        Transmuted?.Invoke(this, args);
     }
 }

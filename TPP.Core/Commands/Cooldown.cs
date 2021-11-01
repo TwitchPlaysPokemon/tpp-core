@@ -49,6 +49,19 @@ namespace TPP.Core.Commands
         }
 
         /// Checks whether the cooldown has lapsed.
+        public bool CheckLapsed(User user)
+        {
+            PruneLapsed(_clock.GetCurrentInstant());
+            return !_lastExecutions.ContainsKey(user);
+        }
+
+        /// Resets the cooldown.
+        public void Reset(User user)
+        {
+            _lastExecutions[user] = _clock.GetCurrentInstant();
+        }
+
+        /// Checks whether the cooldown has lapsed.
         /// If so, returns true and resets the cooldown.
         public bool CheckLapsedThenReset(User user)
         {
