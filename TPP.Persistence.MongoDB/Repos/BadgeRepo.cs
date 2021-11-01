@@ -114,11 +114,15 @@ namespace TPP.Persistence.MongoDB.Repos
             return badge;
         }
 
-        public async Task<List<Badge>> FindByUser(string? userId) =>
-            await Collection.Find(b => b.UserId == userId).ToListAsync();
+        public async Task<IImmutableList<Badge>> FindByUser(string? userId) =>
+            (await Collection.Find(b => b.UserId == userId).ToListAsync()).ToImmutableList();
 
-        public async Task<List<Badge>> FindByUserAndSpecies(string? userId, PkmnSpecies species, int? limit = null) =>
-            await Collection.Find(b => b.UserId == userId && b.Species == species).Limit(limit).ToListAsync();
+        public async Task<IImmutableList<Badge>> FindByUserAndSpecies(
+            string? userId, PkmnSpecies species, int? limit = null)
+        {
+            var cursor = Collection.Find(b => b.UserId == userId && b.Species == species).Limit(limit);
+            return (await cursor.ToListAsync()).ToImmutableList();
+        }
 
         public async Task<long> CountByUserAndSpecies(string? userId, PkmnSpecies species) =>
             await Collection.CountDocumentsAsync(b => b.UserId == userId && b.Species == species);
