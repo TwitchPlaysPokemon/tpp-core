@@ -40,7 +40,7 @@ namespace TPP.Persistence.MongoDB.Repos
         /// as opposed to only badges from "natural" generation sources (pinball).
         /// Because the rarity value is used to determine transmutation results, but transmuting directly changes
         /// how many of a species' badges exist, this is a relatively small percentage to dampen the feedback loop.
-        private const double CountExistingFactor = 0.2;
+        public const double CountExistingFactor = 0.2;
 
         static BadgeRepo()
         {

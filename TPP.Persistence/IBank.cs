@@ -32,6 +32,7 @@ namespace TPP.Persistence
         public const string Subscription = "subscription";
         public const string SubscriptionGift = "subscription gift";
         public const string Welfare = "welfare";
+        public const string Transmutation = "transmutation";
 
         // collect all the types being used here instead of scattering string literals across the codebase
     }
