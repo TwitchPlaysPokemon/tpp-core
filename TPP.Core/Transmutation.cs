@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using NodaTime;
 using TPP.Common;
 using TPP.Model;
 using TPP.Persistence;
@@ -166,14 +167,23 @@ public class Transmuter : ITransmuter
     private readonly IBadgeRepo _badgeRepo;
     private readonly ITransmutationCalculator _transmutationCalculator;
     private readonly IBank<User> _tokenBank;
+    private readonly ITransmutationLogRepo _transmutationLogRepo;
+    private readonly IClock _clock;
 
     public event EventHandler<TransmuteEventArgs>? Transmuted;
 
-    public Transmuter(IBadgeRepo badgeRepo, ITransmutationCalculator transmutationCalculator, IBank<User> tokenBank)
+    public Transmuter(
+        IBadgeRepo badgeRepo,
+        ITransmutationCalculator transmutationCalculator,
+        IBank<User> tokenBank,
+        ITransmutationLogRepo transmutationLogRepo,
+        IClock clock)
     {
         _badgeRepo = badgeRepo;
         _transmutationCalculator = transmutationCalculator;
         _tokenBank = tokenBank;
+        _transmutationLogRepo = transmutationLogRepo;
+        _clock = clock;
     }
 
     public async Task<Badge> Transmute(User user, int tokens, IImmutableList<PkmnSpecies> speciesList)
@@ -214,6 +224,7 @@ public class Transmuter : ITransmuter
                 ["input_badges"] = inputIds,
                 ["output_badge"] = resultBadge.Id
             }));
+        await _transmutationLogRepo.Log(user.Id, _clock.GetCurrentInstant(), tokens, inputIds, resultBadge.Id);
 
         await OnTransmuted(user, speciesList, resultSpecies);
         return resultBadge;
