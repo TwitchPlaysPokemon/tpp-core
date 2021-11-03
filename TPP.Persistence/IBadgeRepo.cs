@@ -37,7 +37,6 @@ namespace TPP.Persistence
 
     public interface IBadgeStatsRepo
     {
-        public Task RenewBadgeStats(IImmutableSet<PkmnSpecies>? onlyTheseSpecies = null);
         public Task<ImmutableSortedDictionary<PkmnSpecies, BadgeStat>> GetBadgeStats();
     }
 

@@ -42,6 +42,11 @@ namespace TPP.Persistence.MongoDB.Repos
         /// how many of a species' badges exist, this is a relatively small percentage to dampen the feedback loop.
         public const double CountExistingFactor = 0.2;
 
+        // Always refresh stats after a fresh boot.
+        private bool _doFullStatsRefresh = true;
+        // Defer refreshing stats until absolutely necessary. This allows for refreshes to be batched up.
+        private readonly HashSet<PkmnSpecies> _outdatedStats = new();
+
         static BadgeRepo()
         {
             Debug.Assert(CountExistingFactor >= 0 && CountExistingFactor <= 1, "factor must be a ratio");
@@ -109,7 +114,7 @@ namespace TPP.Persistence.MongoDB.Repos
                 createdAt: createdAt ?? _clock.GetCurrentInstant()
             );
             await Collection.InsertOneAsync(badge);
-            await RenewBadgeStats(onlyTheseSpecies: ImmutableHashSet.Create(species));
+            _outdatedStats.Add(species);
             return badge;
         }
 
@@ -190,8 +195,8 @@ namespace TPP.Persistence.MongoDB.Repos
                     return (object?)null;
                 });
             }
-            if (subjectToStatChanges.Any())
-                await RenewBadgeStats(onlyTheseSpecies: subjectToStatChanges.ToImmutableHashSet());
+            foreach (PkmnSpecies species in subjectToStatChanges)
+                _outdatedStats.Add(species);
 
             foreach (var tpl in badges.Select(b => (b.UserId, b.Species)).Distinct())
             {
@@ -251,10 +256,24 @@ namespace TPP.Persistence.MongoDB.Repos
                 new BulkWriteOptions { IsOrdered = false });
         }
 
-        public async Task<ImmutableSortedDictionary<PkmnSpecies, BadgeStat>> GetBadgeStats() =>
-            (await CollectionStats
+        public async Task<ImmutableSortedDictionary<PkmnSpecies, BadgeStat>> GetBadgeStats()
+        {
+            if (_doFullStatsRefresh)
+            {
+                _outdatedStats.Clear();
+                _doFullStatsRefresh = false;
+                await RenewBadgeStats();
+            }
+            else if (_outdatedStats.Any())
+            {
+                IImmutableSet<PkmnSpecies> needToUpdate = _outdatedStats.ToImmutableHashSet();
+                _outdatedStats.Clear();
+                await RenewBadgeStats(needToUpdate);
+            }
+            List<BadgeStat> badgeStats = await CollectionStats
                 .Find(FilterDefinition<BadgeStat>.Empty)
-                .ToListAsync())
-            .ToImmutableSortedDictionary(stat => stat.Species, stat => stat);
+                .ToListAsync();
+            return badgeStats.ToImmutableSortedDictionary(stat => stat.Species, stat => stat);
+        }
     }
 }
