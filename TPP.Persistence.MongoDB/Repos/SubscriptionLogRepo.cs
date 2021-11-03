@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Threading.Tasks;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.IdGenerators;
@@ -56,7 +55,6 @@ namespace TPP.Persistence.MongoDB.Repos
                 loyaltyLeaguePrev, loyaltyLeagueNew, loyaltyCompletions, rewardTokens,
                 subMessage, subPlan, subPlanName);
             await Collection.InsertOneAsync(item);
-            Debug.Assert(item.Id.Length > 0, "The MongoDB driver injected a generated ID");
             return item;
         }
     }

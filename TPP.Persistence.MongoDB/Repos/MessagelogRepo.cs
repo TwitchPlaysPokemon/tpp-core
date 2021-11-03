@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Threading.Tasks;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.IdGenerators;
@@ -39,7 +38,6 @@ namespace TPP.Persistence.MongoDB.Repos
         {
             var item = new Messagelog(string.Empty, ircLine, userId, message, timestamp);
             await Collection.InsertOneAsync(item);
-            Debug.Assert(item.Id.Length > 0, "The MongoDB driver injected a generated ID");
             return item;
         }
     }

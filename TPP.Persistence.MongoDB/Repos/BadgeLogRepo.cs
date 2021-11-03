@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.IdGenerators;
@@ -62,7 +61,6 @@ namespace TPP.Persistence.MongoDB.Repos
                 await Collection.InsertOneAsync(session, item);
             else
                 await Collection.InsertOneAsync(item);
-            Debug.Assert(item.Id.Length > 0, "The MongoDB driver injected a generated ID");
             return item;
         }
 

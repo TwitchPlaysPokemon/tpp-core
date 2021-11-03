@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.IdGenerators;
@@ -44,7 +43,6 @@ public class TransmutationLogRepo : ITransmutationLogRepo
     {
         var modLog = new TransmutationLog(string.Empty, userId, timestamp, cost, inputBadges, outputBadge);
         await Collection.InsertOneAsync(modLog);
-        Debug.Assert(modLog.Id.Length > 0, "The MongoDB driver injected a generated ID");
         return modLog;
     }
 }
