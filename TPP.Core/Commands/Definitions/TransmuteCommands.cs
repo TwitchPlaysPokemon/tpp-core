@@ -39,7 +39,7 @@ public class TransmuteCommands : ICommandCollection
         if (!_cooldown.CheckLapsed(user))
             return new CommandResult
             {
-                Response = $"You can only transmute every {DefaultTransmutationCooldownSeconds} seconds."
+                Response = $"You can only transmute every {_cooldown.Duration.TotalSeconds} seconds."
             };
         (Optional<Tokens> tokensArg, ManyOf<PkmnSpecies> speciesArg) =
             await context.ParseArgs<AnyOrder<Optional<Tokens>, ManyOf<PkmnSpecies>>>();
