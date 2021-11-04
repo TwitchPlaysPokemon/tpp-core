@@ -45,7 +45,7 @@ namespace TPP.Persistence.MongoDB.Repos
         // Always refresh stats after a fresh boot.
         private bool _doFullStatsRefresh = true;
         // Defer refreshing stats until absolutely necessary. This allows for refreshes to be batched up.
-        private readonly HashSet<PkmnSpecies> _outdatedStats = new();
+        private readonly HashSet<PkmnSpecies> _speciesWithOutdatedStats = new();
 
         static BadgeRepo()
         {
@@ -114,7 +114,7 @@ namespace TPP.Persistence.MongoDB.Repos
                 createdAt: createdAt ?? _clock.GetCurrentInstant()
             );
             await Collection.InsertOneAsync(badge);
-            _outdatedStats.Add(species);
+            _speciesWithOutdatedStats.Add(species);
             return badge;
         }
 
@@ -196,7 +196,7 @@ namespace TPP.Persistence.MongoDB.Repos
                 });
             }
             foreach (PkmnSpecies species in subjectToStatChanges)
-                _outdatedStats.Add(species);
+                _speciesWithOutdatedStats.Add(species);
 
             foreach (var tpl in badges.Select(b => (b.UserId, b.Species)).Distinct())
             {
@@ -260,14 +260,14 @@ namespace TPP.Persistence.MongoDB.Repos
         {
             if (_doFullStatsRefresh)
             {
-                _outdatedStats.Clear();
+                _speciesWithOutdatedStats.Clear();
                 _doFullStatsRefresh = false;
                 await RenewBadgeStats();
             }
-            else if (_outdatedStats.Any())
+            else if (_speciesWithOutdatedStats.Any())
             {
-                IImmutableSet<PkmnSpecies> needToUpdate = _outdatedStats.ToImmutableHashSet();
-                _outdatedStats.Clear();
+                IImmutableSet<PkmnSpecies> needToUpdate = _speciesWithOutdatedStats.ToImmutableHashSet();
+                _speciesWithOutdatedStats.Clear();
                 await RenewBadgeStats(needToUpdate);
             }
             List<BadgeStat> badgeStats = await CollectionStats
