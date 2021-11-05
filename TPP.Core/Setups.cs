@@ -10,6 +10,7 @@ using MongoDB.Driver.Linq;
 using NodaTime;
 using TPP.ArgsParsing;
 using TPP.ArgsParsing.TypeParsers;
+using TPP.Common;
 using TPP.Core.Chat;
 using TPP.Core.Commands;
 using TPP.Core.Commands.Definitions;
@@ -72,9 +73,15 @@ namespace TPP.Core
             Databases databases,
             OverlayConnection overlayConnection)
         {
+            ImmutableSortedSet<PkmnSpecies> transmutableSpecies = knownSpecies
+                .Where(s => s.GetGeneration()
+                    is Generation.Gen1 or Generation.Gen2 or Generation.Gen3 or Generation.Gen4
+                    or Generation.Gen5 or Generation.Gen6 or Generation.Gen7 or Generation.Gen8
+                )
+                .ToImmutableSortedSet();
             ITransmutationCalculator transmutationCalculator = new TransmutationCalculator(
                 badgeStatsRepo: databases.BadgeStatsRepo,
-                transmutableBadges: knownSpecies.ToImmutableSortedSet(), // TODO not everything is supposed to be transmutable
+                transmutableSpecies: transmutableSpecies,
                 random: new Random().NextDouble);
             ITransmuter transmuter = new Transmuter(
                 databases.BadgeRepo, transmutationCalculator, databases.TokensBank, databases.TransmutationLogRepo,

@@ -36,18 +36,18 @@ public class TransmutationCalculator : ITransmutationCalculator
 
     private readonly IBadgeStatsRepo _badgeStatsRepo;
     private readonly Func<double> _random;
-    private readonly IImmutableSet<PkmnSpecies> _transmutableBadges;
+    private readonly IImmutableSet<PkmnSpecies> _transmutableSpecies;
 
     public TransmutationCalculator(
         IBadgeStatsRepo badgeStatsRepo,
-        IImmutableSet<PkmnSpecies> transmutableBadges,
+        IImmutableSet<PkmnSpecies> transmutableSpecies,
         Func<double> random)
     {
         _badgeStatsRepo = badgeStatsRepo;
-        _transmutableBadges = transmutableBadges;
+        _transmutableSpecies = transmutableSpecies;
         _random = random;
-        if (!transmutableBadges.Any())
-            throw new ArgumentException("must provide at least 1 transmutable", nameof(transmutableBadges));
+        if (!transmutableSpecies.Any())
+            throw new ArgumentException("must provide at least 1 transmutable", nameof(transmutableSpecies));
     }
 
     private static double CombineRarities(IEnumerable<double> rarities) =>
@@ -109,7 +109,7 @@ public class TransmutationCalculator : ITransmutationCalculator
             throw new TransmuteException(
                 $"Must transmute at least {ITransmutationCalculator.MinTransmuteBadges} badges");
         IDictionary<PkmnSpecies, BadgeStat> stats = await _badgeStatsRepo.GetBadgeStats();
-        IImmutableSet<PkmnSpecies> transmutables = _transmutableBadges
+        IImmutableSet<PkmnSpecies> transmutables = _transmutableSpecies
             .Except(inputSpecies)
             .Where(t => stats.ContainsKey(t) && stats[t].Rarity > 0)
             .ToImmutableHashSet();
