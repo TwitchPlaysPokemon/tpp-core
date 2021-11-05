@@ -7,7 +7,7 @@ namespace TPP.Core.Chat
     /// so many entries with the same key get prioritized lower than others.
     public class KeyCountPrioritizedQueue<K, V> where K : notnull where V : class
     {
-        private readonly List<(K, V)> _store = new();
+        private List<(K, V)> _store = new();
 
         public int Count => _store.Count;
 
@@ -25,7 +25,8 @@ namespace TPP.Core.Chat
             Dictionary<K, int> counts = _store
                 .GroupBy(tuple => tuple.Item1)
                 .ToDictionary(grp => grp.Key, grp => grp.Count());
-            _store.Sort((kvp1, kvp2) => counts[kvp1.Item1] - counts[kvp2.Item1]);
+            // using linq instead of List.Sort because the sort needs to be stable
+            _store = _store.OrderBy(kvp => counts[kvp.Item1]).ToList();
         }
 
         public (K, V)? Dequeue()
