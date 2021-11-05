@@ -109,18 +109,20 @@ public class TransmutationCalculator : ITransmutationCalculator
             throw new TransmuteException(
                 $"Must transmute at least {ITransmutationCalculator.MinTransmuteBadges} badges");
         IDictionary<PkmnSpecies, BadgeStat> stats = await _badgeStatsRepo.GetBadgeStats();
-        IImmutableSet<PkmnSpecies> transmutables = _transmutableBadges.Except(inputSpecies);
+        IImmutableSet<PkmnSpecies> transmutables = _transmutableBadges
+            .Except(inputSpecies)
+            .Where(t => stats.ContainsKey(t) && stats[t].Rarity > 0)
+            .ToImmutableHashSet();
         if (!transmutables.Any())
         {
             throw new TransmuteException(
                 "there are no transmutables left after removing all input species from the pool");
         }
 
-        double totalExisting = transmutables.Select(t => stats.ContainsKey(t) ? stats[t].RarityCount : 0).Sum();
-        double totalGenerated = transmutables.Select(t => stats.ContainsKey(t) ? stats[t].RarityCountGenerated : 0)
-            .Sum();
+        double totalExisting = transmutables.Select(t => stats[t].RarityCount).Sum();
+        double totalGenerated = transmutables.Select(t => stats[t].RarityCountGenerated).Sum();
         ImmutableSortedDictionary<PkmnSpecies, double> rarities =
-            transmutables.ToImmutableSortedDictionary(t => t, t => stats.ContainsKey(t) ? stats[t].Rarity : 0);
+            transmutables.ToImmutableSortedDictionary(t => t, t => stats[t].Rarity);
 
         const double factor = BadgeRepo.CountExistingFactor;
         double total = 1d / ((1d - factor) / totalGenerated + factor / totalExisting);

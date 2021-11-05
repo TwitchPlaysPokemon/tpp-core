@@ -60,6 +60,44 @@ public class TransmutationCalculatorTest
         Assert.That(result[speciesUncommon2], Is.EqualTo(54));
         Assert.That(result[speciesRare], Is.EqualTo(6));
     }
+
+    [Test]
+    public void TestCannotTransmuteNonExistingBadge()
+    {
+        const int numTransmutations = 100;
+        PkmnSpecies speciesUncommon = PkmnSpecies.RegisterName("1", "uncommon");
+        PkmnSpecies speciesRare = PkmnSpecies.RegisterName("2", "rare");
+        PkmnSpecies speciesNonExisting = PkmnSpecies.RegisterName("3", "non-existing");
+
+        var badgeStatsRepoMock = new Mock<IBadgeStatsRepo>();
+        var badgeStats = new Dictionary<PkmnSpecies, BadgeStat>
+        {
+            [speciesUncommon] = new(speciesUncommon, 100, 100, 100, 100, Rarity: 0.001),
+            [speciesRare] = new(speciesRare, 1, 1, 1, 1, Rarity: 0.00001),
+            [speciesNonExisting] = new(speciesRare, 0, 0, 0, 0, Rarity: 0),
+        }.ToImmutableSortedDictionary();
+        badgeStatsRepoMock.Setup(bsr => bsr.GetBadgeStats()).ReturnsAsync(badgeStats);
+
+        var random = new Random(numTransmutations);
+        ITransmutationCalculator transmutationCalculator = new TransmutationCalculator(
+            badgeStatsRepoMock.Object,
+            badgeStats.Keys.ToImmutableSortedSet(),
+            random: random.NextDouble
+        );
+
+        ImmutableSortedDictionary<PkmnSpecies, int> result = Enumerable
+            .Range(0, numTransmutations)
+            .Select(_ => transmutationCalculator
+                .Transmute(Enumerable.Repeat(speciesUncommon, 100).ToImmutableList()).Result)
+            .GroupBy(species => species)
+            .ToImmutableSortedDictionary(grp => grp.Key, grp => grp.Count());
+
+        Assert.That(result.Keys, Is.EqualTo(new[] { speciesRare }));
+        // these need to be adjusted when the RNG changes,
+        // or the algorithm has changes in behaviour that are manually verified to be okay
+        Assert.That(result[speciesRare], Is.EqualTo(numTransmutations));
+        Assert.That(result, Does.Not.ContainKey(speciesNonExisting));
+    }
 }
 
 public class TransmuterTest
