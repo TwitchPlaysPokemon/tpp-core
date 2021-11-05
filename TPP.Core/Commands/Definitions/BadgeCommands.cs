@@ -207,7 +207,7 @@ namespace TPP.Core.Commands.Definitions
                 return new CommandResult
                 {
                     Response = isSelf
-                        ? $"You are owning the following duplicate badge(s): {string.Join(", ", badgesFormatted)}"
+                        ? $"You own the following duplicate badge(s): {string.Join(", ", badgesFormatted)}"
                         : $"{user.Name} owns the following duplicate badge(s): {string.Join(", ", badgesFormatted)}",
                     ResponseTarget = ResponseTarget.WhisperIfLong
                 };
