@@ -132,7 +132,12 @@ namespace TPP.Core.Modes
                 return;
             }
 
-            List<string> parts = message.MessageText.Split(" ")
+            string cleanedMessage = message.MessageText;
+            // The 7tv browser extension's setting "Allow sending the same message twice" (general.allow_send_twice)
+            // appends ` \u{E0000}` to messages to bypass Twitch's "message is identical" notice. That is noise.
+            if (cleanedMessage.EndsWith("\U000E0000")) cleanedMessage = cleanedMessage[..^2]; // 2 characters because it's a surrogate pair in UTF-16
+
+            List<string> parts = cleanedMessage.Split(" ")
                 .Where(s => !string.IsNullOrEmpty(s)).ToList();
             string? firstPart = parts.FirstOrDefault();
             string? commandName = firstPart switch
