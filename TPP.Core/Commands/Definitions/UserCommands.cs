@@ -266,7 +266,7 @@ namespace TPP.Core.Commands.Definitions
             await _messageSender.SendWhisper(recipient, $"You have been donated T{tokens} from {gifter.Name}!");
             return new CommandResult
             {
-                Response = $"has donated T{tokens} to @{recipient.Name}!",
+                Response = $"{gifter.Name} has donated T{tokens} to @{recipient.Name}!",
                 ResponseTarget = ResponseTarget.Chat
             };
         }
