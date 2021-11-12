@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using NodaTime;
 using TPP.ArgsParsing.Types;
 using TPP.Common;
 using TPP.Core.Chat;
@@ -31,7 +32,7 @@ namespace TPP.Core.Commands.Definitions
             {
                 Aliases = new[] { "badge" },
                 Description = "Show a user's badges. Argument: <Pokemon> (optional) <Username> (optional)"
-            },
+            }.WithPerUserCooldown(Duration.FromSeconds(3)),
 
             new Command("unselectbadge", UnselectBadge)
             {
@@ -49,7 +50,7 @@ namespace TPP.Core.Commands.Definitions
             {
                 Aliases = new[] { "dex" },
                 Description = "Show how many different species of badge a user owns. Argument: <username> (optional) <mode> (optional). For more info, type \"!dex modes\""
-            },
+            }.WithPerUserCooldown(Duration.FromSeconds(3)),
 
             new Command("giftbadge", GiftBadge)
             {

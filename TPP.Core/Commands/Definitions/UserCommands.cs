@@ -2,12 +2,12 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using NodaTime;
 using TPP.ArgsParsing.Types;
 using TPP.Common;
 using TPP.Core.Chat;
 using TPP.Model;
 using TPP.Persistence;
-using NodaTime;
 
 namespace TPP.Core.Commands.Definitions
 {
@@ -53,7 +53,7 @@ namespace TPP.Core.Commands.Definitions
             {
                 Aliases = new[] { "participation" },
                 Description = "Show a user's run participation record. Argument: <username> (optional)"
-            },
+            }.WithPerUserCooldown(Duration.FromSeconds(3)),
             new Command("selectemblem", SelectEmblem)
             {
                 Aliases = new[] { "chooseemblem", "selectparticipationbadge", "chooseparticipationbadge" },
