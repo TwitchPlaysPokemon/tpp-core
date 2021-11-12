@@ -295,7 +295,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await _userCommands.Donate(new CommandContext(MockMessage(userSelf),
                 ImmutableList.Create("T1", "Recipient"), _argsParser));
 
-            Assert.That(result.Response, Is.EqualTo("has donated T1 to @Recipient!"));
+            Assert.That(result.Response, Is.EqualTo("You successfully donated T1 to @Recipient!"));
             List<Transaction<User>> txs = txInvocations.SelectMany(t => t).ToList();
             CollectionAssert.AreEquivalent(new List<Transaction<User>>
             {
