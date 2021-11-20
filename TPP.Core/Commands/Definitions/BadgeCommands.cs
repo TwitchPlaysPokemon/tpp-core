@@ -123,6 +123,13 @@ namespace TPP.Core.Commands.Definitions
                         Response = isSelf ? "You have no badges." : $"{user.Name} has no badges."
                     };
                 }
+                if (numBadgesPerSpecies.Count > 20)
+                {
+                    return new CommandResult
+                    {
+                        Response = $"Please see https://twitchplayspokemon.tv/badges_for_user/{user.SimpleName}"
+                    };
+                }
                 IEnumerable<string> badgesFormatted = numBadgesPerSpecies.Select(kvp => $"{kvp.Value}x {kvp.Key}");
                 return new CommandResult
                 {
