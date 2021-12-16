@@ -332,12 +332,15 @@ namespace TPP.Core.Commands.Definitions
             await _messageSender.SendWhisper(recipient, amount > 1
                 ? $"You have been gifted {amount} {species} badges from {gifter.Name}!"
                 : $"You have been gifted a {species} badge from {gifter.Name}!");
+            await _messageSender.SendMessage(amount > 1
+                ? $"{gifter.Name} has gifted {amount} {species} badges to {recipient.Name}!"
+                : $"{gifter.Name} has gifted a {species} badge to {recipient.Name}!");
             return new CommandResult
             {
                 Response = amount > 1
-                    ? $"has gifted {amount} {species} badges to {recipient.Name}!"
-                    : $"has gifted a {species} badge to {recipient.Name}!",
-                ResponseTarget = ResponseTarget.Chat
+                    ? $"You successfully gifted {amount} {species} badges to {recipient.Name}!"
+                    : $"You successfully gifted a {species} badge to {recipient.Name}!",
+                ResponseTarget = ResponseTarget.NoneIfChat
             };
         }
     }

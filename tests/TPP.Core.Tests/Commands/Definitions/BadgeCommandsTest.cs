@@ -273,8 +273,8 @@ namespace TPP.Core.Tests.Commands.Definitions
             CommandResult result = await _badgeCommands.GiftBadge(new CommandContext(MockMessage(user),
                 ImmutableList.Create("recipient", "species", "2"), _argsParser));
 
-            Assert.That(result.Response, Is.EqualTo("has gifted 2 #001 species badges to Recipient!"));
-            Assert.That(result.ResponseTarget, Is.EqualTo(ResponseTarget.Chat));
+            Assert.That(result.Response, Is.EqualTo("You successfully gifted 2 #001 species badges to Recipient!"));
+            Assert.That(result.ResponseTarget, Is.EqualTo(ResponseTarget.NoneIfChat));
             IDictionary<string, object?> data = new Dictionary<string, object?> { ["gifter"] = user.Id };
             _badgeRepoMock.Verify(repo => repo.TransferBadges(
                 It.Is<IImmutableList<Badge>>(list => list.SequenceEqual(ImmutableList.Create(badge1, badge2))),
