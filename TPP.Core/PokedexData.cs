@@ -96,7 +96,7 @@ namespace TPP.Core
             [Generation.Gen5] = 649, // Genesect
             [Generation.Gen6] = 721, // Volcanion
             [Generation.Gen7] = 807, // Zeraora
-            [Generation.Gen8] = 898, // Calyrex
+            [Generation.Gen8] = 905, // Enamorus
         }.ToImmutableSortedDictionary();
 
         public static Generation GetGeneration(PkmnSpecies species)
