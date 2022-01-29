@@ -1,5 +1,6 @@
 using System.Linq;
 using NUnit.Framework;
+using TPP.Common;
 
 namespace TPP.Core.Tests
 {
@@ -10,6 +11,14 @@ namespace TPP.Core.Tests
         {
             PokedexData pokedexData = PokedexData.Load();
             Assert.IsTrue(pokedexData.KnownSpecies.Any(), "pokemon name data missing or empty");
+        }
+
+        [Test]
+        public void knows_gen_for_all_known_species()
+        {
+            PokedexData pokedexData = PokedexData.Load();
+            foreach (PkmnSpecies species in pokedexData.KnownSpecies)
+                Assert.NotNull(PokedexData.GetGeneration(species), $"no gen associated with {species}");
         }
 
         [TestFixture]
@@ -130,6 +139,5 @@ namespace TPP.Core.Tests
                 Assert.That(PokedexData.NormalizeName("Flabebe"), Is.EqualTo("Flabébé"));
             }
         }
-
     }
 }
