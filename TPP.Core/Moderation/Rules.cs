@@ -84,15 +84,15 @@ namespace TPP.Core.Moderation
 
         public RuleResult Check(Message message)
         {
-            int numEmotes = message.Details.Emotes.Count;
-            int numEmojis = EmojiRegex.Matches(message.MessageText).Count;
-            int numActionable = numEmotes + numEmojis - _freeEmotes;
-            if (numActionable > 0)
-            {
-                return new RuleResult.GivePoints(
-                    (int)Math.Pow(numActionable, _powerOfEmotes),
-                    "excessive usage of emotes/emojis");
-            }
+            // int numEmotes = message.Details.Emotes.Count;
+            // int numEmojis = EmojiRegex.Matches(message.MessageText).Count;
+            // int numActionable = numEmotes + numEmojis - _freeEmotes;
+            // if (numActionable > 0)
+            // {
+            //     return new RuleResult.GivePoints(
+            //         (int)Math.Pow(numActionable, _powerOfEmotes),
+            //         "excessive usage of emotes/emojis");
+            // }
             return new RuleResult.Nothing();
         }
     }
@@ -131,12 +131,12 @@ namespace TPP.Core.Moderation
             return isCopypasta;
         }
 
-        public RuleResult Check(Message message) =>
-            IsCopypasta(message.MessageText)
-                ? new RuleResult.GivePoints(
-                    (int)(_pointsPerCopypastaChar * message.MessageText.Length),
-                    "participating in copypasta")
-                : new RuleResult.Nothing();
+        public RuleResult Check(Message message) => new RuleResult.Nothing();
+            // IsCopypasta(message.MessageText)
+            //     ? new RuleResult.GivePoints(
+            //         (int)(_pointsPerCopypastaChar * message.MessageText.Length),
+            //         "participating in copypasta")
+            //     : new RuleResult.Nothing();
     }
 
     /// Copypastaing your own messages times you out.
@@ -199,13 +199,13 @@ namespace TPP.Core.Moderation
             return numRepetitions;
         }
 
-        public RuleResult Check(Message message) =>
-            GetNumPersonalRepetitions(message.User, message.MessageText) switch
-            {
-                >= 3 => new RuleResult.Timeout("excessively repetitious messages"),
-                >= 2 => new RuleResult.DeleteMessage(), // as a warning
-                _ => new RuleResult.Nothing()
-            };
+        public RuleResult Check(Message message) => new RuleResult.Nothing()
+            // GetNumPersonalRepetitions(message.User, message.MessageText) switch
+            // {
+            //     >= 3 => new RuleResult.Timeout("excessively repetitious messages"),
+            //     >= 2 => new RuleResult.DeleteMessage(), // as a warning
+            //     _ => new RuleResult.Nothing()
+            // };
     }
 
     /// Excessive amounts of symbols that are typically rare in regular text accumulate points.
