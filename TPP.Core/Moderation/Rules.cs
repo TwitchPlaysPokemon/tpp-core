@@ -199,7 +199,7 @@ namespace TPP.Core.Moderation
             return numRepetitions;
         }
 
-        public RuleResult Check(Message message) => new RuleResult.Nothing()
+        public RuleResult Check(Message message) => new RuleResult.Nothing();
             // GetNumPersonalRepetitions(message.User, message.MessageText) switch
             // {
             //     >= 3 => new RuleResult.Timeout("excessively repetitious messages"),
