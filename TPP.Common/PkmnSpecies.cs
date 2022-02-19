@@ -52,8 +52,8 @@ namespace TPP.Common
 
         private PkmnSpecies(string id, string name)
         {
-            Id = id;
-            Name = name;
+            Id = id ?? throw new ArgumentNullException(nameof(id));
+            Name = name ?? throw new ArgumentNullException(nameof(name));
 
             string[] parts = id.Split("-", count: 2);
             int intPart;
