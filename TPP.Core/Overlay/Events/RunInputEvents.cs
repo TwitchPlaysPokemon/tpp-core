@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.Serialization;
 using TPP.Inputting;
+using TPP.Inputting.Inputs;
 using TPP.Model;
 
 namespace TPP.Core.Overlay.Events
@@ -14,15 +16,24 @@ namespace TPP.Core.Overlay.Events
 
         [DataMember(Name = "button_set")] public IImmutableList<string> ButtonSet { get; set; }
         [DataMember(Name = "button_set_labels")] public IImmutableList<string> ButtonSetLabels { get; set; }
+        [DataMember(Name = "button_set_velocities")] public IImmutableList<float> ButtonSetVelocities { get; set; }
         [DataMember(Name = "user")] public User User { get; set; }
         [DataMember(Name = "id")] public int InputId { get; set; }
+        [DataMember(Name = "side", EmitDefaultValue = false)] public string? Side { get; set; }
+        [DataMember(Name = "direct", EmitDefaultValue = false)] public bool? Direct { get; set; }
 
         public NewAnarchyInput(int inputId, InputSet inputSet, User user)
         {
-            ButtonSet = inputSet.Inputs.Select(i => i.ButtonName).ToImmutableList();
-            ButtonSetLabels = inputSet.Inputs.Select(i => i.DisplayedText).ToImmutableList();
+            IEnumerable<Input> InputsForOverlay() => inputSet.Inputs.Where(i => i is not SideInput);
+            ButtonSet = InputsForOverlay().Select(i => i.ButtonName).ToImmutableList();
+            ButtonSetLabels = InputsForOverlay().Select(i => i.DisplayedText).ToImmutableList();
+            // velocities: was used for analog, but probably needs a rework anyway. Just use dummy values for now.
+            ButtonSetVelocities = ButtonSet.Select(_ => 1.0f).ToImmutableList();
             User = user;
             InputId = inputId;
+            SideInput? sideInput = inputSet.Inputs.Where(i => i is SideInput).Cast<SideInput>().FirstOrDefault();
+            Side = (sideInput?.Side)?.GetSideString();
+            Direct = sideInput?.Direct;
         }
     }
 

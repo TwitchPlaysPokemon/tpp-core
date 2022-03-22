@@ -1,7 +1,6 @@
 using System;
 using System.Runtime.Serialization;
 using TPP.Inputting;
-using TPP.Inputting.Parsing;
 
 namespace TPP.Core
 {
@@ -9,11 +8,12 @@ namespace TPP.Core
     public enum ButtonProfile
     {
         [EnumMember(Value = "gb")] GameBoy,
+        [EnumMember(Value = "dualgb")] DualGameBoy,
     }
 
     public static class ButtonProfileExtensions
     {
-        public static IInputParser ToInputParser(this ButtonProfile profile) =>
+        public static InputParserBuilder ToInputParserBuilder(this ButtonProfile profile) =>
             profile switch
             {
                 ButtonProfile.GameBoy => InputParserBuilder.FromBare()
@@ -22,8 +22,9 @@ namespace TPP.Core
                     .RemappedDPad(up: "n", down: "s", left: "w", right: "e", mapsToPrefix: "")
                     .RemappedButtons(("p", "wait"), ("xp", "wait"), ("exp", "wait"))
                     .LengthRestrictions(maxSetLength: 2, maxSequenceLength: 1)
-                    .HoldEnabled(true)
-                    .Build(),
+                    .HoldEnabled(true),
+                ButtonProfile.DualGameBoy => ButtonProfile.GameBoy.ToInputParserBuilder()
+                    .LeftRightSidesEnabled(true),
                 _ => throw new ArgumentOutOfRangeException(nameof(profile), profile, "missing input parser definition")
             };
     }
