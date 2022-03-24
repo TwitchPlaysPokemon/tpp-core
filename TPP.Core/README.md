@@ -52,18 +52,26 @@ dotnet run -- start -m dualcore
 ## modes
 
 You can run different modes by specifying its mode name in the `dotnet run -- start -m <mode>` command.
+Some modes require an additional mode-specific config file, but just trying to run them will tell you how to create it.
 Currently the following modes are supported:
 
-| mode     | description |
-|----------|-------------|
+| mode     | description                                                                                                                             |
+|----------|-----------------------------------------------------------------------------------------------------------------------------------------|
 | dualcore | This is is a simple mode meant for replacing some functionality that has been ported and subsequently removed from the old python core. |
-| match    | This mode runs basic match cycles. To see anything at `http://localhost:5000/overlay` the overlay must be started from the old core with `python -m tpp overlay`. It will then be able to connect to the new core's websocket to receive overlay events. |
-| run      | This mode does nothing yet. |
-| dummy    | This mode purposely does nothing for testing purposes. |
+| match    | This mode runs basic match cycles. You need the old overlay to see anything. See the below section on old overlay compatibility.        |
+| run      | This mode processed inputs from chat and offers them for consumption through a http endpoint. It also sends them to the old overlay.    |
+| dummy    | This mode purposely does nothing for testing purposes.                                                                                  |
 
 The modes `match` and `run` require a mode-specific configuration file, which you can test and generate
 similar to the base config by passing an additional `--mode` or `-m` option.
 See the `--help` output for more details on that.
+
+## old overlay compatibility mode
+
+The new core (this repository) does not contain any visual components.
+But it does speak the same websocket event dialect the current "old" overlay speaks,
+so to see anything at `http://localhost:5000/overlay` the overlay must be started from the old core with `python -m tpp overlay`.
+It will then be able to connect to the new core's websocket to receive overlay events.
 
 ## proper publishing
 `dotnet run` is a development command that always implicitly restores dependencies,

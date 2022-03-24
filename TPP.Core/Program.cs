@@ -130,6 +130,16 @@ Options:
 
         private static void Mode(string modeName, string baseConfigFilename, string modeConfigFilename)
         {
+            if (DefaultConfigs[modeName] != null && !File.Exists(baseConfigFilename))
+            {
+                Console.Error.WriteLine(MissingConfigErrorMessage(null, baseConfigFilename));
+                return;
+            }
+            if (DefaultConfigs[modeName] != null && !File.Exists(modeConfigFilename))
+            {
+                Console.Error.WriteLine(MissingConfigErrorMessage(modeName, modeConfigFilename));
+                return;
+            }
             BaseConfig baseConfig = ReadConfig<BaseConfig>(baseConfigFilename);
             ILoggerFactory loggerFactory = BuildLoggerFactory(baseConfig);
             ILogger logger = loggerFactory.CreateLogger("main");
@@ -163,6 +173,11 @@ Options:
             cleanupDone.SetResult(true);
         }
 
+        private static string MissingConfigErrorMessage(string? mode, string configFilename) =>
+            $"missing {(mode == null ? "base" : "mode")} config file '{configFilename}'. " +
+            $"Generate one from default values using 'gendefaultconfig{(mode == null ? "" : " --mode=" + mode)} " +
+            $"--outfile={configFilename}'";
+
         private static void TestConfig(
             string configFilename,
             string? mode,
@@ -173,18 +188,14 @@ Options:
             if (File.Exists(configFilename))
                 ReadConfig<BaseConfig>(configFilename);
             else
-                Console.Error.WriteLine(
-                    $"missing base config file '{configFilename}', generate one from default values " +
-                    $"using 'gendefaultconfig --outfile={configFilename}'");
+                Console.Error.WriteLine(MissingConfigErrorMessage(null, configFilename));
 
             if (mode != null && DefaultConfigs[mode] != null)
             {
                 if (File.Exists(modeConfigFilename))
                     ReadConfig(modeConfigFilename, DefaultConfigs[mode]!.GetType());
                 else
-                    Console.Error.WriteLine(
-                        $"missing mode config file '{modeConfigFilename}', generate one from default values " +
-                        $"using 'gendefaultconfig {mode} --outfile={modeConfigFilename}'");
+                    Console.Error.WriteLine(MissingConfigErrorMessage(mode, modeConfigFilename));
             }
         }
 
