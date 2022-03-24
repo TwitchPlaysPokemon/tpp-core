@@ -8,15 +8,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Setup .NET 5
+      - name: Setup .NET 6
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 5.0.x
+          dotnet-version: 6.0.x
       - uses: actions/checkout@v2
       - name: install resharper
         run: dotnet tool install -g JetBrains.ReSharper.GlobalTools
-      - name: install dotnet-format
-        run: dotnet tool install -g dotnet-format
       - name: build solution before analysis
         run: dotnet build
       - name: determine changed files
@@ -37,4 +35,4 @@ jobs:
           fi
       - name: check code formatting
         run: |
-          dotnet format --check --report=_format_report.json || python .github/workflows/process_format_report.py
+          dotnet format --verify-no-changes --report=_format_report.json || python .github/workflows/process_format_report.py

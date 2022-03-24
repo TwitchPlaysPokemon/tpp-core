@@ -16,7 +16,7 @@ taken care of by the old python core.
 Porting features over is an ongoing process.
 
 ## requirements
-- .NET 5 SDK, you can get one from [dotnet.microsoft.com](https://dotnet.microsoft.com/download) (It has to be .NET 5 SDK, not a later version or it won't work, click "All .NET versions" to find the right version)
+- .NET 6 SDK (exactly, not 7 or up), you can get one from [dotnet.microsoft.com](https://dotnet.microsoft.com/download)
 - If you use or run any components with persistence, MongoDB.
   See [TPP.Persistence.MongoDB](TPP.Persistence.MongoDB) for details.
 
