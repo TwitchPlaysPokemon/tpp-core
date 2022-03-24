@@ -45,6 +45,7 @@ Options:
             ["dualcore"] = null,
             ["dummy"] = null,
         };
+        private static bool ModeHasItsOwnConfig(string mode) => DefaultConfigs[mode] != null;
 
         /// Ensures different environments don't change the application's behaviour.
         private static void NormalizeRuntimeEnvironment()
@@ -130,12 +131,12 @@ Options:
 
         private static void Mode(string modeName, string baseConfigFilename, string modeConfigFilename)
         {
-            if (DefaultConfigs[modeName] != null && !File.Exists(baseConfigFilename))
+            if (ModeHasItsOwnConfig(modeName) && !File.Exists(baseConfigFilename))
             {
                 Console.Error.WriteLine(MissingConfigErrorMessage(null, baseConfigFilename));
                 return;
             }
-            if (DefaultConfigs[modeName] != null && !File.Exists(modeConfigFilename))
+            if (ModeHasItsOwnConfig(modeName) && !File.Exists(modeConfigFilename))
             {
                 Console.Error.WriteLine(MissingConfigErrorMessage(modeName, modeConfigFilename));
                 return;
@@ -190,7 +191,7 @@ Options:
             else
                 Console.Error.WriteLine(MissingConfigErrorMessage(null, configFilename));
 
-            if (mode != null && DefaultConfigs[mode] != null)
+            if (mode != null && ModeHasItsOwnConfig(mode))
             {
                 if (File.Exists(modeConfigFilename))
                     ReadConfig(modeConfigFilename, DefaultConfigs[mode]!.GetType());
