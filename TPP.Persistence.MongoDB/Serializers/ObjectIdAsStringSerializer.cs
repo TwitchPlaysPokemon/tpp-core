@@ -1,3 +1,4 @@
+using System;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
@@ -7,9 +8,13 @@ namespace TPP.Persistence.MongoDB.Serializers
     /// <summary>
     /// A serializer for representing Ids as <see cref="ObjectId"/> in the database but as <see cref="string"/> in code.
     /// </summary>
-    public class ObjectIdAsStringSerializer : SerializerBase<string>
+    public class ObjectIdAsStringSerializer : SerializerBase<string>, IRepresentationConfigurable
     {
         public static readonly ObjectIdAsStringSerializer Instance = new ObjectIdAsStringSerializer();
+
+        public BsonType Representation => BsonType.ObjectId;
+
+        public IBsonSerializer WithRepresentation(BsonType representation) => throw new NotSupportedException();
 
         public override string Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
         {

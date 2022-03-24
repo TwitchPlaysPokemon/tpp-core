@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 using NodaTime;
 using TPP.ArgsParsing;
 using TPP.ArgsParsing.TypeParsers;
@@ -123,7 +124,9 @@ namespace TPP.Core
         {
             IClock clock = SystemClock.Instance;
             CustomSerializers.RegisterAll();
-            IMongoClient mongoClient = new MongoClient(baseConfig.MongoDbConnectionUri);
+            MongoClientSettings settings = MongoClientSettings.FromConnectionString(baseConfig.MongoDbConnectionUri);
+            settings.LinqProvider = LinqProvider.V3;
+            IMongoClient mongoClient = new MongoClient(settings);
             IMongoDatabase mongoDatabase = mongoClient.GetDatabase(baseConfig.MongoDbDatabaseName);
             IMongoDatabase mongoDatabaseMessagelog = mongoClient.GetDatabase(baseConfig.MongoDbDatabaseNameMessagelog);
             UserRepo userRepo = new(

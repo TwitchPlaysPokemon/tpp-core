@@ -212,12 +212,10 @@ namespace TPP.Persistence.MongoDB.Repos
                 {
                     Species = group.Key,
                     Count = group.Count(b => b.UserId != null),
-                    // TODO workaround for https://jira.mongodb.org/browse/CSHARP-3449 - remove Equals() with == once that bug is fixed
-                    CountGenerated = group.Count(b => b.Source.Equals("pinball")),
+                    CountGenerated = group.Count(b => b.Source == Badge.BadgeSource.Pinball),
                     RarityCount = group.Count(b => b.UserId != null && b.CreatedAt >= startTime),
                     RarityCountGenerated =
-                        // TODO workaround for https://jira.mongodb.org/browse/CSHARP-3449 - remove Equals() with == once that bug is fixed
-                        group.Count(b => b.Source.Equals("pinball") && b.CreatedAt >= startTime),
+                        group.Count(b => b.Source == Badge.BadgeSource.Pinball && b.CreatedAt >= startTime),
                 })
                 .SortBy(stat => stat.Species)
                 .ToListAsync();

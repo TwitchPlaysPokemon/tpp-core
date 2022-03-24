@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 using NUnit.Framework;
 using TPP.Persistence.MongoDB.Serializers;
 
@@ -29,7 +30,10 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
         {
             CustomSerializers.RegisterAll();
             // try to connect to a mongodb running on the default port
-            _client = new MongoClient($"mongodb://localhost:27017/?replicaSet={ReplicaSetName}");
+            MongoClientSettings settings = MongoClientSettings
+                .FromConnectionString($"mongodb://localhost:27017/?replicaSet={ReplicaSetName}");
+            settings.LinqProvider = LinqProvider.V3;
+            _client = new MongoClient(settings);
             bool success = _client.ListDatabaseNamesAsync(CancellationToken.None).Wait(TimeSpan.FromSeconds(5));
             if (!success)
             {
