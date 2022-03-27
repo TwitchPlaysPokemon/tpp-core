@@ -28,9 +28,12 @@ namespace TPP.Core
             {
                 logger.LogWarning(
                     "Configured input server host as '{Host}', but the host is being used as a http listener prefix, " +
-                    "not as a bind address. Assuming '*' instead to listen on all interfaces.", host);
+                    "not as a bind address. Assuming '*' instead to listen on all interfaces", host);
                 host = "*";
             }
+            if (host is "localhost")
+                logger.LogWarning("Configured input server host as '{Host}' instead of '127.0.0.1. " +
+                                  "It might not be reachable from 127.0.0.1", host);
             _host = host;
             _port = port;
             InputFeed = inputFeed;
@@ -46,6 +49,7 @@ namespace TPP.Core
             _httpListener = new HttpListener();
             _httpListener.Prefixes.Add($"http://{_host}:{_port}/");
             _httpListener.Start();
+            _logger.LogInformation("Started input server on {Prefixes}", _httpListener.Prefixes);
 
             // put responding to input requests on its own thread to avoid any potential
             // delays due to cooperative multitasking
@@ -81,8 +85,10 @@ namespace TPP.Core
                         InputMap? inputMap = await InputFeed.HandleRequest(request.RawUrl?.ToLower());
                         responseText = inputMap == null ? null : JsonSerializer.Serialize(inputMap);
                     }
-                    catch (ArgumentException)
+                    catch (ArgumentException ex)
                     {
+                        byte[] buffer = Encoding.UTF8.GetBytes(ex.Message);
+                        await response.OutputStream.WriteAsync(buffer.AsMemory(0, buffer.Length));
                         response.StatusCode = 400;
                         response.Close();
                         continue;

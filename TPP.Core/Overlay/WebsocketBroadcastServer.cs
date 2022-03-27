@@ -56,9 +56,12 @@ namespace TPP.Core.Overlay
             {
                 logger.LogWarning(
                     "Configured websocket host as '{Host}', but the host is being used as a http listener prefix, " +
-                    "not as a bind address. Assuming '*' instead to listen on all interfaces.", host);
+                    "not as a bind address. Assuming '*' instead to listen on all interfaces", host);
                 host = "*";
             }
+            if (host is "localhost")
+                logger.LogWarning("Configured websocket host as '{Host}' instead of '127.0.0.1. " +
+                                  "It might not be reachable from 127.0.0.1", host);
             _host = host;
             _port = port;
         }
@@ -183,6 +186,7 @@ namespace TPP.Core.Overlay
             _httpListener = new HttpListener();
             _httpListener.Prefixes.Add($"http://{_host}:{_port}/");
             _httpListener.Start();
+            _logger.LogInformation("Started websocket server on {Prefixes}", _httpListener.Prefixes);
             _stopListenerToken = new CancellationTokenSource();
 
             while (_httpListener.IsListening)

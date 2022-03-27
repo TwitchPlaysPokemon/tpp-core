@@ -83,13 +83,18 @@ namespace TPP.Core
                     .ContinueWith(async _ => await _overlayConnection.Send(
                         new AnarchyInputStop(queuedInput.InputId), CancellationToken.None));
             }
-            return path switch
+
+            var endpoints = new Dictionary<string, Func<InputMap>>
             {
-                "/gbmode_input_request_bizhawk" => inputMap,
-                "/gbmode_input_request_desmume" => inputMap
+                ["/gbmode_input_request_bizhawk"] = () => inputMap,
+                ["/gbmode_input_request_desmume"] = () => inputMap
                     .ToDictionary(kvp => CasefoldKeyForDesmume(kvp.Key), kvp => kvp.Value),
-                _ => throw new ArgumentException("unrecognized input polling endpoint")
             };
+            if (endpoints.TryGetValue(path ?? "", out Func<InputMap>? getResultForEndpoint))
+                return getResultForEndpoint();
+            else
+                throw new ArgumentException($"unrecognized input polling endpoint '{path}'. " +
+                                            $"Available endpoints: {string.Join(", ", endpoints.Keys)}");
         }
     }
 }
