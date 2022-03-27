@@ -26,7 +26,7 @@ namespace TPP.Core.Tests.Overlay
 
         private async Task<WebsocketMessageStreamClient> CreateClient()
         {
-            var url = new Uri($"ws://localhost:{_port}");
+            var url = new Uri($"ws://127.0.0.1:{_port}");
             var wsClient = new WebsocketMessageStreamClient();
             await wsClient.Connect(url, CancellationToken.None);
             return wsClient;
