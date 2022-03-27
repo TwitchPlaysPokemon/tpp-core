@@ -16,7 +16,7 @@ namespace TPP.Core.Tests.Overlay
         private int _port = 53427;
 
         private WebsocketBroadcastServer CreateServer() =>
-            new(NullLogger<WebsocketBroadcastServer>.Instance, "localhost", _port);
+            new(NullLogger<WebsocketBroadcastServer>.Instance, "127.0.0.1", _port);
 
         [SetUp]
         public void ChangePort()

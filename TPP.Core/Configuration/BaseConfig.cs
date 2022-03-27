@@ -25,7 +25,7 @@ namespace TPP.Core.Configuration
         public int StartingPokeyen { get; init; } = 100;
         public int StartingTokens { get; init; } = 0;
 
-        public string OverlayWebsocketHost { get; init; } = "localhost";
+        public string OverlayWebsocketHost { get; init; } = "127.0.0.1";
         public int OverlayWebsocketPort { get; init; } = 5001;
 
         /* Required information to post log messages to discord. Logging to discord is disabled if null. */
