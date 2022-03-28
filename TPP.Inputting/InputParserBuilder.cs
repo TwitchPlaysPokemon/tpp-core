@@ -14,12 +14,13 @@ namespace TPP.Inputting
         // so it doesn't make sense to give the touchscreen any custom name.
         private const string TouchscreenName = "touchscreen";
 
-        private readonly List<IInputDefinition> _inputDefinitions = new List<IInputDefinition>();
-        private readonly HashSet<(string, string)> _conflicts = new HashSet<(string, string)>();
+        private readonly List<IInputDefinition> _inputDefinitions = new();
+        private readonly HashSet<(string, string)> _conflicts = new();
         private bool _multitouch = false;
         private int _maxSetLength = 2;
         private int _maxSequenceLength = 1;
         private bool _holdEnabled = true;
+        private bool _leftRightSides = false;
 
         private InputParserBuilder()
         {
@@ -39,7 +40,7 @@ namespace TPP.Inputting
         /// </summary>
         public IInputParser Build()
         {
-            return new ContextualInputParser(
+            IInputParser inputParser = new ContextualInputParser(
                 baseInputParser: new BareInputParser(
                     inputDefinitions: _inputDefinitions,
                     maxSetLength: _maxSetLength,
@@ -47,6 +48,8 @@ namespace TPP.Inputting
                     holdEnabled: _holdEnabled),
                 conflictingInputs: _conflicts,
                 multitouch: _multitouch);
+            if (_leftRightSides) inputParser = new SidedInputParser(inputParser);
+            return inputParser;
         }
 
         /// <summary>
@@ -370,6 +373,12 @@ namespace TPP.Inputting
             string targetRight = mapsToPrefix + "right";
             RemappedButtons((up, targetUp), (down, targetDown), (left, targetLeft), (right, targetRight));
             Conflicts((targetUp, targetDown), (targetLeft, targetRight));
+            return this;
+        }
+
+        public InputParserBuilder LeftRightSidesEnabled(bool enabled)
+        {
+            _leftRightSides = enabled;
             return this;
         }
     }

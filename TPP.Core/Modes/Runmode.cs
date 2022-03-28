@@ -42,7 +42,7 @@ namespace TPP.Core.Modes
             // TODO felk: this feels a bit messy the way it is done right now,
             //            but I am unsure yet how I'd integrate the individual parts in a cleaner way.
             InputConfig inputConfig = runmodeConfig.InputConfig;
-            _inputParser = inputConfig.ButtonsProfile.ToInputParser();
+            _inputParser = inputConfig.ButtonsProfile.ToInputParserBuilder().Build();
             _inputBufferQueue = new InputBufferQueue<QueuedInput>(CreateBufferConfig(inputConfig));
             _anarchyInputFeed = CreateInputFeedFromConfig(inputConfig);
             _inputServer = new InputServer(loggerFactory.CreateLogger<InputServer>(),
@@ -85,7 +85,7 @@ namespace TPP.Core.Modes
         private void ReloadConfig(InputConfig config)
         {
             // TODO endpoints to control configs at runtime?
-            _inputParser = config.ButtonsProfile.ToInputParser();
+            _inputParser = config.ButtonsProfile.ToInputParserBuilder().Build();
             _anarchyInputFeed = CreateInputFeedFromConfig(config);
             _inputServer.InputFeed = _anarchyInputFeed;
         }

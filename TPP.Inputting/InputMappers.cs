@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using TPP.Inputting.Inputs;
 
 namespace TPP.Inputting
@@ -30,6 +31,7 @@ namespace TPP.Inputting
     ///     See <a href="http://tasvideos.org/LuaScripting/TableKeys.html">tasvideos.org/LuaScripting/TableKeys.html</a>
     ///     for a comprehensive list of possible casings.</li>
     /// <li>Unpressed buttons are omitted.</li>
+    /// <li>If an button set is sided, input keys are prefixed with "P1 " for left and "P2 " for right.</li>
     /// </ul>
     /// </summary>
     public class DefaultTppInputMapper : IInputMapper
@@ -52,6 +54,7 @@ namespace TPP.Inputting
         {
             Dictionary<string, object> inputMap = new();
             bool isTouched = false;
+            string buttonPrefix = "";
             foreach (var input in timedInputSet.InputSet.Inputs)
             {
                 if (input is TouchscreenDragInput drag)
@@ -70,11 +73,25 @@ namespace TPP.Inputting
                     inputMap["Touch_Screen_X"] = touch.X;
                     inputMap["Touch_Screen_Y"] = touch.Y;
                 }
+                else if (input is SideInput side)
+                {
+                    buttonPrefix = side.Side switch
+                    {
+                        InputSide.Left => "P1 ",
+                        InputSide.Right => "P2 ",
+                        _ => throw new ArgumentOutOfRangeException($"unknown side '{side.Side}'")
+                    };
+                }
                 else
                 {
                     inputMap[ToLowerFirstUpper(input.ButtonName)] = true;
                 }
             }
+            if (!string.IsNullOrEmpty(buttonPrefix))
+            {
+                inputMap = inputMap.ToDictionary(kvp => buttonPrefix + kvp.Key, kvp => kvp.Value);
+            }
+
             inputMap["Held_Frames"] = (int)Math.Round(timedInputSet.HoldDuration * _fps);
             inputMap["Sleep_Frames"] = (int)Math.Round(timedInputSet.SleepDuration * _fps);
 

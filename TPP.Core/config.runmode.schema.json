@@ -10,7 +10,8 @@
         "ButtonsProfile": {
           "type": "string",
           "enum": [
-            "gb"
+            "gb",
+            "dualgb"
           ]
         },
         "FramesPerSecond": {
