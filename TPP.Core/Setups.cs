@@ -12,6 +12,7 @@ using TPP.Core.Commands;
 using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
 using TPP.Core.Overlay;
+using TPP.Inputting;
 using TPP.Model;
 using TPP.Persistence;
 using TPP.Persistence.MongoDB;
@@ -65,6 +66,7 @@ namespace TPP.Core
             ArgsParser argsParser,
             Databases databases,
             StopToken stopToken,
+            MuteInputsToken? muteInputsToken,
             IMessageSender messageSender,
             IChatModeChanger chatModeChanger,
             IImmutableSet<Common.PkmnSpecies> knownSpecies)
@@ -86,7 +88,7 @@ namespace TPP.Core
                 new ManagePollCommands(databases.PollRepo).Commands,
                 new BadgeCommands(databases.BadgeRepo, databases.UserRepo, messageSender, knownSpecies).Commands,
                 new OperatorCommands(
-                    stopToken, databases.PokeyenBank, databases.TokensBank,
+                    stopToken, muteInputsToken, databases.PokeyenBank, databases.TokensBank,
                     messageSender: messageSender, databases.BadgeRepo, databases.UserRepo
                 ).Commands,
                 new ModeratorCommands(

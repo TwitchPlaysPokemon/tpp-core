@@ -58,6 +58,9 @@
         "null"
       ]
     },
+    "MuteInputsAtStartup": {
+      "type": "boolean"
+    },
     "$schema": {
       "type": [
         "string",

@@ -12,6 +12,7 @@ using TPP.Common;
 using TPP.Core.Chat;
 using TPP.Core.Commands;
 using TPP.Core.Commands.Definitions;
+using TPP.Inputting;
 using TPP.Model;
 using TPP.Persistence;
 
@@ -75,7 +76,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             User user = MockOperator("MockOperator");
             _userRepoMock.Setup(u => u.FindBySimpleName(user.SimpleName)).ReturnsAsync(user);
             OperatorCommands operatorCommands = new OperatorCommands(
-                new StopToken(),
+                new StopToken(), new MuteInputsToken(),
                 _tokensBankMock.Object, _tokensBankMock.Object,
                 _messageSenderMock.Object, _badgeRepoMock.Object,
                 _userRepoMock.Object);
@@ -112,7 +113,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             User userOther = MockUser("MockUserOther");
             _userRepoMock.Setup(u => u.FindBySimpleName(userOther.SimpleName)).ReturnsAsync(userOther);
             OperatorCommands operatorCommands = new OperatorCommands(
-                new StopToken(),
+                new StopToken(), new MuteInputsToken(),
                 _tokensBankMock.Object, _tokensBankMock.Object,
                 _messageSenderMock.Object, _badgeRepoMock.Object,
                 _userRepoMock.Object);
@@ -159,7 +160,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             User gifter = MockUser("Gifter");
             User recipient = MockUser("Recipient");
             OperatorCommands operatorCommands = new(
-                new StopToken(),
+                new StopToken(), new MuteInputsToken(),
                 _tokensBankMock.Object, _tokensBankMock.Object,
                 _messageSenderMock.Object, _badgeRepoMock.Object,
                 _userRepoMock.Object);
@@ -198,7 +199,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             User gifter = MockUser("Gifter");
             User recipient = MockUser("Recipient");
             OperatorCommands operatorCommands = new(
-                new StopToken(),
+                new StopToken(), new MuteInputsToken(),
                 _tokensBankMock.Object, _tokensBankMock.Object,
                 _messageSenderMock.Object, _badgeRepoMock.Object,
                 _userRepoMock.Object);
@@ -226,7 +227,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             User gifter = MockUser("Gifter");
             User recipient = MockUser("Recipient");
             OperatorCommands operatorCommands = new(
-                new StopToken(),
+                new StopToken(), new MuteInputsToken(),
                 _tokensBankMock.Object, _tokensBankMock.Object,
                 _messageSenderMock.Object, _badgeRepoMock.Object,
                 _userRepoMock.Object);
@@ -255,7 +256,8 @@ namespace TPP.Core.Tests.Commands.Definitions
             _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
             User user = MockOperator("MockUser");
             User recipient = MockUser("Recipient");
-            OperatorCommands operatorCommands = new(new StopToken(),
+            OperatorCommands operatorCommands = new(
+                new StopToken(), new MuteInputsToken(),
                 _tokensBankMock.Object, _tokensBankMock.Object,
                 _messageSenderMock.Object, _badgeRepoMock.Object,
                 _userRepoMock.Object);

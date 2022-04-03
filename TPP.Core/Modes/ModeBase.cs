@@ -12,6 +12,7 @@ using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
 using TPP.Core.Moderation;
 using TPP.Core.Overlay;
+using TPP.Inputting;
 using TPP.Model;
 using TPP.Persistence;
 using static TPP.Core.EventUtils;
@@ -43,6 +44,7 @@ namespace TPP.Core.Modes
             Setups.Databases repos,
             BaseConfig baseConfig,
             StopToken stopToken,
+            MuteInputsToken? muteInputsToken,
             OverlayConnection overlayConnection,
             ProcessMessage? processMessage = null)
         {
@@ -71,8 +73,8 @@ namespace TPP.Core.Modes
                 c => (ICommandResponder)new CommandResponder(c));
             _commandProcessors = _chats.Values.ToImmutableDictionary(
                 c => c.Name,
-                c => Setups.SetUpCommandProcessor(loggerFactory, argsParser, repos, stopToken, c, c,
-                    pokedexData.KnownSpecies));
+                c => Setups.SetUpCommandProcessor(loggerFactory, argsParser, repos, stopToken, muteInputsToken,
+                    messageSender: c, chatModeChanger: c, pokedexData.KnownSpecies));
 
             _messagequeueRepo = repos.MessagequeueRepo;
             _messagelogRepo = repos.MessagelogRepo;

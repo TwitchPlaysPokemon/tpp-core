@@ -5,6 +5,11 @@ using TPP.Inputting.Inputs;
 
 namespace TPP.Inputting
 {
+    public class MuteInputsToken
+    {
+        public bool Muted { get; set; }
+    }
+
     /// <summary>
     /// Converts a <see cref="TimedInputSet"/> to a input map, which is a mapping from keys to any objects
     /// to be sent to a specific input frontend.
@@ -38,6 +43,7 @@ namespace TPP.Inputting
     {
         private static string ToLowerFirstUpper(string str) => str[..1].ToUpper() + str[1..].ToLower();
 
+        private readonly MuteInputsToken _muteInputsToken;
         private readonly float _fps;
 
         /// <summary>
@@ -45,8 +51,11 @@ namespace TPP.Inputting
         /// TODO eternal holds
         /// </summary>
         /// <param name="fps">Required for games that don't run at 60fps to correctly compute the frame timings.</param>
-        public DefaultTppInputMapper(float fps = 60)
+        /// <param name="muteInputsToken">the token indicating whether inputs should be muted,
+        /// meaning the inputs should be consumed as usual but not actually perform any actions.</param>
+        public DefaultTppInputMapper(MuteInputsToken muteInputsToken, float fps = 60)
         {
+            _muteInputsToken = muteInputsToken;
             _fps = fps;
         }
 
@@ -57,7 +66,11 @@ namespace TPP.Inputting
             string buttonPrefix = "";
             foreach (var input in timedInputSet.InputSet.Inputs)
             {
-                if (input is TouchscreenDragInput drag)
+                if (_muteInputsToken.Muted)
+                {
+                    // don't emit any actual inputs, just the meta fields like hold and sleep
+                }
+                else if (input is TouchscreenDragInput drag)
                 {
                     if (isTouched) throw new ArgumentException("multitouch is not supported!");
                     isTouched = true;

@@ -11,5 +11,8 @@ namespace TPP.Core.Configuration
 
         /* If this is not null, any user participating will get that run number's participation emblem. */
         public int? RunNumber = null;
+
+        /* If true, inputs are muted until explicitly unmuted, e.g. through !unmuteinputs or 'GET /start_run' */
+        public bool MuteInputsAtStartup = false;
     }
 }

@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using TPP.Inputting;
 using InputMap = System.Collections.Generic.IDictionary<string, object>;
 
 namespace TPP.Core
@@ -14,6 +15,7 @@ namespace TPP.Core
         private readonly ILogger<InputServer> _logger;
         private readonly string _host;
         private readonly int _port;
+        private readonly MuteInputsToken _muteInputsToken;
 
         private HttpListener? _httpListener;
         public IInputFeed InputFeed;
@@ -21,6 +23,7 @@ namespace TPP.Core
         public InputServer(
             ILogger<InputServer> logger,
             string host, int port,
+            MuteInputsToken muteInputsToken,
             IInputFeed inputFeed)
         {
             _logger = logger;
@@ -36,6 +39,7 @@ namespace TPP.Core
                                   "It might not be reachable from 127.0.0.1", host);
             _host = host;
             _port = port;
+            _muteInputsToken = muteInputsToken;
             InputFeed = inputFeed;
         }
 
@@ -80,10 +84,24 @@ namespace TPP.Core
                     HttpListenerResponse response = context.Response;
 
                     string? responseText;
+                    string? requestUrl = request.RawUrl?.ToLower();
                     try
                     {
-                        InputMap? inputMap = await InputFeed.HandleRequest(request.RawUrl?.ToLower());
-                        responseText = inputMap == null ? null : JsonSerializer.Serialize(inputMap);
+                        if (requestUrl == "/start_run")
+                        {
+                            _muteInputsToken.Muted = false;
+                            responseText = "ok";
+                        }
+                        else if (requestUrl == "/stop_run")
+                        {
+                            _muteInputsToken.Muted = true;
+                            responseText = "ok";
+                        }
+                        else
+                        {
+                            InputMap? inputMap = await InputFeed.HandleRequest(requestUrl);
+                            responseText = inputMap == null ? null : JsonSerializer.Serialize(inputMap);
+                        }
                     }
                     catch (ArgumentException ex)
                     {

@@ -28,6 +28,7 @@ namespace TPP.Core.Modes
         private readonly InputBufferQueue<QueuedInput> _inputBufferQueue;
 
         private readonly StopToken _stopToken;
+        private readonly MuteInputsToken _muteInputsToken;
         private readonly ModeBase _modeBase;
         private readonly int? _runNumber;
 
@@ -36,13 +37,15 @@ namespace TPP.Core.Modes
             RunmodeConfig runmodeConfig = configLoader();
             _logger = loggerFactory.CreateLogger<Runmode>();
             _stopToken = new StopToken();
+            _muteInputsToken = new MuteInputsToken { Muted = runmodeConfig.MuteInputsAtStartup };
             Setups.Databases repos = Setups.SetUpRepositories(_logger, baseConfig);
             _userRepo = repos.UserRepo;
             _runCounterRepo = repos.RunCounterRepo;
             _runNumber = runmodeConfig.RunNumber;
             (_broadcastServer, _overlayConnection) = Setups.SetUpOverlayServer(loggerFactory,
                 baseConfig.OverlayWebsocketHost, baseConfig.OverlayWebsocketPort);
-            _modeBase = new ModeBase(loggerFactory, repos, baseConfig, _stopToken, _overlayConnection, ProcessMessage);
+            _modeBase = new ModeBase(
+                loggerFactory, repos, baseConfig, _stopToken, _muteInputsToken, _overlayConnection, ProcessMessage);
             _modeBase.InstallAdditionalCommand(new Command("reloadinputconfig", _ =>
             {
                 ReloadConfig(configLoader().InputConfig);
@@ -57,7 +60,7 @@ namespace TPP.Core.Modes
             _anarchyInputFeed = CreateInputFeedFromConfig(inputConfig);
             _inputServer = new InputServer(loggerFactory.CreateLogger<InputServer>(),
                 runmodeConfig.InputServerHost, runmodeConfig.InputServerPort,
-                _anarchyInputFeed);
+                _muteInputsToken, _anarchyInputFeed);
         }
 
         private AnarchyInputFeed CreateInputFeedFromConfig(InputConfig config)
@@ -74,8 +77,8 @@ namespace TPP.Core.Modes
                 config.FramesPerSecond);
         }
 
-        private static IInputMapper CreateInputMapperFromConfig(InputConfig config) =>
-            new DefaultTppInputMapper(config.FramesPerSecond);
+        private IInputMapper CreateInputMapperFromConfig(InputConfig config) =>
+            new DefaultTppInputMapper(_muteInputsToken, config.FramesPerSecond);
 
         private static IInputHoldTiming CreateInputHoldTimingFromConfig(InputConfig config) =>
             new DefaultInputHoldTiming(
@@ -108,7 +111,8 @@ namespace TPP.Core.Modes
             if (input == null) return false;
             foreach (InputSet inputSet in input.InputSets)
                 await _anarchyInputFeed.Enqueue(inputSet, message.User);
-            await CollectRunStatistics(message.User, input);
+            if (!_muteInputsToken.Muted)
+                await CollectRunStatistics(message.User, input);
             return true;
         }
 
