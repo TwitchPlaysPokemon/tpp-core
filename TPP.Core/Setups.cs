@@ -117,6 +117,7 @@ namespace TPP.Core
             ISubscriptionLogRepo SubscriptionLogRepo,
             IModLogRepo ModLogRepo,
             IResponseCommandRepo ResponseCommandRepo,
+            IRunCounterRepo RunCounterRepo,
             KeyValueStore KeyValueStore
         );
 
@@ -168,6 +169,7 @@ namespace TPP.Core
                 SubscriptionLogRepo: new SubscriptionLogRepo(mongoDatabase),
                 ModLogRepo: new ModLogRepo(mongoDatabase),
                 ResponseCommandRepo: new ResponseCommandRepo(mongoDatabase),
+                RunCounterRepo: new RunCounterRepo(mongoDatabase),
                 KeyValueStore: new KeyValueStore(mongoDatabase)
             );
         }

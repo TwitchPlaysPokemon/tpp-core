@@ -1,12 +1,15 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using TPP.Core.Commands;
 using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
 using TPP.Core.Overlay;
+using TPP.Core.Overlay.Events;
 using TPP.Inputting;
 using TPP.Inputting.Parsing;
+using TPP.Model;
 using TPP.Persistence;
 
 namespace TPP.Core.Modes
@@ -16,6 +19,7 @@ namespace TPP.Core.Modes
         private readonly ILogger<Runmode> _logger;
 
         private readonly IUserRepo _userRepo;
+        private readonly IRunCounterRepo _runCounterRepo;
         private IInputParser _inputParser;
         private readonly InputServer _inputServer;
         private readonly WebsocketBroadcastServer _broadcastServer;
@@ -34,6 +38,7 @@ namespace TPP.Core.Modes
             _stopToken = new StopToken();
             Setups.Databases repos = Setups.SetUpRepositories(_logger, baseConfig);
             _userRepo = repos.UserRepo;
+            _runCounterRepo = repos.RunCounterRepo;
             _runNumber = runmodeConfig.RunNumber;
             (_broadcastServer, _overlayConnection) = Setups.SetUpOverlayServer(loggerFactory,
                 baseConfig.OverlayWebsocketHost, baseConfig.OverlayWebsocketPort);
@@ -103,9 +108,16 @@ namespace TPP.Core.Modes
             if (input == null) return false;
             foreach (InputSet inputSet in input.InputSets)
                 await _anarchyInputFeed.Enqueue(inputSet, message.User);
-            if (_runNumber != null && !message.User.ParticipationEmblems.Contains(_runNumber.Value))
-                await _userRepo.GiveEmblem(message.User, _runNumber.Value);
+            await CollectRunStatistics(message.User, input);
             return true;
+        }
+
+        private async Task CollectRunStatistics(User user, InputSequence input)
+        {
+            if (_runNumber != null && !user.ParticipationEmblems.Contains(_runNumber.Value))
+                await _userRepo.GiveEmblem(user, _runNumber.Value);
+            long counter = await _runCounterRepo.Increment(_runNumber, incrementBy: input.InputSets.Count);
+            await _overlayConnection.Send(new ButtonPressUpdate(counter), CancellationToken.None);
         }
 
         public async Task Run()

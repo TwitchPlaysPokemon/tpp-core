@@ -64,4 +64,13 @@ namespace TPP.Core.Overlay.Events
         [DataMember(Name = "id")] public int InputId { get; set; }
         public AnarchyInputStop(int inputId) => InputId = inputId;
     }
+
+    [DataContract]
+    public sealed class ButtonPressUpdate : IOverlayEvent
+    {
+        public string OverlayEventType => "button_press_update";
+
+        [DataMember(Name = "presses")] public long NumTotalButtonPresses { get; set; }
+        public ButtonPressUpdate(long numTotalButtonPresses) => NumTotalButtonPresses = numTotalButtonPresses;
+    }
 }
