@@ -43,8 +43,8 @@ namespace TPP.Inputting
     {
         private static string ToLowerFirstUpper(string str) => str[..1].ToUpper() + str[1..].ToLower();
 
-        private readonly MuteInputsToken _muteInputsToken;
         private readonly float _fps;
+        private readonly MuteInputsToken _muteInputsToken;
 
         /// <summary>
         /// TODO trigger toggles
@@ -53,10 +53,10 @@ namespace TPP.Inputting
         /// <param name="fps">Required for games that don't run at 60fps to correctly compute the frame timings.</param>
         /// <param name="muteInputsToken">the token indicating whether inputs should be muted,
         /// meaning the inputs should be consumed as usual but not actually perform any actions.</param>
-        public DefaultTppInputMapper(MuteInputsToken muteInputsToken, float fps = 60)
+        public DefaultTppInputMapper(float fps = 60, MuteInputsToken? muteInputsToken = null)
         {
-            _muteInputsToken = muteInputsToken;
             _fps = fps;
+            _muteInputsToken = muteInputsToken ?? new MuteInputsToken { Muted = false };
         }
 
         public IDictionary<string, object> Map(TimedInputSet timedInputSet)

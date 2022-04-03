@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -106,20 +105,28 @@ namespace TPP.Core
                     catch (ArgumentException ex)
                     {
                         byte[] buffer = Encoding.UTF8.GetBytes(ex.Message);
-                        await response.OutputStream.WriteAsync(buffer.AsMemory(0, buffer.Length));
-                        response.StatusCode = 400;
-                        response.Close();
+                        try
+                        {
+                            response.ContentLength64 = buffer.Length;
+                            await response.OutputStream.WriteAsync(buffer.AsMemory(0, buffer.Length));
+                            response.StatusCode = 400;
+                            response.Close();
+                        }
+                        catch (HttpListenerException httpEx)
+                        {
+                            _logger.LogError(httpEx,
+                                "Failed to send input listener exception as response: {Exception}", ex.ToString());
+                        }
                         continue;
                     }
 
-                    Stream output = response.OutputStream;
                     if (responseText != null)
                     {
                         byte[] buffer = Encoding.UTF8.GetBytes(responseText);
                         response.ContentLength64 = buffer.Length;
-                        await output.WriteAsync(buffer.AsMemory(0, buffer.Length));
+                        await response.OutputStream.WriteAsync(buffer.AsMemory(0, buffer.Length));
                     }
-                    output.Close();
+                    response.Close();
                 }
             });
         }

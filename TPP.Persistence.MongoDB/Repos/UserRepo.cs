@@ -61,7 +61,8 @@ namespace TPP.Persistence.MongoDB.Repos
             });
         }
 
-        public UserRepo(IMongoDatabase database, long startingPokeyen, long startingTokens, IImmutableList<string> defaultOperators)
+        public UserRepo(
+            IMongoDatabase database, long startingPokeyen, long startingTokens, IImmutableList<string> defaultOperators)
         {
             database.CreateCollectionIfNotExists(CollectionName).Wait();
             Collection = database.GetCollection<User>(CollectionName);
@@ -185,8 +186,7 @@ namespace TPP.Persistence.MongoDB.Repos
             await Collection.FindOneAndUpdateAsync<User>(
                 filter: u => u.Id == user.Id,
                 update: Builders<User>.Update.AddToSet(u => u.ParticipationEmblems, emblem),
-                options: new FindOneAndUpdateOptions<User>
-                    { ReturnDocument = ReturnDocument.After, IsUpsert = false })
+                options: new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After, IsUpsert = false })
             ?? throw new ArgumentException($"user {user} does not exist");
 
         public Task<User> SetGlowColor(User user, string? glowColor) =>
