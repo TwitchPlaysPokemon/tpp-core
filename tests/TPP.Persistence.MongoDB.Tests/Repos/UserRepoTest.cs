@@ -177,6 +177,33 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
         }
 
         /// <summary>
+        /// Ensures that handing out participation emblems works properly.
+        /// </summary>
+        [Test]
+        public async Task adding_participation_badge()
+        {
+            UserRepo userRepo = CreateUserRepo();
+            // given
+            var userInfo = new UserInfo("123", "X", "x");
+            User user0Emblems = await userRepo.RecordUser(userInfo);
+            Assert.That(user0Emblems.ParticipationEmblems, Is.Empty);
+            User? userFromDb0Emblems = await userRepo.FindBySimpleName(userInfo.SimpleName);
+            Assert.That(userFromDb0Emblems?.ParticipationEmblems, Is.Empty);
+
+            // when, then
+            User user1Emblem = await userRepo.GiveEmblem(user0Emblems, 1);
+            Assert.That(user1Emblem.ParticipationEmblems, Is.EquivalentTo(new[] { 1 }));
+            User? userFromDb1Emblem = await userRepo.FindBySimpleName(userInfo.SimpleName);
+            Assert.That(userFromDb1Emblem?.ParticipationEmblems, Is.EquivalentTo(new[] { 1 }));
+
+            // when, then
+            User user2Emblems = await userRepo.GiveEmblem(user1Emblem, 2);
+            Assert.That(user2Emblems.ParticipationEmblems, Is.EquivalentTo(new[] { 1, 2 }));
+            User? userFromDb2Emblems = await userRepo.FindBySimpleName(userInfo.SimpleName);
+            Assert.That(userFromDb2Emblems?.ParticipationEmblems, Is.EquivalentTo(new[] { 1, 2 }));
+        }
+
+        /// <summary>
         /// Tests that concurrent user recordings work reliably and do not cause
         /// "E11000 duplicate key error collection" errors or similar.
         /// </summary>

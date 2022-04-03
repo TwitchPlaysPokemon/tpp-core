@@ -7,6 +7,7 @@ using TPP.Core.Configuration;
 using TPP.Core.Overlay;
 using TPP.Inputting;
 using TPP.Inputting.Parsing;
+using TPP.Persistence;
 
 namespace TPP.Core.Modes
 {
@@ -14,6 +15,7 @@ namespace TPP.Core.Modes
     {
         private readonly ILogger<Runmode> _logger;
 
+        private readonly IUserRepo _userRepo;
         private IInputParser _inputParser;
         private readonly InputServer _inputServer;
         private readonly WebsocketBroadcastServer _broadcastServer;
@@ -23,6 +25,7 @@ namespace TPP.Core.Modes
 
         private readonly StopToken _stopToken;
         private readonly ModeBase _modeBase;
+        private readonly int? _runNumber;
 
         public Runmode(ILoggerFactory loggerFactory, BaseConfig baseConfig, Func<RunmodeConfig> configLoader)
         {
@@ -30,6 +33,8 @@ namespace TPP.Core.Modes
             _logger = loggerFactory.CreateLogger<Runmode>();
             _stopToken = new StopToken();
             Setups.Databases repos = Setups.SetUpRepositories(_logger, baseConfig);
+            _userRepo = repos.UserRepo;
+            _runNumber = runmodeConfig.RunNumber;
             (_broadcastServer, _overlayConnection) = Setups.SetUpOverlayServer(loggerFactory,
                 baseConfig.OverlayWebsocketHost, baseConfig.OverlayWebsocketPort);
             _modeBase = new ModeBase(loggerFactory, repos, baseConfig, _stopToken, _overlayConnection, ProcessMessage);
@@ -98,6 +103,8 @@ namespace TPP.Core.Modes
             if (input == null) return false;
             foreach (InputSet inputSet in input.InputSets)
                 await _anarchyInputFeed.Enqueue(inputSet, message.User);
+            if (_runNumber != null && !message.User.ParticipationEmblems.Contains(_runNumber.Value))
+                await _userRepo.GiveEmblem(message.User, _runNumber.Value);
             return true;
         }
 

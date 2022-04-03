@@ -52,6 +52,12 @@
   },
   "type": "object",
   "properties": {
+    "RunNumber": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
     "$schema": {
       "type": [
         "string",

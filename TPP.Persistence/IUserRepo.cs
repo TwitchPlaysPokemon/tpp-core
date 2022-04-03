@@ -15,6 +15,7 @@ namespace TPP.Persistence
         public Task<List<User>> FindAllByRole(Role role);
         public Task<User> SetSelectedBadge(User user, PkmnSpecies? badge);
         public Task<User> SetSelectedEmblem(User user, int? emblem);
+        public Task<User> GiveEmblem(User user, int emblem);
         public Task<User> SetGlowColor(User user, string? glowColor);
         public Task<User> SetGlowColorUnlocked(User user, bool unlocked);
         public Task<User> SetDisplayName(User user, string displayName);

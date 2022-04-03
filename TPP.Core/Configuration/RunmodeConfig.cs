@@ -8,5 +8,8 @@ namespace TPP.Core.Configuration
         public int InputServerPort { get; init; } = 5010;
 
         public InputConfig InputConfig { get; init; } = new();
+
+        /* If this is not null, any user participating will get that run number's participation emblem. */
+        public int? RunNumber = null;
     }
 }

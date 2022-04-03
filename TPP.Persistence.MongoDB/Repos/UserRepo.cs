@@ -181,6 +181,14 @@ namespace TPP.Persistence.MongoDB.Repos
         public Task<User> SetSelectedEmblem(User user, int? emblem) =>
             UpdateField(user, u => u.SelectedParticipationEmblem, emblem);
 
+        public async Task<User> GiveEmblem(User user, int emblem) =>
+            await Collection.FindOneAndUpdateAsync<User>(
+                filter: u => u.Id == user.Id,
+                update: Builders<User>.Update.AddToSet(u => u.ParticipationEmblems, emblem),
+                options: new FindOneAndUpdateOptions<User>
+                    { ReturnDocument = ReturnDocument.After, IsUpsert = false })
+            ?? throw new ArgumentException($"user {user} does not exist");
+
         public Task<User> SetGlowColor(User user, string? glowColor) =>
             UpdateField(user, u => u.GlowColor, glowColor);
 
