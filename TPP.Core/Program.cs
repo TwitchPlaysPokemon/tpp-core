@@ -65,7 +65,7 @@ Options:
         {
             NormalizeRuntimeEnvironment();
 
-            IDictionary<string, ValueObject> args = new Docopt().Apply(Usage, argv, exit: true);
+            IDictionary<string, ValueObject> args = new Docopt().Apply(Usage, argv, exit: true)!;
             string? mode = null;
             string modeConfigFilename = args["--mode-config"].ToString();
             if (args["--mode"] is { IsNullOrEmpty: false })
