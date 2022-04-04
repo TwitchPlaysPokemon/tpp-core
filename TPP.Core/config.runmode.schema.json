@@ -52,6 +52,17 @@
   },
   "type": "object",
   "properties": {
+    "RunNumber": {
+      "description": "If this is not null, any user participating will get that run number's participation emblem.",
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "MuteInputsAtStartup": {
+      "description": "If true, inputs are muted until explicitly unmuted. Muting also implies that no emblems are handed out and no run statistics are recorded. Inputs can be unmuted at runtime using !unmuteinputs or calling /start_run on the inputserver. Inputs can be muted at runtime using !muteinputs or calling /stop_run on the inputserver. ",
+      "type": "boolean"
+    },
     "$schema": {
       "type": [
         "string",
@@ -59,12 +70,14 @@
       ]
     },
     "InputServerHost": {
+      "description": "Host of the HTTP input server where inputs can be polled from.",
       "type": [
         "string",
         "null"
       ]
     },
     "InputServerPort": {
+      "description": "Port of the HTTP input server where inputs can be polled from.",
       "type": "integer"
     },
     "InputConfig": {

@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.ComponentModel;
 using NodaTime;
 
 namespace TPP.Core.Configuration
@@ -11,7 +12,7 @@ namespace TPP.Core.Configuration
     {
         public string Schema => "./config.schema.json";
 
-        /* directory under which log files will be created. null for no log files. */
+        [Description("Directory under which log files will be created. Use `null` for no log files.")]
         public string? LogPath { get; init; } = null;
 
         /* connection details for mongodb */
@@ -21,14 +22,17 @@ namespace TPP.Core.Configuration
 
         public ChatConfig Chat { get; init; } = new ChatConfig();
 
-        /* currency amounts for brand new users (new entries in the database) */
+        [Description("Amount of pokeyen for brand new users (new entries in the database).")]
         public int StartingPokeyen { get; init; } = 100;
+        [Description("Amount of tokens for brand new users (new entries in the database).")]
         public int StartingTokens { get; init; } = 0;
 
+        [Description("Host of the HTTP server one may connect to to get overlay events through a websocket.")]
         public string OverlayWebsocketHost { get; init; } = "127.0.0.1";
+        [Description("Port of the HTTP server one may connect to to get overlay events through a websocket.")]
         public int OverlayWebsocketPort { get; init; } = 5001;
 
-        /* Required information to post log messages to discord. Logging to discord is disabled if null. */
+        [Description("Required information to post log messages to discord. Logging to discord is disabled if null.")]
         public DiscordLoggingConfig? DiscordLoggingConfig { get; init; } = null;
 
         public ImmutableHashSet<string> DisabledModbotRules { get; init; } = ImmutableHashSet.Create<string>();

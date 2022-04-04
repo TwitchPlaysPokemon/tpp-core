@@ -1,12 +1,16 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using TPP.Core.Commands;
 using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
 using TPP.Core.Overlay;
+using TPP.Core.Overlay.Events;
 using TPP.Inputting;
 using TPP.Inputting.Parsing;
+using TPP.Model;
+using TPP.Persistence;
 
 namespace TPP.Core.Modes
 {
@@ -14,6 +18,8 @@ namespace TPP.Core.Modes
     {
         private readonly ILogger<Runmode> _logger;
 
+        private readonly IUserRepo _userRepo;
+        private readonly IRunCounterRepo _runCounterRepo;
         private IInputParser _inputParser;
         private readonly InputServer _inputServer;
         private readonly WebsocketBroadcastServer _broadcastServer;
@@ -22,17 +28,24 @@ namespace TPP.Core.Modes
         private readonly InputBufferQueue<QueuedInput> _inputBufferQueue;
 
         private readonly StopToken _stopToken;
+        private readonly MuteInputsToken _muteInputsToken;
         private readonly ModeBase _modeBase;
+        private readonly int? _runNumber;
 
         public Runmode(ILoggerFactory loggerFactory, BaseConfig baseConfig, Func<RunmodeConfig> configLoader)
         {
             RunmodeConfig runmodeConfig = configLoader();
             _logger = loggerFactory.CreateLogger<Runmode>();
             _stopToken = new StopToken();
+            _muteInputsToken = new MuteInputsToken { Muted = runmodeConfig.MuteInputsAtStartup };
             Setups.Databases repos = Setups.SetUpRepositories(_logger, baseConfig);
+            _userRepo = repos.UserRepo;
+            _runCounterRepo = repos.RunCounterRepo;
+            _runNumber = runmodeConfig.RunNumber;
             (_broadcastServer, _overlayConnection) = Setups.SetUpOverlayServer(loggerFactory,
                 baseConfig.OverlayWebsocketHost, baseConfig.OverlayWebsocketPort);
-            _modeBase = new ModeBase(loggerFactory, repos, baseConfig, _stopToken, _overlayConnection, ProcessMessage);
+            _modeBase = new ModeBase(
+                loggerFactory, repos, baseConfig, _stopToken, _muteInputsToken, _overlayConnection, ProcessMessage);
             _modeBase.InstallAdditionalCommand(new Command("reloadinputconfig", _ =>
             {
                 ReloadConfig(configLoader().InputConfig);
@@ -47,7 +60,7 @@ namespace TPP.Core.Modes
             _anarchyInputFeed = CreateInputFeedFromConfig(inputConfig);
             _inputServer = new InputServer(loggerFactory.CreateLogger<InputServer>(),
                 runmodeConfig.InputServerHost, runmodeConfig.InputServerPort,
-                _anarchyInputFeed);
+                _muteInputsToken, _anarchyInputFeed);
         }
 
         private AnarchyInputFeed CreateInputFeedFromConfig(InputConfig config)
@@ -64,8 +77,8 @@ namespace TPP.Core.Modes
                 config.FramesPerSecond);
         }
 
-        private static IInputMapper CreateInputMapperFromConfig(InputConfig config) =>
-            new DefaultTppInputMapper(config.FramesPerSecond);
+        private IInputMapper CreateInputMapperFromConfig(InputConfig config) =>
+            new DefaultTppInputMapper(config.FramesPerSecond, _muteInputsToken);
 
         private static IInputHoldTiming CreateInputHoldTimingFromConfig(InputConfig config) =>
             new DefaultInputHoldTiming(
@@ -98,7 +111,17 @@ namespace TPP.Core.Modes
             if (input == null) return false;
             foreach (InputSet inputSet in input.InputSets)
                 await _anarchyInputFeed.Enqueue(inputSet, message.User);
+            if (!_muteInputsToken.Muted)
+                await CollectRunStatistics(message.User, input);
             return true;
+        }
+
+        private async Task CollectRunStatistics(User user, InputSequence input)
+        {
+            if (_runNumber != null && !user.ParticipationEmblems.Contains(_runNumber.Value))
+                await _userRepo.GiveEmblem(user, _runNumber.Value);
+            long counter = await _runCounterRepo.Increment(_runNumber, incrementBy: input.InputSets.Count);
+            await _overlayConnection.Send(new ButtonPressUpdate(counter), CancellationToken.None);
         }
 
         public async Task Run()

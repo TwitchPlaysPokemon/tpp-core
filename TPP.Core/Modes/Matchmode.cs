@@ -42,7 +42,7 @@ namespace TPP.Core.Modes
             _userRepo = repos.UserRepo;
             (_broadcastServer, _overlayConnection) = Setups.SetUpOverlayServer(loggerFactory,
                 baseConfig.OverlayWebsocketHost, baseConfig.OverlayWebsocketPort);
-            _modeBase = new ModeBase(loggerFactory, repos, baseConfig, _stopToken, _overlayConnection);
+            _modeBase = new ModeBase(loggerFactory, repos, baseConfig, _stopToken, null, _overlayConnection);
             var bettingCommands = new BettingCommands(() => _bettingPeriod);
             foreach (Command command in bettingCommands.Commands)
                 _modeBase.InstallAdditionalCommand(command);

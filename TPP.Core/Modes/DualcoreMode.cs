@@ -24,7 +24,7 @@ namespace TPP.Core.Modes
             OverlayConnection overlayConnection;
             (_broadcastServer, overlayConnection) = Setups.SetUpOverlayServer(loggerFactory,
                 baseConfig.OverlayWebsocketHost, baseConfig.OverlayWebsocketPort);
-            _modeBase = new ModeBase(loggerFactory, repos, baseConfig, _stopToken, overlayConnection);
+            _modeBase = new ModeBase(loggerFactory, repos, baseConfig, _stopToken, null, overlayConnection);
             _databaseLock = new DatabaseLock(
                 loggerFactory.CreateLogger<DatabaseLock>(), SystemClock.Instance, repos.KeyValueStore);
         }

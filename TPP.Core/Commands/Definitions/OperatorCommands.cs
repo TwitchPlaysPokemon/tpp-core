@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using TPP.ArgsParsing.Types;
 using TPP.Common;
 using TPP.Core.Chat;
+using TPP.Inputting;
 using TPP.Model;
 using TPP.Persistence;
 
@@ -18,6 +19,7 @@ namespace TPP.Core.Commands.Definitions
     public class OperatorCommands : ICommandCollection
     {
         private readonly StopToken _stopToken;
+        private readonly MuteInputsToken? _muteInputsToken;
         private readonly IBank<User> _pokeyenBank;
         private readonly IBank<User> _tokensBank;
         private readonly IMessageSender _messageSender;
@@ -26,6 +28,7 @@ namespace TPP.Core.Commands.Definitions
 
         public OperatorCommands(
             StopToken stopToken,
+            MuteInputsToken? muteInputsToken,
             IBank<User> pokeyenBank,
             IBank<User> tokensBank,
             IMessageSender messageSender,
@@ -33,11 +36,13 @@ namespace TPP.Core.Commands.Definitions
             IUserRepo userRepo)
         {
             _stopToken = stopToken;
+            _muteInputsToken = muteInputsToken;
             _pokeyenBank = pokeyenBank;
             _tokensBank = tokensBank;
             _messageSender = messageSender;
             _badgeRepo = badgeRepo;
             _userRepo = userRepo;
+            _muteInputsToken = muteInputsToken;
         }
 
         public IEnumerable<Command> Commands => new[]
@@ -46,6 +51,14 @@ namespace TPP.Core.Commands.Definitions
             {
                 Description = "Stop the core, or cancel a previously issued stop command. " +
                               "Argument: cancel(optional)"
+            },
+            new Command("muteinputs", MuteInputs)
+            {
+                Description = "Mutes run inputs, disabling run statistics and input execution."
+            },
+            new Command("unmuteinputs", UnmuteInputs)
+            {
+                Description = "Unmutes run inputs, enabling run statistics and input execution."
             },
             new Command("pokeyenadjust", AdjustPokeyen)
             {
@@ -105,6 +118,26 @@ namespace TPP.Core.Commands.Definitions
                     : "stopping main loop (new core)";
             _stopToken.ShouldStop = !cancel;
             return Task.FromResult(new CommandResult { Response = message });
+        }
+
+        private Task<CommandResult> MuteInputs(CommandContext context)
+        {
+            if (_muteInputsToken == null)
+                return Task.FromResult(new CommandResult { Response = "No input feed that could be muted exists." });
+            if (_muteInputsToken.Muted)
+                return Task.FromResult(new CommandResult { Response = "The input feed is already muted." });
+            _muteInputsToken.Muted = true;
+            return Task.FromResult(new CommandResult { Response = "The input feed is now muted." });
+        }
+
+        private Task<CommandResult> UnmuteInputs(CommandContext context)
+        {
+            if (_muteInputsToken == null)
+                return Task.FromResult(new CommandResult { Response = "No input feed that could be unmuted exists." });
+            if (!_muteInputsToken.Muted)
+                return Task.FromResult(new CommandResult { Response = "The input feed is not muted." });
+            _muteInputsToken.Muted = false;
+            return Task.FromResult(new CommandResult { Response = "The input feed is now not muted anymore." });
         }
 
         public Task<CommandResult> AdjustPokeyen(CommandContext context)
