@@ -6,5 +6,5 @@ namespace TPP.Persistence;
 
 public interface IInputLogRepo
 {
-    Task<InputLog> LogInput(User user, string message, Instant timestamp);
+    Task<InputLog> LogInput(string userId, string message, Instant timestamp);
 }

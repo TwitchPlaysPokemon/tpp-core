@@ -38,9 +38,9 @@ public class InputLogRepo : IInputLogRepo
         });
     }
 
-    public async Task<InputLog> LogInput(User user, string message, Instant timestamp)
+    public async Task<InputLog> LogInput(string userId, string message, Instant timestamp)
     {
-        var inputLog = new InputLog(string.Empty, user.Id, message, timestamp);
+        var inputLog = new InputLog(string.Empty, userId, message, timestamp);
         await Collection.InsertOneAsync(inputLog);
         Debug.Assert(inputLog.Id.Length > 0, "The MongoDB driver injected a generated ID");
         return inputLog;

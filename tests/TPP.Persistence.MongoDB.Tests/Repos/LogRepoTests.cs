@@ -185,4 +185,29 @@ public class LogRepoTests : MongoTestBase
         Assert.That(read.SubPlan, Is.EqualTo(subPlan));
         Assert.That(read.SubPlanName, Is.EqualTo(subPlanName));
     }
+
+    [Test]
+    public async Task InputLogRepo()
+    {
+        InputLogRepo repo = new(CreateTemporaryDatabase());
+        const string userId = "123";
+        const string message = "start9";
+        Instant timestamp = Instant.FromUnixTimeSeconds(123);
+
+        // persist to db
+        InputLog written = await repo.LogInput(userId, message, timestamp);
+        Assert.That(written.UserId, Is.EqualTo(userId));
+        Assert.That(written.Message, Is.EqualTo(message));
+        Assert.That(written.Timestamp, Is.EqualTo(timestamp));
+        Assert.NotNull(written.Id);
+
+        // read from db
+        List<InputLog> allItems = await repo.Collection.Find(FilterDefinition<InputLog>.Empty).ToListAsync();
+        Assert.That(allItems.Count, Is.EqualTo(1));
+        InputLog read = allItems[0];
+        Assert.That(read, Is.EqualTo(written));
+        Assert.That(read.UserId, Is.EqualTo(userId));
+        Assert.That(read.Message, Is.EqualTo(message));
+        Assert.That(read.Timestamp, Is.EqualTo(timestamp));
+    }
 }

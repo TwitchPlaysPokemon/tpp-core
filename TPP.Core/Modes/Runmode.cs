@@ -121,7 +121,7 @@ namespace TPP.Core.Modes
 
         private async Task CollectRunStatistics(User user, InputSequence input, string rawInput)
         {
-            await _inputLogRepo.LogInput(user, rawInput, SystemClock.Instance.GetCurrentInstant());
+            await _inputLogRepo.LogInput(user.Id, rawInput, SystemClock.Instance.GetCurrentInstant());
             if (_runNumber != null && !user.ParticipationEmblems.Contains(_runNumber.Value))
                 await _userRepo.GiveEmblem(user, _runNumber.Value);
             long counter = await _runCounterRepo.Increment(_runNumber, incrementBy: input.InputSets.Count);
