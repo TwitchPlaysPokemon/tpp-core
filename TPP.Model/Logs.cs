@@ -122,4 +122,6 @@ namespace TPP.Model
             AdditionalData = additionalData;
         }
     }
+
+    public record InputLog(string Id, string UserId, string Message, Instant Timestamp);
 }
