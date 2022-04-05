@@ -120,6 +120,7 @@ namespace TPP.Core
             IModLogRepo ModLogRepo,
             IResponseCommandRepo ResponseCommandRepo,
             IRunCounterRepo RunCounterRepo,
+            IInputLogRepo InputLogRepo,
             KeyValueStore KeyValueStore
         );
 
@@ -172,6 +173,7 @@ namespace TPP.Core
                 ModLogRepo: new ModLogRepo(mongoDatabase),
                 ResponseCommandRepo: new ResponseCommandRepo(mongoDatabase),
                 RunCounterRepo: new RunCounterRepo(mongoDatabase),
+                InputLogRepo: new InputLogRepo(mongoDatabase),
                 KeyValueStore: new KeyValueStore(mongoDatabase)
             );
         }

@@ -1,0 +1,213 @@
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Threading.Tasks;
+using MongoDB.Bson;
+using MongoDB.Driver;
+using Moq;
+using NodaTime;
+using NUnit.Framework;
+using TPP.Common;
+using TPP.Model;
+using TPP.Persistence.MongoDB.Repos;
+
+namespace TPP.Persistence.MongoDB.Tests.Repos;
+
+public class LogRepoTests : MongoTestBase
+{
+    [Test]
+    public async Task CommandLogger()
+    {
+        Mock<IClock> clock = new();
+        CommandLogger repo = new(CreateTemporaryDatabase(), clock.Object);
+        const string userId = "123";
+        const string command = "irc line text";
+        IImmutableList<string> args = ImmutableList.Create("a", "b", "c");
+        const string response = "message text";
+        Instant timestamp = Instant.FromUnixTimeSeconds(123);
+        clock.Setup(c => c.GetCurrentInstant()).Returns(timestamp);
+
+        // persist to db
+        CommandLog written = await repo.Log(userId, command, args, response);
+        Assert.That(written.UserId, Is.EqualTo(userId));
+        Assert.That(written.Command, Is.EqualTo(command));
+        Assert.That(written.Args, Is.EqualTo(args));
+        Assert.That(written.Response, Is.EqualTo(response));
+        Assert.That(written.Timestamp, Is.EqualTo(timestamp));
+        Assert.NotNull(written.Id);
+
+        // read from db
+        List<CommandLog> allItems = await repo.Collection.Find(FilterDefinition<CommandLog>.Empty).ToListAsync();
+        Assert.That(allItems.Count, Is.EqualTo(1));
+        CommandLog read = allItems[0];
+        Assert.That(read, Is.EqualTo(written));
+        Assert.That(read.UserId, Is.EqualTo(userId));
+        Assert.That(read.Command, Is.EqualTo(command));
+        Assert.That(read.Args, Is.EqualTo(args));
+        Assert.That(read.Response, Is.EqualTo(response));
+        Assert.That(read.Timestamp, Is.EqualTo(timestamp));
+    }
+
+    [Test]
+    public async Task BadgeLogRepo()
+    {
+        BadgeLogRepo repo = new(CreateTemporaryDatabase());
+        string badgeId = ObjectId.GenerateNewId().ToString();
+        const string badgeLogType = "type";
+        const string userId = "user";
+        Instant timestamp = Instant.FromUnixTimeSeconds(123);
+
+        // persist to db
+        IDictionary<string, object?> data = new Dictionary<string, object?> { ["some"] = "data" };
+        BadgeLog written = await repo.Log(badgeId, badgeLogType, userId, timestamp, data);
+        Assert.That(written.BadgeId, Is.EqualTo(badgeId));
+        Assert.That(written.BadgeLogType, Is.EqualTo(badgeLogType));
+        Assert.That(written.UserId, Is.EqualTo(userId));
+        Assert.That(written.Timestamp, Is.EqualTo(timestamp));
+        Assert.That(written.AdditionalData, Is.EqualTo(data));
+        Assert.NotNull(written.Id);
+
+        // read from db
+        List<BadgeLog> allItems = await repo.Collection.Find(FilterDefinition<BadgeLog>.Empty).ToListAsync();
+        Assert.That(allItems.Count, Is.EqualTo(1));
+        BadgeLog read = allItems[0];
+        Assert.That(read, Is.EqualTo(written));
+        Assert.That(read.BadgeId, Is.EqualTo(badgeId));
+        Assert.That(read.BadgeLogType, Is.EqualTo(badgeLogType));
+        Assert.That(read.UserId, Is.EqualTo(userId));
+        Assert.That(read.Timestamp, Is.EqualTo(timestamp));
+        Assert.That(read.AdditionalData, Is.EqualTo(data));
+    }
+
+    [Test]
+    public async Task MessagelogRepo()
+    {
+        MessagelogRepo repo = new(CreateTemporaryDatabase());
+        const string userId = "123";
+        const string ircLine = "irc line text";
+        const string message = "message text";
+        Instant timestamp = Instant.FromUnixTimeSeconds(123);
+
+        // persist to db
+        Messagelog written = await repo.LogChat(userId, ircLine, message, timestamp);
+        Assert.That(written.UserId, Is.EqualTo(userId));
+        Assert.That(written.IrcLine, Is.EqualTo(ircLine));
+        Assert.That(written.Message, Is.EqualTo(message));
+        Assert.That(written.Timestamp, Is.EqualTo(timestamp));
+        Assert.NotNull(written.Id);
+
+        // read from db
+        List<Messagelog> allItems = await repo.Collection.Find(FilterDefinition<Messagelog>.Empty).ToListAsync();
+        Assert.That(allItems.Count, Is.EqualTo(1));
+        Messagelog read = allItems[0];
+        Assert.That(read, Is.EqualTo(written));
+        Assert.That(read.UserId, Is.EqualTo(userId));
+        Assert.That(read.IrcLine, Is.EqualTo(ircLine));
+        Assert.That(read.Message, Is.EqualTo(message));
+        Assert.That(read.Timestamp, Is.EqualTo(timestamp));
+    }
+
+    [Test]
+    public async Task MessagequeueRepo()
+    {
+        MessagequeueRepo repo = new(CreateTemporaryDatabase());
+        const string ircLine = "some text";
+
+        // persist to db
+        MessagequeueItem written = await repo.EnqueueMessage(ircLine);
+        Assert.That(written.IrcLine, Is.EqualTo(ircLine));
+        Assert.NotNull(written.Id);
+
+        // read from db
+        List<MessagequeueItem> allItems = await repo.Collection
+            .Find(FilterDefinition<MessagequeueItem>.Empty).ToListAsync();
+        Assert.That(allItems.Count, Is.EqualTo(1));
+        MessagequeueItem read = allItems[0];
+        Assert.That(read, Is.EqualTo(written));
+        Assert.That(read.IrcLine, Is.EqualTo(ircLine));
+    }
+
+    [Test]
+    public async Task SubscriptionLogRepo()
+    {
+        SubscriptionLogRepo repo = new(CreateTemporaryDatabase());
+        Instant timestamp = Instant.FromUnixTimeSeconds(123);
+        const string userId = "123";
+        const int monthsStreak = 101;
+        const int monthsNumPrev = 103;
+        const int monthsNumNew = 105;
+        const int monthsDifference = 2;
+        const int loyaltyLeaguePrev = 20;
+        const int loyaltyLeagueNew = 21;
+        const int loyaltyCompletions = 1;
+        const int rewardTokens = 10;
+        const string subMessage = "message text";
+        const SubscriptionTier subPlan = SubscriptionTier.Tier2;
+        const string subPlanName = "plan name";
+
+        // persist to db
+        SubscriptionLog written = await repo.LogSubscription(userId, timestamp,
+            monthsStreak, monthsNumPrev, monthsNumNew, monthsDifference,
+            loyaltyLeaguePrev, loyaltyLeagueNew, loyaltyCompletions, rewardTokens,
+            subMessage, subPlan, subPlanName);
+        Assert.That(written.Timestamp, Is.EqualTo(timestamp));
+        Assert.That(written.UserId, Is.EqualTo(userId));
+        Assert.That(written.MonthsStreak, Is.EqualTo(monthsStreak));
+        Assert.That(written.MonthsNumPrev, Is.EqualTo(monthsNumPrev));
+        Assert.That(written.MonthsNumNew, Is.EqualTo(monthsNumNew));
+        Assert.That(written.MonthsDifference, Is.EqualTo(monthsDifference));
+        Assert.That(written.LoyaltyLeaguePrev, Is.EqualTo(loyaltyLeaguePrev));
+        Assert.That(written.LoyaltyLeagueNew, Is.EqualTo(loyaltyLeagueNew));
+        Assert.That(written.LoyaltyCompletions, Is.EqualTo(loyaltyCompletions));
+        Assert.That(written.RewardTokens, Is.EqualTo(rewardTokens));
+        Assert.That(written.SubMessage, Is.EqualTo(subMessage));
+        Assert.That(written.SubPlan, Is.EqualTo(subPlan));
+        Assert.That(written.SubPlanName, Is.EqualTo(subPlanName));
+        Assert.NotNull(written.Id);
+
+        // read from db
+        List<SubscriptionLog> allItems =
+            await repo.Collection.Find(FilterDefinition<SubscriptionLog>.Empty).ToListAsync();
+        Assert.That(allItems.Count, Is.EqualTo(1));
+        SubscriptionLog read = allItems[0];
+        Assert.That(read, Is.EqualTo(written));
+
+        Assert.That(read.Timestamp, Is.EqualTo(timestamp));
+        Assert.That(read.UserId, Is.EqualTo(userId));
+        Assert.That(read.MonthsStreak, Is.EqualTo(monthsStreak));
+        Assert.That(read.MonthsNumPrev, Is.EqualTo(monthsNumPrev));
+        Assert.That(read.MonthsNumNew, Is.EqualTo(monthsNumNew));
+        Assert.That(read.MonthsDifference, Is.EqualTo(monthsDifference));
+        Assert.That(read.LoyaltyLeaguePrev, Is.EqualTo(loyaltyLeaguePrev));
+        Assert.That(read.LoyaltyLeagueNew, Is.EqualTo(loyaltyLeagueNew));
+        Assert.That(read.LoyaltyCompletions, Is.EqualTo(loyaltyCompletions));
+        Assert.That(read.RewardTokens, Is.EqualTo(rewardTokens));
+        Assert.That(read.SubMessage, Is.EqualTo(subMessage));
+        Assert.That(read.SubPlan, Is.EqualTo(subPlan));
+        Assert.That(read.SubPlanName, Is.EqualTo(subPlanName));
+    }
+
+    [Test]
+    public async Task InputLogRepo()
+    {
+        InputLogRepo repo = new(CreateTemporaryDatabase());
+        const string userId = "123";
+        const string message = "start9";
+        Instant timestamp = Instant.FromUnixTimeSeconds(123);
+
+        // persist to db
+        InputLog written = await repo.LogInput(userId, message, timestamp);
+        Assert.That(written.UserId, Is.EqualTo(userId));
+        Assert.That(written.Message, Is.EqualTo(message));
+        Assert.That(written.Timestamp, Is.EqualTo(timestamp));
+        Assert.NotNull(written.Id);
+
+        // read from db
+        List<InputLog> allItems = await repo.Collection.Find(FilterDefinition<InputLog>.Empty).ToListAsync();
+        Assert.That(allItems.Count, Is.EqualTo(1));
+        InputLog read = allItems[0];
+        Assert.That(read, Is.EqualTo(written));
+        Assert.That(read.UserId, Is.EqualTo(userId));
+        Assert.That(read.Message, Is.EqualTo(message));
+        Assert.That(read.Timestamp, Is.EqualTo(timestamp));
+    }
+}

@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using NodaTime;
 using TPP.Core.Commands;
 using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
@@ -20,6 +21,7 @@ namespace TPP.Core.Modes
 
         private readonly IUserRepo _userRepo;
         private readonly IRunCounterRepo _runCounterRepo;
+        private readonly IInputLogRepo _inputLogRepo;
         private IInputParser _inputParser;
         private readonly InputServer _inputServer;
         private readonly WebsocketBroadcastServer _broadcastServer;
@@ -41,6 +43,7 @@ namespace TPP.Core.Modes
             Setups.Databases repos = Setups.SetUpRepositories(_logger, baseConfig);
             _userRepo = repos.UserRepo;
             _runCounterRepo = repos.RunCounterRepo;
+            _inputLogRepo = repos.InputLogRepo;
             _runNumber = runmodeConfig.RunNumber;
             (_broadcastServer, _overlayConnection) = Setups.SetUpOverlayServer(loggerFactory,
                 baseConfig.OverlayWebsocketHost, baseConfig.OverlayWebsocketPort);
@@ -112,12 +115,13 @@ namespace TPP.Core.Modes
             foreach (InputSet inputSet in input.InputSets)
                 await _anarchyInputFeed.Enqueue(inputSet, message.User);
             if (!_muteInputsToken.Muted)
-                await CollectRunStatistics(message.User, input);
+                await CollectRunStatistics(message.User, input, rawInput: potentialInput);
             return true;
         }
 
-        private async Task CollectRunStatistics(User user, InputSequence input)
+        private async Task CollectRunStatistics(User user, InputSequence input, string rawInput)
         {
+            await _inputLogRepo.LogInput(user.Id, rawInput, SystemClock.Instance.GetCurrentInstant());
             if (_runNumber != null && !user.ParticipationEmblems.Contains(_runNumber.Value))
                 await _userRepo.GiveEmblem(user, _runNumber.Value);
             long counter = await _runCounterRepo.Increment(_runNumber, incrementBy: input.InputSets.Count);
