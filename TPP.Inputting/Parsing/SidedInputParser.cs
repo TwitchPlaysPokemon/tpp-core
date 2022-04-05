@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Linq;
+using System.Text.RegularExpressions;
 using TPP.Inputting.Inputs;
 
 namespace TPP.Inputting.Parsing
@@ -7,6 +8,10 @@ namespace TPP.Inputting.Parsing
     public class SidedInputParser : IInputParser
     {
         private static bool _sideFlipFlop;
+        private static readonly Regex LeftRegex =
+            new(@"^(?:l|left)[:.@#](?<input>.*)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex RightRegex =
+            new(@"^(?:r|right)[:.@#](?<input>.*)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         private readonly IInputParser _delegateParser;
 
@@ -17,31 +22,18 @@ namespace TPP.Inputting.Parsing
 
         public InputSequence? Parse(string text)
         {
-            string[] parts = text.Split(':', count: 2);
-            InputSide? inputSide = null;
+            InputSide? inputSide;
             InputSequence? inputSequence;
-            if (parts.Length == 2)
-            {
-                string side = parts[0].ToLowerInvariant();
-                if (side is "left" or "l")
-                {
-                    inputSide = InputSide.Left;
-                    inputSequence = _delegateParser.Parse(parts[1]);
-                }
-                else if (side is "right" or "r")
-                {
-                    inputSide = InputSide.Right;
-                    inputSequence = _delegateParser.Parse(parts[1]);
-                }
-                else
-                {
-                    inputSequence = _delegateParser.Parse(text);
-                }
-            }
+
+            Match matchLeft = LeftRegex.Match(text);
+            Match matchRight = RightRegex.Match(text);
+            if (matchLeft.Success)
+                (inputSide, inputSequence) = (InputSide.Left, _delegateParser.Parse(matchLeft.Groups["input"].Value));
+            else if (matchRight.Success)
+                (inputSide, inputSequence) = (InputSide.Right, _delegateParser.Parse(matchRight.Groups["input"].Value));
             else
-            {
-                inputSequence = _delegateParser.Parse(text);
-            }
+                (inputSide, inputSequence) = (null, _delegateParser.Parse(text));
+
             if (inputSequence == null) return null;
             bool direct = inputSide != null;
             if (inputSide == null)
