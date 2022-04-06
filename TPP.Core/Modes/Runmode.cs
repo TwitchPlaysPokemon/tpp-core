@@ -27,7 +27,6 @@ namespace TPP.Core.Modes
         private readonly WebsocketBroadcastServer _broadcastServer;
         private AnarchyInputFeed _anarchyInputFeed;
         private readonly OverlayConnection _overlayConnection;
-        private readonly InputBufferQueue<QueuedInput> _inputBufferQueue;
 
         private readonly StopToken _stopToken;
         private readonly MuteInputsToken _muteInputsToken;
@@ -51,32 +50,28 @@ namespace TPP.Core.Modes
                 loggerFactory, repos, baseConfig, _stopToken, _muteInputsToken, _overlayConnection, ProcessMessage);
             _modeBase.InstallAdditionalCommand(new Command("reloadinputconfig", _ =>
             {
-                ReloadConfig(configLoader().InputConfig);
+                (_inputParser, _anarchyInputFeed) = ConfigToInputStuff(configLoader().InputConfig);
                 return Task.FromResult(new CommandResult { Response = "input config reloaded" });
             }));
 
             // TODO felk: this feels a bit messy the way it is done right now,
             //            but I am unsure yet how I'd integrate the individual parts in a cleaner way.
-            InputConfig inputConfig = runmodeConfig.InputConfig;
-            _inputParser = inputConfig.ButtonsProfile.ToInputParserBuilder().Build();
-            _inputBufferQueue = new InputBufferQueue<QueuedInput>(CreateBufferConfig(inputConfig));
-            _anarchyInputFeed = CreateInputFeedFromConfig(inputConfig);
+            (_inputParser, _anarchyInputFeed) = ConfigToInputStuff(runmodeConfig.InputConfig);
             _inputServer = new InputServer(loggerFactory.CreateLogger<InputServer>(),
                 runmodeConfig.InputServerHost, runmodeConfig.InputServerPort,
-                _muteInputsToken, _anarchyInputFeed);
+                _muteInputsToken, () => _anarchyInputFeed);
         }
 
-        private AnarchyInputFeed CreateInputFeedFromConfig(InputConfig config)
+        private AnarchyInputFeed CreateInputFeedFromConfig(InputConfig config, InputBufferQueue<QueuedInput> inputBufferQueue)
         {
             IInputMapper inputMapper = CreateInputMapperFromConfig(config);
             IInputHoldTiming inputHoldTiming = CreateInputHoldTimingFromConfig(config);
-            _inputBufferQueue.SetNewConfig(CreateBufferConfig(config));
 
             return new AnarchyInputFeed(
                 _overlayConnection,
                 inputHoldTiming,
                 inputMapper,
-                _inputBufferQueue,
+                inputBufferQueue,
                 config.FramesPerSecond);
         }
 
@@ -98,12 +93,15 @@ namespace TPP.Core.Modes
                 MaxInputDuration: config.MaxInputFrames / (float)config.FramesPerSecond,
                 MaxBufferLength: config.MaxBufferLength);
 
-        private void ReloadConfig(InputConfig config)
+        private (IInputParser, AnarchyInputFeed) ConfigToInputStuff(InputConfig config)
         {
             // TODO endpoints to control configs at runtime?
-            _inputParser = config.ButtonsProfile.ToInputParserBuilder().Build();
-            _anarchyInputFeed = CreateInputFeedFromConfig(config);
-            _inputServer.InputFeed = _anarchyInputFeed;
+            IInputParser inputParser = config.ButtonsProfile.ToInputParserBuilder().Build();
+            if (inputParser is SidedInputParser sidedInputParser)
+                sidedInputParser.AllowDirectedInputs = config.AllowDirectedInputs;
+            var inputBufferQueue = new InputBufferQueue<QueuedInput>(CreateBufferConfig(config));
+            AnarchyInputFeed anarchyInputFeed = CreateInputFeedFromConfig(config, inputBufferQueue);
+            return (inputParser, anarchyInputFeed);
         }
 
         private async Task<bool> ProcessMessage(Message message)

@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace TPP.Core.Configuration
 {
     /// Contains all parameters that affect how inputs are performed.
@@ -19,5 +21,10 @@ namespace TPP.Core.Configuration
         public int MinInputFrames { get; init; } = 1;
         public int MaxInputFrames { get; init; } = 100;
         public int MaxBufferLength { get; init; } = 1000;
+
+        [Description("Whether players can choose an input side per-input using a side prefix, e.g. 'left:'. " +
+                     "Disabling this typically means you expect players to choose a side using e.g. !left or !right. " +
+                     "This has no effect for non-dual-sided input profiles.")]
+        public bool AllowDirectedInputs { get; init; } = true;
     }
 }

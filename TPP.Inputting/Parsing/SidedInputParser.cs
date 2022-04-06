@@ -15,6 +15,8 @@ namespace TPP.Inputting.Parsing
 
         private readonly IInputParser _delegateParser;
 
+        public bool AllowDirectedInputs { get; set; }
+
         public SidedInputParser(IInputParser delegateParser)
         {
             _delegateParser = delegateParser;
@@ -25,8 +27,8 @@ namespace TPP.Inputting.Parsing
             InputSide? inputSide;
             InputSequence? inputSequence;
 
-            Match matchLeft = LeftRegex.Match(text);
-            Match matchRight = RightRegex.Match(text);
+            Match matchLeft = AllowDirectedInputs ? LeftRegex.Match(text) : Match.Empty;
+            Match matchRight = AllowDirectedInputs ? RightRegex.Match(text) : Match.Empty;
             if (matchLeft.Success)
                 (inputSide, inputSequence) = (InputSide.Left, _delegateParser.Parse(matchLeft.Groups["input"].Value));
             else if (matchRight.Success)
