@@ -5,9 +5,13 @@ using TPP.Inputting.Inputs;
 
 namespace TPP.Inputting.Parsing
 {
+    /// <summary>
+    /// Parses inputs so that each input set includes a <see cref="SideInput"/> indicating which side it belongs to.
+    /// Note that the <see cref="SideInput"/>'s side may be null if it was not specified in the input.
+    /// In this case it may be desirable to assign a side in a later step, beyond the scope of the input parser.
+    /// </summary>
     public class SidedInputParser : IInputParser
     {
-        private static bool _sideFlipFlop;
         private static readonly Regex LeftRegex =
             new(@"^(?:l|left)[:.@#](?<input>.*)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex RightRegex =
@@ -38,12 +42,7 @@ namespace TPP.Inputting.Parsing
 
             if (inputSequence == null) return null;
             bool direct = inputSide != null;
-            if (inputSide == null)
-            {
-                inputSide = _sideFlipFlop ? InputSide.Left : InputSide.Right;
-                _sideFlipFlop = !_sideFlipFlop;
-            }
-            var sideInput = new SideInput(inputSide.Value, direct);
+            var sideInput = new SideInput(inputSide, direct);
             return new InputSequence(inputSequence.InputSets
                 .Select(set => new InputSet(set.Inputs.Append(sideInput).ToImmutableList())).ToImmutableList());
         }

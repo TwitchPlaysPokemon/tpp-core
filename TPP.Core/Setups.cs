@@ -86,6 +86,7 @@ namespace TPP.Core
                 ).Commands,
                 new PollCommands(databases.PollRepo).Commands,
                 new ManagePollCommands(databases.PollRepo).Commands,
+                new InputtingCommands(databases.InputSidePicksRepo).Commands,
                 new BadgeCommands(databases.BadgeRepo, databases.UserRepo, messageSender, knownSpecies).Commands,
                 new OperatorCommands(
                     stopToken, muteInputsToken, databases.PokeyenBank, databases.TokensBank,
@@ -121,6 +122,7 @@ namespace TPP.Core
             IResponseCommandRepo ResponseCommandRepo,
             IRunCounterRepo RunCounterRepo,
             IInputLogRepo InputLogRepo,
+            IInputSidePicksRepo InputSidePicksRepo,
             KeyValueStore KeyValueStore
         );
 
@@ -174,6 +176,7 @@ namespace TPP.Core
                 ResponseCommandRepo: new ResponseCommandRepo(mongoDatabase),
                 RunCounterRepo: new RunCounterRepo(mongoDatabase),
                 InputLogRepo: new InputLogRepo(mongoDatabase),
+                InputSidePicksRepo: new InputSidePicksRepo(mongoDatabase),
                 KeyValueStore: new KeyValueStore(mongoDatabase)
             );
         }

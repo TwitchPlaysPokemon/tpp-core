@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -9,6 +10,7 @@ using TPP.Core.Configuration;
 using TPP.Core.Overlay;
 using TPP.Core.Overlay.Events;
 using TPP.Inputting;
+using TPP.Inputting.Inputs;
 using TPP.Inputting.Parsing;
 using TPP.Model;
 using TPP.Persistence;
@@ -22,6 +24,7 @@ namespace TPP.Core.Modes
         private readonly IUserRepo _userRepo;
         private readonly IRunCounterRepo _runCounterRepo;
         private readonly IInputLogRepo _inputLogRepo;
+        private readonly IInputSidePicksRepo _inputSidePicksRepo;
         private IInputParser _inputParser;
         private readonly InputServer _inputServer;
         private readonly WebsocketBroadcastServer _broadcastServer;
@@ -43,6 +46,7 @@ namespace TPP.Core.Modes
             _userRepo = repos.UserRepo;
             _runCounterRepo = repos.RunCounterRepo;
             _inputLogRepo = repos.InputLogRepo;
+            _inputSidePicksRepo = repos.InputSidePicksRepo;
             _runNumber = runmodeConfig.RunNumber;
             (_broadcastServer, _overlayConnection) = Setups.SetUpOverlayServer(loggerFactory,
                 baseConfig.OverlayWebsocketHost, baseConfig.OverlayWebsocketPort);
@@ -104,12 +108,36 @@ namespace TPP.Core.Modes
             return (inputParser, anarchyInputFeed);
         }
 
+        // TODO It feels a bit dirty having this very specific use case bubble all the way up here.
+        private async Task ProcessPotentialSidedInputs(User user, InputSequence inputSequence)
+        {
+            foreach (InputSet inputSet in inputSequence.InputSets)
+            {
+                if (inputSet.Inputs.FirstOrDefault(i => i is SideInput) is SideInput { Side: null } sideInput)
+                {
+                    string? side = await _inputSidePicksRepo.GetSide(user.Id);
+                    if (side == null)
+                    {
+                        // TODO auto-assign or flip flop or deny input or something?
+                    }
+                    sideInput.Side = side switch
+                    {
+                        "left" => InputSide.Left,
+                        "right" => InputSide.Right,
+                        null => null,
+                        _ => throw new ArgumentException($"unknown side '{side}'")
+                    };
+                }
+            }
+        }
+
         private async Task<bool> ProcessMessage(Message message)
         {
             if (message.MessageSource != MessageSource.Chat) return false;
             string potentialInput = message.MessageText.Split(' ', count: 2)[0];
             InputSequence? input = _inputParser.Parse(potentialInput);
             if (input == null) return false;
+            await ProcessPotentialSidedInputs(message.User, input);
             foreach (InputSet inputSet in input.InputSets)
                 await _anarchyInputFeed.Enqueue(inputSet, message.User);
             if (!_muteInputsToken.Muted)

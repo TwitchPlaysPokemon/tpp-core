@@ -6,10 +6,14 @@ namespace TPP.Inputting.Inputs
 
     public class SideInput : Input
     {
-        public InputSide Side { get; }
+        /// Which side this input is for.
+        /// Is settable because if the side is not specified explicitly within the input,
+        /// choosing a side can be a non-trivial task beyond an input parser's capabilities.
+        /// It seems easiest to let some post-processing just set it in-place.
+        public InputSide? Side { get; set; }
         public bool Direct { get; }
 
-        public SideInput(InputSide side, bool direct) : base("Side", "side", side.GetSideString())
+        public SideInput(InputSide? side, bool direct) : base("Side", "side", side?.GetSideString() ?? "")
         {
             Side = side;
             Direct = direct;
