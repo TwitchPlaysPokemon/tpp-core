@@ -73,9 +73,18 @@ namespace TPP.Core.Chat
                 // re-use already existing users if they exist, otherwise it gets confusing when you want to impersonate
                 // an existing user and it creates a new user with the same name instead, breaking the expectation that
                 // usernames are unique.
+                string userId = "console-" + simpleName;
                 User user = await _userRepo.FindBySimpleName(simpleName)
-                            ?? await _userRepo.RecordUser(new UserInfo("console-" + simpleName, username, simpleName));
-                IncomingMessage?.Invoke(this, new MessageEventArgs(new Message(user, line, source, string.Empty)));
+                            ?? await _userRepo.RecordUser(new UserInfo(userId, username, simpleName));
+                long nowTs = SystemClock.Instance.GetCurrentInstant().ToUnixTimeSeconds();
+                // Providing a fake irc line makes dualcore mode work.
+                // Otherwise old core couldn't parse any of these messages.
+                string rawIrcMessage =
+                    $"@badge-info=;badges=;color=#FFFFFF;display-name={username};emotes=;id={new Guid()};" +
+                    $"room-id=console;tmi-sent-ts={nowTs};user-id={userId};user-type= " +
+                    $":{simpleName}!{simpleName}@{simpleName}.tmi.twitch.tv " +
+                    $"PRIVMSG #console :{line}";
+                IncomingMessage?.Invoke(this, new MessageEventArgs(new Message(user, line, source, rawIrcMessage)));
             }
         }
 
