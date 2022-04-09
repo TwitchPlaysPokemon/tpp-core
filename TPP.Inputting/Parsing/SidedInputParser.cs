@@ -1,14 +1,25 @@
 using System.Collections.Immutable;
 using System.Linq;
+using System.Text.RegularExpressions;
 using TPP.Inputting.Inputs;
 
 namespace TPP.Inputting.Parsing
 {
+    /// <summary>
+    /// Parses inputs so that each input set includes a <see cref="SideInput"/> indicating which side it belongs to.
+    /// Note that the <see cref="SideInput"/>'s side may be null if it was not specified in the input.
+    /// In this case it may be desirable to assign a side in a later step, beyond the scope of the input parser.
+    /// </summary>
     public class SidedInputParser : IInputParser
     {
-        private static bool _sideFlipFlop;
+        private static readonly Regex LeftRegex =
+            new(@"^(?:l|left)[:.@#](?<input>.*)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex RightRegex =
+            new(@"^(?:r|right)[:.@#](?<input>.*)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         private readonly IInputParser _delegateParser;
+
+        public bool AllowDirectedInputs { get; set; }
 
         public SidedInputParser(IInputParser delegateParser)
         {
@@ -17,39 +28,21 @@ namespace TPP.Inputting.Parsing
 
         public InputSequence? Parse(string text)
         {
-            string[] parts = text.Split(':', count: 2);
-            InputSide? inputSide = null;
+            InputSide? inputSide;
             InputSequence? inputSequence;
-            if (parts.Length == 2)
-            {
-                string side = parts[0].ToLowerInvariant();
-                if (side is "left" or "l")
-                {
-                    inputSide = InputSide.Left;
-                    inputSequence = _delegateParser.Parse(parts[1]);
-                }
-                else if (side is "right" or "r")
-                {
-                    inputSide = InputSide.Right;
-                    inputSequence = _delegateParser.Parse(parts[1]);
-                }
-                else
-                {
-                    inputSequence = _delegateParser.Parse(text);
-                }
-            }
+
+            Match matchLeft = AllowDirectedInputs ? LeftRegex.Match(text) : Match.Empty;
+            Match matchRight = AllowDirectedInputs ? RightRegex.Match(text) : Match.Empty;
+            if (matchLeft.Success)
+                (inputSide, inputSequence) = (InputSide.Left, _delegateParser.Parse(matchLeft.Groups["input"].Value));
+            else if (matchRight.Success)
+                (inputSide, inputSequence) = (InputSide.Right, _delegateParser.Parse(matchRight.Groups["input"].Value));
             else
-            {
-                inputSequence = _delegateParser.Parse(text);
-            }
+                (inputSide, inputSequence) = (null, _delegateParser.Parse(text));
+
             if (inputSequence == null) return null;
             bool direct = inputSide != null;
-            if (inputSide == null)
-            {
-                inputSide = _sideFlipFlop ? InputSide.Left : InputSide.Right;
-                _sideFlipFlop = !_sideFlipFlop;
-            }
-            var sideInput = new SideInput(inputSide.Value, direct);
+            var sideInput = new SideInput(inputSide, direct);
             return new InputSequence(inputSequence.InputSets
                 .Select(set => new InputSet(set.Inputs.Append(sideInput).ToImmutableList())).ToImmutableList());
         }

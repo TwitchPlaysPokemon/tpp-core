@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -9,6 +10,7 @@ using TPP.Core.Configuration;
 using TPP.Core.Overlay;
 using TPP.Core.Overlay.Events;
 using TPP.Inputting;
+using TPP.Inputting.Inputs;
 using TPP.Inputting.Parsing;
 using TPP.Model;
 using TPP.Persistence;
@@ -22,12 +24,12 @@ namespace TPP.Core.Modes
         private readonly IUserRepo _userRepo;
         private readonly IRunCounterRepo _runCounterRepo;
         private readonly IInputLogRepo _inputLogRepo;
+        private readonly IInputSidePicksRepo _inputSidePicksRepo;
         private IInputParser _inputParser;
         private readonly InputServer _inputServer;
         private readonly WebsocketBroadcastServer _broadcastServer;
         private AnarchyInputFeed _anarchyInputFeed;
         private readonly OverlayConnection _overlayConnection;
-        private readonly InputBufferQueue<QueuedInput> _inputBufferQueue;
 
         private readonly StopToken _stopToken;
         private readonly MuteInputsToken _muteInputsToken;
@@ -44,6 +46,7 @@ namespace TPP.Core.Modes
             _userRepo = repos.UserRepo;
             _runCounterRepo = repos.RunCounterRepo;
             _inputLogRepo = repos.InputLogRepo;
+            _inputSidePicksRepo = repos.InputSidePicksRepo;
             _runNumber = runmodeConfig.RunNumber;
             (_broadcastServer, _overlayConnection) = Setups.SetUpOverlayServer(loggerFactory,
                 baseConfig.OverlayWebsocketHost, baseConfig.OverlayWebsocketPort);
@@ -51,32 +54,28 @@ namespace TPP.Core.Modes
                 loggerFactory, repos, baseConfig, _stopToken, _muteInputsToken, _overlayConnection, ProcessMessage);
             _modeBase.InstallAdditionalCommand(new Command("reloadinputconfig", _ =>
             {
-                ReloadConfig(configLoader().InputConfig);
+                (_inputParser, _anarchyInputFeed) = ConfigToInputStuff(configLoader().InputConfig);
                 return Task.FromResult(new CommandResult { Response = "input config reloaded" });
             }));
 
             // TODO felk: this feels a bit messy the way it is done right now,
             //            but I am unsure yet how I'd integrate the individual parts in a cleaner way.
-            InputConfig inputConfig = runmodeConfig.InputConfig;
-            _inputParser = inputConfig.ButtonsProfile.ToInputParserBuilder().Build();
-            _inputBufferQueue = new InputBufferQueue<QueuedInput>(CreateBufferConfig(inputConfig));
-            _anarchyInputFeed = CreateInputFeedFromConfig(inputConfig);
+            (_inputParser, _anarchyInputFeed) = ConfigToInputStuff(runmodeConfig.InputConfig);
             _inputServer = new InputServer(loggerFactory.CreateLogger<InputServer>(),
                 runmodeConfig.InputServerHost, runmodeConfig.InputServerPort,
-                _muteInputsToken, _anarchyInputFeed);
+                _muteInputsToken, () => _anarchyInputFeed);
         }
 
-        private AnarchyInputFeed CreateInputFeedFromConfig(InputConfig config)
+        private AnarchyInputFeed CreateInputFeedFromConfig(InputConfig config, InputBufferQueue<QueuedInput> inputBufferQueue)
         {
             IInputMapper inputMapper = CreateInputMapperFromConfig(config);
             IInputHoldTiming inputHoldTiming = CreateInputHoldTimingFromConfig(config);
-            _inputBufferQueue.SetNewConfig(CreateBufferConfig(config));
 
             return new AnarchyInputFeed(
                 _overlayConnection,
                 inputHoldTiming,
                 inputMapper,
-                _inputBufferQueue,
+                inputBufferQueue,
                 config.FramesPerSecond);
         }
 
@@ -98,12 +97,38 @@ namespace TPP.Core.Modes
                 MaxInputDuration: config.MaxInputFrames / (float)config.FramesPerSecond,
                 MaxBufferLength: config.MaxBufferLength);
 
-        private void ReloadConfig(InputConfig config)
+        private (IInputParser, AnarchyInputFeed) ConfigToInputStuff(InputConfig config)
         {
             // TODO endpoints to control configs at runtime?
-            _inputParser = config.ButtonsProfile.ToInputParserBuilder().Build();
-            _anarchyInputFeed = CreateInputFeedFromConfig(config);
-            _inputServer.InputFeed = _anarchyInputFeed;
+            IInputParser inputParser = config.ButtonsProfile.ToInputParserBuilder().Build();
+            if (inputParser is SidedInputParser sidedInputParser)
+                sidedInputParser.AllowDirectedInputs = config.AllowDirectedInputs;
+            var inputBufferQueue = new InputBufferQueue<QueuedInput>(CreateBufferConfig(config));
+            AnarchyInputFeed anarchyInputFeed = CreateInputFeedFromConfig(config, inputBufferQueue);
+            return (inputParser, anarchyInputFeed);
+        }
+
+        // TODO It feels a bit dirty having this very specific use case bubble all the way up here.
+        private async Task ProcessPotentialSidedInputs(User user, InputSequence inputSequence)
+        {
+            foreach (InputSet inputSet in inputSequence.InputSets)
+            {
+                if (inputSet.Inputs.FirstOrDefault(i => i is SideInput) is SideInput { Side: null } sideInput)
+                {
+                    string? side = await _inputSidePicksRepo.GetSide(user.Id);
+                    if (side == null)
+                    {
+                        // TODO auto-assign or flip flop or deny input or something?
+                    }
+                    sideInput.Side = side switch
+                    {
+                        "left" => InputSide.Left,
+                        "right" => InputSide.Right,
+                        null => null,
+                        _ => throw new ArgumentException($"unknown side '{side}'")
+                    };
+                }
+            }
         }
 
         private async Task<bool> ProcessMessage(Message message)
@@ -112,6 +137,7 @@ namespace TPP.Core.Modes
             string potentialInput = message.MessageText.Split(' ', count: 2)[0];
             InputSequence? input = _inputParser.Parse(potentialInput);
             if (input == null) return false;
+            await ProcessPotentialSidedInputs(message.User, input);
             foreach (InputSet inputSet in input.InputSets)
                 await _anarchyInputFeed.Enqueue(inputSet, message.User);
             if (!_muteInputsToken.Muted)

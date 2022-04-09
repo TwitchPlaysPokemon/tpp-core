@@ -46,6 +46,10 @@
         },
         "MaxBufferLength": {
           "type": "integer"
+        },
+        "AllowDirectedInputs": {
+          "description": "Whether players can choose an input side per-input using a side prefix, e.g. 'left:'. Disabling this typically means you expect players to choose a side using e.g. !left or !right. This has no effect for non-dual-sided input profiles.",
+          "type": "boolean"
         }
       }
     }

@@ -15,15 +15,15 @@ namespace TPP.Core
         private readonly string _host;
         private readonly int _port;
         private readonly MuteInputsToken _muteInputsToken;
+        private readonly Func<IInputFeed> _inputFeedSupplier;
 
         private HttpListener? _httpListener;
-        public IInputFeed InputFeed;
 
         public InputServer(
             ILogger<InputServer> logger,
             string host, int port,
             MuteInputsToken muteInputsToken,
-            IInputFeed inputFeed)
+            Func<IInputFeed> inputFeedSupplier)
         {
             _logger = logger;
             if (host is "0.0.0.0" or "::")
@@ -39,7 +39,7 @@ namespace TPP.Core
             _host = host;
             _port = port;
             _muteInputsToken = muteInputsToken;
-            InputFeed = inputFeed;
+            _inputFeedSupplier = inputFeedSupplier;
         }
 
         /// <summary>
@@ -98,7 +98,7 @@ namespace TPP.Core
                         }
                         else
                         {
-                            InputMap? inputMap = await InputFeed.HandleRequest(requestUrl);
+                            InputMap? inputMap = await _inputFeedSupplier().HandleRequest(requestUrl);
                             responseText = inputMap == null ? null : JsonSerializer.Serialize(inputMap);
                         }
                     }
