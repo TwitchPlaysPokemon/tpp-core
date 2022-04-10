@@ -12,7 +12,6 @@ namespace TPP.Inputting.Parsing
     /// </summary>
     public class SidedInputParser : IInputParser
     {
-        private static bool _sideFlipFlop;
         private static readonly Regex LeftRegex =
             new(@"^(?:l)[:.@#]?(?<input>.*)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex RightRegex =
@@ -43,11 +42,6 @@ namespace TPP.Inputting.Parsing
 
             if (inputSequence == null) return null;
             bool direct = inputSide != null;
-            if (inputSide == null)
-            {
-                inputSide = _sideFlipFlop ? InputSide.Left : InputSide.Right;
-                _sideFlipFlop = !_sideFlipFlop;
-            }
             var sideInput = new SideInput(inputSide, direct);
             return new InputSequence(inputSequence.InputSets
                 .Select(set => new InputSet(set.Inputs.Append(sideInput).ToImmutableList())).ToImmutableList());

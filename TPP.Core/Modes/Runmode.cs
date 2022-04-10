@@ -109,6 +109,7 @@ namespace TPP.Core.Modes
         }
 
         // TODO It feels a bit dirty having this very specific use case bubble all the way up here.
+        private static bool _sideFlipFlop;
         private async Task ProcessPotentialSidedInputs(User user, InputSequence inputSequence)
         {
             foreach (InputSet inputSet in inputSequence.InputSets)
@@ -116,6 +117,11 @@ namespace TPP.Core.Modes
                 if (inputSet.Inputs.FirstOrDefault(i => i is SideInput) is SideInput { Side: null } sideInput)
                 {
                     string? side = await _inputSidePicksRepo.GetSide(user.Id);
+                    if (side == null)
+                    {
+                        side = _sideFlipFlop ? "left" : "right";
+                        _sideFlipFlop = !_sideFlipFlop;
+                    }
                     sideInput.Side = side switch
                     {
                         "left" => InputSide.Left,
