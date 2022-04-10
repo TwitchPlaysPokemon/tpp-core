@@ -86,7 +86,6 @@ namespace TPP.Core
                 ).Commands,
                 new PollCommands(databases.PollRepo).Commands,
                 new ManagePollCommands(databases.PollRepo).Commands,
-                new InputtingCommands(databases.InputSidePicksRepo).Commands,
                 new BadgeCommands(databases.BadgeRepo, databases.UserRepo, messageSender, knownSpecies).Commands,
                 new OperatorCommands(
                     stopToken, muteInputsToken, databases.PokeyenBank, databases.TokensBank,
