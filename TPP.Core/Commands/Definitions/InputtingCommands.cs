@@ -11,7 +11,11 @@ public class InputtingCommands : ICommandCollection
     {
         new Command("left", ctx => PickSide(ctx, "left")) { Description = "Makes your inputs go to the left side." },
         new Command("right", ctx => PickSide(ctx, "right")) { Description = "Makes your inputs go to the right side." },
-        new Command("noside", ctx => PickSide(ctx, null)) { Description = "Clears your input side selection."},
+        new Command("noside", ctx => PickSide(ctx, null))
+        {
+            Description = "Clears your input side selection.",
+            Aliases = new[] { "unselectside" },
+        },
     }.Select(c => c.WithChangedDescription(desc => desc + " Use !left, !right or !noside to change your selection."));
 
     private readonly IInputSidePicksRepo _inputSidePicksRepo;
