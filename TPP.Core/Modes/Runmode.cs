@@ -116,16 +116,11 @@ namespace TPP.Core.Modes
                 if (inputSet.Inputs.FirstOrDefault(i => i is SideInput) is SideInput { Side: null } sideInput)
                 {
                     string? side = await _inputSidePicksRepo.GetSide(user.Id);
-                    if (side == null)
-                    {
-                        // TODO auto-assign or flip flop or deny input or something?
-                    }
                     sideInput.Side = side switch
                     {
                         "left" => InputSide.Left,
                         "right" => InputSide.Right,
-                        null => null,
-                        _ => throw new ArgumentException($"unknown side '{side}'")
+                        _ => null
                     };
                 }
             }
