@@ -21,6 +21,6 @@ public class InputtingCommands : ICommandCollection
     private async Task<CommandResult> PickSide(CommandContext context, string? side)
     {
         await _inputSidePicksRepo.SetSide(context.Message.User.Id, side);
-        return new CommandResult { Response = $"Selected side '{side}'" };
+        return new CommandResult { Response = side == null ? "Unselected side" : $"Selected side '{side}'" };
     }
 }
