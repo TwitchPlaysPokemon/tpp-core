@@ -14,9 +14,9 @@ namespace TPP.Inputting.Parsing
     {
         private static bool _sideFlipFlop;
         private static readonly Regex LeftRegex =
-            new(@"^(?:l|left)[:.@#](?<input>.*)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            new(@"^(?:l)[:.@#]?(?<input>.*)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex RightRegex =
-            new(@"^(?:r|right)[:.@#](?<input>.*)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            new(@"^(?:r)[:.@#]?(?<input>.*)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         private readonly IInputParser _delegateParser;
 
