@@ -25,6 +25,7 @@ namespace TPP.Core.Commands.Definitions
         private readonly IMessageSender _messageSender;
         private readonly IBadgeRepo _badgeRepo;
         private readonly IUserRepo _userRepo;
+        private readonly IInputSidePicksRepo _inputSidePicksRepo;
 
         public OperatorCommands(
             StopToken stopToken,
@@ -33,7 +34,8 @@ namespace TPP.Core.Commands.Definitions
             IBank<User> tokensBank,
             IMessageSender messageSender,
             IBadgeRepo badgeRepo,
-            IUserRepo userRepo)
+            IUserRepo userRepo,
+            IInputSidePicksRepo inputSidePicksRepo)
         {
             _stopToken = stopToken;
             _muteInputsToken = muteInputsToken;
@@ -42,7 +44,7 @@ namespace TPP.Core.Commands.Definitions
             _messageSender = messageSender;
             _badgeRepo = badgeRepo;
             _userRepo = userRepo;
-            _muteInputsToken = muteInputsToken;
+            _inputSidePicksRepo = inputSidePicksRepo;
         }
 
         public IEnumerable<Command> Commands => new[]
@@ -90,6 +92,11 @@ namespace TPP.Core.Commands.Definitions
             new Command("removerole", RemoveRole)
             {
                 Description = "Remove a role from a user. Arguments: <user> <role>"
+            },
+            new Command("clearallsides", ClearAllSidePicks)
+            {
+                Aliases = new []{"clearallsidepicks"},
+                Description = "Clear every user's input side pick."
             },
         }.Select(cmd => cmd
             .WithCondition(
@@ -293,6 +300,12 @@ namespace TPP.Core.Commands.Definitions
             {
                 Response = response
             };
+        }
+
+        private async Task<CommandResult> ClearAllSidePicks(CommandContext context)
+        {
+            await _inputSidePicksRepo.ClearAll();
+            return new CommandResult { Response = "All side picks cleared." };
         }
     }
 }

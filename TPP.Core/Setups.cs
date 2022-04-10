@@ -90,7 +90,7 @@ namespace TPP.Core
                 new BadgeCommands(databases.BadgeRepo, databases.UserRepo, messageSender, knownSpecies).Commands,
                 new OperatorCommands(
                     stopToken, muteInputsToken, databases.PokeyenBank, databases.TokensBank,
-                    messageSender: messageSender, databases.BadgeRepo, databases.UserRepo
+                    messageSender: messageSender, databases.BadgeRepo, databases.UserRepo, databases.InputSidePicksRepo
                 ).Commands,
                 new ModeratorCommands(
                     chatModeChanger, databases.LinkedAccountRepo, databases.ResponseCommandRepo

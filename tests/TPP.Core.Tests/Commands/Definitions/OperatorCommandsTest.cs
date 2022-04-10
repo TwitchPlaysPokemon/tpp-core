@@ -79,7 +79,7 @@ namespace TPP.Core.Tests.Commands.Definitions
                 new StopToken(), new MuteInputsToken(),
                 _tokensBankMock.Object, _tokensBankMock.Object,
                 _messageSenderMock.Object, _badgeRepoMock.Object,
-                _userRepoMock.Object);
+                _userRepoMock.Object, Mock.Of<IInputSidePicksRepo>());
 
             {
                 CommandResult result = await operatorCommands.AdjustTokens(new CommandContext(MockMessage(user),
@@ -116,7 +116,7 @@ namespace TPP.Core.Tests.Commands.Definitions
                 new StopToken(), new MuteInputsToken(),
                 _tokensBankMock.Object, _tokensBankMock.Object,
                 _messageSenderMock.Object, _badgeRepoMock.Object,
-                _userRepoMock.Object);
+                _userRepoMock.Object, Mock.Of<IInputSidePicksRepo>());
 
             {
                 CommandResult result = await operatorCommands.AdjustTokens(new CommandContext(MockMessage(userSelf),
@@ -163,7 +163,7 @@ namespace TPP.Core.Tests.Commands.Definitions
                 new StopToken(), new MuteInputsToken(),
                 _tokensBankMock.Object, _tokensBankMock.Object,
                 _messageSenderMock.Object, _badgeRepoMock.Object,
-                _userRepoMock.Object);
+                _userRepoMock.Object, Mock.Of<IInputSidePicksRepo>());
             _userRepoMock.Setup(repo => repo.FindBySimpleName("gifter")).Returns(Task.FromResult((User?)gifter));
             _userRepoMock.Setup(repo => repo.FindBySimpleName("recipient")).Returns(Task.FromResult((User?)recipient));
             Badge badge1 = new("badge1", gifter.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue);
@@ -202,7 +202,7 @@ namespace TPP.Core.Tests.Commands.Definitions
                 new StopToken(), new MuteInputsToken(),
                 _tokensBankMock.Object, _tokensBankMock.Object,
                 _messageSenderMock.Object, _badgeRepoMock.Object,
-                _userRepoMock.Object);
+                _userRepoMock.Object, Mock.Of<IInputSidePicksRepo>());
             _userRepoMock.Setup(repo => repo.FindBySimpleName("gifter")).Returns(Task.FromResult((User?)gifter));
             _userRepoMock.Setup(repo => repo.FindBySimpleName("recipient")).Returns(Task.FromResult((User?)recipient));
 
@@ -230,7 +230,7 @@ namespace TPP.Core.Tests.Commands.Definitions
                 new StopToken(), new MuteInputsToken(),
                 _tokensBankMock.Object, _tokensBankMock.Object,
                 _messageSenderMock.Object, _badgeRepoMock.Object,
-                _userRepoMock.Object);
+                _userRepoMock.Object, Mock.Of<IInputSidePicksRepo>());
             _userRepoMock.Setup(repo => repo.FindBySimpleName("gifter")).Returns(Task.FromResult((User?)gifter));
             _userRepoMock.Setup(repo => repo.FindBySimpleName("recipient")).Returns(Task.FromResult((User?)recipient));
             _badgeRepoMock.Setup(repo => repo.FindByUserAndSpecies(gifter.Id, species, 1))
@@ -260,7 +260,7 @@ namespace TPP.Core.Tests.Commands.Definitions
                 new StopToken(), new MuteInputsToken(),
                 _tokensBankMock.Object, _tokensBankMock.Object,
                 _messageSenderMock.Object, _badgeRepoMock.Object,
-                _userRepoMock.Object);
+                _userRepoMock.Object, Mock.Of<IInputSidePicksRepo>());
             _userRepoMock.Setup(repo => repo.FindBySimpleName("recipient")).Returns(Task.FromResult((User?)recipient));
 
             CommandResult result = await operatorCommands.CreateBadge(new CommandContext(MockMessage(user),

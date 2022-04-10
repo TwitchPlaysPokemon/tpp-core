@@ -31,4 +31,6 @@ public class InputSidePicksRepo : IInputSidePicksRepo
 
     public async Task<string?> GetSide(string userId) =>
         (await _collection.Find(pick => pick.UserId == userId).FirstOrDefaultAsync())?.Side;
+
+    public async Task ClearAll() => await _collection.DeleteManyAsync(FilterDefinition<SidePick>.Empty);
 }
