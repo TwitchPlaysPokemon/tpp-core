@@ -131,7 +131,7 @@ namespace TPP.Core
             IClock clock = SystemClock.Instance;
             CustomSerializers.RegisterAll();
             MongoClientSettings settings = MongoClientSettings.FromConnectionString(baseConfig.MongoDbConnectionUri);
-            settings.LinqProvider = LinqProvider.V3;
+            settings.LinqProvider = LinqProvider.V2;
             IMongoClient mongoClient = new MongoClient(settings);
             IMongoDatabase mongoDatabase = mongoClient.GetDatabase(baseConfig.MongoDbDatabaseName);
             IMongoDatabase mongoDatabaseMessagelog = mongoClient.GetDatabase(baseConfig.MongoDbDatabaseNameMessagelog);
