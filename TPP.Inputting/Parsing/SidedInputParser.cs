@@ -28,8 +28,8 @@ namespace TPP.Inputting.Parsing
 
         public InputSequence? Parse(string text)
         {
-            InputSide? inputSide;
-            InputSequence? inputSequence;
+            InputSide? inputSide = null;
+            InputSequence? inputSequence = null;
 
             Match matchLeft = AllowDirectedInputs ? LeftRegex.Match(text) : Match.Empty;
             Match matchRight = AllowDirectedInputs ? RightRegex.Match(text) : Match.Empty;
@@ -37,7 +37,9 @@ namespace TPP.Inputting.Parsing
                 (inputSide, inputSequence) = (InputSide.Left, _delegateParser.Parse(matchLeft.Groups["input"].Value));
             else if (matchRight.Success)
                 (inputSide, inputSequence) = (InputSide.Right, _delegateParser.Parse(matchRight.Groups["input"].Value));
-            else
+            if (inputSequence == null)
+                // Run this even if one of the side branches was hit,
+                // because stuff like 'left' can read like 'l:eft' but must be parseable as a normal 'left'.
                 (inputSide, inputSequence) = (null, _delegateParser.Parse(text));
 
             if (inputSequence == null) return null;
