@@ -74,7 +74,7 @@ namespace TPP.Core.Modes
             _commandProcessors = _chats.Values.ToImmutableDictionary(
                 c => c.Name,
                 c => Setups.SetUpCommandProcessor(loggerFactory, argsParser, repos, stopToken, muteInputsToken,
-                    messageSender: c, chatModeChanger: c, pokedexData.KnownSpecies));
+                    messageSender: c, chatModeChanger: c, executor: c, pokedexData.KnownSpecies));
 
             _messagequeueRepo = repos.MessagequeueRepo;
             _messagelogRepo = repos.MessagelogRepo;

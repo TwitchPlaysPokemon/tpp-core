@@ -71,6 +71,9 @@ namespace TPP.Model
 
         // public bool Imported { get; init; }
 
+        public Instant? TimeoutExpiration { get; init; }
+        public bool Banned { get; init; }
+
         public User(
             string id,
             string twitchDisplayName,
