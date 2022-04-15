@@ -15,6 +15,7 @@ namespace TPP.Persistence
     }
     public interface ITimeoutLogRepo
     {
-        Task<TimeoutLog> LogTimeout(string userId, string type, string reason, string issuerUserId, Instant timestamp);
+        Task<TimeoutLog> LogTimeout(
+            string userId, string type, string reason, string issuerUserId, Instant timestamp, Duration? duration);
     }
 }

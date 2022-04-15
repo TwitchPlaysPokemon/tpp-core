@@ -123,6 +123,8 @@ public class TimeoutLogRepo : ITimeoutLogRepo
             cm.MapProperty(b => b.Reason).SetElementName("reason");
             cm.MapProperty(b => b.IssuerUserId).SetElementName("issuer");
             cm.MapProperty(b => b.Timestamp).SetElementName("timestamp");
+            cm.MapProperty(b => b.Duration).SetElementName("duration")
+                .SetSerializer(NullableDurationAsSecondsSerializer.Instance);
         });
     }
 
@@ -142,9 +144,10 @@ public class TimeoutLogRepo : ITimeoutLogRepo
         });
     }
 
-    public async Task<TimeoutLog> LogTimeout(string userId, string type, string reason, string issuerUserId, Instant timestamp)
+    public async Task<TimeoutLog> LogTimeout(
+        string userId, string type, string reason, string issuerUserId, Instant timestamp, Duration? duration)
     {
-        var banLog = new TimeoutLog(string.Empty, type, userId, reason, issuerUserId, timestamp);
+        var banLog = new TimeoutLog(string.Empty, type, userId, reason, issuerUserId, timestamp, duration);
         await Collection.InsertOneAsync(banLog);
         Debug.Assert(banLog.Id.Length > 0, "The MongoDB driver injected a generated ID");
         return banLog;
