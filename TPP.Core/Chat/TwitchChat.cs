@@ -421,5 +421,32 @@ namespace TPP.Core.Chat
                 _twitchClient.TimeoutUser(_ircChannel, user.SimpleName, duration.ToTimeSpan(),
                     message ?? "no timeout reason was given"));
         }
+
+        public async Task Ban(User user, string? message)
+        {
+            if (_suppressions.Contains(SuppressionType.Command) &&
+                !(_suppressionOverrides.Contains(_ircChannel) && _suppressionOverrides.Contains(user.SimpleName)))
+            {
+                _logger.LogDebug($"(suppressed) ban {user} in #{_ircChannel}: {message}");
+                return;
+            }
+
+            _logger.LogDebug($"ban {user} in #{_ircChannel}: {message}");
+            await Task.Run(() => _twitchClient.BanUser(_ircChannel, user.SimpleName,
+                message ?? "no ban reason was given"));
+        }
+
+        public async Task Unban(User user, string? message)
+        {
+            if (_suppressions.Contains(SuppressionType.Command) &&
+                !(_suppressionOverrides.Contains(_ircChannel) && _suppressionOverrides.Contains(user.SimpleName)))
+            {
+                _logger.LogDebug($"(suppressed) unban {user} in #{_ircChannel}: {message}");
+                return;
+            }
+
+            _logger.LogDebug($"unban {user} in #{_ircChannel}: {message}");
+            await Task.Run(() => _twitchClient.UnbanUser(_ircChannel, user.SimpleName));
+        }
     }
 }

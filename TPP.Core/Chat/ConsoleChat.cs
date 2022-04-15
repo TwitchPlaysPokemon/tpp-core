@@ -116,5 +116,7 @@ namespace TPP.Core.Chat
         public Task DeleteMessage(string messageId) => PrintAction($"delete message with id {messageId}");
         public Task Timeout(User user, string? message, Duration duration) =>
             PrintAction($"time out {user.Name} for {duration}");
+        public Task Ban(User user, string? message) => PrintAction($"ban {user.Name}");
+        public Task Unban(User user, string? message) => PrintAction($"unban {user.Name}");
     }
 }
