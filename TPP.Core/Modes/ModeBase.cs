@@ -122,8 +122,9 @@ namespace TPP.Core.Modes
 
         private async Task ProcessIncomingMessage(IChat chat, Message message)
         {
+            Instant now = _clock.GetCurrentInstant();
             await _messagelogRepo.LogChat(
-                message.User.Id, message.RawIrcMessage, message.MessageText, _clock.GetCurrentInstant());
+                message.User.Id, message.RawIrcMessage, message.MessageText, now);
 
             bool isOk = message.Details.IsStaff
                         || message.User.Roles.Intersect(ExemptionRoles).Any()
@@ -131,6 +132,11 @@ namespace TPP.Core.Modes
                         || await _moderators[chat.Name].Check(message);
             if (!isOk)
             {
+                return;
+            }
+            if (message.User.Banned || message.User.TimeoutExpiration > now)
+            {
+                _logger.LogDebug("Skipping message from {User} because user is banned or timed out", message.User);
                 return;
             }
 
