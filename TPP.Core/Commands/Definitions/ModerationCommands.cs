@@ -8,20 +8,28 @@ using TPP.ArgsParsing;
 using TPP.ArgsParsing.Types;
 using TPP.Core.Moderation;
 using TPP.Model;
+using TPP.Persistence;
 
 namespace TPP.Core.Commands.Definitions;
 
 public class ModerationCommands : ICommandCollection
 {
     private readonly ModerationService _moderationService;
+    private readonly IBanLogRepo _banLogRepo;
+    private readonly IUserRepo _userRepo;
 
-    public ModerationCommands(ModerationService moderationService) => _moderationService = moderationService;
+    public ModerationCommands(ModerationService moderationService, IBanLogRepo banLogRepo, IUserRepo userRepo)
+    {
+        _moderationService = moderationService;
+        _banLogRepo = banLogRepo;
+        _userRepo = userRepo;
+    }
 
     public IEnumerable<Command> Commands => new[]
     {
         new Command("ban", Ban),
         new Command("unban", Unban),
-        // new Command("checkban", ctx => null),
+        new Command("checkban", CheckBan),
         new Command("timeout", TimeoutCmd),
         new Command("untimeout", UntimeoutCmd),
         // new Command("checktimeout", ctx => null),
@@ -72,6 +80,19 @@ public class ModerationCommands : ICommandCollection
                 _ => throw new ArgumentOutOfRangeException()
             }
         };
+    }
+
+    private async Task<CommandResult> CheckBan(CommandContext context)
+    {
+        User targetUser = await context.ParseArgs<User>();
+        BanLog? recentLog = await _banLogRepo.FindMostRecent(targetUser.Id);
+        string infoText = recentLog == null
+            ? "No ban logs available."
+            : $"Last action was {recentLog.Type} by {_userRepo.FindById(recentLog.IssuerUserId)} " +
+              $"at {recentLog.Timestamp} with reason {recentLog.Reason}";
+        return new CommandResult { Response = targetUser.Banned
+            ? $"{targetUser.Name} is banned. {infoText}"
+            : $"{targetUser.Name} is not banned. {infoText}" };
     }
 
     private async Task<CommandResult> TimeoutCmd(CommandContext context)

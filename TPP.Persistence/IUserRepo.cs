@@ -9,6 +9,7 @@ namespace TPP.Persistence
     public interface IUserRepo
     {
         public Task<User> RecordUser(UserInfo userInfo);
+        public Task<User?> FindById(string userId);
         public Task<User?> FindBySimpleName(string simpleName);
         public Task<User?> FindByDisplayName(string displayName);
         public Task<List<User>> FindAllByPokeyenUnder(long yen);

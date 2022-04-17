@@ -103,6 +103,11 @@ public class BanLogRepo : IBanLogRepo
         Debug.Assert(banLog.Id.Length > 0, "The MongoDB driver injected a generated ID");
         return banLog;
     }
+
+    public async Task<BanLog?> FindMostRecent(string userId) => await Collection
+        .Find(log => log.UserId == userId)
+        .SortByDescending(log => log.Timestamp)
+        .FirstOrDefaultAsync();
 }
 
 public class TimeoutLogRepo : ITimeoutLogRepo

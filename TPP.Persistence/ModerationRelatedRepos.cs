@@ -12,6 +12,7 @@ namespace TPP.Persistence
     public interface IBanLogRepo
     {
         Task<BanLog> LogBan(string userId, string type, string reason, string issuerUserId, Instant timestamp);
+        Task<BanLog?> FindMostRecent(string userId);
     }
     public interface ITimeoutLogRepo
     {
