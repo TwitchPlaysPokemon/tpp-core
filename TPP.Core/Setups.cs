@@ -109,7 +109,10 @@ namespace TPP.Core
                 new ModeratorCommands(
                     chatModeChanger, databases.LinkedAccountRepo, databases.ResponseCommandRepo
                 ).Commands,
-                new ModerationCommands(moderationService).Commands
+                new ModerationCommands(
+                    moderationService, databases.BanLogRepo, databases.TimeoutLogRepo, databases.UserRepo,
+                    SystemClock.Instance
+                ).Commands
             }.SelectMany(cmds => cmds).Concat(new[]
             {
                 new HelpCommand(commandProcessor).Command

@@ -96,7 +96,7 @@ public class BanLogRepo : IBanLogRepo
         });
     }
 
-    public async Task<BanLog> LogBan(string userId, string type, string reason, string issuerUserId, Instant timestamp)
+    public async Task<BanLog> LogBan(string userId, string type, string reason, string? issuerUserId, Instant timestamp)
     {
         var banLog = new BanLog(string.Empty, type, userId, reason, issuerUserId, timestamp);
         await Collection.InsertOneAsync(banLog);
@@ -150,11 +150,16 @@ public class TimeoutLogRepo : ITimeoutLogRepo
     }
 
     public async Task<TimeoutLog> LogTimeout(
-        string userId, string type, string reason, string issuerUserId, Instant timestamp, Duration? duration)
+        string userId, string type, string reason, string? issuerUserId, Instant timestamp, Duration? duration)
     {
         var banLog = new TimeoutLog(string.Empty, type, userId, reason, issuerUserId, timestamp, duration);
         await Collection.InsertOneAsync(banLog);
         Debug.Assert(banLog.Id.Length > 0, "The MongoDB driver injected a generated ID");
         return banLog;
     }
+
+    public async Task<TimeoutLog?> FindMostRecent(string userId) => await Collection
+        .Find(log => log.UserId == userId)
+        .SortByDescending(log => log.Timestamp)
+        .FirstOrDefaultAsync();
 }

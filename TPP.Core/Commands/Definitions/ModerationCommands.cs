@@ -16,13 +16,19 @@ public class ModerationCommands : ICommandCollection
 {
     private readonly ModerationService _moderationService;
     private readonly IBanLogRepo _banLogRepo;
+    private readonly ITimeoutLogRepo _timeoutLogRepo;
     private readonly IUserRepo _userRepo;
+    private readonly IClock _clock;
 
-    public ModerationCommands(ModerationService moderationService, IBanLogRepo banLogRepo, IUserRepo userRepo)
+    public ModerationCommands(
+        ModerationService moderationService, IBanLogRepo banLogRepo, ITimeoutLogRepo timeoutLogRepo, IUserRepo userRepo,
+        IClock clock)
     {
         _moderationService = moderationService;
         _banLogRepo = banLogRepo;
+        _timeoutLogRepo = timeoutLogRepo;
         _userRepo = userRepo;
+        _clock = clock;
     }
 
     public IEnumerable<Command> Commands => new[]
@@ -32,7 +38,7 @@ public class ModerationCommands : ICommandCollection
         new Command("checkban", CheckBan),
         new Command("timeout", TimeoutCmd),
         new Command("untimeout", UntimeoutCmd),
-        // new Command("checktimeout", ctx => null),
+        new Command("checktimeout", CheckTimeout),
     }.Select(cmd => cmd
         .WithCondition(
             canExecute: ctx => IsStrictlyModerator(ctx.Message.User),
@@ -86,13 +92,19 @@ public class ModerationCommands : ICommandCollection
     {
         User targetUser = await context.ParseArgs<User>();
         BanLog? recentLog = await _banLogRepo.FindMostRecent(targetUser.Id);
+        string? issuerName = recentLog?.IssuerUserId == null
+            ? "<automated>"
+            : (await _userRepo.FindById(recentLog.IssuerUserId))?.Name;
         string infoText = recentLog == null
             ? "No ban logs available."
-            : $"Last action was {recentLog.Type} by {_userRepo.FindById(recentLog.IssuerUserId)} " +
+            : $"Last action was {recentLog.Type} by {issuerName} " +
               $"at {recentLog.Timestamp} with reason {recentLog.Reason}";
-        return new CommandResult { Response = targetUser.Banned
-            ? $"{targetUser.Name} is banned. {infoText}"
-            : $"{targetUser.Name} is not banned. {infoText}" };
+        return new CommandResult
+        {
+            Response = targetUser.Banned
+                ? $"{targetUser.Name} is banned. {infoText}"
+                : $"{targetUser.Name} is not banned. {infoText}"
+        };
     }
 
     private async Task<CommandResult> TimeoutCmd(CommandContext context)
@@ -127,6 +139,31 @@ public class ModerationCommands : ICommandCollection
                 TimeoutResult.UserIsBanned => "User is banned. Unban them instead if desired.",
                 _ => throw new ArgumentOutOfRangeException()
             }
+        };
+    }
+
+    private async Task<CommandResult> CheckTimeout(CommandContext context)
+    {
+        User targetUser = await context.ParseArgs<User>();
+        if (targetUser.Banned)
+            return new CommandResult { Response = $"{targetUser.Name} is banned. Use `checkban` for more info." };
+        TimeoutLog? recentLog = await _timeoutLogRepo.FindMostRecent(targetUser.Id);
+        string? issuerName = recentLog?.IssuerUserId == null
+            ? "<automated>"
+            : (await _userRepo.FindById(recentLog.IssuerUserId))?.Name;
+        string infoText = recentLog == null
+            ? "No timeout logs available."
+            : $"Last action was {recentLog.Type} by {issuerName} " +
+              $"at {recentLog.Timestamp} with reason {recentLog.Reason}";
+        if (recentLog?.Duration != null) infoText += $" for {recentLog.Duration.Value.TotalSeconds}s";
+        Duration remainingTimeout = targetUser.TimeoutExpiration.HasValue
+            ? targetUser.TimeoutExpiration.Value - _clock.GetCurrentInstant()
+            : Duration.Zero;
+        return new CommandResult
+        {
+            Response = remainingTimeout > Duration.Zero
+                ? $"{targetUser.Name} is timed out for another {(int)remainingTimeout.TotalSeconds}s. {infoText}"
+                : $"{targetUser.Name} is not timed out. {infoText}"
         };
     }
 }
