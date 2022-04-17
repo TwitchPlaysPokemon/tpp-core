@@ -85,6 +85,8 @@ namespace TPP.Core
             moderationService.ModerationActionPerformed += (_, args) => TaskToVoidSafely(logger, () =>
             {
                 // TODO matchmode: clear actions
+                //      Note: Already works with old core because it watches the "timeoutlog" collection.
+
                 // TODO deputy stuff
                 return Task.CompletedTask;
             });
