@@ -36,12 +36,12 @@ namespace TPP.Core.Tests.Moderation
         {
             User user = MockUser("MockUser");
             var executor = new Mock<IExecutor>();
-            var modLogRepo = new Mock<IModLogRepo>();
+            var modbotLogRepo = new Mock<IModbotLogRepo>();
             var clock = new Mock<IClock>();
             clock.Setup(c => c.GetCurrentInstant()).Returns(Instant.FromUnixTimeSeconds(0));
             IImmutableList<IModerationRule> rules = ImmutableList.Create<IModerationRule>(new GivePointsRule(50));
             var moderator = new Moderator(
-                NullLogger<Moderator>.Instance, executor.Object, rules, modLogRepo.Object, clock.Object,
+                NullLogger<Moderator>.Instance, executor.Object, rules, modbotLogRepo.Object, clock.Object,
                 pointsForTimeout: 100);
 
             Expression<Func<IExecutor, Task>> invocation =
@@ -69,12 +69,12 @@ namespace TPP.Core.Tests.Moderation
         {
             User user = MockUser("MockUser");
             var executor = new Mock<IExecutor>();
-            var modLogRepo = new Mock<IModLogRepo>();
+            var modbotLogRepo = new Mock<IModbotLogRepo>();
             var clock = new Mock<IClock>();
             clock.Setup(c => c.GetCurrentInstant()).Returns(Instant.FromUnixTimeSeconds(0));
             IImmutableList<IModerationRule> rules = ImmutableList.Create<IModerationRule>(new GivePointsRule(50));
             var moderator = new Moderator(
-                NullLogger<Moderator>.Instance, executor.Object, rules, modLogRepo.Object, clock.Object,
+                NullLogger<Moderator>.Instance, executor.Object, rules, modbotLogRepo.Object, clock.Object,
                 pointsDecayPerSecond: 1, pointsForTimeout: 100);
 
             const string msg1 = "not enough points yet";
@@ -102,12 +102,12 @@ namespace TPP.Core.Tests.Moderation
         {
             User user = MockUser("MockUser");
             var executor = new Mock<IExecutor>();
-            var modLogRepo = new Mock<IModLogRepo>();
+            var modbotLogRepo = new Mock<IModbotLogRepo>();
             var clock = new Mock<IClock>();
             clock.Setup(c => c.GetCurrentInstant()).Returns(Instant.FromUnixTimeSeconds(0));
             IImmutableList<IModerationRule> rules = ImmutableList.Create<IModerationRule>(new GivePointsRule(50));
             var moderator = new Moderator(
-                NullLogger<Moderator>.Instance, executor.Object, rules, modLogRepo.Object, clock.Object,
+                NullLogger<Moderator>.Instance, executor.Object, rules, modbotLogRepo.Object, clock.Object,
                 minPoints: 51, pointsForTimeout: 100);
 
             Assert.IsTrue(await moderator.Check(new Message(user, "no points",
@@ -123,12 +123,12 @@ namespace TPP.Core.Tests.Moderation
         {
             User user = MockUser("MockUser");
             var executor = new Mock<IExecutor>();
-            var modLogRepo = new Mock<IModLogRepo>();
+            var modbotLogRepo = new Mock<IModbotLogRepo>();
             var clock = new Mock<IClock>();
             clock.Setup(c => c.GetCurrentInstant()).Returns(Instant.FromUnixTimeSeconds(0));
             IImmutableList<IModerationRule> rules = ImmutableList.Create<IModerationRule>(new GivePointsRule(50));
             var moderator = new Moderator(
-                NullLogger<Moderator>.Instance, executor.Object, rules, modLogRepo.Object, clock.Object,
+                NullLogger<Moderator>.Instance, executor.Object, rules, modbotLogRepo.Object, clock.Object,
                 pointsDecayPerSecond: 1, pointsForTimeout: 100);
 
             const string msg1 = "not enough points";

@@ -4,9 +4,9 @@ using TPP.Model;
 
 namespace TPP.Persistence
 {
-    public interface IModLogRepo
+    public interface IModbotLogRepo
     {
-        Task<ModLog> LogModAction(User user, string reason, string rule, Instant timestamp);
+        Task<ModbotLog> LogAction(User user, string reason, string rule, Instant timestamp);
         Task<long> CountRecentBans(User user, Instant cutoff);
     }
     public interface IBanLogRepo

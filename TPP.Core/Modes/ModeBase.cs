@@ -100,7 +100,7 @@ namespace TPP.Core.Modes
 
             _moderators = _chats.Values.ToImmutableDictionary(
                 c => c.Name,
-                c => (IModerator)new Moderator(moderatorLogger, c, rules, repos.ModLogRepo, clock));
+                c => (IModerator)new Moderator(moderatorLogger, c, rules, repos.ModbotLogRepo, clock));
             _advertisePollsWorkers = _chats.Values.ToImmutableDictionary(
                 c => c.Name,
                 c => new AdvertisePollsWorker(baseConfig.AdvertisePollsInterval, repos.PollRepo, c));

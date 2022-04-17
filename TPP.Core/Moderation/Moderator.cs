@@ -22,7 +22,7 @@ namespace TPP.Core.Moderation
         private readonly ILogger<Moderator> _logger;
         private readonly IExecutor _executor;
         private readonly IImmutableList<IModerationRule> _rules;
-        private readonly IModLogRepo _modLogRepo;
+        private readonly IModbotLogRepo _modbotLogRepo;
         private readonly IClock _clock;
 
         private static readonly Duration RecentTimeoutsLimit = Duration.FromDays(7);
@@ -42,7 +42,7 @@ namespace TPP.Core.Moderation
             ILogger<Moderator> logger,
             IExecutor executor,
             IImmutableList<IModerationRule> rules,
-            IModLogRepo modLogRepo,
+            IModbotLogRepo modbotLogRepo,
             IClock clock,
             int freeTimeouts = 2,
             float pointsDecayPerSecond = 1f,
@@ -52,7 +52,7 @@ namespace TPP.Core.Moderation
         {
             _logger = logger;
             _executor = executor;
-            _modLogRepo = modLogRepo;
+            _modbotLogRepo = modbotLogRepo;
             _clock = clock;
             _rules = rules;
             _freeTimeouts = freeTimeouts;
@@ -146,7 +146,7 @@ namespace TPP.Core.Moderation
                 (RuleResult.Timeout timeout, IModerationRule rule) = timeoutAndRule.Value;
                 Duration timeoutDuration = await CalculateTimeoutDuration(message.User);
                 await _executor.Timeout(message.User, timeout.Message, timeoutDuration);
-                await _modLogRepo.LogModAction(message.User, timeout.Message, rule.Id, _clock.GetCurrentInstant());
+                await _modbotLogRepo.LogAction(message.User, timeout.Message, rule.Id, _clock.GetCurrentInstant());
                 return false;
             }
             else if (deleteMessage)
@@ -164,7 +164,7 @@ namespace TPP.Core.Moderation
         private async Task<Duration> CalculateTimeoutDuration(User user)
         {
             Instant cutoff = _clock.GetCurrentInstant() - RecentTimeoutsLimit;
-            long recentBans = await _modLogRepo.CountRecentBans(user, cutoff);
+            long recentBans = await _modbotLogRepo.CountRecentBans(user, cutoff);
 
             Duration duration = InitialTimeoutDuration;
             long increases = Math.Max(0, recentBans - _freeTimeouts);

@@ -9,15 +9,15 @@ using TPP.Persistence.MongoDB.Serializers;
 
 namespace TPP.Persistence.MongoDB.Repos;
 
-public class ModLogRepo : IModLogRepo
+public class ModbotLogRepo : IModbotLogRepo
 {
     private const string CollectionName = "modlog";
 
-    public readonly IMongoCollection<ModLog> Collection;
+    public readonly IMongoCollection<ModbotLog> Collection;
 
-    static ModLogRepo()
+    static ModbotLogRepo()
     {
-        BsonClassMap.RegisterClassMap<ModLog>(cm =>
+        BsonClassMap.RegisterClassMap<ModbotLog>(cm =>
         {
             cm.MapIdProperty(b => b.Id)
                 .SetIdGenerator(StringObjectIdGenerator.Instance)
@@ -29,10 +29,10 @@ public class ModLogRepo : IModLogRepo
         });
     }
 
-    public ModLogRepo(IMongoDatabase database)
+    public ModbotLogRepo(IMongoDatabase database)
     {
         database.CreateCollectionIfNotExists(CollectionName).Wait();
-        Collection = database.GetCollection<ModLog>(CollectionName);
+        Collection = database.GetCollection<ModbotLog>(CollectionName);
         InitIndexes();
     }
 
@@ -40,14 +40,14 @@ public class ModLogRepo : IModLogRepo
     {
         Collection.Indexes.CreateMany(new[]
         {
-            new CreateIndexModel<ModLog>(Builders<ModLog>.IndexKeys.Ascending(u => u.UserId)),
-            new CreateIndexModel<ModLog>(Builders<ModLog>.IndexKeys.Descending(u => u.Timestamp)),
+            new CreateIndexModel<ModbotLog>(Builders<ModbotLog>.IndexKeys.Ascending(u => u.UserId)),
+            new CreateIndexModel<ModbotLog>(Builders<ModbotLog>.IndexKeys.Descending(u => u.Timestamp)),
         });
     }
 
-    public async Task<ModLog> LogModAction(User user, string reason, string rule, Instant timestamp)
+    public async Task<ModbotLog> LogAction(User user, string reason, string rule, Instant timestamp)
     {
-        var modLog = new ModLog(string.Empty, user.Id, reason, rule, timestamp);
+        var modLog = new ModbotLog(string.Empty, user.Id, reason, rule, timestamp);
         await Collection.InsertOneAsync(modLog);
         Debug.Assert(modLog.Id.Length > 0, "The MongoDB driver injected a generated ID");
         return modLog;
