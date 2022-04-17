@@ -112,7 +112,7 @@ public class BanLogRepo : IBanLogRepo
 
 public class TimeoutLogRepo : ITimeoutLogRepo
 {
-    private const string CollectionName = "banlog";
+    private const string CollectionName = "timeoutlog";
 
     public readonly IMongoCollection<TimeoutLog> Collection;
 
