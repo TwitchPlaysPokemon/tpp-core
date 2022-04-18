@@ -85,5 +85,7 @@ namespace TPP.Core.Chat
         public Task DisableEmoteOnly() => throw new NotImplementedException();
         public Task DeleteMessage(string messageId) => throw new NotImplementedException();
         public Task Timeout(User user, string? message, Duration duration) => throw new NotImplementedException();
+        public Task Ban(User user, string? message) => throw new NotImplementedException();
+        public Task Unban(User user, string? message) => throw new NotImplementedException();
     }
 }

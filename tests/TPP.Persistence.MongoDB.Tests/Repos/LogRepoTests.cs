@@ -210,4 +210,83 @@ public class LogRepoTests : MongoTestBase
         Assert.That(read.Message, Is.EqualTo(message));
         Assert.That(read.Timestamp, Is.EqualTo(timestamp));
     }
+
+    [Test]
+    public async Task BanLogRepo()
+    {
+        BanLogRepo repo = new(CreateTemporaryDatabase());
+        const string userId = "123";
+        const string issuerUserId = "999";
+        const string type = "test_ban";
+        const string reason = "was very naughty";
+        Instant timestamp = Instant.FromUnixTimeSeconds(123);
+
+        // persist to db
+        BanLog written = await repo.LogBan(userId, type, reason, issuerUserId, timestamp);
+        Assert.That(written.UserId, Is.EqualTo(userId));
+        Assert.That(written.Type, Is.EqualTo(type));
+        Assert.That(written.Reason, Is.EqualTo(reason));
+        Assert.That(written.IssuerUserId, Is.EqualTo(issuerUserId));
+        Assert.That(written.Timestamp, Is.EqualTo(timestamp));
+        Assert.NotNull(written.Id);
+
+        // read from db
+        List<BanLog> allItems = await repo.Collection.Find(FilterDefinition<BanLog>.Empty).ToListAsync();
+        Assert.That(allItems.Count, Is.EqualTo(1));
+        BanLog read = allItems[0];
+        Assert.That(read, Is.EqualTo(written));
+        Assert.That(read.UserId, Is.EqualTo(userId));
+        Assert.That(read.Type, Is.EqualTo(type));
+        Assert.That(read.Reason, Is.EqualTo(reason));
+        Assert.That(read.IssuerUserId, Is.EqualTo(issuerUserId));
+        Assert.That(read.Timestamp, Is.EqualTo(timestamp));
+    }
+
+    [Test]
+    public async Task TimeoutLogRepo()
+    {
+        TimeoutLogRepo repo = new(CreateTemporaryDatabase());
+        const string userId = "123";
+        const string issuerUserId = "999";
+        const string type = "test_timeout";
+        const string reason = "was only a bit naughty";
+        Duration? duration = Duration.FromSeconds(120);
+        Instant timestamp = Instant.FromUnixTimeSeconds(123);
+
+        // persist to db
+        TimeoutLog written = await repo.LogTimeout(userId, type, reason, issuerUserId, timestamp, duration);
+        Assert.That(written.UserId, Is.EqualTo(userId));
+        Assert.That(written.Type, Is.EqualTo(type));
+        Assert.That(written.Reason, Is.EqualTo(reason));
+        Assert.That(written.IssuerUserId, Is.EqualTo(issuerUserId));
+        Assert.That(written.Timestamp, Is.EqualTo(timestamp));
+        Assert.That(written.Duration, Is.EqualTo(duration));
+        Assert.NotNull(written.Id);
+
+        // read from db
+        List<TimeoutLog> allItems = await repo.Collection.Find(FilterDefinition<TimeoutLog>.Empty).ToListAsync();
+        Assert.That(allItems.Count, Is.EqualTo(1));
+        TimeoutLog read = allItems[0];
+        Assert.That(read, Is.EqualTo(written));
+        Assert.That(read.UserId, Is.EqualTo(userId));
+        Assert.That(read.Type, Is.EqualTo(type));
+        Assert.That(read.Reason, Is.EqualTo(reason));
+        Assert.That(read.IssuerUserId, Is.EqualTo(issuerUserId));
+        Assert.That(read.Timestamp, Is.EqualTo(timestamp));
+        Assert.That(read.Duration, Is.EqualTo(duration));
+    }
+
+    [Test]
+    public async Task TimeoutLogRepoNullDuration()
+    {
+        TimeoutLogRepo repo = new(CreateTemporaryDatabase());
+        Duration? duration = null;
+        Instant timestamp = Instant.FromUnixTimeSeconds(123);
+
+        TimeoutLog written = await repo.LogTimeout("123", "test", "test", "999", timestamp, duration);
+        Assert.That(written.Duration, Is.EqualTo(duration));
+        List<TimeoutLog> allItems = await repo.Collection.Find(FilterDefinition<TimeoutLog>.Empty).ToListAsync();
+        Assert.That(allItems, Has.Count.EqualTo(1));
+        Assert.That(allItems[0].Duration, Is.EqualTo(duration));
+    }
 }

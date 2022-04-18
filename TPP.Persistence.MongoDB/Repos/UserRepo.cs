@@ -56,6 +56,8 @@ namespace TPP.Persistence.MongoDB.Repos
                 cm.MapProperty(u => u.SubscriptionTier).SetElementName("sub_plan");
                 cm.MapProperty(u => u.LoyaltyLeague).SetElementName("loyalty_tier");
                 cm.MapProperty(u => u.SubscriptionUpdatedAt).SetElementName("subscription_updated_at");
+                cm.MapProperty(u => u.Banned).SetElementName("banned");
+                cm.MapProperty(u => u.TimeoutExpiration).SetElementName("timeout_expiration");
                 cm.MapProperty(u => u.Roles).SetElementName("roles")
                     .SetDefaultValue(new HashSet<Role>());
             });
@@ -160,6 +162,9 @@ namespace TPP.Persistence.MongoDB.Repos
         public async Task<User?> FindBySimpleName(string simpleName) =>
             await Collection.Find(u => u.SimpleName == simpleName).FirstOrDefaultAsync();
 
+        public async Task<User?> FindById(string userId) =>
+            await Collection.Find(u => u.Id == userId).FirstOrDefaultAsync();
+
         public async Task<User?> FindByDisplayName(string displayName) =>
             await Collection.Find(u => u.TwitchDisplayName == displayName).FirstOrDefaultAsync();
 
@@ -227,5 +232,21 @@ namespace TPP.Persistence.MongoDB.Repos
                         IsUpsert = false
                     })
                 ?? throw new ArgumentException($"user {user} does not exist");
+
+        public async Task<User> SetBanned(User user, bool banned) =>
+            await Collection.FindOneAndUpdateAsync<User>(
+                u => u.Id == user.Id,
+                Builders<User>.Update
+                    .Set(u => u.Banned, banned)
+                    .Set(u => u.TimeoutExpiration, null),
+                new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After });
+
+        public async Task<User> SetTimedOut(User user, Instant? timeoutExpiration) =>
+            await Collection.FindOneAndUpdateAsync<User>(
+                u => u.Id == user.Id,
+                Builders<User>.Update
+                    .Set(u => u.Banned, false)
+                    .Set(u => u.TimeoutExpiration, timeoutExpiration),
+                new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After });
     }
 }

@@ -9,6 +9,7 @@ namespace TPP.Persistence
     public interface IUserRepo
     {
         public Task<User> RecordUser(UserInfo userInfo);
+        public Task<User?> FindById(string userId);
         public Task<User?> FindBySimpleName(string simpleName);
         public Task<User?> FindByDisplayName(string displayName);
         public Task<List<User>> FindAllByPokeyenUnder(long yen);
@@ -24,6 +25,9 @@ namespace TPP.Persistence
         public Task<User> SetIsSubscribed(User user, bool isSubscribed);
         public Task<User> SetSubscriptionInfo(
             User user, int monthsSubscribed, SubscriptionTier tier, int loyaltyLeague, Instant? subscriptionUpdatedAt);
+
+        public Task<User> SetBanned(User user, bool banned);
+        public Task<User> SetTimedOut(User user, Instant? timeoutExpiration);
 
         /// Unselects the specified species as the presented badge if it is the currently equipped species.
         /// Used for resetting the equipped badge after a user lost all of that species' badges.

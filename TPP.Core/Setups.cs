@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
@@ -11,6 +12,7 @@ using TPP.Core.Chat;
 using TPP.Core.Commands;
 using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
+using TPP.Core.Moderation;
 using TPP.Core.Overlay;
 using TPP.Inputting;
 using TPP.Model;
@@ -69,11 +71,24 @@ namespace TPP.Core
             MuteInputsToken? muteInputsToken,
             IMessageSender messageSender,
             IChatModeChanger chatModeChanger,
+            IExecutor executor,
             IImmutableSet<Common.PkmnSpecies> knownSpecies)
         {
             var commandProcessor = new CommandProcessor(
                 loggerFactory.CreateLogger<CommandProcessor>(),
                 databases.CommandLogger, argsParser);
+
+            var moderationService = new ModerationService(
+                SystemClock.Instance, executor, databases.TimeoutLogRepo, databases.BanLogRepo, databases.UserRepo);
+            ILogger<ModerationService> logger = loggerFactory.CreateLogger<ModerationService>();
+            moderationService.ModerationActionPerformed += (_, args) => TaskToVoidSafely(logger, () =>
+            {
+                // TODO matchmode: clear actions
+                //      Note: Already works with old core because it watches the "timeoutlog" collection.
+
+                // TODO deputy stuff
+                return Task.CompletedTask;
+            });
 
             IEnumerable<Command> commands = new[]
             {
@@ -94,6 +109,10 @@ namespace TPP.Core
                 ).Commands,
                 new ModeratorCommands(
                     chatModeChanger, databases.LinkedAccountRepo, databases.ResponseCommandRepo
+                ).Commands,
+                new ModerationCommands(
+                    moderationService, databases.BanLogRepo, databases.TimeoutLogRepo, databases.UserRepo,
+                    SystemClock.Instance
                 ).Commands
             }.SelectMany(cmds => cmds).Concat(new[]
             {
@@ -118,7 +137,9 @@ namespace TPP.Core
             IMessagelogRepo MessagelogRepo,
             ILinkedAccountRepo LinkedAccountRepo,
             ISubscriptionLogRepo SubscriptionLogRepo,
-            IModLogRepo ModLogRepo,
+            IModbotLogRepo ModbotLogRepo,
+            IBanLogRepo BanLogRepo,
+            ITimeoutLogRepo TimeoutLogRepo,
             IResponseCommandRepo ResponseCommandRepo,
             IRunCounterRepo RunCounterRepo,
             IInputLogRepo InputLogRepo,
@@ -173,7 +194,9 @@ namespace TPP.Core
                 MessagelogRepo: new MessagelogRepo(mongoDatabaseMessagelog),
                 LinkedAccountRepo: new LinkedAccountRepo(mongoDatabase, userRepo.Collection),
                 SubscriptionLogRepo: new SubscriptionLogRepo(mongoDatabase),
-                ModLogRepo: new ModLogRepo(mongoDatabase),
+                ModbotLogRepo: new ModbotLogRepo(mongoDatabase),
+                BanLogRepo: new BanLogRepo(mongoDatabase),
+                TimeoutLogRepo: new TimeoutLogRepo(mongoDatabase),
                 ResponseCommandRepo: new ResponseCommandRepo(mongoDatabase),
                 RunCounterRepo: new RunCounterRepo(mongoDatabase),
                 InputLogRepo: new InputLogRepo(mongoDatabase),

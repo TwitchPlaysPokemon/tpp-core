@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using NodaTime;
 using NUnit.Framework;
@@ -262,6 +263,34 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             Assert.That(userAfterUpdate.SubscriptionTier, Is.EqualTo(SubscriptionTier.Tier2));
             Assert.That(userAfterUpdate.LoyaltyLeague, Is.EqualTo(10));
             Assert.That(userAfterUpdate.SubscriptionUpdatedAt, Is.EqualTo(Instant.FromUnixTimeSeconds(123)));
+        }
+
+        /// <summary>
+        /// Tests that if old core happens to save a bare document,
+        /// new core can successfully understand it and interpret missing fields as sensible defaults.
+        /// </summary>
+        [Test]
+        public async Task deserialize_empty_user_document_gives_defaults()
+        {
+            IMongoDatabase db = CreateTemporaryDatabase();
+            IMongoCollection<BsonDocument> coll = db.GetCollection<BsonDocument>(UserRepo.CollectionName);
+
+            await coll.InsertOneAsync(new BsonDocument { ["_id"] = "userid", ["name_lower"] = "username" });
+
+            IUserRepo userRepo = new UserRepo(db, 0, 0, ImmutableList<string>.Empty);
+            User? user = await userRepo.FindBySimpleName("username");
+            Assert.That(user, Is.Not.Null);
+            Assert.That(user?.Banned, Is.False);
+            Assert.That(user?.TimeoutExpiration, Is.Null);
+            Assert.That(user?.Pokeyen, Is.EqualTo(0));
+            Assert.That(user?.PokeyenHighScore, Is.EqualTo(0));
+            Assert.That(user?.Tokens, Is.EqualTo(0));
+            Assert.That(user?.Roles.Count, Is.EqualTo(0));
+            Assert.That(user?.ParticipationEmblems.Count, Is.EqualTo(0));
+            Assert.That(user?.IsSubscribed, Is.False);
+            Assert.That(user?.LoyaltyLeague, Is.EqualTo(0));
+            Assert.That(user?.MonthsSubscribed, Is.EqualTo(0));
+            Assert.That(user?.GlowColorUnlocked, Is.False);
         }
     }
 }

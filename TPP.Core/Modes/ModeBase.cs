@@ -74,7 +74,7 @@ namespace TPP.Core.Modes
             _commandProcessors = _chats.Values.ToImmutableDictionary(
                 c => c.Name,
                 c => Setups.SetUpCommandProcessor(loggerFactory, argsParser, repos, stopToken, muteInputsToken,
-                    messageSender: c, chatModeChanger: c, pokedexData.KnownSpecies));
+                    messageSender: c, chatModeChanger: c, executor: c, pokedexData.KnownSpecies));
 
             _messagequeueRepo = repos.MessagequeueRepo;
             _messagelogRepo = repos.MessagelogRepo;
@@ -100,7 +100,7 @@ namespace TPP.Core.Modes
 
             _moderators = _chats.Values.ToImmutableDictionary(
                 c => c.Name,
-                c => (IModerator)new Moderator(moderatorLogger, c, rules, repos.ModLogRepo, clock));
+                c => (IModerator)new Moderator(moderatorLogger, c, rules, repos.ModbotLogRepo, clock));
             _advertisePollsWorkers = _chats.Values.ToImmutableDictionary(
                 c => c.Name,
                 c => new AdvertisePollsWorker(baseConfig.AdvertisePollsInterval, repos.PollRepo, c));
@@ -122,8 +122,9 @@ namespace TPP.Core.Modes
 
         private async Task ProcessIncomingMessage(IChat chat, Message message)
         {
+            Instant now = _clock.GetCurrentInstant();
             await _messagelogRepo.LogChat(
-                message.User.Id, message.RawIrcMessage, message.MessageText, _clock.GetCurrentInstant());
+                message.User.Id, message.RawIrcMessage, message.MessageText, now);
 
             bool isOk = message.Details.IsStaff
                         || message.User.Roles.Intersect(ExemptionRoles).Any()
@@ -131,6 +132,11 @@ namespace TPP.Core.Modes
                         || await _moderators[chat.Name].Check(message);
             if (!isOk)
             {
+                return;
+            }
+            if (message.User.Banned || message.User.TimeoutExpiration > now)
+            {
+                _logger.LogDebug("Skipping message from {User} because user is banned or timed out", message.User);
                 return;
             }
 
