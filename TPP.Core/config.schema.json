@@ -169,6 +169,21 @@
     },
     "AdvertisePollsInterval": {
       "type": "string"
+    },
+    "DisabledFeatures": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string",
+        "enum": [
+          "Badges",
+          "Currencies",
+          "Polls",
+          "Cosmetics"
+        ]
+      }
     }
   }
 }

@@ -65,6 +65,7 @@ namespace TPP.Core
 
         public static CommandProcessor SetUpCommandProcessor(
             ILoggerFactory loggerFactory,
+            BaseConfig config,
             ArgsParser argsParser,
             Databases databases,
             StopToken stopToken,
@@ -90,18 +91,12 @@ namespace TPP.Core
                 return Task.CompletedTask;
             });
 
-            IEnumerable<Command> commands = new[]
+            List<Command> commands = new[]
             {
                 new EasterEggCommands().Commands,
                 new StaticResponseCommands().Commands,
                 new MiscCommands().Commands,
-                new UserCommands(
-                    databases.UserRepo, pokeyenBank: databases.PokeyenBank, tokenBank: databases.TokensBank,
-                    messageSender
-                ).Commands,
-                new PollCommands(databases.PollRepo).Commands,
-                new ManagePollCommands(databases.PollRepo).Commands,
-                new BadgeCommands(databases.BadgeRepo, databases.UserRepo, messageSender, knownSpecies).Commands,
+                new UserCommands(databases.UserRepo).Commands,
                 new OperatorCommands(
                     stopToken, muteInputsToken, databases.PokeyenBank, databases.TokensBank,
                     messageSender: messageSender, databases.BadgeRepo, databases.UserRepo, databases.InputSidePicksRepo
@@ -113,10 +108,28 @@ namespace TPP.Core
                     moderationService, databases.BanLogRepo, databases.TimeoutLogRepo, databases.UserRepo,
                     SystemClock.Instance
                 ).Commands
-            }.SelectMany(cmds => cmds).Concat(new[]
+            }.SelectMany(cmds => cmds).ToList();
+            if (!config.DisabledFeatures.Contains(TppFeatures.Badges))
             {
-                new HelpCommand(commandProcessor).Command
-            });
+                commands.AddRange(new BadgeCommands(
+                    databases.BadgeRepo, databases.UserRepo, messageSender, knownSpecies).Commands);
+            }
+            if (!config.DisabledFeatures.Contains(TppFeatures.Currencies))
+            {
+                commands.AddRange(new CurrencyCommands(
+                    pokeyenBank: databases.PokeyenBank, tokenBank: databases.TokensBank, messageSender).Commands);
+            }
+            if (!config.DisabledFeatures.Contains(TppFeatures.Polls))
+            {
+                commands.AddRange(new PollCommands(databases.PollRepo).Commands);
+                commands.AddRange(new ManagePollCommands(databases.PollRepo).Commands);
+            }
+            if (!config.DisabledFeatures.Contains(TppFeatures.Cosmetics))
+            {
+                commands.AddRange(new CosmeticsCommands(databases.UserRepo, tokenBank: databases.TokensBank).Commands);
+            }
+
+            commands.Add(new HelpCommand(commandProcessor).Command);
             foreach (Command command in commands)
             {
                 commandProcessor.InstallCommand(command);
