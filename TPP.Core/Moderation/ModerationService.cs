@@ -1,7 +1,6 @@
 using System;
 using System.Threading.Tasks;
 using NodaTime;
-using TPP.Core.Chat;
 using TPP.Model;
 using TPP.Persistence;
 
@@ -30,20 +29,17 @@ public class ModerationService
     private readonly ITimeoutLogRepo _timeoutLogRepo;
     private readonly IBanLogRepo _banLogRepo;
     private readonly IUserRepo _userRepo;
-    private readonly IMessageSender _messageSender;
 
     public event EventHandler<ModerationActionPerformedEventArgs>? ModerationActionPerformed;
 
     public ModerationService(
-        IClock clock, IExecutor executor, ITimeoutLogRepo timeoutLogRepo, IBanLogRepo banLogRepo, IUserRepo userRepo,
-        IMessageSender messageSender)
+        IClock clock, IExecutor executor, ITimeoutLogRepo timeoutLogRepo, IBanLogRepo banLogRepo, IUserRepo userRepo)
     {
         _clock = clock;
         _executor = executor;
         _timeoutLogRepo = timeoutLogRepo;
         _banLogRepo = banLogRepo;
         _userRepo = userRepo;
-        _messageSender = messageSender;
     }
 
     public Task<BanResult> Ban(User issuerUser, User targetUser, string reason) =>
@@ -73,11 +69,6 @@ public class ModerationService
 
         ModerationActionPerformed?.Invoke(this, new ModerationActionPerformedEventArgs(
             issuerUser, targetUser, isBan ? ModerationActionType.Ban : ModerationActionType.Unban));
-
-        // TODO is this obsolete?
-        await _messageSender.SendWhisper(targetUser,
-            $"You were {(isBan ? "banned" : "unbanned")} " +
-            $"by {issuerUser.Name} at {now}. Reason: {reason}");
 
         return BanResult.Ok;
     }
@@ -109,11 +100,6 @@ public class ModerationService
 
         ModerationActionPerformed?.Invoke(this, new ModerationActionPerformedEventArgs(
             issuerUser, targetUser, isIssuing ? ModerationActionType.Timeout : ModerationActionType.Untimeout));
-
-        // TODO is this obsolete?
-        await _messageSender.SendWhisper(targetUser,
-            $"You were {(isIssuing ? "timed out" : "untimed out")} " +
-            $"by {issuerUser.Name} at {now}. Reason: {reason}");
 
         return TimeoutResult.Ok;
     }

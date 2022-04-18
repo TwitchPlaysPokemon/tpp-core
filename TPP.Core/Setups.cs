@@ -79,8 +79,7 @@ namespace TPP.Core
                 databases.CommandLogger, argsParser);
 
             var moderationService = new ModerationService(
-                SystemClock.Instance, executor, databases.TimeoutLogRepo, databases.BanLogRepo, databases.UserRepo,
-                messageSender);
+                SystemClock.Instance, executor, databases.TimeoutLogRepo, databases.BanLogRepo, databases.UserRepo);
             ILogger<ModerationService> logger = loggerFactory.CreateLogger<ModerationService>();
             moderationService.ModerationActionPerformed += (_, args) => TaskToVoidSafely(logger, () =>
             {
