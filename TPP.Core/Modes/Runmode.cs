@@ -57,6 +57,8 @@ namespace TPP.Core.Modes
                 (_inputParser, _anarchyInputFeed) = ConfigToInputStuff(configLoader().InputConfig);
                 return Task.FromResult(new CommandResult { Response = "input config reloaded" });
             }));
+            foreach (Command command in new InputtingCommands(repos.InputSidePicksRepo).Commands)
+                _modeBase.InstallAdditionalCommand(command);
 
             // TODO felk: this feels a bit messy the way it is done right now,
             //            but I am unsure yet how I'd integrate the individual parts in a cleaner way.
