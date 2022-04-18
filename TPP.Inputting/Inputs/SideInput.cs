@@ -1,5 +1,3 @@
-using System;
-
 namespace TPP.Inputting.Inputs
 {
     public enum InputSide { Left, Right }
@@ -26,7 +24,6 @@ namespace TPP.Inputting.Inputs
         {
             InputSide.Left => "left",
             InputSide.Right => "right",
-            _ => throw new ArgumentOutOfRangeException(nameof(inputSide), inputSide, null)
         };
     }
 }

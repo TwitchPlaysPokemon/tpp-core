@@ -92,7 +92,6 @@ namespace TPP.Inputting
                     {
                         InputSide.Left => "P1 ",
                         InputSide.Right => "P2 ",
-                        _ => throw new ArgumentOutOfRangeException($"unknown side '{side.Side}'")
                     };
                 }
                 else

@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.Serialization;
 using TPP.Inputting;
 
@@ -25,7 +24,6 @@ namespace TPP.Core
                     .HoldEnabled(true),
                 ButtonProfile.DualGameBoy => ButtonProfile.GameBoy.ToInputParserBuilder()
                     .LeftRightSidesEnabled(true),
-                _ => throw new ArgumentOutOfRangeException(nameof(profile), profile, "missing input parser definition")
             };
     }
 }

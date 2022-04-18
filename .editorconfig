@@ -9,6 +9,13 @@ indent_style = space
 trim_trailing_whitespace = true
 max_line_length = 120
 
+# Enforces matching on enums is exhaustive. This is the default, but better be explicit.
+dotnet_diagnostic.CS8509.severity = error
+# Enums can have "unnamed" values since they are basically just labelled numbers.
+# Therefore matching on enums normally always requires a default arm,
+# but let's assume noone is using arbitrary numbers as enum values and disable that requirement.
+dotnet_diagnostic.CS8524.severity = none
+
 [*.cs]
 csharp_keep_existing_arrangement = true
 csharp_style_var_for_built_in_types = false

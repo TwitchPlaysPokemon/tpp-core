@@ -78,8 +78,6 @@ namespace TPP.Core
                     SubscriptionPlan.Tier3 => SubscriptionTier.Tier3,
                     SubscriptionPlan.NotSet => throw new ArgumentOutOfRangeException(
                         $"subscription plan not set, plan name: {subscriptionMessage.MsgParamSubPlanName}"),
-                    _ => throw new ArgumentOutOfRangeException(
-                        $"unknown subscription plan '{subscriptionMessage.MsgParamSubPlan}'")
                 };
                 SubscriptionInfo subscriptionInfo = new(
                     user, int.Parse(subscriptionMessage.MsgParamMonths), StreakMonths: 1, tier,
@@ -108,8 +106,6 @@ namespace TPP.Core
                 SubscriptionPlan.Tier3 => SubscriptionTier.Tier3,
                 SubscriptionPlan.NotSet => throw new ArgumentOutOfRangeException(
                     $"subscription plan not set, plan name: {subscriptionMessage.SubscriptionPlanName}"),
-                _ => throw new ArgumentOutOfRangeException(
-                    $"unknown subscription plan '{subscriptionMessage.SubscriptionPlan}'")
             };
             string? message = string.IsNullOrWhiteSpace(subscriptionMessage.ResubMessage)
                 ? null

@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.Serialization;
 
 namespace TPP.Model
@@ -85,7 +84,6 @@ namespace TPP.Model
             MatchResult.Blue => Side.Blue,
             MatchResult.Red => Side.Red,
             MatchResult.Draw => null,
-            _ => throw new ArgumentOutOfRangeException(nameof(matchResult), matchResult, null)
         };
     }
 }
