@@ -12,8 +12,16 @@ public class InputtingCommands : ICommandCollection
 {
     public IEnumerable<Command> Commands => new[]
     {
-        new Command("left", ctx => PickSide(ctx, "left")) { Description = "Makes your inputs go to the left side." },
-        new Command("right", ctx => PickSide(ctx, "right")) { Description = "Makes your inputs go to the right side." },
+        new Command("left", ctx => PickSide(ctx, "left"))
+        {
+            Aliases = new[] { "blue", "corvus" },
+            Description = "Makes your inputs go to the left side."
+        },
+        new Command("right", ctx => PickSide(ctx, "right"))
+        {
+            Aliases = new[] { "red", "greene" },
+            Description = "Makes your inputs go to the right side."
+        },
         new Command("noside", ctx => PickSide(ctx, null))
         {
             Description = "Clears your input side selection.",
