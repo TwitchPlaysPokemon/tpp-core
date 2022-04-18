@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using NodaTime;
 using TPP.ArgsParsing;
 using TPP.ArgsParsing.Types;
+using TPP.Common;
 using TPP.Core.Moderation;
 using TPP.Model;
 using TPP.Persistence;
@@ -115,7 +116,8 @@ public class ModerationCommands : ICommandCollection
         {
             Response = await _moderationService.Timeout(context.Message.User, targetUser, reason, duration) switch
             {
-                TimeoutResult.Ok => $"Timed out {targetUser.Name} for {duration}. Reason: {reason}",
+                TimeoutResult.Ok =>
+                    $"Timed out {targetUser.Name} for {duration.ToTimeSpan().ToHumanReadable()}. Reason: {reason}",
                 TimeoutResult.MustBe2WeeksOrLess => "Twitch timeouts must be 2 weeks or less.",
                 TimeoutResult.UserIsBanned => "User is banned. Unban them first to issue a timeout.",
             }
@@ -151,14 +153,14 @@ public class ModerationCommands : ICommandCollection
             ? "No timeout logs available."
             : $"Last action was {recentLog.Type} by {issuerName} " +
               $"at {recentLog.Timestamp} with reason {recentLog.Reason}";
-        if (recentLog?.Duration != null) infoText += $" for {recentLog.Duration.Value.TotalSeconds}s";
+        if (recentLog?.Duration != null) infoText += $" for {recentLog.Duration.Value.ToTimeSpan().ToHumanReadable()}";
         Duration remainingTimeout = targetUser.TimeoutExpiration.HasValue
             ? targetUser.TimeoutExpiration.Value - _clock.GetCurrentInstant()
             : Duration.Zero;
         return new CommandResult
         {
             Response = remainingTimeout > Duration.Zero
-                ? $"{targetUser.Name} is timed out for another {(int)remainingTimeout.TotalSeconds}s. {infoText}"
+                ? $"{targetUser.Name} is timed out for another {remainingTimeout.ToTimeSpan().ToHumanReadable()}. {infoText}"
                 : $"{targetUser.Name} is not timed out. {infoText}"
         };
     }
