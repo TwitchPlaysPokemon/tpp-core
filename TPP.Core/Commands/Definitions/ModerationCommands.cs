@@ -41,13 +41,13 @@ public class ModerationCommands : ICommandCollection
         new Command("checktimeout", CheckTimeout),
     }.Select(cmd => cmd
         .WithCondition(
-            canExecute: ctx => IsStrictlyModerator(ctx.Message.User),
+            canExecute: ctx => IsModerator(ctx.Message.User),
             ersatzResult: new CommandResult { Response = "Only moderators can use that command" })
         .WithChangedDescription(desc => "Moderators only: " + desc)
     );
 
-    /// Unlike regular moderator commands, this purposely excludes operators to prevent abuse.
-    private static bool IsStrictlyModerator(User u) => u.Roles.Contains(Role.Moderator);
+    private static bool IsModerator(User u) =>
+        u.Roles.Contains(Role.Moderator) || u.Roles.Contains(Role.Operator);
 
     private static string ParseReasonArgs(ManyOf<string> reasonParts)
     {
