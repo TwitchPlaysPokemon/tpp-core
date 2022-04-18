@@ -199,7 +199,7 @@ namespace TPP.Core
                 ResponseCommandRepo: new ResponseCommandRepo(mongoDatabase),
                 RunCounterRepo: new RunCounterRepo(mongoDatabase),
                 InputLogRepo: new InputLogRepo(mongoDatabase),
-                InputSidePicksRepo: new InputSidePicksRepo(mongoDatabase),
+                InputSidePicksRepo: new InputSidePicksRepo(mongoDatabase, clock),
                 KeyValueStore: new KeyValueStore(mongoDatabase)
             );
         }

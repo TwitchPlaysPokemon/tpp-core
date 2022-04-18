@@ -57,7 +57,12 @@ namespace TPP.Core.Modes
                 (_inputParser, _anarchyInputFeed) = ConfigToInputStuff(configLoader().InputConfig);
                 return Task.FromResult(new CommandResult { Response = "input config reloaded" });
             }));
-            foreach (Command command in new InputtingCommands(repos.InputSidePicksRepo).Commands)
+            Duration? sidePickCooldown = runmodeConfig.SwitchSidesCooldown != null
+                ? Duration.FromTimeSpan(runmodeConfig.SwitchSidesCooldown.Value)
+                : null;
+            var inputtingCommands = new InputtingCommands(
+                repos.InputSidePicksRepo, SystemClock.Instance, sidePickCooldown);
+            foreach (Command command in inputtingCommands.Commands)
                 _modeBase.InstallAdditionalCommand(command);
 
             // TODO felk: this feels a bit messy the way it is done right now,
@@ -68,7 +73,8 @@ namespace TPP.Core.Modes
                 _muteInputsToken, () => _anarchyInputFeed);
         }
 
-        private AnarchyInputFeed CreateInputFeedFromConfig(InputConfig config, InputBufferQueue<QueuedInput> inputBufferQueue)
+        private AnarchyInputFeed CreateInputFeedFromConfig(InputConfig config,
+            InputBufferQueue<QueuedInput> inputBufferQueue)
         {
             IInputMapper inputMapper = CreateInputMapperFromConfig(config);
             IInputHoldTiming inputHoldTiming = CreateInputHoldTimingFromConfig(config);
@@ -118,11 +124,16 @@ namespace TPP.Core.Modes
             {
                 if (inputSet.Inputs.FirstOrDefault(i => i is SideInput) is SideInput { Side: null } sideInput)
                 {
-                    string? side = await _inputSidePicksRepo.GetSide(user.Id);
-                    if (side == null)
+                    string? side;
+                    SidePick? sidePick = await _inputSidePicksRepo.GetSidePick(user.Id);
+                    if (sidePick == null)
                     {
                         side = _sideFlipFlop ? "left" : "right";
                         _sideFlipFlop = !_sideFlipFlop;
+                    }
+                    else
+                    {
+                        side = sidePick.Side;
                     }
                     sideInput.Side = side switch
                     {

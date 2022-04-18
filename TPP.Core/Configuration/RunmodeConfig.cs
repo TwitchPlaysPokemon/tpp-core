@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 
 namespace TPP.Core.Configuration
@@ -21,5 +22,9 @@ namespace TPP.Core.Configuration
                      "Inputs can be unmuted at runtime using !unmuteinputs or calling /start_run on the inputserver. " +
                      "Inputs can be muted at runtime using !muteinputs or calling /stop_run on the inputserver. ")]
         public bool MuteInputsAtStartup = false;
+
+        [Description("If not null, this amount of time must pass before a player can switch sides again." +
+                     "Only relevant for dual-sided input profiles.")]
+        public TimeSpan? SwitchSidesCooldown { get; init; } = null;
     }
 }

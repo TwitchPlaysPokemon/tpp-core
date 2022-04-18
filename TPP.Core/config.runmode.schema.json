@@ -86,6 +86,13 @@
     },
     "InputConfig": {
       "$ref": "#/definitions/InputConfig"
+    },
+    "SwitchSidesCooldown": {
+      "description": "If not null, this amount of time must pass before a player can switch sides again.Only relevant for dual-sided input profiles.",
+      "type": [
+        "string",
+        "null"
+      ]
     }
   }
 }
