@@ -124,23 +124,21 @@ namespace TPP.Core.Modes
             {
                 if (inputSet.Inputs.FirstOrDefault(i => i is SideInput) is SideInput { Side: null } sideInput)
                 {
-                    string? side;
                     SidePick? sidePick = await _inputSidePicksRepo.GetSidePick(user.Id);
-                    if (sidePick == null)
+                    if (sidePick?.Side == null)
                     {
-                        side = _sideFlipFlop ? "left" : "right";
+                        sideInput.Side = _sideFlipFlop ? InputSide.Left : InputSide.Right;
                         _sideFlipFlop = !_sideFlipFlop;
                     }
                     else
                     {
-                        side = sidePick.Side;
+                        sideInput.Side = sidePick.Side switch
+                        {
+                            "left" => InputSide.Left,
+                            "right" => InputSide.Right,
+                            _ => null
+                        };
                     }
-                    sideInput.Side = side switch
-                    {
-                        "left" => InputSide.Left,
-                        "right" => InputSide.Right,
-                        _ => null
-                    };
                 }
             }
         }
