@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -31,13 +32,14 @@ public class InputtingCommands : ICommandCollection
 
     private readonly IInputSidePicksRepo _inputSidePicksRepo;
     private readonly IClock _clock;
-    private readonly Duration? _sidePickCooldown;
+    private readonly Func<TimeSpan?> _sidePickCooldownProvider;
 
-    public InputtingCommands(IInputSidePicksRepo inputSidePicksRepo, IClock clock, Duration? sidePickCooldown)
+    public InputtingCommands(
+        IInputSidePicksRepo inputSidePicksRepo, IClock clock, Func<TimeSpan?> sidePickCooldownProvider)
     {
         _inputSidePicksRepo = inputSidePicksRepo;
         _clock = clock;
-        _sidePickCooldown = sidePickCooldown;
+        _sidePickCooldownProvider = sidePickCooldownProvider;
     }
 
     private async Task<CommandResult> PickSide(CommandContext context, string? side)
@@ -45,9 +47,11 @@ public class InputtingCommands : ICommandCollection
         SidePick? sidePick = await _inputSidePicksRepo.GetSidePick(context.Message.User.Id);
         if (sidePick != null && sidePick.Side == side)
             return new CommandResult { Response = "You already selected that side" };
-        if (_sidePickCooldown != null && sidePick != null)
+        TimeSpan? sidePickCooldown = _sidePickCooldownProvider();
+        if (sidePickCooldown != null && sidePick != null)
         {
-            Duration remainingCooldown = sidePick.PickedAt + _sidePickCooldown.Value - _clock.GetCurrentInstant();
+            Instant cooldownExpiresAt = sidePick.PickedAt + Duration.FromTimeSpan(sidePickCooldown.Value);
+            Duration remainingCooldown = cooldownExpiresAt - _clock.GetCurrentInstant();
             if (remainingCooldown > Duration.Zero)
                 return new CommandResult
                 {

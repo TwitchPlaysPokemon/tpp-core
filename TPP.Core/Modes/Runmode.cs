@@ -34,22 +34,19 @@ namespace TPP.Core.Modes
         private readonly StopToken _stopToken;
         private readonly MuteInputsToken _muteInputsToken;
         private readonly ModeBase _modeBase;
-        private readonly int? _runNumber;
-        private bool _autoAssignSide;
+        private RunmodeConfig _runmodeConfig;
 
         public Runmode(ILoggerFactory loggerFactory, BaseConfig baseConfig, Func<RunmodeConfig> configLoader)
         {
-            RunmodeConfig runmodeConfig = configLoader();
-            _autoAssignSide = runmodeConfig.AutoAssignSide;
+            _runmodeConfig = configLoader();
             _logger = loggerFactory.CreateLogger<Runmode>();
             _stopToken = new StopToken();
-            _muteInputsToken = new MuteInputsToken { Muted = runmodeConfig.MuteInputsAtStartup };
+            _muteInputsToken = new MuteInputsToken { Muted = _runmodeConfig.MuteInputsAtStartup };
             Setups.Databases repos = Setups.SetUpRepositories(_logger, baseConfig);
             _userRepo = repos.UserRepo;
             _runCounterRepo = repos.RunCounterRepo;
             _inputLogRepo = repos.InputLogRepo;
             _inputSidePicksRepo = repos.InputSidePicksRepo;
-            _runNumber = runmodeConfig.RunNumber;
             (_broadcastServer, _overlayConnection) = Setups.SetUpOverlayServer(loggerFactory,
                 baseConfig.OverlayWebsocketHost, baseConfig.OverlayWebsocketPort);
             _modeBase = new ModeBase(
@@ -58,22 +55,19 @@ namespace TPP.Core.Modes
             {
                 RunmodeConfig config = configLoader();
                 (_inputParser, _anarchyInputFeed) = ConfigToInputStuff(config.InputConfig);
-                _autoAssignSide = config.AutoAssignSide;
+                _runmodeConfig = config;
                 return Task.FromResult(new CommandResult { Response = "input config reloaded" });
             }));
-            Duration? sidePickCooldown = runmodeConfig.SwitchSidesCooldown != null
-                ? Duration.FromTimeSpan(runmodeConfig.SwitchSidesCooldown.Value)
-                : null;
             var inputtingCommands = new InputtingCommands(
-                repos.InputSidePicksRepo, SystemClock.Instance, sidePickCooldown);
+                repos.InputSidePicksRepo, SystemClock.Instance, () => _runmodeConfig.SwitchSidesCooldown);
             foreach (Command command in inputtingCommands.Commands)
                 _modeBase.InstallAdditionalCommand(command);
 
             // TODO felk: this feels a bit messy the way it is done right now,
             //            but I am unsure yet how I'd integrate the individual parts in a cleaner way.
-            (_inputParser, _anarchyInputFeed) = ConfigToInputStuff(runmodeConfig.InputConfig);
+            (_inputParser, _anarchyInputFeed) = ConfigToInputStuff(_runmodeConfig.InputConfig);
             _inputServer = new InputServer(loggerFactory.CreateLogger<InputServer>(),
-                runmodeConfig.InputServerHost, runmodeConfig.InputServerPort,
+                _runmodeConfig.InputServerHost, _runmodeConfig.InputServerPort,
                 _muteInputsToken, () => _anarchyInputFeed);
         }
 
@@ -133,7 +127,7 @@ namespace TPP.Core.Modes
                     if (sidePick?.Side == null)
                     {
                         side = _sideFlipFlop ? "left" : "right";
-                        if (_autoAssignSide)
+                        if (_runmodeConfig.AutoAssignSide)
                             await _inputSidePicksRepo.SetSide(user.Id, side);
                         _sideFlipFlop = !_sideFlipFlop;
                     }
@@ -168,9 +162,10 @@ namespace TPP.Core.Modes
         private async Task CollectRunStatistics(User user, InputSequence input, string rawInput)
         {
             await _inputLogRepo.LogInput(user.Id, rawInput, SystemClock.Instance.GetCurrentInstant());
-            if (_runNumber != null && !user.ParticipationEmblems.Contains(_runNumber.Value))
-                await _userRepo.GiveEmblem(user, _runNumber.Value);
-            long counter = await _runCounterRepo.Increment(_runNumber, incrementBy: input.InputSets.Count);
+            int? runNumber = _runmodeConfig.RunNumber;
+            if (runNumber != null && !user.ParticipationEmblems.Contains(runNumber.Value))
+                await _userRepo.GiveEmblem(user, runNumber.Value);
+            long counter = await _runCounterRepo.Increment(runNumber, incrementBy: input.InputSets.Count);
             await _overlayConnection.Send(new ButtonPressUpdate(counter), CancellationToken.None);
         }
 
