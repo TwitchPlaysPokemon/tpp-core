@@ -51,7 +51,7 @@ namespace TPP.Core.Modes
                 baseConfig.OverlayWebsocketHost, baseConfig.OverlayWebsocketPort);
             _modeBase = new ModeBase(
                 loggerFactory, repos, baseConfig, _stopToken, _muteInputsToken, _overlayConnection, ProcessMessage);
-            _modeBase.InstallAdditionalCommand(new Command("reloadinputconfig", _ =>
+            _modeBase.InstallAdditionalCommand(new Command("reloadrunconfig", _ =>
             {
                 RunmodeConfig config = configLoader();
                 (_inputParser, _anarchyInputFeed) = ConfigToInputStuff(config.InputConfig);
