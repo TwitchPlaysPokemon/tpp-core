@@ -130,6 +130,13 @@ namespace TPP.Core.Modes
                         side = _sideFlipFlop ? "left" : "right";
                         if (_runmodeConfig.AutoAssignSide)
                         {
+                            // New users might input a plain "left" or "right" instead of properly picking a side.
+                            // It may confuse them if they get assigned to the side named opposite of their input,
+                            // so let's use that directional input as their side pick instead of flip-flopping.
+                            if (inputSet.Inputs.Any(i => i.OriginalText.ToLowerInvariant() == "left"))
+                                side = "left";
+                            else if (inputSet.Inputs.Any(i => i.OriginalText.ToLowerInvariant() == "right"))
+                                side = "right";
                             await _inputSidePicksRepo.SetSide(message.User.Id, side);
                             await chat.SendMessage($"you were auto-assigned to side '{side}'", responseTo: message);
                         }
