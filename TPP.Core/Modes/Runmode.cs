@@ -138,7 +138,9 @@ namespace TPP.Core.Modes
                             else if (inputSet.Inputs.Any(i => i.OriginalText.ToLowerInvariant() == "right"))
                                 side = "right";
                             await _inputSidePicksRepo.SetSide(message.User.Id, side);
-                            await chat.SendMessage($"you were auto-assigned to the {side} side team", message);
+                            await chat.SendMessage(
+                                $"you were auto-assigned to the {side} side team. " +
+                                "You can change your team with !left or !right", responseTo: message);
                         }
                         _sideFlipFlop = !_sideFlipFlop;
                     }

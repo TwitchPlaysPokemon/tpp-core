@@ -16,12 +16,12 @@ public class InputtingCommands : ICommandCollection
         new Command("left", ctx => PickSide(ctx, "left"))
         {
             Aliases = new[] { "blue", "corvus" },
-            Description = "Makes your inputs go to the left side."
+            Description = "Makes your inputs go to the left side team."
         },
         new Command("right", ctx => PickSide(ctx, "right"))
         {
             Aliases = new[] { "red", "greene" },
-            Description = "Makes your inputs go to the right side."
+            Description = "Makes your inputs go to the right side team."
         },
         new Command("noside", ctx => PickSide(ctx, null))
         {
@@ -60,6 +60,6 @@ public class InputtingCommands : ICommandCollection
                 };
         }
         await _inputSidePicksRepo.SetSide(context.Message.User.Id, side);
-        return new CommandResult { Response = side == null ? "Unselected side" : $"Selected side '{side}'" };
+        return new CommandResult { Response = side == null ? "Unselected side" : $"Selected the {side} side team" };
     }
 }
