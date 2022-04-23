@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
+using TPP.Core.Chat;
 using TPP.Core.Commands;
 using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
@@ -116,19 +117,22 @@ namespace TPP.Core.Modes
 
         // TODO It feels a bit dirty having this very specific use case bubble all the way up here.
         private static bool _sideFlipFlop;
-        private async Task ProcessPotentialSidedInputs(User user, InputSequence inputSequence)
+        private async Task ProcessPotentialSidedInputs(IChat chat, Message message, InputSequence inputSequence)
         {
             foreach (InputSet inputSet in inputSequence.InputSets)
             {
                 if (inputSet.Inputs.FirstOrDefault(i => i is SideInput) is SideInput { Side: null } sideInput)
                 {
                     string side;
-                    SidePick? sidePick = await _inputSidePicksRepo.GetSidePick(user.Id);
+                    SidePick? sidePick = await _inputSidePicksRepo.GetSidePick(message.User.Id);
                     if (sidePick?.Side == null)
                     {
                         side = _sideFlipFlop ? "left" : "right";
                         if (_runmodeConfig.AutoAssignSide)
-                            await _inputSidePicksRepo.SetSide(user.Id, side);
+                        {
+                            await _inputSidePicksRepo.SetSide(message.User.Id, side);
+                            await chat.SendMessage($"you were auto-assigned to side '{side}'", responseTo: message);
+                        }
                         _sideFlipFlop = !_sideFlipFlop;
                     }
                     else
@@ -145,13 +149,13 @@ namespace TPP.Core.Modes
             }
         }
 
-        private async Task<bool> ProcessMessage(Message message)
+        private async Task<bool> ProcessMessage(IChat chat, Message message)
         {
             if (message.MessageSource != MessageSource.Chat) return false;
             string potentialInput = message.MessageText.Split(' ', count: 2)[0];
             InputSequence? input = _inputParser.Parse(potentialInput);
             if (input == null) return false;
-            await ProcessPotentialSidedInputs(message.User, input);
+            await ProcessPotentialSidedInputs(chat, message, input);
             foreach (InputSet inputSet in input.InputSets)
                 await _anarchyInputFeed.Enqueue(inputSet, message.User);
             if (!_muteInputsToken.Muted)
