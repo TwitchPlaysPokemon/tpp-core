@@ -75,7 +75,7 @@ namespace TPP.Core
                     {
                         // GetContextAsync doesn't take a cancellation token,
                         // and stopping the http server can cause it to trip over itself for some reason.
-                        _logger.LogError("Encountered ObjectDisposedException while accepting an incoming connection");
+                        _logger.LogDebug("Encountered ObjectDisposedException while accepting an incoming connection");
                         return;
                     }
 
