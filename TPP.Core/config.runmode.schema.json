@@ -93,6 +93,10 @@
         "string",
         "null"
       ]
+    },
+    "AutoAssignSide": {
+      "description": "If true, auto assigns users a side if they haven't picked one yet. Otherwise it would flip-flop their inputs between sides.",
+      "type": "boolean"
     }
   }
 }

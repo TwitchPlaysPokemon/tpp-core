@@ -26,5 +26,9 @@ namespace TPP.Core.Configuration
         [Description("If not null, this amount of time must pass before a player can switch sides again." +
                      "Only relevant for dual-sided input profiles.")]
         public TimeSpan? SwitchSidesCooldown { get; init; } = null;
+
+        [Description("If true, auto assigns users a side if they haven't picked one yet. " +
+                     "Otherwise it would flip-flop their inputs between sides.")]
+        public bool AutoAssignSide { get; init; } = false;
     }
 }

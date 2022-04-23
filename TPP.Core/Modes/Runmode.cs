@@ -35,10 +35,12 @@ namespace TPP.Core.Modes
         private readonly MuteInputsToken _muteInputsToken;
         private readonly ModeBase _modeBase;
         private readonly int? _runNumber;
+        private bool _autoAssignSide;
 
         public Runmode(ILoggerFactory loggerFactory, BaseConfig baseConfig, Func<RunmodeConfig> configLoader)
         {
             RunmodeConfig runmodeConfig = configLoader();
+            _autoAssignSide = runmodeConfig.AutoAssignSide;
             _logger = loggerFactory.CreateLogger<Runmode>();
             _stopToken = new StopToken();
             _muteInputsToken = new MuteInputsToken { Muted = runmodeConfig.MuteInputsAtStartup };
@@ -54,7 +56,9 @@ namespace TPP.Core.Modes
                 loggerFactory, repos, baseConfig, _stopToken, _muteInputsToken, _overlayConnection, ProcessMessage);
             _modeBase.InstallAdditionalCommand(new Command("reloadinputconfig", _ =>
             {
-                (_inputParser, _anarchyInputFeed) = ConfigToInputStuff(configLoader().InputConfig);
+                RunmodeConfig config = configLoader();
+                (_inputParser, _anarchyInputFeed) = ConfigToInputStuff(config.InputConfig);
+                _autoAssignSide = config.AutoAssignSide;
                 return Task.FromResult(new CommandResult { Response = "input config reloaded" });
             }));
             Duration? sidePickCooldown = runmodeConfig.SwitchSidesCooldown != null
@@ -124,21 +128,25 @@ namespace TPP.Core.Modes
             {
                 if (inputSet.Inputs.FirstOrDefault(i => i is SideInput) is SideInput { Side: null } sideInput)
                 {
+                    string side;
                     SidePick? sidePick = await _inputSidePicksRepo.GetSidePick(user.Id);
                     if (sidePick?.Side == null)
                     {
-                        sideInput.Side = _sideFlipFlop ? InputSide.Left : InputSide.Right;
+                        side = _sideFlipFlop ? "left" : "right";
+                        if (_autoAssignSide)
+                            await _inputSidePicksRepo.SetSide(user.Id, side);
                         _sideFlipFlop = !_sideFlipFlop;
                     }
                     else
                     {
-                        sideInput.Side = sidePick.Side switch
-                        {
-                            "left" => InputSide.Left,
-                            "right" => InputSide.Right,
-                            _ => null
-                        };
+                        side = sidePick.Side;
                     }
+                    sideInput.Side = side switch
+                    {
+                        "left" => InputSide.Left,
+                        "right" => InputSide.Right,
+                        _ => null
+                    };
                 }
             }
         }
