@@ -73,4 +73,44 @@ namespace TPP.Core.Overlay.Events
         [DataMember(Name = "presses")] public long NumTotalButtonPresses { get; set; }
         public ButtonPressesCountUpdate(long numTotalButtonPresses) => NumTotalButtonPresses = numTotalButtonPresses;
     }
+
+    [DataContract]
+    public readonly struct NewVote
+    {
+        [DataMember(Name = "command")] public string Command { get; init; }
+        [DataMember(Name = "user")] public User User { get; init; }
+        // [DataMember(Name = "button_sequence")] public InputSequence InputSequence { get; init; } // unused
+        // [DataMember(Name = "ts")] public Instant Timestamp { get; init; } // unused
+    }
+
+    [DataContract]
+    public readonly struct Vote
+    {
+        [DataMember(Name = "command")] public string Command { get; init; }
+        [DataMember(Name = "count")] public int Count { get; init; }
+        // [DataMember(Name = "button_sequence")] public InputSequence InputSequence { get; init; } // unused
+    }
+
+    [DataContract]
+    public sealed class DemocracyVotesUpdate : IOverlayEvent
+    {
+        public string OverlayEventType => "democracy_new_vote";
+
+        [DataMember(Name = "new_vote")] public NewVote NewVote { get; init; }
+        [DataMember(Name = "votes")] public List<Vote> Votes { get; init; }
+
+        public DemocracyVotesUpdate(
+            User newVoteUser,
+            InputSequence votedInput,
+            IReadOnlyDictionary<InputSequence, int> votes)
+        {
+            string InputSetToString(InputSet set) => string.Join('+', set.Inputs.Select(input => input.ButtonName));
+            string InputSeqToString(InputSequence seq) => string.Join("", seq.InputSets.Select(InputSetToString));
+            NewVote = new NewVote { User = newVoteUser, Command = InputSeqToString(votedInput) };
+            Votes = votes
+                .Select(kvp => new Vote { Command = InputSeqToString(kvp.Key), Count = kvp.Value })
+                .OrderBy(vote => vote.Count)
+                .ToList();
+        }
+    }
 }
