@@ -10,11 +10,13 @@ namespace TPP.Inputting
     /// An input set is a set of inputs being inputted simultaneously.
     /// These include buttons, touch screen coordinates, waits etc.
     /// </summary>
-    public sealed record InputSet(ImmutableList<Input> Inputs)
+    public sealed record InputSet(ImmutableList<Input> Inputs, string OriginalText)
     {
         // Need to manually define these, because lists don't implement a proper Equals and GetHashCode themselves.
-        public bool Equals(InputSet? other) => other != null && Inputs.SequenceEqual(other.Inputs);
-        public override int GetHashCode() => Inputs.Select(i => i.GetHashCode()).Aggregate(HashCode.Combine);
+        public bool Equals(InputSet? other) =>
+            other != null && Inputs.SequenceEqual(other.Inputs) && OriginalText == other.OriginalText;
+        public override int GetHashCode() =>
+            Inputs.Select(i => i.GetHashCode()).Aggregate(HashCode.Combine) + OriginalText.GetHashCode();
 
         /// <summary>
         /// Determines whether this input set is effectively equal to another input set,
@@ -29,10 +31,7 @@ namespace TPP.Inputting
             return new HashSet<Input>(Inputs, SameOutcomeComparer.Instance).SetEquals(other.Inputs);
         }
 
-        public override string ToString() => string.Join("+", Inputs);
-
-        /// Returns a string that when parsed would result in the same input set as this.
-        public string ToRepresentation() => string.Join("+", Inputs.Select(input => input.OriginalText));
+        public override string ToString() => $"{nameof(InputSet)}({string.Join("+", Inputs)} '{OriginalText}')";
     }
 
     /// <summary>

@@ -11,9 +11,10 @@ namespace TPP.Inputting.Tests.Parsing
     public class ContextualInputParserTest
     {
         private static InputSet Set(params string[] inputs) =>
-            new(inputs.Select(s => new Input(s, s, s)).ToImmutableList());
+            new(inputs.Select(s => new Input(s, s, s)).ToImmutableList(), string.Join('+', inputs));
 
-        private static InputSequence Seq(params InputSet[] inputSets) => new(inputSets.ToImmutableList());
+        private static InputSequence Seq(params InputSet[] inputSets) =>
+            new(inputSets.ToImmutableList(), string.Join("", inputSets.Select(set => set.OriginalText)));
 
         private IInputParser _inputParser = null!;
 
@@ -48,12 +49,14 @@ namespace TPP.Inputting.Tests.Parsing
                 .Build();
 
             Assert.AreEqual(Seq(new InputSet(ImmutableList.Create<Input>(
-                new TouchscreenInput("234,123", "touchscreen", "234,123", 234, 123),
-                new TouchscreenInput("11,22", "touchscreen", "11,22", 11, 22)))
+                    new TouchscreenInput("234,123", "touchscreen", "234,123", 234, 123),
+                    new TouchscreenInput("11,22", "touchscreen", "11,22", 11, 22)),
+                "234,123+11,22")
             ), _inputParser.Parse("234,123+11,22"));
             Assert.AreEqual(Seq(new InputSet(ImmutableList.Create<Input>(
-                new TouchscreenInput("234,123", "touchscreen", "234,123", 234, 123),
-                new TouchscreenDragInput("11,22>33,44", "touchscreen", "11,22>33,44", 11, 22, 33, 44)))
+                    new TouchscreenInput("234,123", "touchscreen", "234,123", 234, 123),
+                    new TouchscreenDragInput("11,22>33,44", "touchscreen", "11,22>33,44", 11, 22, 33, 44)),
+                "234,123+11,22>33,44")
             ), _inputParser.Parse("234,123+11,22>33,44"));
 
             // multitouch disabled

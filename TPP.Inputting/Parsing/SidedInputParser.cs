@@ -46,7 +46,8 @@ namespace TPP.Inputting.Parsing
             bool direct = inputSide != null;
             var sideInput = new SideInput(inputSide, direct);
             return new InputSequence(inputSequence.InputSets
-                .Select(set => new InputSet(set.Inputs.Append(sideInput).ToImmutableList())).ToImmutableList());
+                .Select(set => set with { Inputs = set.Inputs.Append(sideInput).ToImmutableList() }).ToImmutableList(),
+                text);
         }
     }
 }

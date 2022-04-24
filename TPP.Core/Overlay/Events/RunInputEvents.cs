@@ -105,9 +105,9 @@ namespace TPP.Core.Overlay.Events
             InputSequence votedInput,
             IReadOnlyDictionary<InputSequence, int> votes)
         {
-            NewVote = new NewVote { User = newVoteUser, Command = votedInput.ToRepresentation() };
+            NewVote = new NewVote { User = newVoteUser, Command = votedInput.OriginalText };
             Votes = votes
-                .Select(kvp => new Vote { Command = kvp.Key.ToRepresentation(), Count = kvp.Value })
+                .Select(kvp => new Vote { Command = kvp.Key.OriginalText, Count = kvp.Value })
                 .OrderBy(vote => vote.Count)
                 .ToList();
         }
@@ -128,6 +128,6 @@ namespace TPP.Core.Overlay.Events
         public string OverlayEventType => "democracy_voting_over";
 
         [DataMember(Name = "winning_button_sequence")] public string WinningSequence { get; init; }
-        public DemocracyVotingOver(InputSequence input) => WinningSequence = input.ToRepresentation();
+        public DemocracyVotingOver(InputSequence input) => WinningSequence = input.OriginalText;
     }
 }
