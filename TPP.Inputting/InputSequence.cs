@@ -34,7 +34,16 @@ namespace TPP.Inputting
 
         public override string ToString() => $"{nameof(InputSequence)}({string.Join(", ", InputSets)})";
 
+        /// <summary>
         /// Returns a string that when parsed would result in the same input sequence as this.
-        public string ToRepresentation() => string.Join("", InputSets.Select(set => set.ToRepresentation()));
+        /// </summary>
+        /// <param name="collapseRepeats">Whether repeats like 'aaaab' should be collapsed to 'a4b'.</param>
+        /// <returns></returns>
+        public string ToRepresentation(bool collapseRepeats = true) => collapseRepeats
+            ? string.Join("", InputSets
+                .GroupAdjacent((set1, set2) => set1.HasSameOutcomeAs(set2))
+                .Select(grp => grp.Key.ToRepresentation() +
+                               grp.Count() switch { 1 => "", var more => more.ToString() }))
+            : string.Join("", InputSets.Select(set => set.ToRepresentation()));
     }
 }
