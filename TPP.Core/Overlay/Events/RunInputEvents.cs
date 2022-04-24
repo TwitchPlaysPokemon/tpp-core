@@ -130,4 +130,18 @@ namespace TPP.Core.Overlay.Events
         [DataMember(Name = "winning_button_sequence")] public string WinningSequence { get; init; }
         public DemocracyVotingOver(InputSequence input) => WinningSequence = input.OriginalText;
     }
+
+    [DataContract]
+    public sealed class DemocracySequenceStart : IOverlayEvent
+    {
+        public string OverlayEventType => "democracy_sequence_start";
+
+        [DataMember(Name = "button_sequence")] public List<List<string>> Sequence { get; init; }
+        public DemocracySequenceStart(InputSequence input)
+        {
+            Sequence = input.InputSets
+                .Select(set => set.Inputs
+                    .Select(i => i.DisplayedText).ToList()).ToList();
+        }
+    }
 }
