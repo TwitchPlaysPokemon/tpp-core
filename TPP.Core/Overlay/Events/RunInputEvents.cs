@@ -66,11 +66,11 @@ namespace TPP.Core.Overlay.Events
     }
 
     [DataContract]
-    public sealed class ButtonPressUpdate : IOverlayEvent
+    public sealed class ButtonPressesCountUpdate : IOverlayEvent
     {
         public string OverlayEventType => "button_press_update";
 
         [DataMember(Name = "presses")] public long NumTotalButtonPresses { get; set; }
-        public ButtonPressUpdate(long numTotalButtonPresses) => NumTotalButtonPresses = numTotalButtonPresses;
+        public ButtonPressesCountUpdate(long numTotalButtonPresses) => NumTotalButtonPresses = numTotalButtonPresses;
     }
 }
