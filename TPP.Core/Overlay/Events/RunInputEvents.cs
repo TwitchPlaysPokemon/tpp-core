@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.Serialization;
+using NodaTime;
 using TPP.Inputting;
 using TPP.Inputting.Inputs;
 using TPP.Model;
@@ -112,5 +113,14 @@ namespace TPP.Core.Overlay.Events
                 .OrderBy(vote => vote.Count)
                 .ToList();
         }
+    }
+
+    [DataContract]
+    public sealed class DemocracyReset : IOverlayEvent
+    {
+        public string OverlayEventType => "democracy_reset";
+
+        [DataMember(Name = "vote_ends_at")] public Instant Timestamp { get; init; }
+        public DemocracyReset(Instant timestamp) => Timestamp = timestamp;
     }
 }
