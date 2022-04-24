@@ -30,6 +30,9 @@ namespace TPP.Inputting
         }
 
         public override string ToString() => string.Join("+", Inputs);
+
+        /// Returns a string that when parsed would result in the same input set as this.
+        public string ToRepresentation() => string.Join("+", Inputs.Select(input => input.OriginalText));
     }
 
     /// <summary>

@@ -33,5 +33,8 @@ namespace TPP.Inputting
         }
 
         public override string ToString() => $"{nameof(InputSequence)}({string.Join(", ", InputSets)})";
+
+        /// Returns a string that when parsed would result in the same input sequence as this.
+        public string ToRepresentation() => string.Join("", InputSets.Select(set => set.ToRepresentation()));
     }
 }
