@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using NodaTime;
+using TPP.Common;
 
 namespace TPP.Core.Commands.Definitions
 {
@@ -8,7 +9,7 @@ namespace TPP.Core.Commands.Definitions
     public class MiscCommands : ICommandCollection
     {
         // assuming this class gets loaded at startup, which it does
-        private static readonly Instant UpSince = SystemClock.Instance.GetCurrentInstant();
+        private readonly Instant _upSince = SystemClock.Instance.GetCurrentInstant();
 
         public IEnumerable<Command> Commands => new[]
         {
@@ -20,8 +21,8 @@ namespace TPP.Core.Commands.Definitions
 
             new Command("uptime", _ =>
             {
-                Duration uptime = SystemClock.Instance.GetCurrentInstant() - UpSince;
-                string uptimeFormatted = uptime.ToString("D'd'h'h'm'm'", null);
+                Duration uptime = SystemClock.Instance.GetCurrentInstant() - _upSince;
+                string uptimeFormatted = uptime.ToTimeSpan().ToHumanReadable(FormatPrecision.Adaptive);
                 return Task.FromResult(new CommandResult { Response = $"TPP has been running for: {uptimeFormatted}" });
             }) { Description = "Shows how long the core has been running." }
         };

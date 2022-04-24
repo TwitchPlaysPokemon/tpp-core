@@ -2,12 +2,20 @@ using System;
 
 namespace TPP.Common;
 
-public enum FormatPrecision { Days, Hours, Minutes, Seconds, Milliseconds }
+public enum FormatPrecision { Days, Hours, Minutes, Seconds, Milliseconds, Adaptive }
 public static class TimeSpanExtensions
 {
     public static string ToHumanReadable(
         this TimeSpan timeSpan, FormatPrecision precision = FormatPrecision.Milliseconds)
     {
+        if (precision == FormatPrecision.Adaptive)
+        {
+            if (timeSpan.TotalSeconds >= 1) precision = FormatPrecision.Milliseconds;
+            if (timeSpan.TotalMinutes >= 1) precision = FormatPrecision.Seconds;
+            if (timeSpan.TotalHours >= 1) precision = FormatPrecision.Minutes;
+            if (timeSpan.TotalDays >= 1) precision = FormatPrecision.Hours;
+        }
+
         string result = "";
         if (precision >= FormatPrecision.Days && timeSpan.Days > 0)
             result += $"{timeSpan.Days}d";
