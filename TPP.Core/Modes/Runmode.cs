@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
+using TPP.Core.Chat;
 using TPP.Core.Commands;
 using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
@@ -34,41 +35,45 @@ namespace TPP.Core.Modes
         private readonly StopToken _stopToken;
         private readonly MuteInputsToken _muteInputsToken;
         private readonly ModeBase _modeBase;
-        private readonly int? _runNumber;
+        private RunmodeConfig _runmodeConfig;
 
         public Runmode(ILoggerFactory loggerFactory, BaseConfig baseConfig, Func<RunmodeConfig> configLoader)
         {
-            RunmodeConfig runmodeConfig = configLoader();
+            _runmodeConfig = configLoader();
             _logger = loggerFactory.CreateLogger<Runmode>();
             _stopToken = new StopToken();
-            _muteInputsToken = new MuteInputsToken { Muted = runmodeConfig.MuteInputsAtStartup };
+            _muteInputsToken = new MuteInputsToken { Muted = _runmodeConfig.MuteInputsAtStartup };
             Setups.Databases repos = Setups.SetUpRepositories(_logger, baseConfig);
             _userRepo = repos.UserRepo;
             _runCounterRepo = repos.RunCounterRepo;
             _inputLogRepo = repos.InputLogRepo;
             _inputSidePicksRepo = repos.InputSidePicksRepo;
-            _runNumber = runmodeConfig.RunNumber;
             (_broadcastServer, _overlayConnection) = Setups.SetUpOverlayServer(loggerFactory,
                 baseConfig.OverlayWebsocketHost, baseConfig.OverlayWebsocketPort);
             _modeBase = new ModeBase(
                 loggerFactory, repos, baseConfig, _stopToken, _muteInputsToken, _overlayConnection, ProcessMessage);
-            _modeBase.InstallAdditionalCommand(new Command("reloadinputconfig", _ =>
+            _modeBase.InstallAdditionalCommand(new Command("reloadrunconfig", _ =>
             {
-                (_inputParser, _anarchyInputFeed) = ConfigToInputStuff(configLoader().InputConfig);
+                RunmodeConfig config = configLoader();
+                (_inputParser, _anarchyInputFeed) = ConfigToInputStuff(config.InputConfig);
+                _runmodeConfig = config;
                 return Task.FromResult(new CommandResult { Response = "input config reloaded" });
             }));
-            foreach (Command command in new InputtingCommands(repos.InputSidePicksRepo).Commands)
+            var inputtingCommands = new InputtingCommands(
+                repos.InputSidePicksRepo, SystemClock.Instance, () => _runmodeConfig.SwitchSidesCooldown);
+            foreach (Command command in inputtingCommands.Commands)
                 _modeBase.InstallAdditionalCommand(command);
 
             // TODO felk: this feels a bit messy the way it is done right now,
             //            but I am unsure yet how I'd integrate the individual parts in a cleaner way.
-            (_inputParser, _anarchyInputFeed) = ConfigToInputStuff(runmodeConfig.InputConfig);
+            (_inputParser, _anarchyInputFeed) = ConfigToInputStuff(_runmodeConfig.InputConfig);
             _inputServer = new InputServer(loggerFactory.CreateLogger<InputServer>(),
-                runmodeConfig.InputServerHost, runmodeConfig.InputServerPort,
+                _runmodeConfig.InputServerHost, _runmodeConfig.InputServerPort,
                 _muteInputsToken, () => _anarchyInputFeed);
         }
 
-        private AnarchyInputFeed CreateInputFeedFromConfig(InputConfig config, InputBufferQueue<QueuedInput> inputBufferQueue)
+        private AnarchyInputFeed CreateInputFeedFromConfig(InputConfig config,
+            InputBufferQueue<QueuedInput> inputBufferQueue)
         {
             IInputMapper inputMapper = CreateInputMapperFromConfig(config);
             IInputHoldTiming inputHoldTiming = CreateInputHoldTimingFromConfig(config);
@@ -112,17 +117,36 @@ namespace TPP.Core.Modes
 
         // TODO It feels a bit dirty having this very specific use case bubble all the way up here.
         private static bool _sideFlipFlop;
-        private async Task ProcessPotentialSidedInputs(User user, InputSequence inputSequence)
+        private async Task ProcessPotentialSidedInputs(IChat chat, Message message, InputSequence inputSequence)
         {
             foreach (InputSet inputSet in inputSequence.InputSets)
             {
                 if (inputSet.Inputs.FirstOrDefault(i => i is SideInput) is SideInput { Side: null } sideInput)
                 {
-                    string? side = await _inputSidePicksRepo.GetSide(user.Id);
-                    if (side == null)
+                    string side;
+                    SidePick? sidePick = await _inputSidePicksRepo.GetSidePick(message.User.Id);
+                    if (sidePick?.Side == null)
                     {
                         side = _sideFlipFlop ? "left" : "right";
+                        if (_runmodeConfig.AutoAssignSide)
+                        {
+                            // New users might input a plain "left" or "right" instead of properly picking a side.
+                            // It may confuse them if they get assigned to the side named opposite of their input,
+                            // so let's use that directional input as their side pick instead of flip-flopping.
+                            if (inputSet.Inputs.Any(i => i.OriginalText.ToLowerInvariant() == "left"))
+                                side = "left";
+                            else if (inputSet.Inputs.Any(i => i.OriginalText.ToLowerInvariant() == "right"))
+                                side = "right";
+                            await _inputSidePicksRepo.SetSide(message.User.Id, side);
+                            await chat.SendMessage(
+                                $"you were auto-assigned to the {side} side team. " +
+                                "You can change your team with !left or !right", responseTo: message);
+                        }
                         _sideFlipFlop = !_sideFlipFlop;
+                    }
+                    else
+                    {
+                        side = sidePick.Side;
                     }
                     sideInput.Side = side switch
                     {
@@ -134,13 +158,13 @@ namespace TPP.Core.Modes
             }
         }
 
-        private async Task<bool> ProcessMessage(Message message)
+        private async Task<bool> ProcessMessage(IChat chat, Message message)
         {
             if (message.MessageSource != MessageSource.Chat) return false;
             string potentialInput = message.MessageText.Split(' ', count: 2)[0];
             InputSequence? input = _inputParser.Parse(potentialInput);
             if (input == null) return false;
-            await ProcessPotentialSidedInputs(message.User, input);
+            await ProcessPotentialSidedInputs(chat, message, input);
             foreach (InputSet inputSet in input.InputSets)
                 await _anarchyInputFeed.Enqueue(inputSet, message.User);
             if (!_muteInputsToken.Muted)
@@ -151,9 +175,10 @@ namespace TPP.Core.Modes
         private async Task CollectRunStatistics(User user, InputSequence input, string rawInput)
         {
             await _inputLogRepo.LogInput(user.Id, rawInput, SystemClock.Instance.GetCurrentInstant());
-            if (_runNumber != null && !user.ParticipationEmblems.Contains(_runNumber.Value))
-                await _userRepo.GiveEmblem(user, _runNumber.Value);
-            long counter = await _runCounterRepo.Increment(_runNumber, incrementBy: input.InputSets.Count);
+            int? runNumber = _runmodeConfig.RunNumber;
+            if (runNumber != null && !user.ParticipationEmblems.Contains(runNumber.Value))
+                await _userRepo.GiveEmblem(user, runNumber.Value);
+            long counter = await _runCounterRepo.Increment(runNumber, incrementBy: input.InputSets.Count);
             await _overlayConnection.Send(new ButtonPressUpdate(counter), CancellationToken.None);
         }
 

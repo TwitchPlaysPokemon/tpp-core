@@ -28,7 +28,7 @@ namespace TPP.Core.Modes
         private readonly IImmutableDictionary<string, ICommandResponder> _commandResponders;
         private readonly IImmutableDictionary<string, CommandProcessor> _commandProcessors;
         private readonly IImmutableDictionary<string, IModerator> _moderators;
-        private readonly IImmutableDictionary<string, AdvertisePollsWorker> _advertisePollsWorkers;
+        private readonly IImmutableDictionary<string, AdvertisePollsWorker>? _advertisePollsWorkers;
         private readonly IMessagequeueRepo _messagequeueRepo;
         private readonly bool _forwardUnprocessedMessages;
         private readonly IMessagelogRepo _messagelogRepo;
@@ -37,7 +37,7 @@ namespace TPP.Core.Modes
 
         /// Processes a message that wasn't already processed by the mode base,
         /// and returns whether the message was actively processed.
-        public delegate Task<bool> ProcessMessage(Message message);
+        public delegate Task<bool> ProcessMessage(IChat chat, Message message);
 
         public ModeBase(
             ILoggerFactory loggerFactory,
@@ -52,7 +52,7 @@ namespace TPP.Core.Modes
             _logger = loggerFactory.CreateLogger<ModeBase>();
             PokedexData pokedexData = PokedexData.Load();
             ArgsParser argsParser = Setups.SetUpArgsParser(repos.UserRepo, pokedexData);
-            _processMessage = processMessage ?? (_ => Task.FromResult(false));
+            _processMessage = processMessage ?? ((_, _) => Task.FromResult(false));
 
             var chats = new Dictionary<string, IChat>();
             var chatFactory = new ChatFactory(loggerFactory, clock,
@@ -73,8 +73,8 @@ namespace TPP.Core.Modes
                 c => (ICommandResponder)new CommandResponder(c));
             _commandProcessors = _chats.Values.ToImmutableDictionary(
                 c => c.Name,
-                c => Setups.SetUpCommandProcessor(loggerFactory, argsParser, repos, stopToken, muteInputsToken,
-                    messageSender: c, chatModeChanger: c, executor: c, pokedexData.KnownSpecies));
+                c => Setups.SetUpCommandProcessor(loggerFactory, baseConfig, argsParser, repos, stopToken,
+                    muteInputsToken, messageSender: c, chatModeChanger: c, executor: c, pokedexData.KnownSpecies));
 
             _messagequeueRepo = repos.MessagequeueRepo;
             _messagelogRepo = repos.MessagelogRepo;
@@ -101,9 +101,10 @@ namespace TPP.Core.Modes
             _moderators = _chats.Values.ToImmutableDictionary(
                 c => c.Name,
                 c => (IModerator)new Moderator(moderatorLogger, c, rules, repos.ModbotLogRepo, clock));
-            _advertisePollsWorkers = _chats.Values.ToImmutableDictionary(
-                c => c.Name,
-                c => new AdvertisePollsWorker(baseConfig.AdvertisePollsInterval, repos.PollRepo, c));
+            if (!baseConfig.DisabledFeatures.Contains(TppFeatures.Polls))
+                _advertisePollsWorkers = _chats.Values.ToImmutableDictionary(
+                    c => c.Name,
+                    c => new AdvertisePollsWorker(baseConfig.AdvertisePollsInterval, repos.PollRepo, c));
         }
 
         public void InstallAdditionalCommand(Command command)
@@ -177,7 +178,7 @@ namespace TPP.Core.Modes
                     wasProcessed = true;
                 }
             }
-            wasProcessed |= await _processMessage(message);
+            wasProcessed |= await _processMessage(chat, message);
             if (!wasProcessed && _forwardUnprocessedMessages)
             {
                 await _messagequeueRepo.EnqueueMessage(message.RawIrcMessage);
@@ -188,8 +189,9 @@ namespace TPP.Core.Modes
         {
             foreach (IChat chat in _chats.Values)
                 chat.Connect();
-            foreach (var advertisePollsWorker in _advertisePollsWorkers.Values)
-                advertisePollsWorker.Start();
+            if (_advertisePollsWorkers != null)
+                foreach (var advertisePollsWorker in _advertisePollsWorkers.Values)
+                    advertisePollsWorker.Start();
         }
 
         public void Dispose()
@@ -199,8 +201,9 @@ namespace TPP.Core.Modes
                 chat.Dispose();
                 chat.IncomingMessage -= MessageReceived;
             }
-            foreach (var advertisePollsWorker in _advertisePollsWorkers.Values)
-                advertisePollsWorker.Dispose();
+            if (_advertisePollsWorkers != null)
+                foreach (var advertisePollsWorker in _advertisePollsWorkers.Values)
+                    advertisePollsWorker.Dispose();
         }
     }
 }
