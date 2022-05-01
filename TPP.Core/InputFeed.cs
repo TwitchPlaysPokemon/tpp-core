@@ -32,6 +32,7 @@ namespace TPP.Core
         private readonly float _fps;
 
         private static int _inputIdSeq = 1;
+        private InputMap? _activeInput = null;
 
         public AnarchyInputFeed(
             OverlayConnection overlayConnection,
@@ -60,13 +61,18 @@ namespace TPP.Core
         {
             if (path == "/gbmode_input_complete")
             {
+                _activeInput = null;
                 return null;
             }
 
             static string CasefoldKeyForDesmume(string key) => key.Length == 1 ? key : key.ToLower();
 
             InputMap inputMap;
-            if (_inputBufferQueue.IsEmpty)
+            if (_activeInput != null)
+            {
+                inputMap = _activeInput;
+            }
+            else if (_inputBufferQueue.IsEmpty)
             {
                 inputMap = new Dictionary<string, object>();
             }
@@ -76,6 +82,7 @@ namespace TPP.Core
                 duration = (float)(Math.Round(duration * 60f) / 60f);
                 TimedInputSet timedInputSet = _inputHoldTiming.TimeInput(queuedInput.InputSet, duration);
                 inputMap = _inputMapper.Map(timedInputSet);
+                _activeInput = inputMap;
 
                 await _overlayConnection.Send(new AnarchyInputStart(queuedInput.InputId, timedInputSet, _fps),
                     CancellationToken.None);
