@@ -1,4 +1,4 @@
-﻿
+
 This project consists of functionality regarding inputting.
 
 ## nomenclature
@@ -195,3 +195,9 @@ This conversion is done by an [`InputMapper`](InputMappers.cs).
 There is a [default implementation](InputMappers.cs) available for the default
 TwitchPlaysPokemon input map structure understood by all our input frontends.
 If this does not suit your needs, you need to implement your own input mapper.
+
+
+## input scripts
+
+Lua input scripts for BizHawk and Desmume are supplied in ther Emulator Scripts folder.
+They may need to be adapted for your specific circumstances.
