@@ -79,13 +79,20 @@ namespace TPP.Core.Chat
             });
         }
 
-        public Task SendMessage(string message, Message? responseTo = null) => throw new NotImplementedException();
-        public Task SendWhisper(User target, string message) => throw new NotImplementedException();
-        public Task EnableEmoteOnly() => throw new NotImplementedException();
-        public Task DisableEmoteOnly() => throw new NotImplementedException();
-        public Task DeleteMessage(string messageId) => throw new NotImplementedException();
-        public Task Timeout(User user, string? message, Duration duration) => throw new NotImplementedException();
-        public Task Ban(User user, string? message) => throw new NotImplementedException();
-        public Task Unban(User user, string? message) => throw new NotImplementedException();
+        private static Task PrintAction(string message)
+        {
+            Console.Out.WriteLine($"=== SIMULATED CHAT: {message} ===");
+            return Task.CompletedTask;
+        }
+
+        public Task SendMessage(string message, Message? responseTo = null) => PrintAction($"chat: {message}");
+        public Task SendWhisper(User target, string message) => PrintAction($"whisper to {target}: {message}");
+        public Task EnableEmoteOnly() => PrintAction("enable emote only");
+        public Task DisableEmoteOnly() => PrintAction("disable emote only");
+        public Task DeleteMessage(string messageId) => PrintAction($"delete message with id {messageId}");
+        public Task Timeout(User user, string? message, Duration duration) =>
+            PrintAction($"time out {user.Name} for {duration}");
+        public Task Ban(User user, string? message) => PrintAction($"ban {user.Name}");
+        public Task Unban(User user, string? message) => PrintAction($"unban {user.Name}");
     }
 }
