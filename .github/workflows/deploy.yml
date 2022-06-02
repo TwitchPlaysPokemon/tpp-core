@@ -15,8 +15,7 @@ jobs:
       - name: Setup .NET 6
         uses: actions/setup-dotnet@v1
         with:
-          # TODO change back to "6.0.x" once 6.0.301 is out, because of https://github.com/dotnet/sdk/issues/24269
-          dotnet-version: 6.0.203
+          dotnet-version: 6.0.x
       - uses: actions/checkout@v2
       - name: Publish the core
         run: dotnet publish -c Release -r linux-x64 -p:PublishSingleFile=true --no-self-contained -p:IncludeNativeLibrariesForSelfExtract=true
