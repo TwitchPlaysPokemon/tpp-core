@@ -66,7 +66,8 @@ namespace TPP.Common
             [57] = "Brilliant Diamond",
             [58] = "Legends: Arceus",
             [59] = "Randomized Chatty Crystal",
-            [60] = "Dual Red Blue 2"
+            [60] = "Dual Red Blue 2",
+            [61] = "Grand Colosseum"
         };
 
         public static string FormatEmblem(int emblemNum)
