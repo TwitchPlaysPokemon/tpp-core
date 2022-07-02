@@ -317,6 +317,8 @@ namespace TPP.Core.Commands.Definitions
 
             if (recipient == gifter)
                 return new CommandResult { Response = "You cannot gift to yourself" };
+            if (recipient.Banned)
+                return new CommandResult { Response = "You cannot gift to a banned user." };
 
             List<Badge> badges = await _badgeRepo.FindByUserAndSpecies(gifter.Id, species, amount);
             if (badges.Count < amount)

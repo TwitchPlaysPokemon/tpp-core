@@ -89,6 +89,8 @@ public class CurrencyCommands : ICommandCollection
         (User recipient, Tokens tokens) = await context.ParseArgs<AnyOrder<User, Tokens>>();
         if (recipient == gifter)
             return new CommandResult { Response = "You can't donate to yourself." };
+        if (recipient.Banned)
+            return new CommandResult { Response = "You cannot donate to a banned user." };
         if (tokens <= 0)
             return new CommandResult { Response = "You must donate at least T1." };
 
