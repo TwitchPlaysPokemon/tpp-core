@@ -11,8 +11,8 @@ namespace TPP.Core.Commands.Definitions
             Description = "Get general help, or info on a specific command like: \"!help balance\""
         };
 
-        private readonly CommandProcessor _commandProcessor;
-        public HelpCommand(CommandProcessor commandProcessor) => _commandProcessor = commandProcessor;
+        private readonly ICommandProcessor _commandProcessor;
+        public HelpCommand(ICommandProcessor commandProcessor) => _commandProcessor = commandProcessor;
 
         private CommandResult Execute(CommandContext context)
         {

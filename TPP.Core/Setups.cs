@@ -63,7 +63,7 @@ namespace TPP.Core
             return argsParser;
         }
 
-        public static CommandProcessor SetUpCommandProcessor(
+        public static ICommandProcessor SetUpCommandProcessor(
             ILoggerFactory loggerFactory,
             BaseConfig config,
             ArgsParser argsParser,
@@ -75,9 +75,9 @@ namespace TPP.Core
             IExecutor executor,
             IImmutableSet<Common.PkmnSpecies> knownSpecies)
         {
-            var commandProcessor = new CommandProcessor(
+            ICommandProcessor commandProcessor = new CommandProcessor(
                 loggerFactory.CreateLogger<CommandProcessor>(),
-                databases.CommandLogger, argsParser);
+                databases.CommandLogger, argsParser, SystemClock.Instance);
 
             var moderationService = new ModerationService(
                 SystemClock.Instance, executor, databases.TimeoutLogRepo, databases.BanLogRepo, databases.UserRepo);
@@ -227,7 +227,7 @@ namespace TPP.Core
         }
 
         private static void SetUpDynamicCommands(
-            ILogger logger, CommandProcessor commandProcessor, IResponseCommandRepo responseCommandRepo)
+            ILogger logger, ICommandProcessor commandProcessor, IResponseCommandRepo responseCommandRepo)
         {
             IImmutableList<ResponseCommand> commands = responseCommandRepo.GetCommands().Result;
 
