@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,7 +15,7 @@ namespace TPP.Core.Tests.Overlay
     [Category("IntegrationTest"), Timeout(10_000)]
     public class WebsocketBroadcastServerTest
     {
-        private int _port = 53427;
+        private int _port;
 
         private WebsocketBroadcastServer CreateServer() =>
             new(NullLogger<WebsocketBroadcastServer>.Instance, "127.0.0.1", _port);
@@ -21,7 +23,16 @@ namespace TPP.Core.Tests.Overlay
         [SetUp]
         public void ChangePort()
         {
-            _port++;
+            _port = GetFreePort();
+        }
+
+        private static int GetFreePort()
+        {
+            var tcpListener = new TcpListener(IPAddress.Loopback, 0);
+            tcpListener.Start();
+            int freePort = ((IPEndPoint)tcpListener.LocalEndpoint).Port;
+            tcpListener.Stop();
+            return freePort;
         }
 
         private async Task<WebsocketMessageStreamClient> CreateClient()
