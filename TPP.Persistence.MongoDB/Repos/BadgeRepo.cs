@@ -212,7 +212,7 @@ namespace TPP.Persistence.MongoDB.Repos
             Instant now = _clock.GetCurrentInstant();
             Instant startTime = Instant.Min(_lastRarityUpdate, now - _rarityCalculationTransition);
 
-            IAggregateFluent<Badge> pipeline = Collection.Aggregate();
+            IAggregateFluent<Badge> pipeline = Collection.Aggregate(new AggregateOptions { AllowDiskUse = true });
             if (onlyTheseSpecies != null)
                 pipeline = pipeline.Match(stat => onlyTheseSpecies.Contains(stat.Species));
             var stats = await pipeline
