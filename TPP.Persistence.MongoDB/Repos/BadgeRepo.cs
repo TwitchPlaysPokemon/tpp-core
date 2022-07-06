@@ -40,7 +40,12 @@ namespace TPP.Persistence.MongoDB.Repos
         /// as opposed to only badges from "natural" generation sources (pinball).
         /// Because the rarity value is used to determine transmutation results, but transmuting directly changes
         /// how many of a species' badges exist, this is a relatively small percentage to dampen the feedback loop.
-        private const double CountExistingFactor = 0.2;
+        public const double CountExistingFactor = 0.2;
+
+        // Always refresh stats after a fresh boot.
+        private bool _doFullStatsRefresh = true;
+        // Defer refreshing stats until absolutely necessary. This allows for refreshes to be batched up.
+        private readonly HashSet<PkmnSpecies> _speciesWithOutdatedStats = new();
 
         static BadgeRepo()
         {
@@ -109,16 +114,19 @@ namespace TPP.Persistence.MongoDB.Repos
                 createdAt: createdAt ?? _clock.GetCurrentInstant()
             );
             await Collection.InsertOneAsync(badge);
-            Debug.Assert(badge.Id.Length > 0, "The MongoDB driver injected a generated ID");
-            await RenewBadgeStats(onlyTheseSpecies: ImmutableHashSet.Create(species));
+            _speciesWithOutdatedStats.Add(species);
             return badge;
         }
 
-        public async Task<List<Badge>> FindByUser(string? userId) =>
-            await Collection.Find(b => b.UserId == userId).ToListAsync();
+        public async Task<IImmutableList<Badge>> FindByUser(string? userId) =>
+            (await Collection.Find(b => b.UserId == userId).ToListAsync()).ToImmutableList();
 
-        public async Task<List<Badge>> FindByUserAndSpecies(string? userId, PkmnSpecies species, int? limit = null) =>
-            await Collection.Find(b => b.UserId == userId && b.Species == species).Limit(limit).ToListAsync();
+        public async Task<IImmutableList<Badge>> FindByUserAndSpecies(
+            string? userId, PkmnSpecies species, int? limit = null)
+        {
+            var cursor = Collection.Find(b => b.UserId == userId && b.Species == species).Limit(limit);
+            return (await cursor.ToListAsync()).ToImmutableList();
+        }
 
         public async Task<long> CountByUserAndSpecies(string? userId, PkmnSpecies species) =>
             await Collection.CountDocumentsAsync(b => b.UserId == userId && b.Species == species);
@@ -187,8 +195,8 @@ namespace TPP.Persistence.MongoDB.Repos
                     return (object?)null;
                 });
             }
-            if (subjectToStatChanges.Any())
-                await RenewBadgeStats(onlyTheseSpecies: subjectToStatChanges.ToImmutableHashSet());
+            foreach (PkmnSpecies species in subjectToStatChanges)
+                _speciesWithOutdatedStats.Add(species);
 
             foreach (var tpl in badges.Select(b => (b.UserId, b.Species)).Distinct())
             {
@@ -248,10 +256,24 @@ namespace TPP.Persistence.MongoDB.Repos
                 new BulkWriteOptions { IsOrdered = false });
         }
 
-        public async Task<ImmutableSortedDictionary<PkmnSpecies, BadgeStat>> GetBadgeStats() =>
-            (await CollectionStats
+        public async Task<ImmutableSortedDictionary<PkmnSpecies, BadgeStat>> GetBadgeStats()
+        {
+            if (_doFullStatsRefresh)
+            {
+                _speciesWithOutdatedStats.Clear();
+                _doFullStatsRefresh = false;
+                await RenewBadgeStats();
+            }
+            else if (_speciesWithOutdatedStats.Any())
+            {
+                IImmutableSet<PkmnSpecies> needToUpdate = _speciesWithOutdatedStats.ToImmutableHashSet();
+                _speciesWithOutdatedStats.Clear();
+                await RenewBadgeStats(needToUpdate);
+            }
+            List<BadgeStat> badgeStats = await CollectionStats
                 .Find(FilterDefinition<BadgeStat>.Empty)
-                .ToListAsync())
-            .ToImmutableSortedDictionary(stat => stat.Species, stat => stat);
+                .ToListAsync();
+            return badgeStats.ToImmutableSortedDictionary(stat => stat.Species, stat => stat);
+        }
     }
 }

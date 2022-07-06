@@ -79,9 +79,9 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             Badge badgeNobody = await badgeRepo.AddBadge(null, PkmnSpecies.OfId("4"), Badge.BadgeSource.Pinball);
 
             // when
-            List<Badge> resultUserA = await badgeRepo.FindByUser("userA");
-            List<Badge> resultUserB = await badgeRepo.FindByUser("userB");
-            List<Badge> resultNobody = await badgeRepo.FindByUser(null);
+            IImmutableList<Badge> resultUserA = await badgeRepo.FindByUser("userA");
+            IImmutableList<Badge> resultUserB = await badgeRepo.FindByUser("userB");
+            IImmutableList<Badge> resultNobody = await badgeRepo.FindByUser(null);
 
             // then
             Assert.That(resultUserA, Is.EqualTo(new List<Badge> { badgeUserA1, badgeUserA2 }));

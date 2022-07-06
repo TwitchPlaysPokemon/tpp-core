@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -16,11 +15,6 @@ namespace TPP.Core.Commands
     /// </summary>
     public class CommandProcessor
     {
-        /// <summary>
-        /// maximum execution time for a command before a warning is logged.
-        /// </summary>
-        private static readonly TimeSpan CommandWarnTimeLimit = TimeSpan.FromMilliseconds(1000);
-
         private readonly ILogger<CommandProcessor> _logger;
         private readonly ICommandLogger _commandLogger;
         private readonly ArgsParser _argsParser;
@@ -76,8 +70,6 @@ namespace TPP.Core.Commands
                 _logger.LogDebug("unknown command '{Command}'", commandName);
                 return null;
             }
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
             CommandResult result;
             try
             {
@@ -94,14 +86,6 @@ namespace TPP.Core.Commands
                     "An exception occured while executing command '{Command}'. User: {User}, Original text: {MessageText}",
                     command.Name, message.User, message.MessageText);
                 result = new CommandResult { Response = "An error occurred." };
-            }
-            stopwatch.Stop();
-            if (stopwatch.Elapsed >= CommandWarnTimeLimit)
-            {
-                _logger.LogWarning(
-                    "Command '{Command}' took unusually long ({Duration}ms) to finish! " +
-                    "User: {User:l}, Original text: {MessageText}",
-                    command.Name, stopwatch.ElapsedMilliseconds, message.User, message.MessageText);
             }
             return result;
         }

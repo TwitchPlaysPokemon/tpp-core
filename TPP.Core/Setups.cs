@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
@@ -8,12 +10,14 @@ using MongoDB.Driver.Linq;
 using NodaTime;
 using TPP.ArgsParsing;
 using TPP.ArgsParsing.TypeParsers;
+using TPP.Common;
 using TPP.Core.Chat;
 using TPP.Core.Commands;
 using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
 using TPP.Core.Moderation;
 using TPP.Core.Overlay;
+using TPP.Core.Overlay.Events;
 using TPP.Inputting;
 using TPP.Model;
 using TPP.Persistence;
@@ -63,6 +67,33 @@ namespace TPP.Core
             return argsParser;
         }
 
+        public static ITransmuter SetUpTransmuter(
+            ILoggerFactory loggerFactory,
+            IImmutableSet<Common.PkmnSpecies> knownSpecies,
+            Databases databases,
+            OverlayConnection overlayConnection)
+        {
+            ImmutableSortedSet<PkmnSpecies> transmutableSpecies = knownSpecies
+                .Where(s => s.GetGeneration()
+                    is Generation.Gen1 or Generation.Gen2 or Generation.Gen3 or Generation.Gen4
+                    or Generation.Gen5 or Generation.Gen6 or Generation.Gen7 or Generation.Gen8
+                )
+                .ToImmutableSortedSet();
+            ITransmutationCalculator transmutationCalculator = new TransmutationCalculator(
+                badgeStatsRepo: databases.BadgeStatsRepo,
+                transmutableSpecies: transmutableSpecies,
+                random: new Random().NextDouble);
+            ITransmuter transmuter = new Transmuter(
+                databases.BadgeRepo, transmutationCalculator, databases.TokensBank, databases.TransmutationLogRepo,
+                SystemClock.Instance);
+            transmuter.Transmuted += (_, evt) => TaskToVoidSafely(loggerFactory.CreateLogger<ITransmuter>(), async () =>
+            {
+                TransmuteEvent overlayEvent = new(evt.User.Name, evt.InputSpecies, evt.OutputSpecies, evt.Candidates);
+                await overlayConnection.Send(overlayEvent, CancellationToken.None);
+            });
+            return transmuter;
+        }
+
         public static CommandProcessor SetUpCommandProcessor(
             ILoggerFactory loggerFactory,
             BaseConfig config,
@@ -73,7 +104,8 @@ namespace TPP.Core
             IMessageSender messageSender,
             IChatModeChanger chatModeChanger,
             IExecutor executor,
-            IImmutableSet<Common.PkmnSpecies> knownSpecies)
+            IImmutableSet<Common.PkmnSpecies> knownSpecies,
+            ITransmuter transmuter)
         {
             var commandProcessor = new CommandProcessor(
                 loggerFactory.CreateLogger<CommandProcessor>(),
@@ -97,6 +129,7 @@ namespace TPP.Core
                 new StaticResponseCommands().Commands,
                 new MiscCommands().Commands,
                 new UserCommands(databases.UserRepo).Commands,
+                new TransmuteCommands(transmuter).Commands,
                 new OperatorCommands(
                     stopToken, muteInputsToken, databases.PokeyenBank, databases.TokensBank,
                     messageSender: messageSender, databases.BadgeRepo, databases.UserRepo, databases.InputSidePicksRepo
@@ -142,6 +175,7 @@ namespace TPP.Core
             IUserRepo UserRepo,
             IPollRepo PollRepo,
             IBadgeRepo BadgeRepo,
+            IBadgeStatsRepo BadgeStatsRepo,
             IBank<User> PokeyenBank,
             IBank<User> TokensBank,
             ICommandLogger CommandLogger,
@@ -156,7 +190,8 @@ namespace TPP.Core
             IRunCounterRepo RunCounterRepo,
             IInputLogRepo InputLogRepo,
             IInputSidePicksRepo InputSidePicksRepo,
-            KeyValueStore KeyValueStore
+            KeyValueStore KeyValueStore,
+            ITransmutationLogRepo TransmutationLogRepo
         );
 
         public static Databases SetUpRepositories(ILogger logger, BaseConfig baseConfig)
@@ -175,7 +210,7 @@ namespace TPP.Core
                 defaultOperators: baseConfig.Chat.DefaultOperatorNames,
                 clock: clock);
             IMongoBadgeLogRepo badgeLogRepo = new BadgeLogRepo(mongoDatabase);
-            IBadgeRepo badgeRepo = new BadgeRepo(mongoDatabase, badgeLogRepo, clock);
+            BadgeRepo badgeRepo = new(mongoDatabase, badgeLogRepo, clock);
             badgeRepo.UserLostBadgeSpecies += (_, args) => TaskToVoidSafely(logger, () =>
                 userRepo.UnselectBadgeIfSpeciesSelected(args.UserId, args.Species));
             IBank<User> pokeyenBank = new Bank<User>(
@@ -198,6 +233,7 @@ namespace TPP.Core
             (
                 UserRepo: userRepo,
                 BadgeRepo: badgeRepo,
+                BadgeStatsRepo: badgeRepo,
                 PollRepo: new PollRepo(mongoDatabase, clock),
                 PokeyenBank: pokeyenBank,
                 TokensBank: tokenBank,
@@ -213,7 +249,8 @@ namespace TPP.Core
                 RunCounterRepo: new RunCounterRepo(mongoDatabase),
                 InputLogRepo: new InputLogRepo(mongoDatabase),
                 InputSidePicksRepo: new InputSidePicksRepo(mongoDatabase, clock),
-                KeyValueStore: new KeyValueStore(mongoDatabase)
+                KeyValueStore: new KeyValueStore(mongoDatabase),
+                TransmutationLogRepo: new TransmutationLogRepo(mongoDatabase)
             );
         }
 

@@ -129,4 +129,27 @@ namespace TPP.Model
     }
 
     public record InputLog(string Id, string UserId, string Message, Instant Timestamp);
+
+    public record TransmutationLog(
+        string Id,
+        string UserId,
+        Instant Timestamp,
+        int Cost,
+        IReadOnlyList<string> InputBadges,
+        string OutputBadge)
+    {
+        public virtual bool Equals(TransmutationLog? other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Id == other.Id
+                   && UserId == other.UserId
+                   && Timestamp.Equals(other.Timestamp)
+                   && Cost == other.Cost
+                   && InputBadges.SequenceEqual(other.InputBadges) // <-- Equals() is overridden just for this
+                   && OutputBadge == other.OutputBadge;
+        }
+        public override int GetHashCode() =>
+            HashCode.Combine(Id, UserId, Timestamp, Cost, InputBadges, OutputBadge);
+    }
 }

@@ -32,20 +32,33 @@ namespace TPP.Core.Commands
     public class PerUserCooldown
     {
         private readonly IClock _clock;
-        private readonly Duration _duration;
+        public Duration Duration { get; }
         private Dictionary<User, Instant> _lastExecutions = new Dictionary<User, Instant>();
 
         public PerUserCooldown(IClock clock, Duration duration)
         {
             _clock = clock;
-            _duration = duration;
+            Duration = duration;
         }
 
         private void PruneLapsed(Instant now)
         {
             _lastExecutions = _lastExecutions
-                .Where(kvp => kvp.Value + _duration > now)
+                .Where(kvp => kvp.Value + Duration > now)
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        }
+
+        /// Checks whether the cooldown has lapsed.
+        public bool CheckLapsed(User user)
+        {
+            PruneLapsed(_clock.GetCurrentInstant());
+            return !_lastExecutions.ContainsKey(user);
+        }
+
+        /// Resets the cooldown.
+        public void Reset(User user)
+        {
+            _lastExecutions[user] = _clock.GetCurrentInstant();
         }
 
         /// Checks whether the cooldown has lapsed.

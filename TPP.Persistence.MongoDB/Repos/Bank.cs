@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -134,7 +133,6 @@ namespace TPP.Persistence.MongoDB.Repos
                 additionalData: new Dictionary<string, object?>(transaction.AdditionalData)
             );
             await _transactionLogCollection.InsertOneAsync(session, transactionLog, cancellationToken: token);
-            Debug.Assert(transactionLog.Id.Length > 0, "The MongoDB driver injected a generated ID");
             return transactionLog;
         }
 
