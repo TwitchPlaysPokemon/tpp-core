@@ -12,9 +12,11 @@ namespace TPP.Core.Commands.Definitions;
 public class TransmuteCommands : ICommandCollection
 {
     private const int DefaultTransmutationCooldownSeconds = 30;
+    private const int DefaultMessageDelaySeconds = 15;
 
     private readonly ITransmuter _transmuter;
     private readonly PerUserCooldown _cooldown;
+    private readonly Duration _messageDelay;
 
     public IEnumerable<Command> Commands => new[]
     {
@@ -25,12 +27,16 @@ public class TransmuteCommands : ICommandCollection
         },
     };
 
-    public TransmuteCommands(ITransmuter transmuter, Duration? transmutationCooldown = null)
+    public TransmuteCommands(
+        ITransmuter transmuter,
+        Duration? transmutationCooldown = null,
+        Duration? messageDelay = null)
     {
         _transmuter = transmuter;
         _cooldown = new PerUserCooldown(
             SystemClock.Instance,
             transmutationCooldown ?? Duration.FromSeconds(DefaultTransmutationCooldownSeconds));
+        _messageDelay = messageDelay ?? Duration.FromSeconds(DefaultMessageDelaySeconds);
     }
 
     public async Task<CommandResult> Transmute(CommandContext context)
@@ -63,6 +69,7 @@ public class TransmuteCommands : ICommandCollection
 
         string badgesStr = string.Join(", ", speciesList.Take(speciesList.Count - 1)) + " and " +
                            speciesList.Last();
+        await Task.Delay(_messageDelay.ToTimeSpan());
         return new CommandResult
         {
             Response = $"{user.Name} transmuted {badgesStr}, and the result is {resultBadge.Species}!"
