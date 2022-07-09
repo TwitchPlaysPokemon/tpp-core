@@ -67,7 +67,8 @@ namespace TPP.Common
             [58] = "Legends: Arceus",
             [59] = "Randomized Chatty Crystal",
             [60] = "Dual Red Blue 2",
-            [61] = "Grand Colosseum"
+            [61] = "Grand Colosseum",
+            [62] = "XG Remix"
         };
 
         public static string FormatEmblem(int emblemNum)
