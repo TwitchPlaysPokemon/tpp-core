@@ -121,6 +121,14 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo
     public async Task<IImmutableList<Badge>> FindByUser(string? userId) =>
         (await Collection.Find(b => b.UserId == userId).ToListAsync()).ToImmutableList();
 
+    public async Task<IImmutableList<string>> FindOwnerIdsForSpecies(PkmnSpecies species) =>
+        (await Collection.AsQueryable()
+            .Where(b => b.Species == species && b.UserId != null)
+            .GroupBy(b => b.UserId! /* not null because of filter on not-null above */)
+            .OrderByDescending(grp => grp.Count())
+            .Select(grp => grp.Key)
+            .ToListAsync()).ToImmutableList();
+
     public async Task<IImmutableList<Badge>> FindByUserAndSpecies(
         string? userId, PkmnSpecies species, int? limit = null)
     {
@@ -274,5 +282,23 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo
             .Find(FilterDefinition<BadgeStat>.Empty)
             .ToListAsync();
         return badgeStats.ToImmutableSortedDictionary(stat => stat.Species, stat => stat);
+    }
+
+    public async Task<BadgeStat?> GetBadgeStatsForSpecies(PkmnSpecies species)
+    {
+        if (_doFullStatsRefresh)
+        {
+            _speciesWithOutdatedStats.Clear();
+            _doFullStatsRefresh = false;
+            await RenewBadgeStats();
+        }
+        else if (_speciesWithOutdatedStats.Contains(species))
+        {
+            _speciesWithOutdatedStats.Remove(species);
+            await RenewBadgeStats(ImmutableHashSet.Create(species));
+        }
+        return await CollectionStats
+            .Find(stat => stat.Species == species)
+            .SingleOrDefaultAsync();
     }
 }

@@ -145,7 +145,8 @@ namespace TPP.Core
             if (!config.DisabledFeatures.Contains(TppFeatures.Badges))
             {
                 commands.AddRange(new BadgeCommands(
-                    databases.BadgeRepo, databases.UserRepo, messageSender, knownSpecies).Commands);
+                    databases.BadgeRepo, databases.BadgeStatsRepo, databases.UserRepo, messageSender, knownSpecies
+                ).Commands);
             }
             if (!config.DisabledFeatures.Contains(TppFeatures.Currencies))
             {

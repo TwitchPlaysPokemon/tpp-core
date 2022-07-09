@@ -190,7 +190,6 @@ namespace TPP.Core.Commands.Definitions
             ["giftitem"] = "Gift an item you own to another user with no price. Arguments: <item> <number of items>(Optional) <username>",
 
             // badges
-            ["checkbadge"] = "View statistics about a badge. Argument: <Pokémon>",
             ["buybadge"] = "Buy a badge that is being sold. If no selling badge matches, it will place a buy order on the badge. Arguments: <Pokémon> <quantity> t<tokens> <duration>(s(seconds)/m(minutes)/h(hours)/d(days)/w(weeks))(optional: will not place a buy order if not specified)",
             ["listbuybadge"] = "List all the badge buy offers you have up.",
             ["cancelbuybadge"] = "Cancel all buy orders up for a particular badge. Argument: <Pokémon>",
