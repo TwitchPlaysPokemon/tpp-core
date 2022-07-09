@@ -38,6 +38,7 @@ namespace TPP.Persistence
     public interface IBadgeStatsRepo
     {
         public Task<ImmutableSortedDictionary<PkmnSpecies, BadgeStat>> GetBadgeStats();
+        public Task<BadgeStat?> GetBadgeStatsForSpecies(PkmnSpecies species);
     }
 
     public interface IBadgeRepo
@@ -45,6 +46,7 @@ namespace TPP.Persistence
         public Task<Badge> AddBadge(
             string? userId, PkmnSpecies species, Badge.BadgeSource source, Instant? createdAt = null);
         public Task<IImmutableList<Badge>> FindByUser(string? userId);
+        public Task<IImmutableList<string>> FindOwnerIdsForSpecies(PkmnSpecies species);
         public Task<IImmutableList<Badge>> FindByUserAndSpecies(string? userId, PkmnSpecies species, int? limit = null);
         public Task<long> CountByUserAndSpecies(string? userId, PkmnSpecies species);
         public Task<ImmutableSortedDictionary<PkmnSpecies, int>> CountByUserPerSpecies(string? userId);
