@@ -164,13 +164,13 @@ namespace TPP.Persistence.MongoDB.Repos
         }
 
         public async Task<User?> FindBySimpleName(string simpleName) =>
-            await Collection.Find(u => u.SimpleName == simpleName).FirstOrDefaultAsync();
+            await Collection.Find(u => u.SimpleName == simpleName).SortByDescending(u => u.LastActiveAt).FirstOrDefaultAsync();
 
         public async Task<User?> FindById(string userId) =>
             await Collection.Find(u => u.Id == userId).FirstOrDefaultAsync();
 
         public async Task<User?> FindByDisplayName(string displayName) =>
-            await Collection.Find(u => u.TwitchDisplayName == displayName).FirstOrDefaultAsync();
+            await Collection.Find(u => u.TwitchDisplayName == displayName).SortByDescending(u => u.LastActiveAt).FirstOrDefaultAsync();
 
         public async Task<List<User>> FindAllByPokeyenUnder(long yen) =>
             await Collection.Find(u => u.Pokeyen < yen).ToListAsync();
