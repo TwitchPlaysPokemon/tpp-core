@@ -17,6 +17,7 @@ using TwitchLib.Client.Extensions;
 using TwitchLib.Client.Models;
 using TwitchLib.Communication.Clients;
 using TwitchLib.Communication.Models;
+using TwitchLib.Communication.Events;
 using static TPP.Core.Configuration.ConnectionConfig.Twitch;
 using static TPP.Core.EventUtils;
 
@@ -98,6 +99,7 @@ namespace TPP.Core.Chat
                 whisperCommandIdentifier: '\0');
 
             _twitchClient.OnConnected += Connected;
+            _twitchClient.OnError += OnError;
             _twitchClient.OnMessageReceived += MessageReceived;
             _twitchClient.OnWhisperReceived += WhisperReceived;
             _subscriptionWatcher = new TwitchLibSubscriptionWatcher(
@@ -109,6 +111,18 @@ namespace TPP.Core.Chat
         }
 
         private void Connected(object? sender, OnConnectedArgs e) => _twitchClient.JoinChannel(_ircChannel);
+
+        // Subscribe to TwitchClient errors to hopefully prevent the very rare incidents where the bot effectively
+        // gets disconnected, but the CheckConnectivityWorker cannot detect it and doesn't reconnect.
+        // I've never caught this event firing (it doesn't fire when you pull the ethernet cable either)
+        // but the theory is that if this bug occurs: https://github.com/dotnet/runtime/issues/48246 we can call
+        // Disconnect() to force the underlying ClientWebSocket.State to change to Abort.
+        private void OnError(object? sender, OnErrorEventArgs e)
+        {
+            _logger.LogError(e.Exception, "The TwitchClient encountered an error. Forcing a disconnect");
+            _twitchClient.Disconnect();
+            // let the CheckConnectivityWorker handle reconnecting
+        }
 
         private static string BuildSubResponse(
             ISubscriptionProcessor.SubResult subResult, User? gifter, bool isAnonymous)
