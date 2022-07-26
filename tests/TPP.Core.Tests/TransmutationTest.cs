@@ -43,13 +43,14 @@ public class TransmutationCalculatorTest
         ITransmutationCalculator transmutationCalculator = new TransmutationCalculator(
             badgeStatsRepoMock.Object,
             badgeStats.Keys.ToImmutableSortedSet(),
+            badgeStats.Keys.ToImmutableSortedSet(),
             random: random.NextDouble
         );
 
         ImmutableSortedDictionary<PkmnSpecies, int> result = Enumerable
             .Range(0, numTransmutations)
             .Select(_ => transmutationCalculator
-                .Transmute(ImmutableList.Create(speciesCommon, speciesCommon, speciesCommon)).Result)
+                .Transmute(ImmutableList.Create(speciesCommon, speciesCommon, speciesCommon), 1).Result)
             .GroupBy(species => species)
             .ToImmutableSortedDictionary(grp => grp.Key, grp => grp.Count());
 
@@ -82,13 +83,14 @@ public class TransmutationCalculatorTest
         ITransmutationCalculator transmutationCalculator = new TransmutationCalculator(
             badgeStatsRepoMock.Object,
             badgeStats.Keys.ToImmutableSortedSet(),
+            badgeStats.Keys.ToImmutableSortedSet(),
             random: random.NextDouble
         );
 
         ImmutableSortedDictionary<PkmnSpecies, int> result = Enumerable
             .Range(0, numTransmutations)
             .Select(_ => transmutationCalculator
-                .Transmute(Enumerable.Repeat(speciesUncommon, 100).ToImmutableList()).Result)
+                .Transmute(Enumerable.Repeat(speciesUncommon, 100).ToImmutableList(), 1).Result)
             .GroupBy(species => species)
             .ToImmutableSortedDictionary(grp => grp.Key, grp => grp.Count());
 
@@ -133,7 +135,7 @@ public class TransmuterTest
 
         bankMock.Setup(b => b.GetAvailableMoney(user)).ReturnsAsync(1);
         List<Dictionary<string, object?>> transferData = new();
-        transmutationCalculatorMock.Setup(c => c.Transmute(inputSpeciesList)).ReturnsAsync(speciesOut);
+        transmutationCalculatorMock.Setup(c => c.Transmute(inputSpeciesList, 1)).ReturnsAsync(speciesOut);
         badgeRepoMock.Setup(r => r.FindByUserAndSpecies(user.Id, speciesIn, inputSpeciesList.Count))
             .ReturnsAsync(inputBadges);
         badgeRepoMock.Setup(r => r.TransferBadges(inputBadges, null, "transmutation", Capture.In(transferData)))
