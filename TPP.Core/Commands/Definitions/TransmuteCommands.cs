@@ -22,8 +22,9 @@ public class TransmuteCommands : ICommandCollection
     {
         new Command("transmute", Transmute)
         {
-            Description = "Transform 3 or more badges into a (usually) rarer badge. Costs one token. " +
-                          "Arguments: <several Pokemon>(at least 3) t1"
+            Description = "Transform 3 or more badges into a (usually) rarer badge. Costs one or ten token(s). T1 shall be provided" +
+                          " for regular transmutation, T10 will start a special transmutation that results in a fakemon badge. " +
+                          "Arguments: <several Pokemon>(at least 3) T1 / T10"
         },
     };
 
@@ -52,7 +53,7 @@ public class TransmuteCommands : ICommandCollection
         if (!tokensArg.IsPresent)
             return new CommandResult
             {
-                Response = $"Please include payment 'T{ITransmutationCalculator.TransmutationCost}' in your command"
+                Response = $"Please include payment 'T{ITransmutationCalculator.TransmutationCostStandard}' or 'T{ITransmutationCalculator.TransmutationCostSpecial}' in your command"
             };
         ImmutableList<PkmnSpecies> speciesList = speciesArg.Values;
 

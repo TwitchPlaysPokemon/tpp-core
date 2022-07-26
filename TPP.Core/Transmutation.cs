@@ -18,10 +18,13 @@ public class TransmuteException : Exception
 
 public interface ITransmutationCalculator
 {
-    public const int TransmutationCost = 1;
+    public const int TransmutationCostStandard = 1;
+    public const int TransmutationCostSpecial = 10;
+    public const double TransmutationSpecialMinRarity = 11.0; // Minimum logarithmic inverse rarity at least one of
+                                                              //   the badges used in special transmutation needs to have
     public const int MinTransmuteBadges = 3;
 
-    Task<PkmnSpecies> Transmute(IImmutableList<PkmnSpecies> inputSpecies);
+    Task<PkmnSpecies> Transmute(IImmutableList<PkmnSpecies> inputSpecies, int tokens);
 }
 
 /// <summary>
@@ -36,18 +39,23 @@ public class TransmutationCalculator : ITransmutationCalculator
 
     private readonly IBadgeStatsRepo _badgeStatsRepo;
     private readonly Func<double> _random;
-    private readonly IImmutableSet<PkmnSpecies> _transmutableSpecies;
+    private readonly IImmutableSet<PkmnSpecies> _transmutableSpeciesStandard;
+    private readonly IImmutableSet<PkmnSpecies> _transmutableSpeciesSpecial;
 
     public TransmutationCalculator(
         IBadgeStatsRepo badgeStatsRepo,
-        IImmutableSet<PkmnSpecies> transmutableSpecies,
+        IImmutableSet<PkmnSpecies> transmutableSpeciesStandard,
+        IImmutableSet<PkmnSpecies> transmutableSpeciesSpecial,
         Func<double> random)
     {
         _badgeStatsRepo = badgeStatsRepo;
-        _transmutableSpecies = transmutableSpecies;
+        _transmutableSpeciesStandard = transmutableSpeciesStandard;
+        _transmutableSpeciesSpecial = transmutableSpeciesSpecial;
         _random = random;
-        if (!transmutableSpecies.Any())
-            throw new ArgumentException("must provide at least 1 transmutable", nameof(transmutableSpecies));
+        if (!transmutableSpeciesStandard.Any())
+            throw new ArgumentException("must provide at least 1 transmutable", nameof(transmutableSpeciesStandard));
+        if (!transmutableSpeciesSpecial.Any())
+            throw new ArgumentException("must provide at least 1 transmutable", nameof(transmutableSpeciesSpecial));
     }
 
     private static double CombineRarities(IEnumerable<double> rarities) =>
@@ -103,13 +111,23 @@ public class TransmutationCalculator : ITransmutationCalculator
         return randomRounding < rarity ? closestNeg.Value.Item1 : closestPos.Value.Item1;
     }
 
-    public async Task<PkmnSpecies> Transmute(IImmutableList<PkmnSpecies> inputSpecies)
+    public async Task<PkmnSpecies> Transmute(IImmutableList<PkmnSpecies> inputSpecies, int tokens)
     {
         if (inputSpecies.Count < ITransmutationCalculator.MinTransmuteBadges)
             throw new TransmuteException(
                 $"Must transmute at least {ITransmutationCalculator.MinTransmuteBadges} badges");
         IDictionary<PkmnSpecies, BadgeStat> stats = await _badgeStatsRepo.GetBadgeStats();
-        IImmutableSet<PkmnSpecies> transmutables = _transmutableSpecies
+        if (tokens == ITransmutationCalculator.TransmutationCostSpecial)
+        {
+            double minRarity = inputSpecies.Where(i => stats.ContainsKey(i)).Select(i => stats[i]).Min(t => t.Rarity);
+            double logInverseRarity = -1 * Math.Log(minRarity);
+            if (logInverseRarity < ITransmutationCalculator.TransmutationSpecialMinRarity)
+                throw new TransmuteException(
+                    $"Have to provide a badge that has at least {ITransmutationCalculator.TransmutationSpecialMinRarity} in logarithmic inverse rarity");
+        }
+
+        IImmutableSet<PkmnSpecies> transmutables = (tokens == ITransmutationCalculator.TransmutationCostSpecial
+                                                        ? _transmutableSpeciesSpecial : _transmutableSpeciesStandard)
             .Except(inputSpecies)
             .Where(t => stats.ContainsKey(t) && stats[t].Rarity > 0)
             .ToImmutableHashSet();
@@ -190,15 +208,15 @@ public class Transmuter : ITransmuter
 
     public async Task<Badge> Transmute(User user, int tokens, IImmutableList<PkmnSpecies> speciesList)
     {
-        if (tokens != ITransmutationCalculator.TransmutationCost)
+        if (tokens != ITransmutationCalculator.TransmutationCostStandard && tokens != ITransmutationCalculator.TransmutationCostSpecial)
             throw new TransmuteException(
-                $"Must pay exactly {ITransmutationCalculator.TransmutationCost} token to transmute.");
+                $"Must pay exactly {ITransmutationCalculator.TransmutationCostStandard} or {ITransmutationCalculator.TransmutationCostSpecial} token to transmute.");
         if (speciesList.Count < ITransmutationCalculator.MinTransmuteBadges)
             throw new TransmuteException(
                 $"Must transmute at least {ITransmutationCalculator.MinTransmuteBadges} badges.");
         if (await _tokenBank.GetAvailableMoney(user) < tokens)
             throw new TransmuteException(
-                $"You don't have the T{ITransmutationCalculator.TransmutationCost} required to transmute.");
+                $"You don't have the T{tokens} required to transmute.");
 
         IImmutableList<Badge> inputBadges = ImmutableList<Badge>.Empty;
         foreach (var grouping in speciesList.GroupBy(s => s))
@@ -212,7 +230,7 @@ public class Transmuter : ITransmuter
             inputBadges = inputBadges.Concat(badges).ToImmutableList();
         }
 
-        PkmnSpecies resultSpecies = await _transmutationCalculator.Transmute(speciesList);
+        PkmnSpecies resultSpecies = await _transmutationCalculator.Transmute(speciesList, tokens);
 
         Dictionary<string, object?> additionalData = new();
         IImmutableList<Badge> consumedBadges = await _badgeRepo
@@ -228,15 +246,15 @@ public class Transmuter : ITransmuter
             }));
         await _transmutationLogRepo.Log(user.Id, _clock.GetCurrentInstant(), tokens, inputIds, resultBadge.Id);
 
-        await OnTransmuted(user, speciesList, resultSpecies);
+        await OnTransmuted(user, speciesList, resultSpecies, tokens);
         return resultBadge;
     }
 
-    private async Task OnTransmuted(User user, IImmutableList<PkmnSpecies> inputs, PkmnSpecies output)
+    private async Task OnTransmuted(User user, IImmutableList<PkmnSpecies> inputs, PkmnSpecies output, int tokens)
     {
         List<PkmnSpecies> candidates = new();
         for (int i = 0; i < 5; i++)
-            candidates.Add(await _transmutationCalculator.Transmute(inputs));
+            candidates.Add(await _transmutationCalculator.Transmute(inputs, tokens));
         candidates.Insert(Random.Next(0, candidates.Count), output);
         var args = new TransmuteEventArgs(user, inputs, output, candidates.ToImmutableList());
         Transmuted?.Invoke(this, args);
