@@ -96,7 +96,8 @@ namespace TPP.Core
             User user = subscriptionInfo.Subscriber;
             if (user.MonthsSubscribed > 0 && user.SubscriptionTier == null)
             {
-                _logger.LogWarning("Subscriber {User} has no subscription tier recorded. Assuming Tier 1", user);
+                _logger.LogInformation("Subscriber {User} has no subscription tier recorded. Assuming this user was " +
+                                       "subscribed before tiers were a thing and is equivalent to Tier 1", user);
                 user = await _userRepo.SetSubscriptionInfo(
                     user, user.MonthsSubscribed, SubscriptionTier.Tier1, user.LoyaltyLeague,
                     user.SubscriptionUpdatedAt);

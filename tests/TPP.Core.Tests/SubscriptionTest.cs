@@ -282,8 +282,9 @@ namespace TPP.Core.Tests
 
             // THEN
             Assert.IsInstanceOf<ISubscriptionProcessor.SubResult.SameMonth>(subResult);
-            logMock.VerifyLog(l => l.LogWarning(
-                $"Subscriber {userWithoutTier} has no subscription tier recorded. Assuming Tier 1"));
+            logMock.VerifyLog(l => l.LogInformation(
+                $"Subscriber {userWithoutTier} has no subscription tier recorded. " +
+                "Assuming this user was subscribed before tiers were a thing and is equivalent to Tier 1"));
             userRepoMock.Verify(r => r.SetSubscriptionInfo(userWithoutTier, 1,
                 SubscriptionTier.Tier1, userWithoutTier.LoyaltyLeague, userWithoutTier.SubscriptionUpdatedAt));
         }
