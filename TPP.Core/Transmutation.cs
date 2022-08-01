@@ -118,6 +118,9 @@ public class TransmutationCalculator : ITransmutationCalculator
             throw new TransmuteException(
                 "there are no transmutables left after removing all input species from the pool");
         }
+        HashSet<PkmnSpecies> illegalInputs = inputSpecies.Except(_transmutableSpecies).ToHashSet();
+        if (illegalInputs.Any())
+            throw new TransmuteException(string.Join(", ", illegalInputs) + " cannot be used for transmutation");
 
         double totalExisting = transmutables.Select(t => stats[t].RarityCount).Sum();
         double totalGenerated = transmutables.Select(t => stats[t].RarityCountGenerated).Sum();
