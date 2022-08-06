@@ -30,6 +30,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             new(user, text, MessageSource.Chat, string.Empty);
 
         private Mock<IBadgeRepo> _badgeRepoMock = null!;
+        private Mock<IBadgeStatsRepo> _badgeStatsRepoMock = null!;
         private Mock<IUserRepo> _userRepoMock = null!;
         private Mock<IMessageSender> _messageSender = null!;
         private ArgsParser _argsParser = null!;
@@ -40,9 +41,11 @@ namespace TPP.Core.Tests.Commands.Definitions
         public void SetUp()
         {
             _badgeRepoMock = new Mock<IBadgeRepo>();
+            _badgeStatsRepoMock = new Mock<IBadgeStatsRepo>();
             _userRepoMock = new Mock<IUserRepo>();
             _messageSender = new Mock<IMessageSender>();
-            _badgeCommands = new BadgeCommands(_badgeRepoMock.Object, _userRepoMock.Object, _messageSender.Object,
+            _badgeCommands = new BadgeCommands(
+                _badgeRepoMock.Object, _badgeStatsRepoMock.Object, _userRepoMock.Object, _messageSender.Object,
                 ImmutableHashSet<PkmnSpecies>.Empty);
             _argsParser = new ArgsParser();
             _argsParser.AddArgumentParser(new OptionalParser(_argsParser));
@@ -235,6 +238,28 @@ namespace TPP.Core.Tests.Commands.Definitions
                 _badgeCommands.SelectBadge(new CommandContext(MockMessage(user),
                     ImmutableList.Create("#123"), _argsParser)))!;
             Assert.That(failure.Message, Is.EqualTo("did not recognize species '#123'"));
+        }
+
+        [Test]
+        public async Task TestCheckBadge()
+        {
+            User user = MockUser("MockUser");
+            PkmnSpecies species = PkmnSpecies.RegisterName("1", "Mon");
+            _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
+            _badgeStatsRepoMock.Setup(repo => repo.GetBadgeStatsForSpecies(species))
+                .ReturnsAsync(new BadgeStat(species, 5, 5, 5, 5, 0.00001d));
+            _badgeRepoMock.Setup(repo => repo.FindOwnerIdsForSpecies(species))
+                .ReturnsAsync(ImmutableList.Create("1", "2", "3"));
+            _userRepoMock.Setup(repo => repo.FindById("1")).ReturnsAsync(MockUser("Owner1"));
+            _userRepoMock.Setup(repo => repo.FindById("2")).ReturnsAsync(MockUser("Owner2"));
+            _userRepoMock.Setup(repo => repo.FindById("3")).ReturnsAsync(MockUser("Owner3"));
+
+            CommandResult result = await _badgeCommands.CheckBadge(new CommandContext(MockMessage(user),
+                ImmutableList.Create("#1"), _argsParser));
+
+            Assert.That(result.Response, Is.EqualTo(
+                "#001 Mon badges existing: 5, " +
+                "logarithmic inverse rarity: 11.5, higher is better, owned by Owner1, Owner2, Owner3"));
         }
 
         [Test]

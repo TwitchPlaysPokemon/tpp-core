@@ -100,6 +100,34 @@ public class TransmutationCalculatorTest
         Assert.That(result[speciesRare], Is.EqualTo(numTransmutations));
         Assert.That(result, Does.Not.ContainKey(speciesNonExisting));
     }
+
+    /// <summary>
+    /// If a badge is not a possible transmutation result,
+    /// it should also be rejected as a transmutation input.
+    /// </summary>
+    [Test]
+    public void TestCannotTransmuteUntransmutableBadge()
+    {
+        PkmnSpecies speciesTransmutable = PkmnSpecies.RegisterName("1", "yes");
+        PkmnSpecies speciesUntransmutable = PkmnSpecies.RegisterName("2", "no");
+
+        var badgeStatsRepoMock = new Mock<IBadgeStatsRepo>();
+        var badgeStats = new Dictionary<PkmnSpecies, BadgeStat>
+        {
+            [speciesTransmutable] = new(speciesTransmutable, 100, 100, 100, 100, Rarity: 0.001),
+        }.ToImmutableSortedDictionary();
+        badgeStatsRepoMock.Setup(bsr => bsr.GetBadgeStats()).ReturnsAsync(badgeStats);
+
+        ITransmutationCalculator transmutationCalculator = new TransmutationCalculator(
+            badgeStatsRepoMock.Object,
+            ImmutableHashSet.Create(speciesTransmutable),
+            random: () => 12345
+        );
+
+        TransmuteException exception = Assert.ThrowsAsync<TransmuteException>(async () => await transmutationCalculator
+            .Transmute(ImmutableList.Create(speciesUntransmutable, speciesUntransmutable, speciesUntransmutable)))!;
+        Assert.That(exception.Message, Is.EqualTo(speciesUntransmutable + " cannot be used for transmutation"));
+    }
 }
 
 public class TransmuterTest

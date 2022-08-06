@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using NodaTime;
@@ -46,6 +48,11 @@ namespace TPP.Core.Commands.Definitions
                 Description = "Change your displayed badge. Argument: <Pokemon>"
             },
 
+            new Command("checkbadge", CheckBadge)
+            {
+                Description = "View statistics about a badge. Argument: <Pokemon>"
+            },
+
             new Command("pokedex", Pokedex)
             {
                 Aliases = new[] { "dex" },
@@ -60,6 +67,7 @@ namespace TPP.Core.Commands.Definitions
         };
 
         private readonly IBadgeRepo _badgeRepo;
+        private readonly IBadgeStatsRepo _badgeStatsRepo;
         private readonly IUserRepo _userRepo;
         private readonly IMessageSender _messageSender;
         private readonly IImmutableSet<PkmnSpecies> _knownSpecies;
@@ -67,12 +75,14 @@ namespace TPP.Core.Commands.Definitions
 
         public BadgeCommands(
             IBadgeRepo badgeRepo,
+            IBadgeStatsRepo badgeStatsRepo,
             IUserRepo userRepo,
             IMessageSender messageSender,
             IImmutableSet<PkmnSpecies> knownSpecies
         )
         {
             _badgeRepo = badgeRepo;
+            _badgeStatsRepo = badgeStatsRepo;
             _userRepo = userRepo;
             _messageSender = messageSender;
             _knownSpecies = knownSpecies;
@@ -162,6 +172,28 @@ namespace TPP.Core.Commands.Definitions
             }
             await _userRepo.SetSelectedBadge(context.Message.User, species);
             return new CommandResult { Response = $"{species} selected as badge." };
+        }
+
+        public async Task<CommandResult> CheckBadge(CommandContext context)
+        {
+            var species = await context.ParseArgs<PkmnSpecies>();
+            BadgeStat? stats = await _badgeStatsRepo.GetBadgeStatsForSpecies(species);
+
+            int num = stats?.Count ?? 0;
+            double rarity = stats?.Rarity ?? 0;
+            string logInvRarityStr = rarity == 0
+                ? "infinity"
+                : Math.Log(1d / rarity).ToString("F1", CultureInfo.InvariantCulture);
+            string message = $"{species} badges existing: {num}, " +
+                             $"logarithmic inverse rarity: {logInvRarityStr}, higher is better";
+            if (num <= 10)
+            {
+                IImmutableList<string> ownerIds = await _badgeRepo.FindOwnerIdsForSpecies(species);
+                IEnumerable<string> ownerNames = await Task.WhenAll(
+                    ownerIds.Select(async userId => (await _userRepo.FindById(userId))?.Name ?? "<unknown>"));
+                message += ", owned by " + string.Join(", ", ownerNames);
+            }
+            return new CommandResult { Response = message };
         }
 
         public async Task<CommandResult> Pokedex(CommandContext context)
