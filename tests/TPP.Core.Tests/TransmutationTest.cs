@@ -121,11 +121,12 @@ public class TransmutationCalculatorTest
         ITransmutationCalculator transmutationCalculator = new TransmutationCalculator(
             badgeStatsRepoMock.Object,
             ImmutableHashSet.Create(speciesTransmutable),
+            ImmutableHashSet.Create(speciesUntransmutable),
             random: () => 12345
         );
 
         TransmuteException exception = Assert.ThrowsAsync<TransmuteException>(async () => await transmutationCalculator
-            .Transmute(ImmutableList.Create(speciesUntransmutable, speciesUntransmutable, speciesUntransmutable)))!;
+            .Transmute(ImmutableList.Create(speciesUntransmutable, speciesUntransmutable, speciesUntransmutable), 1))!;
         Assert.That(exception.Message, Is.EqualTo(speciesUntransmutable + " cannot be used for transmutation"));
     }
 }

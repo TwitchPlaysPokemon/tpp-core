@@ -136,7 +136,7 @@ public class TransmutationCalculator : ITransmutationCalculator
             throw new TransmuteException(
                 "there are no transmutables left after removing all input species from the pool");
         }
-        HashSet<PkmnSpecies> illegalInputs = inputSpecies.Except(_transmutableSpecies).ToHashSet();
+        HashSet<PkmnSpecies> illegalInputs = inputSpecies.Except(_transmutableSpeciesStandard).ToHashSet();
         if (illegalInputs.Any())
             throw new TransmuteException(string.Join(", ", illegalInputs) + " cannot be used for transmutation");
 
