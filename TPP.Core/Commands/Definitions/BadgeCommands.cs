@@ -186,7 +186,7 @@ namespace TPP.Core.Commands.Definitions
                 : Math.Log(1d / rarity).ToString("F1", CultureInfo.InvariantCulture);
             string message = $"{species} badges existing: {num}, " +
                              $"logarithmic inverse rarity: {logInvRarityStr}, higher is better";
-            if (num <= 10)
+            if (num is > 0 and <= 10)
             {
                 IImmutableList<string> ownerIds = await _badgeRepo.FindOwnerIdsForSpecies(species);
                 IEnumerable<string> ownerNames = await Task.WhenAll(
