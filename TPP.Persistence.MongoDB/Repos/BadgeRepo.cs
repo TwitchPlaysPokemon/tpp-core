@@ -125,8 +125,9 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo
         (await Collection.AsQueryable()
             .Where(b => b.Species == species && b.UserId != null)
             .GroupBy(b => b.UserId! /* not null because of filter on not-null above */)
-            .OrderByDescending(grp => grp.Count())
-            .Select(grp => grp.Key)
+            .Select(grp => new { OwnerId = grp.Key, Count = grp.Count() })
+            .OrderByDescending(grp => grp.Count)
+            .Select(grp => grp.OwnerId)
             .ToListAsync()).ToImmutableList();
 
     public async Task<IImmutableList<Badge>> FindByUserAndSpecies(
