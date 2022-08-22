@@ -68,7 +68,8 @@ namespace TPP.Common
             [59] = "Randomized Chatty Crystal",
             [60] = "Dual Red Blue 2",
             [61] = "Grand Colosseum",
-            [62] = "XG Remix"
+            [62] = "XG Remix",
+            [63] = "Randomized TriHard Emerald",
         };
 
         public static string FormatEmblem(int emblemNum)
