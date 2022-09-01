@@ -16,7 +16,7 @@
         <PackageReference Include="Serilog.Sinks.Discord" Version="1.1.1" />
         <PackageReference Include="String.Similarity" Version="3.0.0" />
         <!-- Earliest version to include this fix: https://github.com/TwitchLib/TwitchLib.Client/pull/170 -->
-        <PackageReference Include="TwitchLib.Client" Version="3.2.3" />
+        <PackageReference Include="TwitchLib.Client" Version="3.2.6" />
     </ItemGroup>
 
     <ItemGroup>
