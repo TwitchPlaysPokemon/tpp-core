@@ -6,7 +6,7 @@ using TPP.Persistence;
 
 namespace TPP.Core.Moderation;
 
-public enum TimeoutResult { Ok, MustBe2WeeksOrLess, UserIsBanned }
+public enum TimeoutResult { Ok, MustBe2WeeksOrLess, UserIsBanned, UserIsModOrOp }
 public enum BanResult { Ok, UserIsModOrOp }
 public enum ModerationActionType { Ban, Unban, Timeout, Untimeout }
 public class ModerationActionPerformedEventArgs : EventArgs
@@ -81,6 +81,9 @@ public class ModerationService
     private async Task<TimeoutResult> TimeoutOrUntimeout(
         User issuerUser, User targetUser, string reason, Duration? duration)
     {
+        if (targetUser.Roles.Overlaps(new[] { Role.Operator, Role.Moderator }))
+            return TimeoutResult.UserIsModOrOp;
+
         bool isIssuing = duration != null;
         if (duration.HasValue && duration > Duration.FromDays(14))
             return TimeoutResult.MustBe2WeeksOrLess;

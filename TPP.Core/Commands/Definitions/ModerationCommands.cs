@@ -120,6 +120,7 @@ public class ModerationCommands : ICommandCollection
                     $"Timed out {targetUser.Name} for {duration.ToTimeSpan().ToHumanReadable()}. Reason: {reason}",
                 TimeoutResult.MustBe2WeeksOrLess => "Twitch timeouts must be 2 weeks or less.",
                 TimeoutResult.UserIsBanned => "User is banned. Unban them first to issue a timeout.",
+                TimeoutResult.UserIsModOrOp => "User is a moderator or operator, they cannot be timed out.",
             }
         };
     }
@@ -136,6 +137,7 @@ public class ModerationCommands : ICommandCollection
                 TimeoutResult.Ok => $"Untimed out {targetUser.Name}. Reason: {reason}",
                 TimeoutResult.MustBe2WeeksOrLess => "Twitch timeouts must be 2 weeks or less.",
                 TimeoutResult.UserIsBanned => "User is banned. Unban them instead if desired.",
+                TimeoutResult.UserIsModOrOp => "User is a moderator or operator, they cannot be timed out.",
             }
         };
     }
