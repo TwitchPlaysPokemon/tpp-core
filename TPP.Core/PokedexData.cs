@@ -10,7 +10,7 @@ namespace TPP.Core
 {
     public enum Generation
     {
-        Gen1 = 1, Gen2, Gen3, Gen4, Gen5, Gen6, Gen7, Gen8,
+        Gen1 = 1, Gen2, Gen3, Gen4, Gen5, Gen6, Gen7, Gen8, Gen9,
         GenFake = 1000
     }
 
@@ -89,14 +89,15 @@ namespace TPP.Core
 
         private static readonly ImmutableSortedDictionary<Generation, int> GenMaxIds = new Dictionary<Generation, int>
         {
-            [Generation.Gen1] = 151, // Mew
-            [Generation.Gen2] = 251, // Celebi
-            [Generation.Gen3] = 386, // Deoxys
-            [Generation.Gen4] = 493, // Arceus
-            [Generation.Gen5] = 649, // Genesect
-            [Generation.Gen6] = 721, // Volcanion
-            [Generation.Gen7] = 807, // Zeraora
-            [Generation.Gen8] = 905, // Enamorus
+            [Generation.Gen1] =  151, // Mew
+            [Generation.Gen2] =  251, // Celebi
+            [Generation.Gen3] =  386, // Deoxys
+            [Generation.Gen4] =  493, // Arceus
+            [Generation.Gen5] =  649, // Genesect
+            [Generation.Gen6] =  721, // Volcanion
+            [Generation.Gen7] =  807, // Zeraora
+            [Generation.Gen8] =  905, // Enamorus
+            [Generation.Gen9] = 1010, // Annihilape
         }.ToImmutableSortedDictionary();
 
         public static Generation GetGeneration(PkmnSpecies species)
