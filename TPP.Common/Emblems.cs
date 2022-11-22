@@ -70,7 +70,8 @@ namespace TPP.Common
             [61] = "Grand Colosseum",
             [62] = "XG Remix",
             [63] = "Randomized TriHard Emerald",
-            [64] = "Star"
+            [64] = "Star",
+            [65] = "Scarlet",
         };
 
         public static string FormatEmblem(int emblemNum)
