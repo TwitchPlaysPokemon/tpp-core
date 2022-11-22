@@ -96,6 +96,7 @@ namespace TPP.Core.Commands.Definitions
                 { "kalos", new RegionInformation(Generation.Gen6, _knownSpecies.Count(pokemon => pokemon.GetGeneration() == Generation.Gen6))},
                 { "alola", new RegionInformation(Generation.Gen7, _knownSpecies.Count(pokemon => pokemon.GetGeneration() == Generation.Gen7))},
                 { "galar", new RegionInformation(Generation.Gen8, _knownSpecies.Count(pokemon => pokemon.GetGeneration() == Generation.Gen8))},
+                { "paldea", new RegionInformation(Generation.Gen9, _knownSpecies.Count(pokemon => pokemon.GetGeneration() == Generation.Gen9))},
                 { "fakemons", new RegionInformation(Generation.GenFake, _knownSpecies.Count(pokemon => pokemon.GetGeneration() == Generation.GenFake))},
                 { PokedexModeNational, new RegionInformation(Generation.GenFake, _knownSpecies.Count(pokemon => pokemon.GetGeneration() != Generation.GenFake))}
             };
