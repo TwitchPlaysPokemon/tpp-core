@@ -9,7 +9,7 @@ using TPP.Persistence;
 
 namespace TPP.Core.Commands.Definitions;
 
-public class InputtingCommands : ICommandCollection
+public class DualRunCommands : ICommandCollection
 {
     public IEnumerable<Command> Commands => new[]
     {
@@ -34,7 +34,7 @@ public class InputtingCommands : ICommandCollection
     private readonly IClock _clock;
     private readonly Func<TimeSpan?> _sidePickCooldownProvider;
 
-    public InputtingCommands(
+    public DualRunCommands(
         IInputSidePicksRepo inputSidePicksRepo, IClock clock, Func<TimeSpan?> sidePickCooldownProvider)
     {
         _inputSidePicksRepo = inputSidePicksRepo;

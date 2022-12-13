@@ -59,10 +59,15 @@ namespace TPP.Core.Modes
                 _runmodeConfig = config;
                 return Task.FromResult(new CommandResult { Response = "input config reloaded" });
             }));
-            var inputtingCommands = new InputtingCommands(
-                repos.InputSidePicksRepo, SystemClock.Instance, () => _runmodeConfig.SwitchSidesCooldown);
-            foreach (Command command in inputtingCommands.Commands)
-                _modeBase.InstallAdditionalCommand(command);
+
+            // Only install dual run commands if we're in dual run mode
+            if (_runmodeConfig.InputConfig.ButtonsProfile.ToInputParserBuilder().IsDualRun)
+            {
+                var dualRunCommands = new DualRunCommands(
+                    repos.InputSidePicksRepo, SystemClock.Instance, () => _runmodeConfig.SwitchSidesCooldown);
+                foreach (Command command in dualRunCommands.Commands)
+                    _modeBase.InstallAdditionalCommand(command);
+            }
 
             // TODO felk: this feels a bit messy the way it is done right now,
             //            but I am unsure yet how I'd integrate the individual parts in a cleaner way.

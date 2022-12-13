@@ -381,5 +381,7 @@ namespace TPP.Inputting
             _leftRightSides = enabled;
             return this;
         }
+
+        public bool IsDualRun { get => _leftRightSides; }
     }
 }
