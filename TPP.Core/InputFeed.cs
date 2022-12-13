@@ -82,6 +82,7 @@ namespace TPP.Core
                 duration = (float)(Math.Round(duration * 60f) / 60f);
                 TimedInputSet timedInputSet = _inputHoldTiming.TimeInput(queuedInput.InputSet, duration);
                 inputMap = _inputMapper.Map(timedInputSet);
+                inputMap["Input_Id"] = queuedInput.InputId; // So client can reject duplicate inputs
                 _activeInput = inputMap;
 
                 await _overlayConnection.Send(new AnarchyInputStart(queuedInput.InputId, timedInputSet, _fps),

@@ -35,7 +35,11 @@ end
 local currentInput = {}
 local currentSeries = {}
 
-function initInput(input) 
+function initInput(input)
+    if input["Input_Id"] and currentInput["Input_Id"] and input["Input_Id"] == currentInput["Input_Id"] then
+        -- Didn't get new input. Call Done endpoint again, try again next frame
+        return http.request(doneInputEndpoint)
+    end
     currentInput = input
     currentInput['active'] = true
     if currentInput["series"] ~= nil then

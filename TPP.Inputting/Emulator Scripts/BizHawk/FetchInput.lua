@@ -33,7 +33,12 @@ function fetchInput()
 			local response, status = http.request(getInputEndpoint)
 			--print(response)
 			if status == 200 then
-				currentInput = JSON:decode(response)
+				local newInput = JSON:decode(response)
+                if newInput["Input_Id"] and currentInput["Input_Id"] and newInput["Input_Id"] == currentInput["Input_Id"] then
+                    -- Didn't get new input. Call Done endpoint again, try again next frame
+                    return http.request(doneInputEndpoint)
+                end
+                currentInput = newInput
                 if currentInput["Held_Frames"] ~= nil then
                     currentInput["Held_Frames"] = math.min(currentInput["Held_Frames"], inputMaxHeldFrames)
                 end
