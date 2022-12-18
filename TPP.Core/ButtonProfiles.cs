@@ -7,6 +7,7 @@ namespace TPP.Core
     public enum ButtonProfile
     {
         [EnumMember(Value = "gb")] GameBoy,
+        [EnumMember(Value = "gba")] GameBoyAdvance,
         [EnumMember(Value = "dualgb")] DualGameBoy,
     }
 
@@ -22,6 +23,8 @@ namespace TPP.Core
                     .RemappedDPad(up: "north", down: "south", left: "west", right: "east", mapsToPrefix: "")
                     .LengthRestrictions(maxSetLength: 2, maxSequenceLength: 1)
                     .HoldEnabled(true),
+                ButtonProfile.GameBoyAdvance => ButtonProfile.GameBoy.ToInputParserBuilder()
+                    .Buttons("l", "r"),
                 ButtonProfile.DualGameBoy => ButtonProfile.GameBoy.ToInputParserBuilder()
                     .LeftRightSidesEnabled(true),
             };
