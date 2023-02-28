@@ -7,16 +7,16 @@
     <ItemGroup>
         <PackageReference Include="docopt.net" Version="0.8.1" />
         <PackageReference Include="JsonNet.ContractResolvers" Version="2.0.0" />
-        <PackageReference Include="JsonSubTypes" Version="1.9.0" />
+        <PackageReference Include="JsonSubTypes" Version="2.0.1" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
         <PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.14" />
         <PackageReference Include="Serilog.Extensions.Logging.File" Version="3.0.0" />
-        <PackageReference Include="Serilog.Sinks.Discord" Version="1.1.1" />
+        <PackageReference Include="Serilog.Sinks.Discord" Version="1.2.1" />
         <PackageReference Include="String.Similarity" Version="3.0.0" />
         <!-- Earliest version to include this fix: https://github.com/TwitchLib/TwitchLib.Client/pull/170 -->
-        <PackageReference Include="TwitchLib.Client" Version="3.2.6" />
+        <PackageReference Include="TwitchLib.Client" Version="3.3.1" />
     </ItemGroup>
 
     <ItemGroup>
