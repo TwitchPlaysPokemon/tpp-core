@@ -11,6 +11,7 @@
           "type": "string",
           "enum": [
             "gb",
+            "gba",
             "dualgb"
           ]
         },
