@@ -34,6 +34,7 @@ namespace TPP.Persistence.MongoDB.Repos
                 cm.MapProperty(u => u.FirstActiveAt).SetElementName("first_active_at");
                 cm.MapProperty(u => u.LastActiveAt).SetElementName("last_active_at");
                 cm.MapProperty(u => u.LastMessageAt).SetElementName("last_message_at");
+                cm.MapProperty(u => u.LastWhisperReceivedAt).SetElementName("last_whisper_received_at");
                 cm.MapProperty(u => u.Pokeyen).SetElementName("pokeyen");
                 cm.MapProperty(u => u.PokeyenHighScore).SetElementName("pokeyen_highscore")
                     .SetDefaultValue(0L)
@@ -119,6 +120,10 @@ namespace TPP.Persistence.MongoDB.Repos
             if (userInfo.FromMessage)
             {
                 update = update.Set(u => u.LastMessageAt, updatedAt);
+            }
+            if (userInfo.FromWhisper)
+            {
+                update = update.Set(u => u.LastWhisperReceivedAt, updatedAt);
             }
 
             async Task<User?> UpdateExistingUser() => await Collection.FindOneAndUpdateAsync<User>(

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
 using TPP.Model;
+using TwitchLib.Api;
 using TwitchLib.Client;
 
 namespace TPP.Core.Chat
@@ -18,7 +19,8 @@ namespace TPP.Core.Chat
 
         public sealed record Chat(string Channel, string Message) : OutgoingMessage;
         public sealed record Reply(string Channel, string Message, string ReplyToId) : OutgoingMessage;
-        public sealed record Whisper(string Receiver, string Message) : OutgoingMessage;
+        public sealed record Whisper
+            (string Receiver, string Message, bool NewRecipient) : OutgoingMessage;
     }
 
     public class TwitchChatQueue
@@ -26,6 +28,8 @@ namespace TPP.Core.Chat
         private static readonly Duration DefaultSleepDuration = Duration.FromMilliseconds(100);
 
         private readonly ILogger<TwitchChatQueue> _logger;
+        private readonly string _senderUserId;
+        private readonly TwitchAPI _twitchApi;
         private readonly TwitchClient _twitchClient;
         /// At which queue size messages get discarded.
         private readonly int _maxQueueLength;
@@ -37,11 +41,15 @@ namespace TPP.Core.Chat
 
         public TwitchChatQueue(
             ILogger<TwitchChatQueue> logger,
+            string senderUserId,
+            TwitchAPI twitchApi,
             TwitchClient twitchClient,
             int maxQueueLength = 100,
             Duration? sleepDuration = null)
         {
             _logger = logger;
+            _senderUserId = senderUserId;
+            _twitchApi = twitchApi;
             _twitchClient = twitchClient;
             _maxQueueLength = maxQueueLength;
             _sleepDuration = sleepDuration ?? DefaultSleepDuration;
@@ -85,7 +93,12 @@ namespace TPP.Core.Chat
             else if (message is OutgoingMessage.Reply reply)
                 _twitchClient.SendReply(reply.Channel, replyToId: reply.ReplyToId, message: reply.Message);
             else if (message is OutgoingMessage.Whisper whisper)
-                _twitchClient.SendWhisper(whisper.Receiver, whisper.Message);
+                _twitchApi.Helix.Whispers.SendWhisperAsync(
+                    _senderUserId,
+                    whisper.Receiver,
+                    whisper.Message,
+                    whisper.NewRecipient
+                ).Wait();
             else
                 throw new ArgumentException("Unknown outgoing message type: " + message);
         }

@@ -32,8 +32,12 @@ namespace TPP.Core.Configuration
             public string Channel { get; init; } = "twitchplayspokemon";
 
             /* account information */
+            public string UserId { get; init; } = "1234567";
             public string Username { get; init; } = "justinfan27365461784";
             public string Password { get; init; } = "oauth:mysecret";
+            public string ClientId { get; init; } = "myclientid";
+            public string AccessToken { get; init; } = "myaccesstoken";
+            // public string RefreshToken { get; init; } = "asdadasd";
 
             /* communication settings */
             public enum SuppressionType { Whisper, Message, Command }

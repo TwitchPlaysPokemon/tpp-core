@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NodaTime;
 using TPP.Common;
+
 //public record Match(long Pokeyen, long Tokens, long PokeyenHighScore);
 
 namespace TPP.Model;
@@ -37,6 +38,7 @@ public class User : PropertyEquatable<User>
     // public Instant? FollowedAt { get; init; }
     // public Instant? LastBetAt { get; init; }
     public Instant? LastMessageAt { get; init; }
+    public Instant? LastWhisperReceivedAt { get; init; }
 
     public long Pokeyen { get; init; }
     public long Tokens { get; init; }
@@ -87,6 +89,7 @@ public class User : PropertyEquatable<User>
         long pokeyen,
         long tokens,
         long pokeyenHighScore = 0,
+        Instant? lastWhisperReceivedAt = null,
         SortedSet<int>? participationEmblems = null,
         int? selectedParticipationEmblem = null,
         PkmnSpecies? selectedBadge = null,
@@ -108,6 +111,7 @@ public class User : PropertyEquatable<User>
         FirstActiveAt = firstActiveAt;
         LastActiveAt = lastActiveAt;
         LastMessageAt = lastMessageAt;
+        LastWhisperReceivedAt = lastWhisperReceivedAt;
         Pokeyen = pokeyen;
         Tokens = tokens;
         PokeyenHighScore = pokeyenHighScore;
