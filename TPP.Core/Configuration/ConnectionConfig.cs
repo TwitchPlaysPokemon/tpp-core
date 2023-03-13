@@ -35,9 +35,11 @@ namespace TPP.Core.Configuration
             public string UserId { get; init; } = "1234567";
             public string Username { get; init; } = "justinfan27365461784";
             public string Password { get; init; } = "oauth:mysecret";
-            public string ClientId { get; init; } = "myclientid";
-            public string AccessToken { get; init; } = "myaccesstoken";
-            // public string RefreshToken { get; init; } = "asdadasd";
+            public string UserClientId { get; init; } = "myuserclientid";
+            // the access token gets created dynamically from the refresh token
+            public string RefreshToken { get; init; } = "myrefreshtoken";
+            public string AppClientId { get; init; } = "myappclientid";
+            public string AppClientSecret { get; init; } = "myappclientsecret";
 
             /* communication settings */
             public enum SuppressionType { Whisper, Message, Command }

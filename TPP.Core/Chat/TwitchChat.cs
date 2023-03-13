@@ -11,8 +11,6 @@ using TPP.Core.Overlay;
 using TPP.Core.Overlay.Events;
 using TPP.Model;
 using TPP.Persistence;
-using TwitchLib.Api;
-using TwitchLib.Api.Core;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Extensions;
@@ -88,11 +86,13 @@ namespace TPP.Core.Chat
             _overlayConnection = overlayConnection;
             _useTwitchReplies = useTwitchReplies;
 
-            var twitchApi = new TwitchAPI(loggerFactory, settings: new ApiSettings
-            {
-                ClientId = chatConfig.ClientId,
-                AccessToken = chatConfig.AccessToken,
-            });
+            var twitchApiProvider = new TwitchApiProvider(
+                loggerFactory,
+                clock,
+                chatConfig.RefreshToken,
+                chatConfig.UserClientId,
+                chatConfig.AppClientId,
+                chatConfig.AppClientSecret);
             _twitchClient = new TwitchClient(
                 client: new WebSocketClient(new ClientOptions
                 {
@@ -125,7 +125,7 @@ namespace TPP.Core.Chat
             _queue = new TwitchChatQueue(
                 loggerFactory.CreateLogger<TwitchChatQueue>(),
                 chatConfig.UserId,
-                twitchApi,
+                twitchApiProvider,
                 _twitchClient);
         }
 

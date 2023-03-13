@@ -29,7 +29,7 @@ namespace TPP.Core.Chat
 
         private readonly ILogger<TwitchChatQueue> _logger;
         private readonly string _senderUserId;
-        private readonly TwitchAPI _twitchApi;
+        private readonly TwitchApiProvider _twitchApiProvider;
         private readonly TwitchClient _twitchClient;
         /// At which queue size messages get discarded.
         private readonly int _maxQueueLength;
@@ -42,14 +42,14 @@ namespace TPP.Core.Chat
         public TwitchChatQueue(
             ILogger<TwitchChatQueue> logger,
             string senderUserId,
-            TwitchAPI twitchApi,
+            TwitchApiProvider twitchApiProvider,
             TwitchClient twitchClient,
             int maxQueueLength = 100,
             Duration? sleepDuration = null)
         {
             _logger = logger;
             _senderUserId = senderUserId;
-            _twitchApi = twitchApi;
+            _twitchApiProvider = twitchApiProvider;
             _twitchClient = twitchClient;
             _maxQueueLength = maxQueueLength;
             _sleepDuration = sleepDuration ?? DefaultSleepDuration;
@@ -93,12 +93,20 @@ namespace TPP.Core.Chat
             else if (message is OutgoingMessage.Reply reply)
                 _twitchClient.SendReply(reply.Channel, replyToId: reply.ReplyToId, message: reply.Message);
             else if (message is OutgoingMessage.Whisper whisper)
-                _twitchApi.Helix.Whispers.SendWhisperAsync(
-                    _senderUserId,
-                    whisper.Receiver,
-                    whisper.Message,
-                    whisper.NewRecipient
-                ).Wait();
+                Task.Run(async () =>
+                {
+                    TwitchAPI twitchApi = await _twitchApiProvider.Get();
+                    await twitchApi.Helix.Whispers.SendWhisperAsync(
+                        _senderUserId,
+                        whisper.Receiver,
+                        whisper.Message,
+                        whisper.NewRecipient
+                    );
+                }).ContinueWith(task =>
+                {
+                    if (task.IsFaulted)
+                        _logger.LogError(task.Exception, "Error during sending of whisper");
+                });
             else
                 throw new ArgumentException("Unknown outgoing message type: " + message);
         }
