@@ -20,8 +20,8 @@ public class TwitchApiProvider
     private readonly ILoggerFactory _loggerFactory;
     private readonly ILogger<TwitchApiProvider> _logger;
     private readonly IClock _clock;
-    private readonly string _refreshToken;
-    private readonly string _userClientId;
+    private readonly string? _accessToken;
+    private readonly string? _refreshToken;
     private readonly string _appClientId;
     private readonly string _appClientSecret;
     private readonly TwitchAPI _authlessApi;
@@ -31,17 +31,19 @@ public class TwitchApiProvider
     public TwitchApiProvider(
         ILoggerFactory loggerFactory,
         IClock clock,
-        string refreshToken,
-        string userClientId,
+        string? accessToken,
+        string? refreshToken,
         string appClientId,
         string appClientSecret)
     {
+        if (accessToken == null && refreshToken == null)
+            throw new ArgumentException("Cannot omit both the access token and the refresh token in the twitch config");
         _loggerFactory = loggerFactory;
         _logger = loggerFactory.CreateLogger<TwitchApiProvider>();
         _clock = clock;
+        _accessToken = accessToken;
         _refreshToken = refreshToken;
         _authlessApi = new TwitchAPI();
-        _userClientId = userClientId;
         _appClientId = appClientId;
         _appClientSecret = appClientSecret;
     }
@@ -53,6 +55,17 @@ public class TwitchApiProvider
         {
             return _api;
         }
+        if (_api == null && _accessToken != null)
+        {
+            _logger.LogDebug("Twitch-API access_token configured, assuming token with infinite validity, using it");
+            _api = new TwitchAPI(_loggerFactory, settings: new ApiSettings
+            {
+                ClientId = _appClientId,
+                AccessToken = _accessToken
+            });
+            _apiValidUntil = Instant.MaxValue;
+            return _api;
+        }
         _logger.LogDebug("Twitch-API access_token expired or not initialized, refreshing API...");
         RefreshResponse result = await _authlessApi.Auth.RefreshAuthTokenAsync(
             refreshToken: _refreshToken,
@@ -61,7 +74,7 @@ public class TwitchApiProvider
         ) ?? throw new ArgumentNullException(null, "The refresh auth token result cannot be null");
         _api = new TwitchAPI(_loggerFactory, settings: new ApiSettings
         {
-            ClientId = _userClientId,
+            ClientId = _appClientId,
             AccessToken = result.AccessToken
         });
         if (result.ExpiresIn <= 0)

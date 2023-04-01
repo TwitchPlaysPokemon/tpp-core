@@ -89,8 +89,8 @@ namespace TPP.Core.Chat
             var twitchApiProvider = new TwitchApiProvider(
                 loggerFactory,
                 clock,
+                chatConfig.AccessToken,
                 chatConfig.RefreshToken,
-                chatConfig.UserClientId,
                 chatConfig.AppClientId,
                 chatConfig.AppClientSecret);
             _twitchClient = new TwitchClient(

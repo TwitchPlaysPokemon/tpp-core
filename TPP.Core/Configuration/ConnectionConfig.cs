@@ -35,9 +35,10 @@ namespace TPP.Core.Configuration
             public string UserId { get; init; } = "1234567";
             public string Username { get; init; } = "justinfan27365461784";
             public string Password { get; init; } = "oauth:mysecret";
-            public string UserClientId { get; init; } = "myuserclientid";
-            // the access token gets created dynamically from the refresh token
-            public string RefreshToken { get; init; } = "myrefreshtoken";
+            // if an access token is specified, assumes it has infinite validity and always uses that one
+            public string? AccessToken { get; init; } = "myaccesstoken";
+            // if no access token is specified, dynamically create access tokens from this refresh token
+            public string? RefreshToken { get; init; } = "myrefreshtoken";
             public string AppClientId { get; init; } = "myappclientid";
             public string AppClientSecret { get; init; } = "myappclientsecret";
 
