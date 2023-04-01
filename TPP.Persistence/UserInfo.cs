@@ -10,5 +10,6 @@ public readonly record struct UserInfo
     string SimpleName,
     HexColor? Color = null,
     bool FromMessage = false,
+    bool FromWhisper = false,
     Instant? UpdatedAt = null
 );

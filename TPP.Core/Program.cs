@@ -127,6 +127,9 @@ Options:
                         .MinimumLevel.Is(baseConfig.DiscordLoggingConfig.MinLogLevel)
                         .CreateLogger());
                 }
+                // TwitchLib.API ist quite spammy, but more importantly, it prints all HTTP calls at info level.
+                // That is bad, because it may include auth calls, which include secrets in their query params.
+                builder.AddFilter("TwitchLib.Api", level => level >= LogLevel.Warning);
             });
 
         private static void Mode(string modeName, string baseConfigFilename, string modeConfigFilename)

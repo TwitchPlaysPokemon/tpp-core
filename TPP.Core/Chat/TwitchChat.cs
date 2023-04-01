@@ -16,8 +16,8 @@ using TwitchLib.Client.Events;
 using TwitchLib.Client.Extensions;
 using TwitchLib.Client.Models;
 using TwitchLib.Communication.Clients;
-using TwitchLib.Communication.Models;
 using TwitchLib.Communication.Events;
+using TwitchLib.Communication.Models;
 using static TPP.Core.Configuration.ConnectionConfig.Twitch;
 using static TPP.Core.EventUtils;
 
@@ -31,13 +31,21 @@ namespace TPP.Core.Chat
         /// Twitch Messaging Interface (TMI, the somewhat IRC-compatible protocol twitch uses) maximum message length.
         /// This limit is in characters, not bytes. See https://discuss.dev.twitch.tv/t/message-character-limit/7793/6
         private const int MaxMessageLength = 500;
+        /// Maximum message length for whispers if the target user hasn't whispered us before.
+        /// See also https://dev.twitch.tv/docs/api/reference/#send-whisper
+        private const int MaxWhisperLength = 500;
+        /// Maximum message length for whispers if the target user _has_ whispered us before.
+        /// See also https://dev.twitch.tv/docs/api/reference/#send-whisper
+        private const int MaxRepeatedWhisperLength = 10000;
 
         private static readonly MessageSplitter MessageSplitterRegular = new(
             maxMessageLength: MaxMessageLength - "/me ".Length);
 
-        private static readonly MessageSplitter MessageSplitterWhisper = new(
-            // visual representation of the longest possible username (25 characters)
-            maxMessageLength: MaxMessageLength - "/w ,,,,,''''',,,,,''''',,,,, ".Length);
+        private static readonly MessageSplitter MessageSplitterWhisperNeverWhispered = new(
+            maxMessageLength: MaxWhisperLength);
+
+        private static readonly MessageSplitter MessageSplitterWhisperWereWhisperedBefore = new(
+            maxMessageLength: MaxRepeatedWhisperLength);
 
         private readonly ILogger<TwitchChat> _logger;
         private readonly IClock _clock;
@@ -78,6 +86,13 @@ namespace TPP.Core.Chat
             _overlayConnection = overlayConnection;
             _useTwitchReplies = useTwitchReplies;
 
+            var twitchApiProvider = new TwitchApiProvider(
+                loggerFactory,
+                clock,
+                chatConfig.AccessToken,
+                chatConfig.RefreshToken,
+                chatConfig.AppClientId,
+                chatConfig.AppClientSecret);
             _twitchClient = new TwitchClient(
                 client: new WebSocketClient(new ClientOptions
                 {
@@ -107,7 +122,11 @@ namespace TPP.Core.Chat
             _subscriptionWatcher.Subscribed += OnSubscribed;
             _subscriptionWatcher.SubscriptionGifted += OnSubscriptionGifted;
 
-            _queue = new TwitchChatQueue(loggerFactory.CreateLogger<TwitchChatQueue>(), _twitchClient);
+            _queue = new TwitchChatQueue(
+                loggerFactory.CreateLogger<TwitchChatQueue>(),
+                chatConfig.UserId,
+                twitchApiProvider,
+                _twitchClient);
         }
 
         private void Connected(object? sender, OnConnectedArgs e) => _twitchClient.JoinChannel(_ircChannel);
@@ -250,11 +269,15 @@ namespace TPP.Core.Chat
                 return;
             }
             _logger.LogDebug(">@{Username}: {Message}", target.SimpleName, message);
+            bool newRecipient = target.LastWhisperReceivedAt == null;
+            MessageSplitter splitter = newRecipient
+                ? MessageSplitterWhisperNeverWhispered
+                : MessageSplitterWhisperWereWhisperedBefore;
             await Task.Run(() =>
             {
-                foreach (string part in MessageSplitterWhisper.FitToMaxLength(message))
+                foreach (string part in splitter.FitToMaxLength(message))
                 {
-                    _queue.Enqueue(target, new OutgoingMessage.Whisper(target.SimpleName, part));
+                    _queue.Enqueue(target, new OutgoingMessage.Whisper(target.Id, part, newRecipient));
                 }
             });
         }
@@ -317,7 +340,7 @@ namespace TPP.Core.Chat
                 if (e.ChatMessage.Username == _twitchClient.TwitchUsername)
                     // new core sees messages posted by old core, but we don't want to process our own messages
                     return;
-                User user = await _userRepo.RecordUser(GetUserInfoFromTwitchMessage(e.ChatMessage));
+                User user = await _userRepo.RecordUser(GetUserInfoFromTwitchMessage(e.ChatMessage, fromWhisper: false));
                 var message = new Message(user, e.ChatMessage.Message, MessageSource.Chat, e.ChatMessage.RawIrcMessage)
                 {
                     Details = new MessageDetails(
@@ -337,7 +360,8 @@ namespace TPP.Core.Chat
             TaskToVoidSafely(_logger, async () =>
             {
                 _logger.LogDebug("<@{Username}: {Message}", e.WhisperMessage.Username, e.WhisperMessage.Message);
-                User user = await _userRepo.RecordUser(GetUserInfoFromTwitchMessage(e.WhisperMessage));
+                User user = await _userRepo.RecordUser(
+                    GetUserInfoFromTwitchMessage(e.WhisperMessage, fromWhisper: true));
                 var message = new Message(user, e.WhisperMessage.Message, MessageSource.Whisper,
                     e.WhisperMessage.RawIrcMessage)
                 {
@@ -353,7 +377,7 @@ namespace TPP.Core.Chat
             });
         }
 
-        private UserInfo GetUserInfoFromTwitchMessage(TwitchLibMessage message)
+        private UserInfo GetUserInfoFromTwitchMessage(TwitchLibMessage message, bool fromWhisper)
         {
             string? colorHex = message.ColorHex;
             return new UserInfo(
@@ -362,6 +386,7 @@ namespace TPP.Core.Chat
                 SimpleName: message.Username,
                 Color: string.IsNullOrEmpty(colorHex) ? null : HexColor.FromWithHash(colorHex),
                 FromMessage: true,
+                FromWhisper: fromWhisper,
                 UpdatedAt: _clock.GetCurrentInstant()
             );
         }

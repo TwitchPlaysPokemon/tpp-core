@@ -15,8 +15,9 @@
         <PackageReference Include="Serilog.Extensions.Logging.File" Version="3.0.0" />
         <PackageReference Include="Serilog.Sinks.Discord" Version="1.2.1" />
         <PackageReference Include="String.Similarity" Version="3.0.0" />
+        <PackageReference Include="TwitchLib.Api" Version="3.9.0-preview-f7f2908" />
         <!-- Earliest version to include this fix: https://github.com/TwitchLib/TwitchLib.Client/pull/170 -->
-        <PackageReference Include="TwitchLib.Client" Version="3.3.1" />
+        <PackageReference Include="TwitchLib.Client" Version="3.4.0-preview-d6687358268723051c755034b155a703c97c353a" />
     </ItemGroup>
 
     <ItemGroup>
