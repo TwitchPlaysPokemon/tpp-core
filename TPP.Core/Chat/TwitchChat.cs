@@ -11,9 +11,11 @@ using TPP.Core.Overlay;
 using TPP.Core.Overlay.Events;
 using TPP.Model;
 using TPP.Persistence;
+using TwitchLib.Api;
+using TwitchLib.Api.Helix.Models.Chat.ChatSettings;
+using TwitchLib.Api.Helix.Models.Moderation.BanUser;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
-using TwitchLib.Client.Extensions;
 using TwitchLib.Client.Models;
 using TwitchLib.Communication.Clients;
 using TwitchLib.Communication.Events;
@@ -49,12 +51,15 @@ namespace TPP.Core.Chat
 
         private readonly ILogger<TwitchChat> _logger;
         private readonly IClock _clock;
-        private readonly string _ircChannel;
+        private readonly string _channel;
+        private readonly string _channelId;
+        private readonly string _userId;
         private readonly ImmutableHashSet<SuppressionType> _suppressions;
         private readonly ImmutableHashSet<string> _suppressionOverrides;
         private readonly IUserRepo _userRepo;
         private readonly ISubscriptionProcessor _subscriptionProcessor;
         private readonly TwitchClient _twitchClient;
+        private readonly TwitchApiProvider _twitchApiProvider;
         private readonly TwitchLibSubscriptionWatcher _subscriptionWatcher;
         private readonly OverlayConnection _overlayConnection;
         private readonly TwitchChatQueue _queue;
@@ -77,7 +82,9 @@ namespace TPP.Core.Chat
             Name = name;
             _logger = loggerFactory.CreateLogger<TwitchChat>();
             _clock = clock;
-            _ircChannel = chatConfig.Channel;
+            _channel = chatConfig.Channel;
+            _channelId = chatConfig.ChannelId;
+            _userId = chatConfig.UserId;
             _suppressions = chatConfig.Suppressions;
             _suppressionOverrides = chatConfig.SuppressionOverrides
                 .Select(s => s.ToLowerInvariant()).ToImmutableHashSet();
@@ -86,7 +93,7 @@ namespace TPP.Core.Chat
             _overlayConnection = overlayConnection;
             _useTwitchReplies = useTwitchReplies;
 
-            var twitchApiProvider = new TwitchApiProvider(
+            _twitchApiProvider = new TwitchApiProvider(
                 loggerFactory,
                 clock,
                 chatConfig.AccessToken,
@@ -125,11 +132,11 @@ namespace TPP.Core.Chat
             _queue = new TwitchChatQueue(
                 loggerFactory.CreateLogger<TwitchChatQueue>(),
                 chatConfig.UserId,
-                twitchApiProvider,
+                _twitchApiProvider,
                 _twitchClient);
         }
 
-        private void Connected(object? sender, OnConnectedArgs e) => _twitchClient.JoinChannel(_ircChannel);
+        private void Connected(object? sender, OnConnectedArgs e) => _twitchClient.JoinChannel(_channel);
 
         // Subscribe to TwitchClient errors to hopefully prevent the very rare incidents where the bot effectively
         // gets disconnected, but the CheckConnectivityWorker cannot detect it and doesn't reconnect.
@@ -239,12 +246,12 @@ namespace TPP.Core.Chat
         public async Task SendMessage(string message, Message? responseTo = null)
         {
             if (_suppressions.Contains(SuppressionType.Message) &&
-                !_suppressionOverrides.Contains(_ircChannel))
+                !_suppressionOverrides.Contains(_channel))
             {
-                _logger.LogDebug("(suppressed) >#{Channel}: {Message}", _ircChannel, message);
+                _logger.LogDebug("(suppressed) >#{Channel}: {Message}", _channel, message);
                 return;
             }
-            _logger.LogDebug(">#{Channel}: {Message}", _ircChannel, message);
+            _logger.LogDebug(">#{Channel}: {Message}", _channel, message);
             await Task.Run(() =>
             {
                 if (responseTo != null && !_useTwitchReplies)
@@ -253,9 +260,9 @@ namespace TPP.Core.Chat
                 {
                     if (_useTwitchReplies && responseTo?.Details.MessageId != null)
                         _queue.Enqueue(responseTo.User, new OutgoingMessage
-                            .Reply(_ircChannel, Message: "/me " + part, ReplyToId: responseTo.Details.MessageId));
+                            .Reply(_channel, Message: "/me " + part, ReplyToId: responseTo.Details.MessageId));
                     else
-                        _queue.Enqueue(responseTo?.User, new OutgoingMessage.Chat(_ircChannel, "/me " + part));
+                        _queue.Enqueue(responseTo?.User, new OutgoingMessage.Chat(_channel, "/me " + part));
                 }
             });
         }
@@ -336,7 +343,7 @@ namespace TPP.Core.Chat
             TaskToVoidSafely(_logger, async () =>
             {
                 _logger.LogDebug("<#{Channel} {Username}: {Message}",
-                    _ircChannel, e.ChatMessage.Username, e.ChatMessage.Message);
+                    _channel, e.ChatMessage.Username, e.ChatMessage.Message);
                 if (e.ChatMessage.Username == _twitchClient.TwitchUsername)
                     // new core sees messages posted by old core, but we don't want to process our own messages
                     return;
@@ -407,85 +414,124 @@ namespace TPP.Core.Chat
             _logger.LogDebug("twitch chat is now fully shut down");
         }
 
+        private async Task<ChatSettings> GetChatSettings()
+        {
+            TwitchAPI twitchApi = await _twitchApiProvider.Get();
+            GetChatSettingsResponse settingsResponse = await twitchApi.Helix.Chat.GetChatSettingsAsync(_channelId, _userId);
+            // From the Twitch API documentation https://dev.twitch.tv/docs/api/reference/#update-chat-settings
+            //   'data': The list of chat settings. The list contains a single object with all the settings
+            ChatSettingsResponseModel settings = settingsResponse.Data[0];
+            return new ChatSettings
+            {
+                EmoteMode = settings.EmoteMode,
+                FollowerMode = settings.FollowerMode,
+                FollowerModeDuration = settings.FollowerModeDuration,
+                SlowMode = settings.SlowMode,
+                SlowModeWaitTime = settings.SlowModeWaitDuration,
+                SubscriberMode = settings.SubscriberMode,
+                UniqueChatMode = settings.UniqueChatMode,
+                NonModeratorChatDelay = settings.NonModeratorChatDelay,
+                NonModeratorChatDelayDuration = settings.NonModeratorChatDelayDuration,
+            };
+        }
+
         public async Task EnableEmoteOnly()
         {
             if (_suppressions.Contains(SuppressionType.Command) &&
-                !_suppressionOverrides.Contains(_ircChannel))
+                !_suppressionOverrides.Contains(_channel))
             {
-                _logger.LogDebug($"(suppressed) enabling emote only mode in #{_ircChannel}");
+                _logger.LogDebug($"(suppressed) enabling emote only mode in #{_channel}");
                 return;
             }
 
-            _logger.LogDebug($"enabling emote only mode in #{_ircChannel}");
-            await Task.Run(() => _twitchClient.EmoteOnlyOn(_ircChannel));
+            _logger.LogDebug($"enabling emote only mode in #{_channel}");
+            TwitchAPI twitchApi = await _twitchApiProvider.Get();
+            ChatSettings chatSettings = await GetChatSettings();
+            chatSettings.EmoteMode = true;
+            await twitchApi.Helix.Chat.UpdateChatSettingsAsync(_channelId, _userId, chatSettings);
         }
 
         public async Task DisableEmoteOnly()
         {
             if (_suppressions.Contains(SuppressionType.Command) &&
-                !_suppressionOverrides.Contains(_ircChannel))
+                !_suppressionOverrides.Contains(_channel))
             {
-                _logger.LogDebug($"(suppressed) disabling emote only mode in #{_ircChannel}");
+                _logger.LogDebug($"(suppressed) disabling emote only mode in #{_channel}");
                 return;
             }
 
-            _logger.LogDebug($"disabling emote only mode in #{_ircChannel}");
-            await Task.Run(() => _twitchClient.EmoteOnlyOff(_ircChannel));
+            _logger.LogDebug($"disabling emote only mode in #{_channel}");
+            TwitchAPI twitchApi = await _twitchApiProvider.Get();
+            ChatSettings chatSettings = await GetChatSettings();
+            chatSettings.EmoteMode = false;
+            await twitchApi.Helix.Chat.UpdateChatSettingsAsync(_channelId, _userId, chatSettings);
         }
 
         public async Task DeleteMessage(string messageId)
         {
             if (_suppressions.Contains(SuppressionType.Command) &&
-                !_suppressionOverrides.Contains(_ircChannel))
+                !_suppressionOverrides.Contains(_channel))
             {
-                _logger.LogDebug($"(suppressed) deleting message {messageId} in #{_ircChannel}");
+                _logger.LogDebug($"(suppressed) deleting message {messageId} in #{_channel}");
                 return;
             }
 
-            _logger.LogDebug($"deleting message {messageId} in #{_ircChannel}");
-            await Task.Run(() => _queue.Enqueue(null, new OutgoingMessage.Chat(_ircChannel, ".delete " + messageId)));
+            _logger.LogDebug($"deleting message {messageId} in #{_channel}");
+            await Task.Run(() => _queue.Enqueue(null, new OutgoingMessage.Chat(_channel, ".delete " + messageId)));
         }
 
         public async Task Timeout(User user, string? message, Duration duration)
         {
             if (_suppressions.Contains(SuppressionType.Command) &&
-                !(_suppressionOverrides.Contains(_ircChannel) && _suppressionOverrides.Contains(user.SimpleName)))
+                !(_suppressionOverrides.Contains(_channel) && _suppressionOverrides.Contains(user.SimpleName)))
             {
-                _logger.LogDebug($"(suppressed) time out {user} for {duration} in #{_ircChannel}: {message}");
+                _logger.LogDebug($"(suppressed) time out {user} for {duration} in #{_channel}: {message}");
                 return;
             }
 
-            _logger.LogDebug($"time out {user} for {duration} in #{_ircChannel}: {message}");
-            await Task.Run(() =>
-                _twitchClient.TimeoutUser(_ircChannel, user.SimpleName, duration.ToTimeSpan(),
-                    message ?? "no timeout reason was given"));
+            _logger.LogDebug($"time out {user} for {duration} in #{_channel}: {message}");
+            TwitchAPI twitchApi = await _twitchApiProvider.Get();
+            var banUserRequest = new BanUserRequest
+            {
+                UserId = user.Id,
+                Duration = (int)duration.TotalSeconds,
+                Reason = message ?? "no timeout reason was given",
+            };
+            await twitchApi.Helix.Moderation.BanUserAsync(_channelId, _userId, banUserRequest);
         }
 
         public async Task Ban(User user, string? message)
         {
             if (_suppressions.Contains(SuppressionType.Command) &&
-                !(_suppressionOverrides.Contains(_ircChannel) && _suppressionOverrides.Contains(user.SimpleName)))
+                !(_suppressionOverrides.Contains(_channel) && _suppressionOverrides.Contains(user.SimpleName)))
             {
-                _logger.LogDebug($"(suppressed) ban {user} in #{_ircChannel}: {message}");
+                _logger.LogDebug($"(suppressed) ban {user} in #{_channel}: {message}");
                 return;
             }
 
-            _logger.LogDebug($"ban {user} in #{_ircChannel}: {message}");
-            await Task.Run(() => _twitchClient.BanUser(_ircChannel, user.SimpleName,
-                message ?? "no ban reason was given"));
+            _logger.LogDebug($"ban {user} in #{_channel}: {message}");
+            TwitchAPI twitchApi = await _twitchApiProvider.Get();
+            var banUserRequest = new BanUserRequest
+            {
+                UserId = user.Id,
+                Duration = null,
+                Reason = message ?? "no ban reason was given",
+            };
+            await twitchApi.Helix.Moderation.BanUserAsync(_channelId, _userId, banUserRequest);
         }
 
         public async Task Unban(User user, string? message)
         {
             if (_suppressions.Contains(SuppressionType.Command) &&
-                !(_suppressionOverrides.Contains(_ircChannel) && _suppressionOverrides.Contains(user.SimpleName)))
+                !(_suppressionOverrides.Contains(_channel) && _suppressionOverrides.Contains(user.SimpleName)))
             {
-                _logger.LogDebug($"(suppressed) unban {user} in #{_ircChannel}: {message}");
+                _logger.LogDebug($"(suppressed) unban {user} in #{_channel}: {message}");
                 return;
             }
 
-            _logger.LogDebug($"unban {user} in #{_ircChannel}: {message}");
-            await Task.Run(() => _twitchClient.UnbanUser(_ircChannel, user.SimpleName));
+            _logger.LogDebug($"unban {user} in #{_channel}: {message}");
+            TwitchAPI twitchApi = await _twitchApiProvider.Get();
+            await twitchApi.Helix.Moderation.UnbanUserAsync(_channelId, _userId, user.Id);
         }
     }
 }
