@@ -37,7 +37,7 @@ namespace TPP.Core.Modes
             _loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger<Matchmode>();
             _stopToken = new StopToken();
-            Setups.Databases repos = Setups.SetUpRepositories(_logger, baseConfig);
+            Setups.Databases repos = Setups.SetUpRepositories(loggerFactory, _logger, baseConfig);
             _pokeyenBank = repos.PokeyenBank;
             _userRepo = repos.UserRepo;
             (_broadcastServer, _overlayConnection) = Setups.SetUpOverlayServer(loggerFactory,

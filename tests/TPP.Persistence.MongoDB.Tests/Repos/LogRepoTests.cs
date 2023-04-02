@@ -109,19 +109,19 @@ public class LogRepoTests : MongoTestBase
     [Test]
     public async Task MessagequeueRepo()
     {
-        MessagequeueRepo repo = new(CreateTemporaryDatabase());
+        OutgoingMessagequeueRepo repo = new(CreateTemporaryDatabase());
         const string ircLine = "some text";
 
         // persist to db
-        MessagequeueItem written = await repo.EnqueueMessage(ircLine);
+        OutgoingMessagequeueItem written = await repo.EnqueueMessage(ircLine);
         Assert.That(written.IrcLine, Is.EqualTo(ircLine));
         Assert.NotNull(written.Id);
 
         // read from db
-        List<MessagequeueItem> allItems = await repo.Collection
-            .Find(FilterDefinition<MessagequeueItem>.Empty).ToListAsync();
+        List<OutgoingMessagequeueItem> allItems = await repo.Collection
+            .Find(FilterDefinition<OutgoingMessagequeueItem>.Empty).ToListAsync();
         Assert.That(allItems.Count, Is.EqualTo(1));
-        MessagequeueItem read = allItems[0];
+        OutgoingMessagequeueItem read = allItems[0];
         Assert.That(read, Is.EqualTo(written));
         Assert.That(read.IrcLine, Is.EqualTo(ircLine));
     }

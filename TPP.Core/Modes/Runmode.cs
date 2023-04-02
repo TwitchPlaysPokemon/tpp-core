@@ -43,7 +43,7 @@ namespace TPP.Core.Modes
             _logger = loggerFactory.CreateLogger<Runmode>();
             _stopToken = new StopToken();
             _muteInputsToken = new MuteInputsToken { Muted = _runmodeConfig.MuteInputsAtStartup };
-            Setups.Databases repos = Setups.SetUpRepositories(_logger, baseConfig);
+            Setups.Databases repos = Setups.SetUpRepositories(loggerFactory, _logger, baseConfig);
             _userRepo = repos.UserRepo;
             _runCounterRepo = repos.RunCounterRepo;
             _inputLogRepo = repos.InputLogRepo;
