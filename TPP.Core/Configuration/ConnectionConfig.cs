@@ -30,6 +30,7 @@ namespace TPP.Core.Configuration
 
             /* connection information */
             public string Channel { get; init; } = "twitchplayspokemon";
+            public string ChannelId { get; init; } = "56648155";
 
             /* account information */
             public string UserId { get; init; } = "1234567";
