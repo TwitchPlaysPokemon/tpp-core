@@ -152,4 +152,26 @@ namespace TPP.Model
         public override int GetHashCode() =>
             HashCode.Combine(Id, UserId, Timestamp, Cost, InputBadges, OutputBadge);
     }
+
+    public record ChattersSnapshot(
+        string Id,
+        IReadOnlyList<string> ChatterNames,
+        IReadOnlyList<string> ChatterIds,
+        Instant Timestamp,
+        string Channel)
+    {
+        public virtual bool Equals(ChattersSnapshot? other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Id == other.Id
+                   && ChatterNames.SequenceEqual(other.ChatterNames) // <-- Equals() is overridden just for this
+                   && ChatterIds.SequenceEqual(other.ChatterIds) // <-- Equals() is overridden just for this
+                   && Timestamp.Equals(other.Timestamp)
+                   && Channel == other.Channel;
+        }
+        public override int GetHashCode() =>
+            HashCode.Combine(Id, ChatterNames, ChatterIds, Timestamp, Channel);
+    }
+
 }
