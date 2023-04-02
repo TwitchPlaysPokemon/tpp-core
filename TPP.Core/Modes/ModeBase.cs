@@ -57,8 +57,8 @@ namespace TPP.Core.Modes
 
             var chats = new Dictionary<string, IChat>();
             var chatFactory = new ChatFactory(loggerFactory, clock,
-                repos.UserRepo, repos.TokensBank, repos.SubscriptionLogRepo, repos.LinkedAccountRepo,
-                overlayConnection);
+                repos.UserRepo, repos.ChattersSnapshotsRepo, repos.TokensBank, repos.SubscriptionLogRepo,
+                repos.LinkedAccountRepo, overlayConnection);
             foreach (ConnectionConfig connectorConfig in baseConfig.Chat.Connections)
             {
                 IChat chat = chatFactory.Create(connectorConfig);

@@ -13,19 +13,22 @@ namespace TPP.Core.Chat
         private readonly ILoggerFactory _loggerFactory;
         private readonly IClock _clock;
         private readonly IUserRepo _userRepo;
+        private readonly IChattersSnapshotsRepo _chattersSnapshotsRepo;
         private readonly IBank<User> _tokenBank;
         private readonly ISubscriptionLogRepo _subscriptionLogRepo;
         private readonly ILinkedAccountRepo _linkedAccountRepo;
         private readonly OverlayConnection _overlayConnection;
 
         public ChatFactory(
-            ILoggerFactory loggerFactory, IClock clock, IUserRepo userRepo, IBank<User> tokenBank,
+            ILoggerFactory loggerFactory, IClock clock, IUserRepo userRepo,
+            IChattersSnapshotsRepo chattersSnapshotsRepo, IBank<User> tokenBank,
             ISubscriptionLogRepo subscriptionLogRepo, ILinkedAccountRepo linkedAccountRepo,
             OverlayConnection overlayConnection)
         {
             _loggerFactory = loggerFactory;
             _clock = clock;
             _userRepo = userRepo;
+            _chattersSnapshotsRepo = chattersSnapshotsRepo;
             _tokenBank = tokenBank;
             _subscriptionLogRepo = subscriptionLogRepo;
             _linkedAccountRepo = linkedAccountRepo;
@@ -37,6 +40,7 @@ namespace TPP.Core.Chat
             {
                 ConnectionConfig.Console cfg => new ConsoleChat(config.Name, _loggerFactory, cfg, _userRepo),
                 ConnectionConfig.Twitch cfg => new TwitchChat(config.Name, _loggerFactory, _clock, cfg, _userRepo,
+                    _chattersSnapshotsRepo,
                     new SubscriptionProcessor(
                         _loggerFactory.CreateLogger<SubscriptionProcessor>(),
                         _tokenBank, _userRepo, _subscriptionLogRepo, _linkedAccountRepo),

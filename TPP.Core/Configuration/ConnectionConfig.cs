@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using JsonSubTypes;
 using Newtonsoft.Json;
+using NodaTime;
 
 namespace TPP.Core.Configuration
 {
@@ -51,6 +52,8 @@ namespace TPP.Core.Configuration
                 .ToImmutableHashSet(); // all by default
             // list of usernames and channels that may receive outbound messages even with suppression enabled
             public ImmutableHashSet<string> SuppressionOverrides { get; init; } = ImmutableHashSet.Create<string>();
+
+            public Duration GetChattersInterval { get; init; } = Duration.FromMinutes(5);
         }
 
         public sealed class Simulation : ConnectionConfig

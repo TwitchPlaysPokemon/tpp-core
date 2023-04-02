@@ -289,4 +289,32 @@ public class LogRepoTests : MongoTestBase
         Assert.That(allItems, Has.Count.EqualTo(1));
         Assert.That(allItems[0].Duration, Is.EqualTo(duration));
     }
+
+    [Test]
+    public async Task ChattersSnapshotsRepo()
+    {
+        ChattersSnapshotsRepo repo = new(CreateTemporaryDatabase());
+        var usernames = ImmutableList.Create<string>("Karl", "Fritz");
+        var userIds = ImmutableList.Create<string>("1234", "5678");
+        const string channel = "twitchplayspokemon";
+        Instant timestamp = Instant.FromUnixTimeSeconds(123);
+
+        // persist to db
+        ChattersSnapshot written = await repo.LogChattersSnapshot(usernames, userIds, channel, timestamp);
+        Assert.That(written.ChatterNames, Is.EqualTo(usernames));
+        Assert.That(written.ChatterIds, Is.EqualTo(userIds));
+        Assert.That(written.Channel, Is.EqualTo(channel));
+        Assert.That(written.Timestamp, Is.EqualTo(timestamp));
+        Assert.NotNull(written.Id);
+
+        // read from db
+        List<ChattersSnapshot> allItems = await repo.Collection.Find(FilterDefinition<ChattersSnapshot>.Empty).ToListAsync();
+        Assert.That(allItems.Count, Is.EqualTo(1));
+        ChattersSnapshot read = allItems[0];
+        Assert.That(read, Is.EqualTo(written));
+        Assert.That(read.ChatterNames, Is.EqualTo(usernames));
+        Assert.That(read.ChatterIds, Is.EqualTo(userIds));
+        Assert.That(read.Channel, Is.EqualTo(channel));
+        Assert.That(read.Timestamp, Is.EqualTo(timestamp));
+    }
 }

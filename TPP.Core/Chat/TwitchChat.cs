@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
@@ -13,6 +14,7 @@ using TPP.Model;
 using TPP.Persistence;
 using TwitchLib.Api;
 using TwitchLib.Api.Helix.Models.Chat.ChatSettings;
+using TwitchLib.Api.Helix.Models.Chat.GetChatters;
 using TwitchLib.Api.Helix.Models.Moderation.BanUser;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
@@ -57,12 +59,14 @@ namespace TPP.Core.Chat
         private readonly ImmutableHashSet<SuppressionType> _suppressions;
         private readonly ImmutableHashSet<string> _suppressionOverrides;
         private readonly IUserRepo _userRepo;
+        private readonly IChattersSnapshotsRepo _chattersSnapshotsRepo;
         private readonly ISubscriptionProcessor _subscriptionProcessor;
         private readonly TwitchClient _twitchClient;
         private readonly TwitchApiProvider _twitchApiProvider;
         private readonly TwitchLibSubscriptionWatcher _subscriptionWatcher;
         private readonly OverlayConnection _overlayConnection;
         private readonly TwitchChatQueue _queue;
+        private readonly Duration _getChattersInterval;
 
         private readonly bool _useTwitchReplies;
 
@@ -75,6 +79,7 @@ namespace TPP.Core.Chat
             IClock clock,
             ConnectionConfig.Twitch chatConfig,
             IUserRepo userRepo,
+            IChattersSnapshotsRepo chattersSnapshotsRepo,
             ISubscriptionProcessor subscriptionProcessor,
             OverlayConnection overlayConnection,
             bool useTwitchReplies = true)
@@ -89,9 +94,11 @@ namespace TPP.Core.Chat
             _suppressionOverrides = chatConfig.SuppressionOverrides
                 .Select(s => s.ToLowerInvariant()).ToImmutableHashSet();
             _userRepo = userRepo;
+            _chattersSnapshotsRepo = chattersSnapshotsRepo;
             _subscriptionProcessor = subscriptionProcessor;
             _overlayConnection = overlayConnection;
             _useTwitchReplies = useTwitchReplies;
+            _getChattersInterval = chatConfig.GetChattersInterval;
 
             _twitchApiProvider = new TwitchApiProvider(
                 loggerFactory,
@@ -300,11 +307,13 @@ namespace TPP.Core.Chat
             var tokenSource = new CancellationTokenSource();
             Task sendWorker = _queue.StartSendWorker(tokenSource.Token);
             Task checkConnectivityWorker = CheckConnectivityWorker(tokenSource.Token);
+            Task chattersWorker = ChattersWorker(tokenSource.Token);
             _workersCleanup = () =>
             {
                 tokenSource.Cancel();
                 if (!sendWorker.IsCanceled) sendWorker.Wait();
                 if (!checkConnectivityWorker.IsCanceled) checkConnectivityWorker.Wait();
+                if (!chattersWorker.IsCanceled) chattersWorker.Wait();
             };
         }
 
@@ -335,6 +344,29 @@ namespace TPP.Core.Chat
                 }
 
                 await Task.Delay(delay, cancellationToken);
+            }
+        }
+
+        private async Task ChattersWorker(CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                List<Chatter> chatters = new();
+                string? nextCursor = null;
+                do
+                {
+                    GetChattersResponse getChattersResponse = await (await _twitchApiProvider.Get()).Helix
+                        .Chat.GetChattersAsync(_channelId, _userId, first: 1000, after: nextCursor);
+                    chatters.AddRange(getChattersResponse.Data);
+                    nextCursor = getChattersResponse.Pagination?.Cursor;
+                } while (nextCursor != null);
+
+                ImmutableList<string> chatterNames = chatters.Select(c => c.UserLogin).ToImmutableList();
+                ImmutableList<string> chatterIds = chatters.Select(c => c.UserId).ToImmutableList();
+                await _chattersSnapshotsRepo.LogChattersSnapshot(
+                    chatterNames, chatterIds, _channel, _clock.GetCurrentInstant());
+
+                await Task.Delay(_getChattersInterval.ToTimeSpan(), cancellationToken);
             }
         }
 

@@ -193,7 +193,8 @@ namespace TPP.Core
             IInputLogRepo InputLogRepo,
             IInputSidePicksRepo InputSidePicksRepo,
             KeyValueStore KeyValueStore,
-            ITransmutationLogRepo TransmutationLogRepo
+            ITransmutationLogRepo TransmutationLogRepo,
+            IChattersSnapshotsRepo ChattersSnapshotsRepo
         );
 
         public static Databases SetUpRepositories(ILoggerFactory loggerFactory, ILogger logger, BaseConfig baseConfig)
@@ -254,7 +255,8 @@ namespace TPP.Core
                 InputLogRepo: new InputLogRepo(mongoDatabase),
                 InputSidePicksRepo: new InputSidePicksRepo(mongoDatabase, clock),
                 KeyValueStore: new KeyValueStore(mongoDatabase),
-                TransmutationLogRepo: new TransmutationLogRepo(mongoDatabase)
+                TransmutationLogRepo: new TransmutationLogRepo(mongoDatabase),
+                ChattersSnapshotsRepo: new ChattersSnapshotsRepo(mongoDatabase)
             );
         }
 
