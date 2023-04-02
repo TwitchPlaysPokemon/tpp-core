@@ -30,6 +30,9 @@
         },
         "ForwardUnprocessedMessages": {
           "type": "boolean"
+        },
+        "SendOutForwardedMessages": {
+          "type": "boolean"
         }
       }
     },

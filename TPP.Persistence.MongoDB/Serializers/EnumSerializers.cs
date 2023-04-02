@@ -64,4 +64,17 @@ namespace TPP.Persistence.MongoDB.Serializers
     {
         public static readonly SwitchingPolicySerializer Instance = new();
     }
+
+    public class MessageTypeSerializer : EnumToStringUsingTranslationMappingSerializer<MessageType>
+    {
+        public static readonly MessageTypeSerializer Instance = new();
+
+        private MessageTypeSerializer() : base(new Dictionary<MessageType, string>
+        {
+            [MessageType.Chat] = "chat",
+            [MessageType.Whisper] = "whisper",
+        })
+        {
+        }
+    }
 }

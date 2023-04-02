@@ -180,7 +180,8 @@ namespace TPP.Core
             IBank<User> PokeyenBank,
             IBank<User> TokensBank,
             ICommandLogger CommandLogger,
-            IMessagequeueRepo MessagequeueRepo,
+            IOutgoingMessagequeueRepo OutgoingMessagequeueRepo,
+            IIncomingMessagequeueRepo IncomingMessagequeueRepo,
             IMessagelogRepo MessagelogRepo,
             ILinkedAccountRepo LinkedAccountRepo,
             ISubscriptionLogRepo SubscriptionLogRepo,
@@ -195,7 +196,7 @@ namespace TPP.Core
             ITransmutationLogRepo TransmutationLogRepo
         );
 
-        public static Databases SetUpRepositories(ILogger logger, BaseConfig baseConfig)
+        public static Databases SetUpRepositories(ILoggerFactory loggerFactory, ILogger logger, BaseConfig baseConfig)
         {
             IClock clock = SystemClock.Instance;
             CustomSerializers.RegisterAll();
@@ -239,7 +240,9 @@ namespace TPP.Core
                 PokeyenBank: pokeyenBank,
                 TokensBank: tokenBank,
                 CommandLogger: new CommandLogger(mongoDatabase, clock),
-                MessagequeueRepo: new MessagequeueRepo(mongoDatabase),
+                OutgoingMessagequeueRepo: new OutgoingMessagequeueRepo(mongoDatabase),
+                IncomingMessagequeueRepo: new IncomingMessagequeueRepo(
+                    mongoDatabase, loggerFactory.CreateLogger<IncomingMessagequeueRepo>()),
                 MessagelogRepo: new MessagelogRepo(mongoDatabaseMessagelog),
                 LinkedAccountRepo: new LinkedAccountRepo(mongoDatabase, userRepo.Collection),
                 SubscriptionLogRepo: new SubscriptionLogRepo(mongoDatabase),
