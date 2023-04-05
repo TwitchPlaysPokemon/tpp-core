@@ -129,7 +129,9 @@ Options:
                 }
                 // TwitchLib.API ist quite spammy, but more importantly, it prints all HTTP calls at info level.
                 // That is bad, because it may include auth calls, which include secrets in their query params.
-                builder.AddFilter("TwitchLib.Api", level => level >= LogLevel.Warning);
+                // Also mute warn level until https://github.com/TwitchLib/TwitchLib.Client/pull/218 is fixed
+                // builder.AddFilter("TwitchLib.Api", level => level >= LogLevel.Warning);
+                builder.AddFilter("TwitchLib.Api", level => level >= LogLevel.Error);
             });
 
         private static void Mode(string modeName, string baseConfigFilename, string modeConfigFilename)
