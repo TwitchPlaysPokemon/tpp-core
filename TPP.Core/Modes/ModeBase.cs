@@ -126,7 +126,7 @@ namespace TPP.Core.Modes
                         loggerFactory.CreateLogger<SendOutQueuedMessagesWorker>(),
                         repos.IncomingMessagequeueRepo,
                         repos.UserRepo,
-                        chat);
+                        chat, clock);
                 }
             }
         }

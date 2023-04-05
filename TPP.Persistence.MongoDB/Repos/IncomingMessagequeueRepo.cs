@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Driver;
+using NodaTime;
 using TPP.Model;
 using TPP.Persistence.MongoDB.Serializers;
 
@@ -28,6 +29,8 @@ public class IncomingMessagequeueRepo : IIncomingMessagequeueRepo
             cm.MapProperty(i => i.Message).SetElementName("message");
             cm.MapProperty(i => i.MessageType).SetElementName("type");
             cm.MapProperty(i => i.Target).SetElementName("target");
+            cm.MapProperty(i => i.QueuedAt).SetElementName("queued_at")
+                .SetDefaultValue(Instant.MinValue);
         });
     }
 
@@ -38,9 +41,9 @@ public class IncomingMessagequeueRepo : IIncomingMessagequeueRepo
         Collection = database.GetCollection<IncomingMessagequeueItem>(CollectionName);
     }
 
-    public async Task Prune()
+    public async Task Prune(Instant olderThan)
     {
-        await Collection.DeleteManyAsync(FilterDefinition<IncomingMessagequeueItem>.Empty);
+        await Collection.DeleteManyAsync(item => item.QueuedAt < olderThan);
     }
 
     public async Task ForEachAsync(

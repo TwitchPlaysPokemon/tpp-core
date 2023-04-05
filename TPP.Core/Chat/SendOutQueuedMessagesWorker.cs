@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using NodaTime;
 using TPP.Model;
 using TPP.Persistence;
 
@@ -16,6 +17,7 @@ public sealed class SendOutQueuedMessagesWorker : IDisposable
     private readonly IIncomingMessagequeueRepo _incomingMessagequeueRepo;
     private readonly IUserRepo _userRepo;
     private readonly IMessageSender _messageSender;
+    private readonly IClock _clock;
 
     private readonly CancellationTokenSource _cancellationTokenSource;
     private Task? _runTask = null;
@@ -24,12 +26,14 @@ public sealed class SendOutQueuedMessagesWorker : IDisposable
         ILogger<SendOutQueuedMessagesWorker> logger,
         IIncomingMessagequeueRepo incomingMessagequeueRepo,
         IUserRepo userRepo,
-        IMessageSender messageSender)
+        IMessageSender messageSender,
+        IClock clock)
     {
         _logger = logger;
         _incomingMessagequeueRepo = incomingMessagequeueRepo;
         _userRepo = userRepo;
         _messageSender = messageSender;
+        _clock = clock;
         _cancellationTokenSource = new CancellationTokenSource();
     }
 
@@ -54,7 +58,8 @@ public sealed class SendOutQueuedMessagesWorker : IDisposable
 
     public async Task Run()
     {
-        await _incomingMessagequeueRepo.Prune();
+        Instant olderThan = _clock.GetCurrentInstant() - Duration.FromMinutes(5);
+        await _incomingMessagequeueRepo.Prune(olderThan);
         await _incomingMessagequeueRepo.ForEachAsync(async item =>
         {
             _logger.LogDebug("Received message from queue to send out: {Message}", item);

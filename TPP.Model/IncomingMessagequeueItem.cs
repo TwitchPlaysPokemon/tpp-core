@@ -1,3 +1,5 @@
+using NodaTime;
+
 namespace TPP.Model;
 
 public enum MessageType { Chat, Whisper }
@@ -11,4 +13,5 @@ public record IncomingMessagequeueItem(
     string Id,
     string Message,
     MessageType MessageType,
-    string Target);
+    string Target,
+    Instant QueuedAt);
