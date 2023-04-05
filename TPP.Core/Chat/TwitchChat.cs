@@ -522,7 +522,8 @@ namespace TPP.Core.Chat
             }
 
             _logger.LogDebug($"deleting message {messageId} in #{_channel}");
-            await Task.Run(() => _queue.Enqueue(null, new OutgoingMessage.Chat(_channel, ".delete " + messageId)));
+            TwitchAPI twitchApi = await _twitchApiProvider.Get();
+            await twitchApi.Helix.Moderation.DeleteChatMessagesAsync(_channelId, _userId, messageId);
         }
 
         public async Task Timeout(User user, string? message, Duration duration)
