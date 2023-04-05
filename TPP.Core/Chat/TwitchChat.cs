@@ -347,24 +347,37 @@ namespace TPP.Core.Chat
             }
         }
 
+        private async Task<List<Chatter>> GetChatters()
+        {
+            List<Chatter> chatters = new();
+            string? nextCursor = null;
+            do
+            {
+                GetChattersResponse getChattersResponse = await (await _twitchApiProvider.Get()).Helix
+                    .Chat.GetChattersAsync(_channelId, _userId, first: 1000, after: nextCursor);
+                chatters.AddRange(getChattersResponse.Data);
+                nextCursor = getChattersResponse.Pagination?.Cursor;
+            } while (nextCursor != null);
+            return chatters;
+        }
+
         private async Task ChattersWorker(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                List<Chatter> chatters = new();
-                string? nextCursor = null;
-                do
+                try
                 {
-                    GetChattersResponse getChattersResponse = await (await _twitchApiProvider.Get()).Helix
-                        .Chat.GetChattersAsync(_channelId, _userId, first: 1000, after: nextCursor);
-                    chatters.AddRange(getChattersResponse.Data);
-                    nextCursor = getChattersResponse.Pagination?.Cursor;
-                } while (nextCursor != null);
+                    List<Chatter> chatters = await GetChatters();
 
-                ImmutableList<string> chatterNames = chatters.Select(c => c.UserLogin).ToImmutableList();
-                ImmutableList<string> chatterIds = chatters.Select(c => c.UserId).ToImmutableList();
-                await _chattersSnapshotsRepo.LogChattersSnapshot(
-                    chatterNames, chatterIds, _channel, _clock.GetCurrentInstant());
+                    ImmutableList<string> chatterNames = chatters.Select(c => c.UserLogin).ToImmutableList();
+                    ImmutableList<string> chatterIds = chatters.Select(c => c.UserId).ToImmutableList();
+                    await _chattersSnapshotsRepo.LogChattersSnapshot(
+                        chatterNames, chatterIds, _channel, _clock.GetCurrentInstant());
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, "Failed retrieving chatters list");
+                }
 
                 await Task.Delay(_getChattersInterval.ToTimeSpan(), cancellationToken);
             }

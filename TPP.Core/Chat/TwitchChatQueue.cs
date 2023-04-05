@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using NodaTime;
 using TPP.Model;
 using TwitchLib.Api;
+using TwitchLib.Api.Core.Exceptions;
 using TwitchLib.Client;
 
 namespace TPP.Core.Chat
@@ -73,40 +74,52 @@ namespace TPP.Core.Chat
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    ProcessOne();
+                    await ProcessOne();
                     await Task.Delay(_sleepDuration.ToTimeSpan(), cancellationToken);
                 }
             }, cancellationToken);
         }
 
-        private void ProcessOne()
+        private async Task ProcessOne()
         {
             (string, OutgoingMessage)? kvp = _queue.Dequeue();
-            if (kvp != null)
-                Send(kvp.Value.Item2);
+            if (kvp == null)
+                return;
+            try
+            {
+                await Send(kvp.Value.Item2);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error while processing twitch chat queue item {Item}", kvp.Value);
+            }
         }
 
-        private void Send(OutgoingMessage message)
+        private async Task Send(OutgoingMessage message)
         {
             if (message is OutgoingMessage.Chat chat)
                 _twitchClient.SendMessage(chat.Channel, chat.Message);
             else if (message is OutgoingMessage.Reply reply)
                 _twitchClient.SendReply(reply.Channel, replyToId: reply.ReplyToId, message: reply.Message);
             else if (message is OutgoingMessage.Whisper whisper)
-                Task.Run(async () =>
+            {
+                TwitchAPI twitchApi = await _twitchApiProvider.Get();
+                try
                 {
-                    TwitchAPI twitchApi = await _twitchApiProvider.Get();
                     await twitchApi.Helix.Whispers.SendWhisperAsync(
                         _senderUserId,
                         whisper.Receiver,
                         whisper.Message,
                         whisper.NewRecipient
                     );
-                }).ContinueWith(task =>
+                }
+                catch (HttpResponseException e)
                 {
-                    if (task.IsFaulted)
-                        _logger.LogError(task.Exception, "Error during sending of whisper");
-                });
+                    string response = await e.HttpResponse.Content.ReadAsStringAsync();
+                    throw new Exception($"Error while sending whisper to {whisper.Receiver}. " +
+                                        $"Response: '{response}'. Whisper: '{whisper.Message}'", e);
+                }
+            }
             else
                 throw new ArgumentException("Unknown outgoing message type: " + message);
         }
