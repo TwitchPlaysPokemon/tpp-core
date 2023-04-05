@@ -40,7 +40,11 @@ namespace TPP.Core.Chat
         private const int MaxWhisperLength = 500;
         /// Maximum message length for whispers if the target user _has_ whispered us before.
         /// See also https://dev.twitch.tv/docs/api/reference/#send-whisper
-        private const int MaxRepeatedWhisperLength = 10000;
+        /// TODO Either Twitch's API is broken or their documentation is wrong,
+        ///      because even for users that have whispered us before they just truncate the message to 500 characters.
+        ///      See also https://discuss.dev.twitch.tv/t/whisper-truncated-to-500-characters-even-for-users-that-have-whispered-us-before/44844?u=felk
+        // private const int MaxRepeatedWhisperLength = 10000;
+        private const int MaxRepeatedWhisperLength = 500;
 
         private static readonly MessageSplitter MessageSplitterRegular = new(
             maxMessageLength: MaxMessageLength - "/me ".Length);
