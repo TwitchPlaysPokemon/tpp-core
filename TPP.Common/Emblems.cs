@@ -75,7 +75,8 @@ namespace TPP.Common
             [66] = "Volt White 2 Redux",
             [67] = "Randomized Violet+",
             [68] = "Anniversary Prism",
-            [69] = "Inverse Platinum"
+            [69] = "Inverse Platinum",
+            [70] = "Wilting Y"
         };
 
         public static string FormatEmblem(int emblemNum)
