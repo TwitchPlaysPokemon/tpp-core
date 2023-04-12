@@ -12,9 +12,11 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Schema.Generation;
 using Serilog;
+using Serilog.Events;
 using Serilog.Sinks.Discord;
 using TPP.Core.Configuration;
 using TPP.Core.Modes;
+using TPP.Core.Utils;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace TPP.Core
@@ -117,21 +119,44 @@ Options:
         private static ILoggerFactory BuildLoggerFactory(BaseConfig baseConfig) =>
             LoggerFactory.Create(builder =>
             {
-                builder.AddConsole().SetMinimumLevel(LogLevel.Debug);
-                if (baseConfig.LogPath != null) builder.AddFile(Path.Combine(baseConfig.LogPath, "tpp-{Date}.log"),
-                    outputTemplate: "{Timestamp:o} [{Level:u3}] {Message}{NewLine}{Exception}");
+                IDictionary<string, LogLevel> levelOverrides = new Dictionary<string, LogLevel>
+                {
+                    // TwitchLib.API ist quite spammy, but more importantly, it prints all HTTP calls at info level.
+                    // That is bad, because it may include auth calls, which include secrets in their query params.
+                    ["TwitchLib.Api"] = LogLevel.Warning,
+                    // Also mute TwitchLib.Client's warn level until https://github.com/TwitchLib/TwitchLib.Client/pull/218 is fixed
+                    ["TwitchLib.Client"] = LogLevel.Error,
+                };
+
+                builder.SetMinimumLevel(LogLevel.Debug);
+                foreach ((string loggerPrefix, LogLevel logLevel) in levelOverrides)
+                    builder.AddFilter(loggerPrefix, logLevel);
+
+                builder.AddConsole();
+                if (baseConfig.LogPath != null)
+                {
+                    builder.AddFile(
+                        pathFormat: Path.Combine(baseConfig.LogPath, "tpp-{Date}.log"),
+                        outputTemplate: "{Timestamp:o} [{Level:u3}] {Message}{NewLine}{Exception}",
+                        levelOverrides: levelOverrides);
+                }
                 if (baseConfig.DiscordLoggingConfig != null)
                 {
                     builder.AddSerilog(new LoggerConfiguration()
                         .WriteTo.Discord(baseConfig.DiscordLoggingConfig.WebhookId, baseConfig.DiscordLoggingConfig.WebhookToken)
                         .MinimumLevel.Is(baseConfig.DiscordLoggingConfig.MinLogLevel)
+                        .Filter.ByExcluding(logEvent =>
+                        {
+                            string? context = (logEvent.Properties["SourceContext"] as ScalarValue)?.Value as string;
+                            if (context == null)
+                                return false;
+                            foreach ((string loggerPrefix, LogLevel logLevel) in levelOverrides)
+                                if (context.StartsWith(loggerPrefix) && logEvent.Level < logLevel.ToSerilogLogLevel())
+                                    return true;
+                            return false;
+                        })
                         .CreateLogger());
                 }
-                // TwitchLib.API ist quite spammy, but more importantly, it prints all HTTP calls at info level.
-                // That is bad, because it may include auth calls, which include secrets in their query params.
-                builder.AddFilter("TwitchLib.Api", LogLevel.Warning);
-                // Also mute TwitchLib.Client's warn level until https://github.com/TwitchLib/TwitchLib.Client/pull/218 is fixed
-                builder.AddFilter("TwitchLib.Client", LogLevel.Error);
             });
 
         private static void Mode(string modeName, string baseConfigFilename, string modeConfigFilename)
