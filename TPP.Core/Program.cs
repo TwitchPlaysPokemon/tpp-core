@@ -121,9 +121,13 @@ Options:
             {
                 IDictionary<string, LogLevel> levelOverrides = new Dictionary<string, LogLevel>
                 {
-                    // TwitchLib.API ist quite spammy, but more importantly, it prints all HTTP calls at info level.
-                    // That is bad, because it may include auth calls, which include secrets in their query params.
-                    ["TwitchLib.Api"] = LogLevel.Warning,
+                    // The TwitchHttpClientHandler, which uses the below log category,
+                    // logs all requests and successful responses at info level, and failed responses at error level.
+                    // That is counterproductive for at least these reasons:
+                    // - Logging requests may include auth calls, which include secrets in their query params.
+                    // - Logging all errors, even though those errors manifest themselves as exceptions,
+                    //   prevents us from catching and deliberately ignoring some error cases.
+                    ["TwitchLib.Api.Core.HttpCallHandlers.TwitchHttpClient"] = LogLevel.Critical,
                     // Also mute TwitchLib.Client's warn level until https://github.com/TwitchLib/TwitchLib.Client/pull/218 is fixed
                     ["TwitchLib.Client"] = LogLevel.Error,
                 };
