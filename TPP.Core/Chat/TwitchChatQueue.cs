@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -116,8 +117,22 @@ namespace TPP.Core.Chat
                 catch (HttpResponseException e)
                 {
                     string response = await e.HttpResponse.Content.ReadAsStringAsync();
-                    throw new Exception($"Error while sending whisper to {whisper.Receiver}. " +
-                                        $"Response: '{response}'. Whisper: '{whisper.Message}'", e);
+                    if (whisper.NewRecipient && e.HttpResponse.StatusCode == HttpStatusCode.Forbidden)
+                    {
+                        // If we get a 403 while trying to whisper someone we haven't whispered before,
+                        // that's most likely due to their privacy settings:
+                        // Users can disable receiving whispers from users they haven't interacted with first.
+                        // There's nothing we can do about that, so let's just silently ignore the failure.
+                        _logger.LogDebug(e,
+                            "Ignoring 403 whisper failure to {Receiver}, because it's likely their privacy settings. " +
+                            "Response: '{Response}'. Whisper: '{Message}'",
+                            whisper.Receiver, response, whisper.Message);
+                    }
+                    else
+                    {
+                        throw new Exception($"Error while sending whisper to {whisper.Receiver}. " +
+                                            $"Response: '{response}'. Whisper: '{whisper.Message}'", e);
+                    }
                 }
             }
             else
