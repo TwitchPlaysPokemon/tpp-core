@@ -77,7 +77,8 @@ namespace TPP.Common
             [68] = "Anniversary Prism",
             [69] = "Inverse Platinum",
             [70] = "Wilting Y",
-            [71] = "Victory Fire"
+            [71] = "Victory Fire",
+            [72] = "Randomized Soul Silver"
         };
 
         public static string FormatEmblem(int emblemNum)
