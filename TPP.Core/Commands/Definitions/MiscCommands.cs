@@ -21,10 +21,16 @@ namespace TPP.Core.Commands.Definitions
     {
         private static readonly Duration MaxUptimeUpdateAge = Duration.FromMinutes(1);
 
+        // assuming this class gets loaded at startup, which it does
+        private readonly Instant _upSince;
         private readonly IClock _clock;
         private readonly IDictionary<IChat, UptimeData> _uptimeDict = new Dictionary<IChat, UptimeData>();
 
-        public MiscCommands(IClock clock) => _clock = clock;
+        public MiscCommands(IClock clock)
+        {
+            _clock = clock;
+            _upSince = _clock.GetCurrentInstant();
+        }
 
         private async Task<CommandResult> Uptime(CommandContext ctx)
         {
@@ -47,18 +53,22 @@ namespace TPP.Core.Commands.Definitions
                 uptimeData.LastUpdatedAt = now;
             }
 
-            string response;
+            string streamUptimeResponse;
             if (uptimeData.StartedAt == null)
             {
-                response = "The stream is currently offline, or uptime information is unavailable";
+                streamUptimeResponse = "The stream is currently offline, or uptime information is unavailable.";
             }
             else
             {
-                Duration uptime = now - uptimeData.StartedAt.Value;
-                string uptimeFormatted = uptime.ToTimeSpan().ToHumanReadable(FormatPrecision.Adaptive);
-                response = $"The stream has been online for {uptimeFormatted} (since {uptimeData.StartedAt})";
+                Duration streamUptime = now - uptimeData.StartedAt.Value;
+                string streamUptimeFormatted = streamUptime.ToTimeSpan().ToHumanReadable(FormatPrecision.Adaptive);
+                streamUptimeResponse =
+                    $"The stream has been online for {streamUptimeFormatted} (since {uptimeData.StartedAt}).";
             }
-            return new CommandResult { Response = response };
+            Duration coreUptime = now - _upSince;
+            string coreUptimeFormatted = coreUptime.ToTimeSpan().ToHumanReadable(FormatPrecision.Adaptive);
+            string coreUptimeResponse = $"The TPP core has been running for {coreUptimeFormatted} (since {_upSince}).";
+            return new CommandResult { Response = streamUptimeResponse + " " + coreUptimeResponse };
         }
 
         public IEnumerable<Command> Commands => new[]
