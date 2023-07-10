@@ -89,8 +89,8 @@ public class UserCommands : ICommandCollection
     }
 
     private Task<CommandResult> Ops(CommandContext context) =>
-        List(new CommandContext(context.Message, ImmutableList.Create("operator"), context.ArgsParser));
+        List(context with { Args = ImmutableList.Create("operator") });
 
     private Task<CommandResult> Mods(CommandContext context) =>
-        List(new CommandContext(context.Message, ImmutableList.Create("moderator"), context.ArgsParser));
+        List(context with { Args = ImmutableList.Create("moderator") });
 }

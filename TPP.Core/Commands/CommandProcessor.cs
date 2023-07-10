@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using TPP.ArgsParsing;
+using TPP.Core.Chat;
 using TPP.Persistence;
 
 namespace TPP.Core.Commands
@@ -63,7 +64,8 @@ namespace TPP.Core.Commands
         public Command? FindCommand(string commandName) =>
             _commands.TryGetValue(commandName.ToLower(), out Command command) ? command : null;
 
-        public async Task<CommandResult?> Process(string commandName, IImmutableList<string> args, Message message)
+        public async Task<CommandResult?> Process(
+            string commandName, IImmutableList<string> args, Message message, IChat? source = null)
         {
             if (!_commands.TryGetValue(commandName.ToLower(), out Command command))
             {
@@ -73,7 +75,7 @@ namespace TPP.Core.Commands
             CommandResult result;
             try
             {
-                result = await command.Execution(new CommandContext(message, args, _argsParser));
+                result = await command.Execution(new CommandContext(message, args, _argsParser, source));
                 await _commandLogger.Log(message.User.Id, commandName, args, result.Response);
             }
             catch (ArgsParseFailure ex)

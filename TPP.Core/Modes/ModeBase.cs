@@ -186,7 +186,7 @@ namespace TPP.Core.Modes
             if (commandName != null)
             {
                 CommandResult? result = await _commandProcessors[chat.Name]
-                    .Process(commandName, parts.Skip(1).ToImmutableList(), message);
+                    .Process(commandName, parts.Skip(1).ToImmutableList(), message, chat);
                 if (result != null)
                 {
                     await _commandResponders[chat.Name].ProcessResponse(message, result);

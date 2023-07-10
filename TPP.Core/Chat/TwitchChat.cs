@@ -58,7 +58,7 @@ namespace TPP.Core.Chat
         private readonly ILogger<TwitchChat> _logger;
         private readonly IClock _clock;
         private readonly string _channel;
-        private readonly string _channelId;
+        public readonly string ChannelId;
         private readonly string _userId;
         private readonly ImmutableHashSet<SuppressionType> _suppressions;
         private readonly ImmutableHashSet<string> _suppressionOverrides;
@@ -92,7 +92,7 @@ namespace TPP.Core.Chat
             _logger = loggerFactory.CreateLogger<TwitchChat>();
             _clock = clock;
             _channel = chatConfig.Channel;
-            _channelId = chatConfig.ChannelId;
+            ChannelId = chatConfig.ChannelId;
             _userId = chatConfig.UserId;
             _suppressions = chatConfig.Suppressions;
             _suppressionOverrides = chatConfig.SuppressionOverrides
@@ -358,7 +358,7 @@ namespace TPP.Core.Chat
             do
             {
                 GetChattersResponse getChattersResponse = await (await _twitchApiProvider.Get()).Helix
-                    .Chat.GetChattersAsync(_channelId, _userId, first: 1000, after: nextCursor);
+                    .Chat.GetChattersAsync(ChannelId, _userId, first: 1000, after: nextCursor);
                 chatters.AddRange(getChattersResponse.Data);
                 nextCursor = getChattersResponse.Pagination?.Cursor;
             } while (nextCursor != null);
@@ -466,7 +466,7 @@ namespace TPP.Core.Chat
         private async Task<ChatSettings> GetChatSettings()
         {
             TwitchAPI twitchApi = await _twitchApiProvider.Get();
-            GetChatSettingsResponse settingsResponse = await twitchApi.Helix.Chat.GetChatSettingsAsync(_channelId, _userId);
+            GetChatSettingsResponse settingsResponse = await twitchApi.Helix.Chat.GetChatSettingsAsync(ChannelId, _userId);
             // From the Twitch API documentation https://dev.twitch.tv/docs/api/reference/#update-chat-settings
             //   'data': The list of chat settings. The list contains a single object with all the settings
             ChatSettingsResponseModel settings = settingsResponse.Data[0];
@@ -497,7 +497,7 @@ namespace TPP.Core.Chat
             TwitchAPI twitchApi = await _twitchApiProvider.Get();
             ChatSettings chatSettings = await GetChatSettings();
             chatSettings.EmoteMode = true;
-            await twitchApi.Helix.Chat.UpdateChatSettingsAsync(_channelId, _userId, chatSettings);
+            await twitchApi.Helix.Chat.UpdateChatSettingsAsync(ChannelId, _userId, chatSettings);
         }
 
         public async Task DisableEmoteOnly()
@@ -513,7 +513,7 @@ namespace TPP.Core.Chat
             TwitchAPI twitchApi = await _twitchApiProvider.Get();
             ChatSettings chatSettings = await GetChatSettings();
             chatSettings.EmoteMode = false;
-            await twitchApi.Helix.Chat.UpdateChatSettingsAsync(_channelId, _userId, chatSettings);
+            await twitchApi.Helix.Chat.UpdateChatSettingsAsync(ChannelId, _userId, chatSettings);
         }
 
         public async Task DeleteMessage(string messageId)
@@ -527,7 +527,7 @@ namespace TPP.Core.Chat
 
             _logger.LogDebug($"deleting message {messageId} in #{_channel}");
             TwitchAPI twitchApi = await _twitchApiProvider.Get();
-            await twitchApi.Helix.Moderation.DeleteChatMessagesAsync(_channelId, _userId, messageId);
+            await twitchApi.Helix.Moderation.DeleteChatMessagesAsync(ChannelId, _userId, messageId);
         }
 
         public async Task Timeout(User user, string? message, Duration duration)
@@ -547,7 +547,7 @@ namespace TPP.Core.Chat
                 Duration = (int)duration.TotalSeconds,
                 Reason = message ?? "no timeout reason was given",
             };
-            await twitchApi.Helix.Moderation.BanUserAsync(_channelId, _userId, banUserRequest);
+            await twitchApi.Helix.Moderation.BanUserAsync(ChannelId, _userId, banUserRequest);
         }
 
         public async Task Ban(User user, string? message)
@@ -567,7 +567,7 @@ namespace TPP.Core.Chat
                 Duration = null,
                 Reason = message ?? "no ban reason was given",
             };
-            await twitchApi.Helix.Moderation.BanUserAsync(_channelId, _userId, banUserRequest);
+            await twitchApi.Helix.Moderation.BanUserAsync(ChannelId, _userId, banUserRequest);
         }
 
         public async Task Unban(User user, string? message)
@@ -581,7 +581,9 @@ namespace TPP.Core.Chat
 
             _logger.LogDebug($"unban {user} in #{_channel}: {message}");
             TwitchAPI twitchApi = await _twitchApiProvider.Get();
-            await twitchApi.Helix.Moderation.UnbanUserAsync(_channelId, _userId, user.Id);
+            await twitchApi.Helix.Moderation.UnbanUserAsync(ChannelId, _userId, user.Id);
         }
+
+        public async Task<TwitchAPI> GetTwitchApi() => await _twitchApiProvider.Get();
     }
 }

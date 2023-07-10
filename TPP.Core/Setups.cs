@@ -127,7 +127,7 @@ namespace TPP.Core
             {
                 new EasterEggCommands().Commands,
                 new StaticResponseCommands().Commands,
-                new MiscCommands().Commands,
+                new MiscCommands(SystemClock.Instance).Commands,
                 new UserCommands(databases.UserRepo).Commands,
                 new TransmuteCommands(transmuter).Commands,
                 new OperatorCommands(
