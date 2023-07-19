@@ -79,7 +79,9 @@ namespace TPP.Common
             [70] = "Wilting Y",
             [71] = "Victory Fire",
             [72] = "Randomized Soul Silver",
-            [73] = "Resolute"
+            [73] = "Resolute",
+            [74] = "Black and White 3: Genesis",
+            [75] = "Mega Power
         };
 
         public static string FormatEmblem(int emblemNum)
