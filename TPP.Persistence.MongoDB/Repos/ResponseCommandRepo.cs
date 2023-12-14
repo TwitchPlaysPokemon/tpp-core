@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using TPP.Model;
@@ -39,7 +40,7 @@ namespace TPP.Persistence.MongoDB.Repos
             var commandLower = command.ToLower();
             ResponseCommand newCommand = new(commandLower, response);
             ResponseCommand? oldCommand = await Collection.FindOneAndReplaceAsync(
-                Builders<ResponseCommand>.Filter.Eq(c => c.Command.ToLower(), commandLower),
+                Builders<ResponseCommand>.Filter.Eq(c => c.Command, commandLower),
                 newCommand,
                 new FindOneAndReplaceOptions<ResponseCommand>
                 {
@@ -54,8 +55,7 @@ namespace TPP.Persistence.MongoDB.Repos
 
         public async Task<bool> RemoveCommand(string command)
         {
-            var commandLower = command.ToLower();
-            DeleteResult deleteOneAsync = await Collection.DeleteOneAsync(c => c.Command.ToLower() == commandLower);
+            DeleteResult deleteOneAsync = await Collection.DeleteOneAsync(c => c.Command.Equals(command, StringComparison.InvariantCultureIgnoreCase));
             CommandRemoved?.Invoke(this, command);
             return deleteOneAsync.DeletedCount > 0;
         }
