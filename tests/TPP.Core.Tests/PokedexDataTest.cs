@@ -37,6 +37,7 @@ namespace TPP.Core.Tests
                     "Great Tusk", "Brute Bonnet", "Walking Wake", "Sandy Shocks", "Scream Tail", "Flutter Mane", "Slither Wing", "Roaring Moon",
                     "Iron Treads", "Iron Leaves", "Iron Moth", "Iron Hands", "Iron Jugulis", "Iron Thorns", "Iron Bundle", "Iron Valiant",
                     "Ting-Lu", "Chien-Pao", "Wo-Chien", "Chi-Yu",
+                    "Gouging Fire", "Raging Bolt", "Iron Boulder", "Iron Crown",
                     "Ho-Oh",
                     "Porygon-Z",
                     "Flabébé",

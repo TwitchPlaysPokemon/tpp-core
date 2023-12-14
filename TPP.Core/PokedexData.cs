@@ -58,6 +58,10 @@ namespace TPP.Core
             (@"Chien-?Pao",       "Chien-Pao"),
             (@"Wo-?Chien",        "Wo-Chien"),
             (@"Chi-?Yu",          "Chi-Yu"),
+            (@"Gouging[ -]?Fire", "Gouging Fire"),
+            (@"Raging[ -]?Bolt",  "Raging Bolt"),
+            (@"Iron[ -]?Boulder", "Iron Boulder"),
+            (@"Iron[ -]?Crown",   "Iron Crown"),
             (@"MissingNo\.?",    "MissingNo."),
         };
 
@@ -117,7 +121,7 @@ namespace TPP.Core
             [Generation.Gen6] = 721, // Volcanion
             [Generation.Gen7] = 807, // Zeraora
             [Generation.Gen8] = 905, // Enamorus
-            [Generation.Gen9] = 1018, // Archaludon (for now)
+            [Generation.Gen9] = 1025, // Pecharunt
         }.ToImmutableSortedDictionary();
 
         public static Generation GetGeneration(PkmnSpecies species)
