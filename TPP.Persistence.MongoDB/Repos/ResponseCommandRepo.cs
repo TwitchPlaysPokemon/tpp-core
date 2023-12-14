@@ -55,7 +55,8 @@ namespace TPP.Persistence.MongoDB.Repos
 
         public async Task<bool> RemoveCommand(string command)
         {
-            DeleteResult deleteOneAsync = await Collection.DeleteOneAsync(c => c.Command.Equals(command, StringComparison.InvariantCultureIgnoreCase));
+            var commandLower = command.ToLower();
+            DeleteResult deleteOneAsync = await Collection.DeleteOneAsync(c => c.Command == command || c.Command == commandLower);
             CommandRemoved?.Invoke(this, command);
             return deleteOneAsync.DeletedCount > 0;
         }
