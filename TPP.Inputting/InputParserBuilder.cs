@@ -245,8 +245,25 @@ namespace TPP.Inputting
                 Conflicts((spinl, up), (spinl, down), (spinl, left), (spinl, right));
                 Conflicts((spinr, up), (spinr, down), (spinr, left), (spinr, right));
             }
-            return this;
+            return this.CardinalAnalogStickMapping(prefix);
         }
+
+        /// <summary>
+        /// Adds an aliased analog stick, automatically building a stick for an aliased prefix
+        /// </summary>
+        /// <param name="aliasPrefix">prefix for the aliased analog stick</param>
+        /// <param name="mapsToPrefix">prefix for the analog stick that the alias names map to</param>
+        /// <param name="allowSpin">if enabled, additional prefixed "spinl" and "spinr" buttons are added</param>
+        public InputParserBuilder SimpleAliasedAnalogStick(string aliasPrefix, string mapsToPrefix, bool allowSpin) =>
+            AliasedAnalogStick(
+                up: aliasPrefix + "up",
+                down: aliasPrefix + "down",
+                left: aliasPrefix + "left",
+                right: aliasPrefix + "right",
+                spinl: allowSpin ? aliasPrefix + "spinl" : null,
+                spinr: allowSpin ? aliasPrefix + "spinr" : null,
+                mapsToPrefix
+            ).CardinalAnalogStickAliases(aliasPrefix, mapsToPrefix);
 
         /// <summary>
         /// Adds an aliased analog stick. This is a shortcut for adding aliased analog inputs for
@@ -321,6 +338,7 @@ namespace TPP.Inputting
         /// <summary>
         /// Add a D-pad. This is a shortcut for adding buttons for "up"/"down"/"left"/"right",
         /// plus configuring respective conflicts, like inputting opposing directions.
+        /// Also automatically adds N E W S and North East West South remappings for the pad.
         /// </summary>
         /// <param name="prefix">prefix for the D-pad, which will get prepended to "up"/"down"/"left"/"right"</param>
         public InputParserBuilder DPad(string prefix = "")
@@ -331,8 +349,22 @@ namespace TPP.Inputting
             string right = prefix + "right";
             Buttons(up, down, left, right);
             Conflicts((up, down), (left, right));
-            return this;
+            return this.CardinalDPadMapping(prefix);
         }
+
+        /// <summary>
+        /// Adds an aliased D-pad, automatically building up/down/left/right buttons for an aliased prefix
+        /// </summary>
+        /// <param name="aliasPrefix">prefix for the aliased D-pad</param>
+        /// <param name="mapsToPrefix">prefix for the D-pad that the alias names map to</param>
+        public InputParserBuilder SimpleAliasedDPad(string aliasPrefix, string mapsToPrefix) =>
+            AliasedDPad(
+                up: aliasPrefix + "up",
+                down: aliasPrefix + "down",
+                left: aliasPrefix + "left",
+                right: aliasPrefix + "right",
+                mapsToPrefix
+            ).CardinalDPadAliases(aliasPrefix, mapsToPrefix);
 
         /// <summary>
         /// Add an aliased D-pad. This is a shortcut for adding aliased buttons for "up"/"down"/"left"/"right",
@@ -375,6 +407,44 @@ namespace TPP.Inputting
             Conflicts((targetUp, targetDown), (targetLeft, targetRight));
             return this;
         }
+
+        /// <summary>
+        /// Add N E W S and North East West South remapped D-pad.
+        /// </summary>
+        /// <param name="prefix">prefix for the D-pad that the remapping names map to,
+        /// which will get prepended to "n"/"s"/"w"/"e"</param>
+        public InputParserBuilder CardinalDPadMapping(string prefix) =>
+            RemappedDPad(up: prefix + "n", down: prefix + "s", left: prefix + "w", right: prefix + "e", prefix)
+            .RemappedDPad(up: prefix + "north", down: prefix + "south", left: prefix + "west", right: prefix + "east", prefix);
+
+        /// <summary>
+        /// Add N E W S and North East West South remapped Analog Stick.
+        /// </summary>
+        /// <param name="prefix">prefix for the stick that the remapping names map to,
+        /// which will get prepended to "n"/"s"/"w"/"e"</param>
+        public InputParserBuilder CardinalAnalogStickMapping(string prefix) =>
+            RemappedAnalogStick(up: prefix + "n", down: prefix + "s", left: prefix + "w", right: prefix + "e", spinl: null, spinr: null, prefix)
+            .RemappedAnalogStick(up: prefix + "north", down: prefix + "south", left: prefix + "west", right: prefix + "east", spinl: null, spinr: null, prefix);
+
+        /// <summary>
+        /// Add N E W S and North East West South D-pad aliases.
+        /// </summary>
+        /// <param name="prefix">prefix for the aliased D-pad,
+        /// <param name="mapsToPrefix">prefix that the aliased D-pad maps to</param>
+        public InputParserBuilder CardinalDPadAliases(string prefix, string mapsToPrefix) =>
+            AliasedDPad(up: prefix + "n", down: prefix + "s", left: prefix + "w", right: prefix + "e", mapsToPrefix)
+            .AliasedDPad(up: prefix + "north", down: prefix + "south", left: prefix + "west", right: prefix + "east", mapsToPrefix);
+
+
+        /// <summary>
+        /// Add N E W S and North East West South Analog Stick aliases.
+        /// </summary>
+        /// <param name="prefix">prefix for the aliased stick,
+        /// <param name="mapsToPrefix">prefix that the aliased stick maps to</param>
+        public InputParserBuilder CardinalAnalogStickAliases(string prefix, string mapsToPrefix) =>
+            AliasedAnalogStick(up: prefix + "n", down: prefix + "s", left: prefix + "w", right: prefix + "e", spinl: null, spinr: null, mapsToPrefix)
+            .AliasedAnalogStick(up: prefix + "north", down: prefix + "south", left: prefix + "west", right: prefix + "east", spinl: null, spinr: null, mapsToPrefix);
+
 
         public InputParserBuilder LeftRightSidesEnabled(bool enabled)
         {
