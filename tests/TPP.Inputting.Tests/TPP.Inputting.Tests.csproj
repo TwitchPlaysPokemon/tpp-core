@@ -11,6 +11,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\TPP.Core\TPP.Core.csproj" />
       <ProjectReference Include="..\..\TPP.Inputting\TPP.Inputting.csproj" />
     </ItemGroup>
 
