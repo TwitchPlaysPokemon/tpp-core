@@ -22,4 +22,4 @@ jobs:
           git add config.matchmode.schema.json
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git diff-index --quiet HEAD || { echo 'Please update the json schemas by running `dotnet run -- regenjsonschemas`'; exit 1; }
+          git diff-index --quiet HEAD || { echo 'The configuration schema has changed. Please update the json schema files by running `dotnet run -- regenjsonschemas` locally and committing the output.'; exit 1; }
