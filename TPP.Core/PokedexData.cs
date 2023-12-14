@@ -117,7 +117,7 @@ namespace TPP.Core
             [Generation.Gen6] = 721, // Volcanion
             [Generation.Gen7] = 807, // Zeraora
             [Generation.Gen8] = 905, // Enamorus
-            [Generation.Gen9] = 1010, // Annihilape
+            [Generation.Gen9] = 1018, // Archaludon (for now)
         }.ToImmutableSortedDictionary();
 
         public static Generation GetGeneration(PkmnSpecies species)

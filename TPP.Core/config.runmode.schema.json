@@ -12,7 +12,18 @@
           "enum": [
             "gb",
             "gba",
-            "dualgb"
+            "nds",
+            "3ds",
+            "nes",
+            "snes",
+            "n64",
+            "gc",
+            "switch",
+            "dualgb",
+            "dualnes",
+            "dualsnes",
+            "dualn64",
+            "dualgc"
           ]
         },
         "FramesPerSecond": {
