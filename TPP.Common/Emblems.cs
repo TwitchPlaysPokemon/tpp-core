@@ -83,7 +83,9 @@ namespace TPP.Common
             [74] = "Black and White 3: Genesis",
             [75] = "Mega Power",
             [76] = "Snakewood DX",
-            [77] = "Nameless"
+            [77] = "Nameless",
+            [78] = "Inverse White",
+            [79] = "Inverse White 2"
         };
 
         public static string FormatEmblem(int emblemNum)
