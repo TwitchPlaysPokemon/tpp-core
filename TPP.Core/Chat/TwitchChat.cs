@@ -133,6 +133,7 @@ namespace TPP.Core.Chat
 
             _twitchClient.OnConnected += Connected;
             _twitchClient.OnError += OnError;
+            _twitchClient.OnConnectionError += OnConnectionError;
             _twitchClient.OnMessageReceived += MessageReceived;
             _twitchClient.OnWhisperReceived += WhisperReceived;
             _subscriptionWatcher = new TwitchLibSubscriptionWatcher(
@@ -159,6 +160,13 @@ namespace TPP.Core.Chat
             _logger.LogError(e.Exception, "The TwitchClient encountered an error. Forcing a disconnect");
             _twitchClient.Disconnect();
             // let the CheckConnectivityWorker handle reconnecting
+        }
+
+        private void OnConnectionError(object? sender, OnConnectionErrorArgs e)
+        {
+            // same procedure as above
+            _logger.LogError("The TwitchClient encountered a connection error. Forcing a disconnect. Error: {Error}", e.Error.Message);
+            _twitchClient.Disconnect();
         }
 
         private static string BuildSubResponse(
