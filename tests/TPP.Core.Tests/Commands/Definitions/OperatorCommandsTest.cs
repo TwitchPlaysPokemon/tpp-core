@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using Moq;
 using NodaTime;
+using NSubstitute;
 using NUnit.Framework;
 using TPP.ArgsParsing;
 using TPP.ArgsParsing.TypeParsers;
@@ -37,17 +37,17 @@ namespace TPP.Core.Tests.Commands.Definitions
         private static Message MockMessage(User user, string text = "") =>
             new(user, text, MessageSource.Chat, string.Empty);
 
-        private Mock<IUserRepo> _userRepoMock = null!;
+        private IUserRepo _userRepoMock = null!;
         private ArgsParser _argsParser = null!;
-        private Mock<IBank<User>> _pokeyenBankMock = null!;
-        private Mock<IBank<User>> _tokensBankMock = null!;
-        private Mock<IMessageSender> _messageSenderMock = null!;
-        private Mock<IBadgeRepo> _badgeRepoMock = null!;
+        private IBank<User> _pokeyenBankMock = null!;
+        private IBank<User> _tokensBankMock = null!;
+        private IMessageSender _messageSenderMock = null!;
+        private IBadgeRepo _badgeRepoMock = null!;
 
         [SetUp]
         public void SetUp()
         {
-            _userRepoMock = new Mock<IUserRepo>();
+            _userRepoMock = Substitute.For<IUserRepo>();
             _argsParser = new ArgsParser();
             _argsParser.AddArgumentParser(new StringParser());
             _argsParser.AddArgumentParser(new SignedPokeyenParser());
@@ -56,12 +56,12 @@ namespace TPP.Core.Tests.Commands.Definitions
             _argsParser.AddArgumentParser(new OptionalParser(_argsParser));
             _argsParser.AddArgumentParser(new ManyOfParser(_argsParser));
             _argsParser.AddArgumentParser(new RoleParser());
-            _argsParser.AddArgumentParser(new UserParser(_userRepoMock.Object));
+            _argsParser.AddArgumentParser(new UserParser(_userRepoMock));
             _argsParser.AddArgumentParser(new PositiveIntParser());
-            _pokeyenBankMock = new Mock<IBank<User>>();
-            _tokensBankMock = new Mock<IBank<User>>();
-            _messageSenderMock = new Mock<IMessageSender>();
-            _badgeRepoMock = new Mock<IBadgeRepo>();
+            _pokeyenBankMock = Substitute.For<IBank<User>>();
+            _tokensBankMock = Substitute.For<IBank<User>>();
+            _messageSenderMock = Substitute.For<IMessageSender>();
+            _badgeRepoMock = Substitute.For<IBadgeRepo>();
         }
 
         private static bool AreTransactionsEqual(Transaction<User> tx1, Transaction<User> tx2)
@@ -74,12 +74,12 @@ namespace TPP.Core.Tests.Commands.Definitions
         public async Task adjust_tokens_self()
         {
             User user = MockOperator("MockOperator");
-            _userRepoMock.Setup(u => u.FindBySimpleName(user.SimpleName)).ReturnsAsync(user);
+            _userRepoMock.FindBySimpleName(user.SimpleName).Returns(user);
             OperatorCommands operatorCommands = new OperatorCommands(
                 new StopToken(), new MuteInputsToken(),
-                _tokensBankMock.Object, _tokensBankMock.Object,
-                _messageSenderMock.Object, _badgeRepoMock.Object,
-                _userRepoMock.Object, Mock.Of<IInputSidePicksRepo>());
+                _tokensBankMock, _tokensBankMock,
+                _messageSenderMock, _badgeRepoMock,
+                _userRepoMock, Substitute.For<IInputSidePicksRepo>());
 
             {
                 CommandResult result = await operatorCommands.AdjustTokens(new CommandContext(MockMessage(user),
@@ -88,8 +88,8 @@ namespace TPP.Core.Tests.Commands.Definitions
 
                 var transaction = new Transaction<User>(user, 123, "manual_adjustment",
                     new Dictionary<string, object?> { ["responsible_user"] = user.Id });
-                _tokensBankMock.Verify(b => b.PerformTransaction(
-                    It.Is<Transaction<User>>(tx => AreTransactionsEqual(tx, transaction)), default), Times.Once);
+                await _tokensBankMock.Received(1).PerformTransaction(
+                    Arg.Is<Transaction<User>>(tx => AreTransactionsEqual(tx, transaction)), default);
             }
             {
                 CommandResult result = await operatorCommands.AdjustTokens(new CommandContext(MockMessage(user),
@@ -98,12 +98,12 @@ namespace TPP.Core.Tests.Commands.Definitions
 
                 var transaction = new Transaction<User>(user, -123, "manual_adjustment",
                     new Dictionary<string, object?> { ["responsible_user"] = user.Id });
-                _tokensBankMock.Verify(b => b.PerformTransaction(
-                    It.Is<Transaction<User>>(tx => AreTransactionsEqual(tx, transaction)), default), Times.Once);
+                await _tokensBankMock.Received(1).PerformTransaction(
+                    Arg.Is<Transaction<User>>(tx => AreTransactionsEqual(tx, transaction)), default);
             }
-            _tokensBankMock.VerifyNoOtherCalls();
-            _pokeyenBankMock.VerifyNoOtherCalls();
-            _messageSenderMock.VerifyNoOtherCalls();
+            Assert.That(_tokensBankMock.ReceivedCalls().Count(), Is.EqualTo(2));
+            Assert.That(_pokeyenBankMock.ReceivedCalls().Count(), Is.EqualTo(0));
+            Assert.That(_messageSenderMock.ReceivedCalls().Count(), Is.EqualTo(0));
         }
 
         [Test]
@@ -111,12 +111,12 @@ namespace TPP.Core.Tests.Commands.Definitions
         {
             User userSelf = MockOperator("MockUserSelf");
             User userOther = MockUser("MockUserOther");
-            _userRepoMock.Setup(u => u.FindBySimpleName(userOther.SimpleName)).ReturnsAsync(userOther);
+            _userRepoMock.FindBySimpleName(userOther.SimpleName).Returns(userOther);
             OperatorCommands operatorCommands = new OperatorCommands(
                 new StopToken(), new MuteInputsToken(),
-                _tokensBankMock.Object, _tokensBankMock.Object,
-                _messageSenderMock.Object, _badgeRepoMock.Object,
-                _userRepoMock.Object, Mock.Of<IInputSidePicksRepo>());
+                _tokensBankMock, _tokensBankMock,
+                _messageSenderMock, _badgeRepoMock,
+                _userRepoMock, Substitute.For<IInputSidePicksRepo>());
 
             {
                 CommandResult result = await operatorCommands.AdjustTokens(new CommandContext(MockMessage(userSelf),
@@ -125,12 +125,11 @@ namespace TPP.Core.Tests.Commands.Definitions
 
                 var transaction = new Transaction<User>(userOther, 123, "manual_adjustment",
                     new Dictionary<string, object?> { ["responsible_user"] = userSelf.Id });
-                _tokensBankMock.Verify(b => b.PerformTransaction(
-                    It.Is<Transaction<User>>(tx => AreTransactionsEqual(tx, transaction)), default), Times.Once);
+                await _tokensBankMock.Received(1).PerformTransaction(
+                    Arg.Is<Transaction<User>>(tx => AreTransactionsEqual(tx, transaction)), default);
 
                 const string notification = "MockUserSelf adjusted your token balance by +123. Reason: because reason";
-                _messageSenderMock.Verify(m => m.SendWhisper(userOther,
-                    notification), Times.Once);
+                await _messageSenderMock.Received(1).SendWhisper(userOther, notification);
             }
             {
                 CommandResult result = await operatorCommands.AdjustTokens(new CommandContext(MockMessage(userSelf),
@@ -139,16 +138,15 @@ namespace TPP.Core.Tests.Commands.Definitions
 
                 var transaction = new Transaction<User>(userOther, -123, "manual_adjustment",
                     new Dictionary<string, object?> { ["responsible_user"] = userSelf.Id });
-                _tokensBankMock.Verify(b => b.PerformTransaction(
-                    It.Is<Transaction<User>>(tx => AreTransactionsEqual(tx, transaction)), default), Times.Once);
+                await _tokensBankMock.Received(1).PerformTransaction(
+                    Arg.Is<Transaction<User>>(tx => AreTransactionsEqual(tx, transaction)), default);
 
                 const string notification = "MockUserSelf adjusted your token balance by -123. Reason: because";
-                _messageSenderMock.Verify(m => m.SendWhisper(userOther,
-                    notification), Times.Once);
+                await _messageSenderMock.Received(1).SendWhisper(userOther, notification);
             }
-            _tokensBankMock.VerifyNoOtherCalls();
-            _pokeyenBankMock.VerifyNoOtherCalls();
-            _messageSenderMock.VerifyNoOtherCalls();
+            Assert.That(_tokensBankMock.ReceivedCalls().Count(), Is.EqualTo(2));
+            Assert.That(_pokeyenBankMock.ReceivedCalls().Count(), Is.EqualTo(0));
+            Assert.That(_messageSenderMock.ReceivedCalls().Count(), Is.EqualTo(2));
         }
 
         [Test]
@@ -161,16 +159,16 @@ namespace TPP.Core.Tests.Commands.Definitions
             User recipient = MockUser("Recipient");
             OperatorCommands operatorCommands = new(
                 new StopToken(), new MuteInputsToken(),
-                _tokensBankMock.Object, _tokensBankMock.Object,
-                _messageSenderMock.Object, _badgeRepoMock.Object,
-                _userRepoMock.Object, Mock.Of<IInputSidePicksRepo>());
-            _userRepoMock.Setup(repo => repo.FindBySimpleName("gifter")).Returns(Task.FromResult((User?)gifter));
-            _userRepoMock.Setup(repo => repo.FindBySimpleName("recipient")).Returns(Task.FromResult((User?)recipient));
+                _tokensBankMock, _tokensBankMock,
+                _messageSenderMock, _badgeRepoMock,
+                _userRepoMock, Substitute.For<IInputSidePicksRepo>());
+            _userRepoMock.FindBySimpleName("gifter").Returns(Task.FromResult((User?)gifter));
+            _userRepoMock.FindBySimpleName("recipient").Returns(Task.FromResult((User?)recipient));
             Badge badge1 = new("badge1", gifter.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue);
             Badge badge2 = new("badge2", gifter.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue);
             Badge badge3 = new("badge3", gifter.Id, species, Badge.BadgeSource.ManualCreation, Instant.MinValue);
-            _badgeRepoMock.Setup(repo => repo.FindByUserAndSpecies(gifter.Id, species, 2))
-                .ReturnsAsync(ImmutableList.Create(badge1, badge2, badge3));
+            _badgeRepoMock.FindByUserAndSpecies(gifter.Id, species, 2)
+                .Returns(ImmutableList.Create(badge1, badge2, badge3));
 
             CommandResult result = await operatorCommands.TransferBadge(new CommandContext(MockMessage(userSelf),
                 ImmutableList.Create("gifter", "recipient", "species", "2", "because", "reason"), _argsParser));
@@ -183,11 +181,11 @@ namespace TPP.Core.Tests.Commands.Definitions
                 ["responsible_user"] = userSelf.Id,
                 ["reason"] = "because reason",
             };
-            _badgeRepoMock.Verify(repo => repo.TransferBadges(
-                It.Is<IImmutableList<Badge>>(list => list.SequenceEqual(ImmutableList.Create(badge1, badge2))),
+            await _badgeRepoMock.Received(1).TransferBadges(
+                Arg.Is<IImmutableList<Badge>>(list => list.SequenceEqual(ImmutableList.Create(badge1, badge2))),
                 recipient.Id,
                 "gift_remote",
-                It.Is<IDictionary<string, object?>>(dict => dict.DictionaryEqual(data))));
+                Arg.Is<IDictionary<string, object?>>(dict => dict.DictionaryEqual(data)));
         }
 
         [Test]
@@ -200,22 +198,21 @@ namespace TPP.Core.Tests.Commands.Definitions
             User recipient = MockUser("Recipient");
             OperatorCommands operatorCommands = new(
                 new StopToken(), new MuteInputsToken(),
-                _tokensBankMock.Object, _tokensBankMock.Object,
-                _messageSenderMock.Object, _badgeRepoMock.Object,
-                _userRepoMock.Object, Mock.Of<IInputSidePicksRepo>());
-            _userRepoMock.Setup(repo => repo.FindBySimpleName("gifter")).Returns(Task.FromResult((User?)gifter));
-            _userRepoMock.Setup(repo => repo.FindBySimpleName("recipient")).Returns(Task.FromResult((User?)recipient));
+                _tokensBankMock, _tokensBankMock,
+                _messageSenderMock, _badgeRepoMock,
+                _userRepoMock, Substitute.For<IInputSidePicksRepo>());
+            _userRepoMock.FindBySimpleName("gifter").Returns(Task.FromResult((User?)gifter));
+            _userRepoMock.FindBySimpleName("recipient").Returns(Task.FromResult((User?)recipient));
 
             CommandResult result = await operatorCommands.TransferBadge(new CommandContext(MockMessage(userSelf),
                 ImmutableList.Create("gifter", "recipient", "species", "2"), _argsParser));
 
             Assert.That(result.Response, Is.EqualTo("Must provide a reason"));
-            _badgeRepoMock.Verify(repo => repo.TransferBadges(
-                    It.IsAny<IImmutableList<Badge>>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<IDictionary<string, object?>>()),
-                Times.Never);
+            await _badgeRepoMock.DidNotReceive().TransferBadges(
+                    Arg.Any<IImmutableList<Badge>>(),
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<IDictionary<string, object?>>());
         }
 
         [Test]
@@ -228,25 +225,24 @@ namespace TPP.Core.Tests.Commands.Definitions
             User recipient = MockUser("Recipient");
             OperatorCommands operatorCommands = new(
                 new StopToken(), new MuteInputsToken(),
-                _tokensBankMock.Object, _tokensBankMock.Object,
-                _messageSenderMock.Object, _badgeRepoMock.Object,
-                _userRepoMock.Object, Mock.Of<IInputSidePicksRepo>());
-            _userRepoMock.Setup(repo => repo.FindBySimpleName("gifter")).Returns(Task.FromResult((User?)gifter));
-            _userRepoMock.Setup(repo => repo.FindBySimpleName("recipient")).Returns(Task.FromResult((User?)recipient));
-            _badgeRepoMock.Setup(repo => repo.FindByUserAndSpecies(gifter.Id, species, 1))
-                .ReturnsAsync(ImmutableList<Badge>.Empty);
+                _tokensBankMock, _tokensBankMock,
+                _messageSenderMock, _badgeRepoMock,
+                _userRepoMock, Substitute.For<IInputSidePicksRepo>());
+            _userRepoMock.FindBySimpleName("gifter").Returns(Task.FromResult((User?)gifter));
+            _userRepoMock.FindBySimpleName("recipient").Returns(Task.FromResult((User?)recipient));
+            _badgeRepoMock.FindByUserAndSpecies(gifter.Id, species, 1)
+                .Returns(ImmutableList<Badge>.Empty);
 
             CommandResult result = await operatorCommands.TransferBadge(new CommandContext(MockMessage(userSelf),
                 ImmutableList.Create("gifter", "recipient", "species", "reason"), _argsParser));
 
             Assert.That(result.Response, Is.EqualTo("You tried to transfer 1 #001 species badges, but the gifter only has 0."));
             Assert.That(result.ResponseTarget, Is.EqualTo(ResponseTarget.Source));
-            _badgeRepoMock.Verify(repo => repo.TransferBadges(
-                    It.IsAny<IImmutableList<Badge>>(),
-                    It.IsAny<string?>(),
-                    It.IsAny<string>(),
-                    It.IsAny<IDictionary<string, object?>>()),
-                Times.Never);
+            await _badgeRepoMock.DidNotReceive().TransferBadges(
+                    Arg.Any<IImmutableList<Badge>>(),
+                    Arg.Any<string?>(),
+                    Arg.Any<string>(),
+                    Arg.Any<IDictionary<string, object?>>());
         }
 
         [Test]
@@ -258,19 +254,17 @@ namespace TPP.Core.Tests.Commands.Definitions
             User recipient = MockUser("Recipient");
             OperatorCommands operatorCommands = new(
                 new StopToken(), new MuteInputsToken(),
-                _tokensBankMock.Object, _tokensBankMock.Object,
-                _messageSenderMock.Object, _badgeRepoMock.Object,
-                _userRepoMock.Object, Mock.Of<IInputSidePicksRepo>());
-            _userRepoMock.Setup(repo => repo.FindBySimpleName("recipient")).Returns(Task.FromResult((User?)recipient));
+                _tokensBankMock, _tokensBankMock,
+                _messageSenderMock, _badgeRepoMock,
+                _userRepoMock, Substitute.For<IInputSidePicksRepo>());
+            _userRepoMock.FindBySimpleName("recipient").Returns(Task.FromResult((User?)recipient));
 
             CommandResult result = await operatorCommands.CreateBadge(new CommandContext(MockMessage(user),
                 ImmutableList.Create("recipient", "species", "123"), _argsParser));
 
             Assert.That(result.Response, Is.EqualTo("123 badges of species #001 Species created for user Recipient."));
             Assert.That(result.ResponseTarget, Is.EqualTo(ResponseTarget.Source));
-            _badgeRepoMock.Verify(repo =>
-                    repo.AddBadge(recipient.Id, species, Badge.BadgeSource.ManualCreation, null),
-                Times.Exactly(123));
+            await _badgeRepoMock.Received(123).AddBadge(recipient.Id, species, Badge.BadgeSource.ManualCreation, null);
         }
     }
 }

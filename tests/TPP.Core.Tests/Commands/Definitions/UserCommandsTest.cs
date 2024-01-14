@@ -4,8 +4,8 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Moq;
 using NodaTime;
+using NSubstitute;
 using NUnit.Framework;
 using TPP.ArgsParsing;
 using TPP.ArgsParsing.TypeParsers;
@@ -40,10 +40,10 @@ public class UserCommandsTest
     private static Message MockMessage(User user, string text = "")
         => new Message(user, text, MessageSource.Chat, string.Empty);
 
-    private Mock<IUserRepo> _userRepoMock = null!;
-    private Mock<IBank<User>> _pokeyenBankMock = null!;
-    private Mock<IBank<User>> _tokenBankMock = null!;
-    private Mock<IMessageSender> _messageSenderMock = null!;
+    private IUserRepo _userRepoMock = null!;
+    private IBank<User> _pokeyenBankMock = null!;
+    private IBank<User> _tokenBankMock = null!;
+    private IMessageSender _messageSenderMock = null!;
     private ArgsParser _argsParser = null!;
 
     private UserCommands _userCommands = null!;
@@ -53,19 +53,19 @@ public class UserCommandsTest
     [SetUp]
     public void SetUp()
     {
-        _userRepoMock = new Mock<IUserRepo>();
-        _pokeyenBankMock = new Mock<IBank<User>>();
-        _tokenBankMock = new Mock<IBank<User>>();
-        _messageSenderMock = new Mock<IMessageSender>();
-        _userCommands = new UserCommands(userRepo: _userRepoMock.Object);
+        _userRepoMock = Substitute.For<IUserRepo>();
+        _pokeyenBankMock = Substitute.For<IBank<User>>();
+        _tokenBankMock = Substitute.For<IBank<User>>();
+        _messageSenderMock = Substitute.For<IMessageSender>();
+        _userCommands = new UserCommands(userRepo: _userRepoMock);
         _currencyCommands = new CurrencyCommands(
-            pokeyenBank: _pokeyenBankMock.Object,
-            tokenBank: _tokenBankMock.Object,
-            messageSender: _messageSenderMock.Object);
-        _cosmeticsCommands = new CosmeticsCommands(userRepo: _userRepoMock.Object, tokenBank: _tokenBankMock.Object);
+            pokeyenBank: _pokeyenBankMock,
+            tokenBank: _tokenBankMock,
+            messageSender: _messageSenderMock);
+        _cosmeticsCommands = new CosmeticsCommands(userRepo: _userRepoMock, tokenBank: _tokenBankMock);
         _argsParser = new ArgsParser();
         _argsParser.AddArgumentParser(new OptionalParser(_argsParser));
-        _argsParser.AddArgumentParser(new UserParser(_userRepoMock.Object));
+        _argsParser.AddArgumentParser(new UserParser(_userRepoMock));
         _argsParser.AddArgumentParser(new HexColorParser());
         _argsParser.AddArgumentParser(new StringParser());
         _argsParser.AddArgumentParser(new NonNegativeIntParser());
@@ -77,10 +77,10 @@ public class UserCommandsTest
     public async Task TestBalanceSelfWithReserved()
     {
         var user = MockUser(pokeyen: 1000, tokens: 10);
-        _pokeyenBankMock.Setup(b => b.GetAvailableMoney(user)).ReturnsAsync(900);
-        _pokeyenBankMock.Setup(b => b.GetReservedMoney(user)).ReturnsAsync(100);
-        _tokenBankMock.Setup(b => b.GetAvailableMoney(user)).ReturnsAsync(9);
-        _tokenBankMock.Setup(b => b.GetReservedMoney(user)).ReturnsAsync(1);
+        _pokeyenBankMock.GetAvailableMoney(user).Returns(900);
+        _pokeyenBankMock.GetReservedMoney(user).Returns(100);
+        _tokenBankMock.GetAvailableMoney(user).Returns(9);
+        _tokenBankMock.GetReservedMoney(user).Returns(1);
 
         CommandResult result = await _currencyCommands.CheckBalance(new CommandContext(MockMessage(user),
             ImmutableList<string>.Empty, _argsParser));
@@ -92,10 +92,10 @@ public class UserCommandsTest
     public async Task TestBalanceSelfWithRank()
     {
         var user = MockUser(pokeyen: 1000, tokens: 10, pokeyenBetRank: 123);
-        _pokeyenBankMock.Setup(b => b.GetAvailableMoney(user)).ReturnsAsync(1000);
-        _pokeyenBankMock.Setup(b => b.GetReservedMoney(user)).ReturnsAsync(0);
-        _tokenBankMock.Setup(b => b.GetAvailableMoney(user)).ReturnsAsync(10);
-        _tokenBankMock.Setup(b => b.GetReservedMoney(user)).ReturnsAsync(0);
+        _pokeyenBankMock.GetAvailableMoney(user).Returns(1000);
+        _pokeyenBankMock.GetReservedMoney(user).Returns(0);
+        _tokenBankMock.GetAvailableMoney(user).Returns(10);
+        _tokenBankMock.GetReservedMoney(user).Returns(0);
 
         CommandResult result = await _currencyCommands.CheckBalance(new CommandContext(MockMessage(user),
             ImmutableList<string>.Empty, _argsParser));
@@ -109,12 +109,12 @@ public class UserCommandsTest
     public async Task TestBalanceOther()
     {
         var user = MockUser(pokeyen: 1000, tokens: 10, pokeyenBetRank: 123);
-        _pokeyenBankMock.Setup(b => b.GetAvailableMoney(user)).ReturnsAsync(900);
-        _pokeyenBankMock.Setup(b => b.GetReservedMoney(user)).ReturnsAsync(100);
-        _tokenBankMock.Setup(b => b.GetAvailableMoney(user)).ReturnsAsync(9);
-        _tokenBankMock.Setup(b => b.GetReservedMoney(user)).ReturnsAsync(1);
-        _userRepoMock.Setup(r => r.FindBySimpleName(user.SimpleName))
-            .ReturnsAsync(user);
+        _pokeyenBankMock.GetAvailableMoney(user).Returns(900);
+        _pokeyenBankMock.GetReservedMoney(user).Returns(100);
+        _tokenBankMock.GetAvailableMoney(user).Returns(9);
+        _tokenBankMock.GetReservedMoney(user).Returns(1);
+        _userRepoMock.FindBySimpleName(user.SimpleName)
+            .Returns(user);
 
         var message = new Message(MockUser("Someone_Else"), "", MessageSource.Chat, string.Empty);
         CommandResult result = await _currencyCommands.CheckBalance(new CommandContext(message,
@@ -133,7 +133,7 @@ public class UserCommandsTest
             ImmutableList.Create("#123456"), _argsParser));
 
         Assert.That(result.Response, Is.EqualTo("glow color is still locked, use 'unlockglow' to unlock (costs T1)"));
-        _userRepoMock.VerifyNoOtherCalls();
+        Assert.That(_userRepoMock.ReceivedCalls().Count(), Is.EqualTo(0));
     }
 
     [Test]
@@ -146,7 +146,7 @@ public class UserCommandsTest
             ImmutableList.Create('#' + glowColor), _argsParser));
 
         Assert.That(result.Response, Is.EqualTo("glow color set to #123456"));
-        _userRepoMock.Verify(u => u.SetGlowColor(user, glowColor), Times.Once);
+        await _userRepoMock.Received(1).SetGlowColor(user, glowColor);
     }
 
     [Test]
@@ -158,7 +158,7 @@ public class UserCommandsTest
             ImmutableList<string>.Empty, _argsParser));
 
         Assert.That(result.Response, Is.EqualTo("your glow color was removed"));
-        _userRepoMock.Verify(u => u.SetGlowColor(user, null), Times.Once);
+        await _userRepoMock.Received(1).SetGlowColor(user, null);
     }
 
     [Test]
@@ -170,38 +170,37 @@ public class UserCommandsTest
             ImmutableList<string>.Empty, _argsParser));
 
         Assert.That(result.Response, Is.EqualTo("glow color is already unlocked"));
-        _userRepoMock.VerifyNoOtherCalls();
+        Assert.That(_userRepoMock.ReceivedCalls().Count(), Is.EqualTo(0));
     }
 
     [Test]
     public async Task TestUnlockGlowNotEnoughTokens()
     {
         var user = MockUser(glowColorUnlocked: false);
-        _tokenBankMock.Setup(b => b.GetAvailableMoney(user)).ReturnsAsync(0);
+        _tokenBankMock.GetAvailableMoney(user).Returns(0);
 
         CommandResult result = await _cosmeticsCommands.UnlockGlow(new CommandContext(MockMessage(user),
             ImmutableList<string>.Empty, _argsParser));
 
         Assert.That(result.Response, Is.EqualTo("you don't have T1 to unlock the glow color"));
-        _userRepoMock.VerifyNoOtherCalls();
+        Assert.That(_userRepoMock.ReceivedCalls().Count(), Is.EqualTo(0));
     }
 
     [Test]
     public async Task TestUnlockGlow()
     {
         var user = MockUser(glowColorUnlocked: false);
-        _tokenBankMock.Setup(b => b.GetAvailableMoney(user)).ReturnsAsync(1);
+        _tokenBankMock.GetAvailableMoney(user).Returns(1);
 
         CommandResult result = await _cosmeticsCommands.UnlockGlow(new CommandContext(MockMessage(user),
             ImmutableList<string>.Empty, _argsParser));
 
         Assert.That(result.Response, Is.EqualTo("your glow color was unlocked"));
-        _userRepoMock.Verify(u => u.SetGlowColorUnlocked(user, true), Times.Once);
-        _tokenBankMock.Verify(b => b.PerformTransaction(
-                It.Is((Transaction<User> tx) =>
+        await _userRepoMock.Received(1).SetGlowColorUnlocked(user, true);
+        await _tokenBankMock.Received(1).PerformTransaction(
+                Arg.Is((Transaction<User> tx) =>
                     tx.Change == -1 && tx.User == user && tx.Type == TransactionType.SecondaryColorUnlock),
-                It.IsAny<CancellationToken>()),
-            Times.Once);
+                Arg.Any<CancellationToken>());
     }
 
     [Test]
@@ -216,7 +215,7 @@ public class UserCommandsTest
         Assert.That(
             result.Response, Is.EqualTo("you don't have any special characters in your name " +
                                         "and can therefore still change it in your twitch settings"));
-        _userRepoMock.VerifyNoOtherCalls();
+        Assert.That(_userRepoMock.ReceivedCalls().Count(), Is.EqualTo(0));
     }
 
     [Test]
@@ -229,7 +228,7 @@ public class UserCommandsTest
             ImmutableList.Create(newDisplayName), _argsParser));
 
         Assert.That(result.Response, Is.EqualTo($"your display name has been updated to '{newDisplayName}'"));
-        _userRepoMock.Verify(u => u.SetDisplayName(user, newDisplayName), Times.Once);
+        await _userRepoMock.Received(1).SetDisplayName(user, newDisplayName);
     }
 
     [Test]
@@ -250,8 +249,8 @@ public class UserCommandsTest
         var userSelf = MockUser(emblems: new SortedSet<int>(new[] { 3, 4, 9 }));
         var userOther = MockUser(name: "OtherUser", emblems: new SortedSet<int>(new[] { 1, 2, 47 }));
         _userRepoMock
-            .Setup(repo => repo.FindBySimpleName(userOther.SimpleName))
-            .ReturnsAsync(userOther);
+            .FindBySimpleName(userOther.SimpleName)
+            .Returns(userOther);
 
         CommandResult result = await _cosmeticsCommands.CheckEmblems(new CommandContext(MockMessage(userSelf),
             ImmutableList.Create("oThErUsEr"), _argsParser));
@@ -269,7 +268,7 @@ public class UserCommandsTest
             ImmutableList.Create("10"), _argsParser));
 
         Assert.That(result.Response, Is.EqualTo("you don't own that participation badge"));
-        _userRepoMock.VerifyNoOtherCalls();
+        Assert.That(_userRepoMock.ReceivedCalls().Count(), Is.EqualTo(0));
     }
 
     [Test]
@@ -281,7 +280,7 @@ public class UserCommandsTest
             ImmutableList.Create("2"), _argsParser));
 
         Assert.That(result.Response, Is.EqualTo("color of participation badge #2 (Crystal) successfully equipped"));
-        _userRepoMock.Verify(u => u.SetSelectedEmblem(user, 2), Times.Once);
+        await _userRepoMock.Received(1).SetSelectedEmblem(user, 2);
     }
 
     [Test]
@@ -289,22 +288,24 @@ public class UserCommandsTest
     {
         User userSelf = MockUser("Self");
         User userRecipient = MockUser("Recipient");
-        _userRepoMock.Setup(r => r.FindBySimpleName(userRecipient.SimpleName))
+        _userRepoMock.FindBySimpleName(userRecipient.SimpleName)
             .Returns(Task.FromResult((User?)userRecipient));
-        _tokenBankMock.Setup(b => b.GetAvailableMoney(userSelf)).Returns(Task.FromResult(1L));
-        List<IEnumerable<Transaction<User>>> txInvocations = new();
-        _tokenBankMock.Setup(b => b.PerformTransactions(Capture.In(txInvocations), It.IsAny<CancellationToken>()));
+        _tokenBankMock.GetAvailableMoney(userSelf).Returns(Task.FromResult(1L));
+        List<Transaction<User>> transactions = new();
+        _tokenBankMock.PerformTransactions(
+            Arg.Do<IEnumerable<Transaction<User>>>(txs => transactions.AddRange(txs)),
+            Arg.Any<CancellationToken>()
+        ).ReturnsForAnyArgs(new List<TransactionLog>());
 
         CommandResult result = await _currencyCommands.Donate(new CommandContext(MockMessage(userSelf),
             ImmutableList.Create("T1", "Recipient"), _argsParser));
 
         Assert.That(result.Response, Is.EqualTo("You successfully donated T1 to @Recipient!"));
-        List<Transaction<User>> txs = txInvocations.SelectMany(t => t).ToList();
         CollectionAssert.AreEquivalent(new List<Transaction<User>>
         {
             new(userSelf, -1, "donation_give"),
             new(userRecipient, 1, "donation_recieve"),
-        }, txs);
+        }, transactions);
     }
 
     [Test]
@@ -312,16 +313,15 @@ public class UserCommandsTest
     {
         User userSelf = MockUser("Self");
         User userRecipient = MockUser("Recipient");
-        _userRepoMock.Setup(r => r.FindBySimpleName(userRecipient.SimpleName))
+        _userRepoMock.FindBySimpleName(userRecipient.SimpleName)
             .Returns(Task.FromResult((User?)userRecipient));
-        _tokenBankMock.Setup(b => b.GetAvailableMoney(userSelf)).Returns(Task.FromResult(1L));
+        _tokenBankMock.GetAvailableMoney(userSelf).Returns(Task.FromResult(1L));
 
         CommandResult result = await _currencyCommands.Donate(new CommandContext(MockMessage(userSelf),
             ImmutableList.Create("T2", "Recipient"), _argsParser));
 
         Assert.That(result.Response, Is.EqualTo("You are trying to donate T2 but you only have T1."));
-        _tokenBankMock.Verify(b =>
-                b.PerformTransactions(It.IsAny<IEnumerable<Transaction<User>>>(), It.IsAny<CancellationToken>()),
-            Times.Never);
+        await _tokenBankMock.DidNotReceive()
+            .PerformTransactions(Arg.Any<IEnumerable<Transaction<User>>>(), Arg.Any<CancellationToken>());
     }
 }

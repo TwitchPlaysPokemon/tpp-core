@@ -1,7 +1,8 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
-using Moq;
 using NodaTime;
+using NSubstitute;
 using NUnit.Framework;
 using TPP.Core.Chat;
 using TPP.Core.Commands;
@@ -21,8 +22,8 @@ namespace TPP.Core.Tests.Commands
         public async Task TestRespondToSource()
         {
             // given
-            var messageSenderMock = new Mock<IMessageSender>();
-            var commandResponder = new CommandResponder(messageSenderMock.Object);
+            var messageSenderMock = Substitute.For<IMessageSender>();
+            var commandResponder = new CommandResponder(messageSenderMock);
             var user = MockUser();
             var chatMessage = new Message(user, "message text", MessageSource.Chat, string.Empty);
             var whisperMessage = new Message(user, "message text", MessageSource.Whisper, string.Empty);
@@ -34,16 +35,16 @@ namespace TPP.Core.Tests.Commands
                 new CommandResult { Response = "Whisper response!", ResponseTarget = ResponseTarget.Source });
 
             // then
-            messageSenderMock.Verify(ms => ms.SendMessage("Chat response!", chatMessage), Times.Once);
-            messageSenderMock.Verify(ms => ms.SendWhisper(user, "Whisper response!"), Times.Once);
+            await messageSenderMock.Received(1).SendMessage("Chat response!", chatMessage);
+            await messageSenderMock.Received(1).SendWhisper(user, "Whisper response!");
         }
 
         [Test]
         public async Task TestRespondFixed()
         {
             // given
-            var messageSenderMock = new Mock<IMessageSender>();
-            var commandResponder = new CommandResponder(messageSenderMock.Object);
+            var messageSenderMock = Substitute.For<IMessageSender>();
+            var commandResponder = new CommandResponder(messageSenderMock);
             var user = MockUser();
             var chatMessage = new Message(user, "message text", MessageSource.Chat, string.Empty);
             var whisperMessage = new Message(user, "message text", MessageSource.Whisper, string.Empty);
@@ -59,18 +60,18 @@ namespace TPP.Core.Tests.Commands
                 new CommandResult { Response = "Whisper response 2!", ResponseTarget = ResponseTarget.Whisper });
 
             // then
-            messageSenderMock.Verify(ms => ms.SendMessage("Chat response 1!", chatMessage), Times.Once);
-            messageSenderMock.Verify(ms => ms.SendMessage("Chat response 2!", whisperMessage), Times.Once);
-            messageSenderMock.Verify(ms => ms.SendWhisper(user, "Whisper response 1!"), Times.Once);
-            messageSenderMock.Verify(ms => ms.SendWhisper(user, "Whisper response 2!"), Times.Once);
+            await messageSenderMock.Received(1).SendMessage("Chat response 1!", chatMessage);
+            await messageSenderMock.Received(1).SendMessage("Chat response 2!", whisperMessage);
+            await messageSenderMock.Received(1).SendWhisper(user, "Whisper response 1!");
+            await messageSenderMock.Received(1).SendWhisper(user, "Whisper response 2!");
         }
 
         [Test]
         public async Task TestWhisperIfLong()
         {
             // given
-            var messageSenderMock = new Mock<IMessageSender>();
-            var commandResponder = new CommandResponder(messageSenderMock.Object, whisperIfLongThreshold: 20);
+            var messageSenderMock = Substitute.For<IMessageSender>();
+            var commandResponder = new CommandResponder(messageSenderMock, whisperIfLongThreshold: 20);
             var user = MockUser();
             var chatMessageShort = new Message(user, "short", MessageSource.Chat, string.Empty);
             var chatMessageLong = new Message(user, "longer than 20 characters", MessageSource.Chat, string.Empty);
@@ -88,18 +89,18 @@ namespace TPP.Core.Tests.Commands
                 new CommandResult { Response = "Whisper response 2!", ResponseTarget = ResponseTarget.WhisperIfLong });
 
             // then
-            messageSenderMock.Verify(ms => ms.SendMessage("Chat response!", chatMessageShort), Times.Once);
-            messageSenderMock.Verify(ms => ms.SendWhisper(user, "Too long chat response!"), Times.Once);
-            messageSenderMock.Verify(ms => ms.SendWhisper(user, "Whisper response 1!"), Times.Once);
-            messageSenderMock.Verify(ms => ms.SendWhisper(user, "Whisper response 2!"), Times.Once);
+            await messageSenderMock.Received(1).SendMessage("Chat response!", chatMessageShort);
+            await messageSenderMock.Received(1).SendWhisper(user, "Too long chat response!");
+            await messageSenderMock.Received(1).SendWhisper(user, "Whisper response 1!");
+            await messageSenderMock.Received(1).SendWhisper(user, "Whisper response 2!");
         }
 
         [Test]
         public async Task TestNoneIfChat()
         {
             // given
-            var messageSenderMock = new Mock<IMessageSender>();
-            var commandResponder = new CommandResponder(messageSenderMock.Object);
+            var messageSenderMock = Substitute.For<IMessageSender>();
+            var commandResponder = new CommandResponder(messageSenderMock);
             var user = MockUser();
             var chatMessage = new Message(user, "message text", MessageSource.Chat, string.Empty);
             var whisperMessage = new Message(user, "message text", MessageSource.Whisper, string.Empty);
@@ -111,8 +112,8 @@ namespace TPP.Core.Tests.Commands
                 new CommandResult { Response = "Whisper response!", ResponseTarget = ResponseTarget.NoneIfChat });
 
             // then
-            messageSenderMock.Verify(ms => ms.SendWhisper(user, "Whisper response!"), Times.Once);
-            messageSenderMock.VerifyNoOtherCalls();
+            await messageSenderMock.Received(1).SendWhisper(user, "Whisper response!");
+            Assert.That(messageSenderMock.ReceivedCalls().Count(), Is.EqualTo(1)); // no other calls
         }
     }
 }

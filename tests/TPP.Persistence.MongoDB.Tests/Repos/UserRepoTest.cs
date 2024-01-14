@@ -4,8 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Moq;
 using NodaTime;
+using NSubstitute;
 using NUnit.Framework;
 using TPP.Common;
 using TPP.Model;
@@ -19,7 +19,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
         private UserRepo CreateUserRepo()
         {
             IMongoDatabase database = CreateTemporaryDatabase();
-            UserRepo userRepo = new UserRepo(database, 100, 1, ImmutableList<string>.Empty, Mock.Of<IClock>());
+            UserRepo userRepo = new UserRepo(database, 100, 1, ImmutableList<string>.Empty, Substitute.For<IClock>());
             Assert.That(userRepo.Collection.CountDocuments(FilterDefinition<User>.Empty), Is.EqualTo(expected: 0));
             return userRepo;
         }
@@ -224,7 +224,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             const long pokeyen = long.MaxValue - 123;
             const long tokens = long.MaxValue - 234;
             var userRepo = new UserRepo(
-                CreateTemporaryDatabase(), pokeyen, tokens, ImmutableList<string>.Empty, Mock.Of<IClock>());
+                CreateTemporaryDatabase(), pokeyen, tokens, ImmutableList<string>.Empty, Substitute.For<IClock>());
 
             User userFromRecording = await userRepo.RecordUser(new UserInfo("123", "X", "x"));
             Assert.That(userFromRecording.Pokeyen, Is.EqualTo(pokeyen));
@@ -241,7 +241,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
         public async Task set_is_subscribed()
         {
             IUserRepo userRepo = new UserRepo(
-                CreateTemporaryDatabase(), 0, 0, ImmutableList<string>.Empty, Mock.Of<IClock>());
+                CreateTemporaryDatabase(), 0, 0, ImmutableList<string>.Empty, Substitute.For<IClock>());
 
             User userBeforeUpdate = await userRepo.RecordUser(new UserInfo("123", "X", "x"));
             Assert.IsFalse(userBeforeUpdate.IsSubscribed);
@@ -253,7 +253,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
         public async Task set_subscription_info()
         {
             IUserRepo userRepo = new UserRepo(
-                CreateTemporaryDatabase(), 0, 0, ImmutableList<string>.Empty, Mock.Of<IClock>());
+                CreateTemporaryDatabase(), 0, 0, ImmutableList<string>.Empty, Substitute.For<IClock>());
 
             User userBeforeUpdate = await userRepo.RecordUser(new UserInfo("123", "X", "x"));
             Assert.That(userBeforeUpdate.MonthsSubscribed, Is.EqualTo(0));
@@ -281,7 +281,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
 
             await coll.InsertOneAsync(new BsonDocument { ["_id"] = "userid", ["name_lower"] = "username" });
 
-            IUserRepo userRepo = new UserRepo(db, 0, 0, ImmutableList<string>.Empty, Mock.Of<IClock>());
+            IUserRepo userRepo = new UserRepo(db, 0, 0, ImmutableList<string>.Empty, Substitute.For<IClock>());
             User? user = await userRepo.FindBySimpleName("username");
             Assert.That(user, Is.Not.Null);
             Assert.That(user?.Banned, Is.False);

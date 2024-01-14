@@ -1,5 +1,5 @@
-using Moq;
 using NodaTime;
+using NSubstitute;
 using NUnit.Framework;
 using TPP.Core.Moderation;
 using TPP.Model;
@@ -23,21 +23,21 @@ namespace TPP.Core.Tests.Moderation
             [Test]
             public void detects_recent_exact_copypasta()
             {
-                Mock<IClock> clockMock = new();
-                CopypastaRule rule = new(clockMock.Object, Duration.FromSeconds(10));
+                var clockMock = Substitute.For<IClock>();
+                CopypastaRule rule = new(clockMock, Duration.FromSeconds(10));
 
                 const string copypasta =
                     "Please do not copy and paste this copypasta. It is my original copypasta and is protected by copyright law. If I see anyone pasting my intellectual property without permission, a navy seal trained in gorilla warfare will smite you.";
 
-                clockMock.Setup(c => c.GetCurrentInstant()).Returns(Instant.FromUnixTimeSeconds(0));
+                clockMock.GetCurrentInstant().Returns(Instant.FromUnixTimeSeconds(0));
                 RuleResult resultFirstSeen = rule.Check(TextMessage(copypasta));
                 Assert.IsInstanceOf<RuleResult.Nothing>(resultFirstSeen);
 
-                clockMock.Setup(c => c.GetCurrentInstant()).Returns(Instant.FromUnixTimeSeconds(5));
+                clockMock.GetCurrentInstant().Returns(Instant.FromUnixTimeSeconds(5));
                 RuleResult resultCopypasted = rule.Check(TextMessage(copypasta));
                 Assert.IsInstanceOf<RuleResult.GivePoints>(resultCopypasted);
 
-                clockMock.Setup(c => c.GetCurrentInstant()).Returns(Instant.FromUnixTimeSeconds(16));
+                clockMock.GetCurrentInstant().Returns(Instant.FromUnixTimeSeconds(16));
                 RuleResult resultLapsed = rule.Check(TextMessage(copypasta));
                 Assert.IsInstanceOf<RuleResult.Nothing>(resultLapsed);
             }
@@ -45,19 +45,19 @@ namespace TPP.Core.Tests.Moderation
             [Test]
             public void detects_similar_copypasta()
             {
-                Mock<IClock> clockMock = new();
-                CopypastaRule rule = new(clockMock.Object, Duration.FromSeconds(10));
+                var clockMock = Substitute.For<IClock>();
+                CopypastaRule rule = new(clockMock, Duration.FromSeconds(10));
 
                 const string copypasta1 =
                     "What the *** did you just *** type about me, you little bitch? I’ll have you know I graduated top of my class at MIT, and I’ve been involved in numerous secret raids with Anonymous, and I have over 300 confirmed DDoSes.";
                 const string copypasta2 =
                     "What the fuck did you just fucking say about me, you little bitch? I'll have you know I graduated top of my class in the Navy Seals, and I've been involved in numerous secret raids on Al-Quaeda, and I have over 300 confirmed kills.";
 
-                clockMock.Setup(c => c.GetCurrentInstant()).Returns(Instant.FromUnixTimeSeconds(0));
+                clockMock.GetCurrentInstant().Returns(Instant.FromUnixTimeSeconds(0));
                 RuleResult resultFirstSeen = rule.Check(TextMessage(copypasta1));
                 Assert.IsInstanceOf<RuleResult.Nothing>(resultFirstSeen);
 
-                clockMock.Setup(c => c.GetCurrentInstant()).Returns(Instant.FromUnixTimeSeconds(5));
+                clockMock.GetCurrentInstant().Returns(Instant.FromUnixTimeSeconds(5));
                 RuleResult resultSimilarCopypasted = rule.Check(TextMessage(copypasta2));
                 Assert.IsInstanceOf<RuleResult.GivePoints>(resultSimilarCopypasted);
             }
@@ -65,19 +65,19 @@ namespace TPP.Core.Tests.Moderation
             [Test]
             public void ignores_different_messages()
             {
-                Mock<IClock> clockMock = new();
-                CopypastaRule rule = new(clockMock.Object, Duration.FromSeconds(10));
+                var clockMock = Substitute.For<IClock>();
+                CopypastaRule rule = new(clockMock, Duration.FromSeconds(10));
 
                 const string copypasta1 =
                     "What the fuck did you just fucking say about me, you little bitch? I'll have you know I graduated top of my class in the Navy Seals, and I've been involved in numerous secret raids on Al-Quaeda, and I have over 300 confirmed kills.";
                 const string copypasta2 =
                     "Welch eynen verschissenen Unfug schicktest du dich zur Hölle nochmal an, über das heilige römische Reych in die Welt herauszuthragen, du Lustknabe? Seyd drumb in Kennthnisz gesetzet, dass min threue Sünderseele meynes Gewalthauvns besther Landsknecht gewesen und an Schwerthzügen gegen holländische Rebellen meynen Theil trug, derer nicht nur zahlreych, sondern auch occulter Natura waren.";
 
-                clockMock.Setup(c => c.GetCurrentInstant()).Returns(Instant.FromUnixTimeSeconds(0));
+                clockMock.GetCurrentInstant().Returns(Instant.FromUnixTimeSeconds(0));
                 RuleResult resultFirstSeen = rule.Check(TextMessage(copypasta1));
                 Assert.IsInstanceOf<RuleResult.Nothing>(resultFirstSeen);
 
-                clockMock.Setup(c => c.GetCurrentInstant()).Returns(Instant.FromUnixTimeSeconds(5));
+                clockMock.GetCurrentInstant().Returns(Instant.FromUnixTimeSeconds(5));
                 RuleResult resultSimilarCopypasted = rule.Check(TextMessage(copypasta2));
                 Assert.IsInstanceOf<RuleResult.Nothing>(resultSimilarCopypasted);
             }
@@ -89,10 +89,10 @@ namespace TPP.Core.Tests.Moderation
             [Test]
             public void detects_counting_spam()
             {
-                Mock<IClock> clockMock = new();
-                PersonalRepetitionRule rule = new(clockMock.Object, recentMessagesTtl: Duration.FromSeconds(10));
+                var clockMock = Substitute.For<IClock>();
+                PersonalRepetitionRule rule = new(clockMock, recentMessagesTtl: Duration.FromSeconds(10));
 
-                clockMock.Setup(c => c.GetCurrentInstant()).Returns(Instant.FromUnixTimeSeconds(0));
+                clockMock.GetCurrentInstant().Returns(Instant.FromUnixTimeSeconds(0));
                 Assert.That(rule.Check(TextMessage("I AM INVINCIBLE TriHard I AM UNBANNABLE TriHard 1")),
                     Is.InstanceOf<RuleResult.Nothing>());
                 Assert.That(rule.Check(TextMessage("I AM INVINCIBLE TriHard I AM UNBANNABLE TriHard 2")),
@@ -103,7 +103,7 @@ namespace TPP.Core.Tests.Moderation
                 Assert.That(result, Is.InstanceOf<RuleResult.Timeout>());
                 Assert.That(((RuleResult.Timeout)result).Message, Is.EqualTo("excessively repetitious messages"));
 
-                clockMock.Setup(c => c.GetCurrentInstant()).Returns(Instant.FromUnixTimeSeconds(15));
+                clockMock.GetCurrentInstant().Returns(Instant.FromUnixTimeSeconds(15));
                 Assert.That(rule.Check(TextMessage("I AM INVINCIBLE TriHard I AM UNBANNABLE TriHard 5")),
                     Is.InstanceOf<RuleResult.Nothing>()); // previous messages expired
             }
@@ -111,7 +111,7 @@ namespace TPP.Core.Tests.Moderation
             [Test]
             public void ignores_short_messages()
             {
-                PersonalRepetitionRule rule = new(Mock.Of<IClock>());
+                PersonalRepetitionRule rule = new(Substitute.For<IClock>());
                 Assert.That(rule.Check(TextMessage("59,95+e+A-")), Is.InstanceOf<RuleResult.Nothing>());
                 Assert.That(rule.Check(TextMessage("59,95+e+A-")), Is.InstanceOf<RuleResult.Nothing>());
                 Assert.That(rule.Check(TextMessage("59,95+e+A-")), Is.InstanceOf<RuleResult.Nothing>());
@@ -121,7 +121,7 @@ namespace TPP.Core.Tests.Moderation
             [Test]
             public void detects_short_non_input_messages()
             {
-                PersonalRepetitionRule rule = new(Mock.Of<IClock>());
+                PersonalRepetitionRule rule = new(Substitute.For<IClock>());
                 Assert.That(rule.Check(TextMessage("I am eternal 1")), Is.InstanceOf<RuleResult.Nothing>());
                 Assert.That(rule.Check(TextMessage("I am eternal 2")), Is.InstanceOf<RuleResult.Nothing>());
                 Assert.That(rule.Check(TextMessage("I am eternal 3")), Is.InstanceOf<RuleResult.DeleteMessage>());
@@ -133,7 +133,7 @@ namespace TPP.Core.Tests.Moderation
             [Test]
             public void ignores_commands()
             {
-                PersonalRepetitionRule rule = new(Mock.Of<IClock>());
+                PersonalRepetitionRule rule = new(Substitute.For<IClock>());
                 Assert.That(rule.Check(TextMessage("!buybadge pidgey 20 t2 90d")), Is.InstanceOf<RuleResult.Nothing>());
                 Assert.That(rule.Check(TextMessage("!buybadge pidgey 20 t2 90d")), Is.InstanceOf<RuleResult.Nothing>());
                 Assert.That(rule.Check(TextMessage("!buybadge pidgey 20 t2 90d")), Is.InstanceOf<RuleResult.Nothing>());
@@ -143,7 +143,7 @@ namespace TPP.Core.Tests.Moderation
             [Test]
             public void ignores_different_messages()
             {
-                PersonalRepetitionRule rule = new(Mock.Of<IClock>());
+                PersonalRepetitionRule rule = new(Substitute.For<IClock>());
                 Assert.That(rule.Check(TextMessage("Lorem ipsum dolor sit amet, consetetur sadipscing elitr")),
                     Is.InstanceOf<RuleResult.Nothing>());
                 Assert.That(rule.Check(TextMessage("sed diam nonumy eirmod tempor invidunt ut labore et dolore magna")),
@@ -207,11 +207,11 @@ namespace TPP.Core.Tests.Moderation
             [Test]
             public void detects_links_of_new_user()
             {
-                Mock<IClock> clockMock = new();
-                NewUserLinkRule rule = new(clockMock.Object);
+                var clockMock = Substitute.For<IClock>();
+                NewUserLinkRule rule = new(clockMock);
                 Message message = TextMessage("check this out https://i.imgur.com/ZinpOzD.png OhMyDog");
                 Duration age = Duration.FromHours(2);
-                clockMock.Setup(c => c.GetCurrentInstant()).Returns(message.User.FirstActiveAt + age);
+                clockMock.GetCurrentInstant().Returns(message.User.FirstActiveAt + age);
 
                 RuleResult result = rule.Check(message);
                 Assert.That(result, Is.InstanceOf<RuleResult.Timeout>());
@@ -222,11 +222,11 @@ namespace TPP.Core.Tests.Moderation
             [Test]
             public void tolerates_links_of_well_known_user()
             {
-                Mock<IClock> clockMock = new();
-                NewUserLinkRule rule = new(clockMock.Object);
+                var clockMock = Substitute.For<IClock>();
+                NewUserLinkRule rule = new(clockMock);
                 Message message = TextMessage("check this out https://i.imgur.com/ZinpOzD.png OhMyDog");
                 Duration age = Duration.FromDays(50);
-                clockMock.Setup(c => c.GetCurrentInstant()).Returns(message.User.FirstActiveAt + age);
+                clockMock.GetCurrentInstant().Returns(message.User.FirstActiveAt + age);
 
                 Assert.That(rule.Check(message), Is.InstanceOf<RuleResult.Nothing>());
             }

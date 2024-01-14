@@ -2,7 +2,7 @@ using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 using TPP.Core.Overlay;
 
@@ -10,12 +10,12 @@ namespace TPP.Core.Tests.Overlay
 {
     public class OverlayConnectionTest
     {
-        private readonly Mock<IBroadcastServer> _broadcastServerMock = new Mock<IBroadcastServer>();
+        private readonly IBroadcastServer _broadcastServerMock = Substitute.For<IBroadcastServer>();
         private readonly OverlayConnection _connection;
 
         public OverlayConnectionTest()
         {
-            _connection = new OverlayConnection(NullLogger<OverlayConnection>.Instance, _broadcastServerMock.Object);
+            _connection = new OverlayConnection(NullLogger<OverlayConnection>.Instance, _broadcastServerMock);
         }
 
         private struct EventWithoutData : IOverlayEvent
@@ -28,7 +28,7 @@ namespace TPP.Core.Tests.Overlay
         {
             await _connection.Send(new EventWithoutData(), CancellationToken.None);
             const string json = @"{""type"":""test"",""extra_parameters"":{}}";
-            _broadcastServerMock.Verify(s => s.Send(json, CancellationToken.None), Times.Once);
+            await _broadcastServerMock.Received(1).Send(json, CancellationToken.None);
         }
 
         private readonly struct EventWithEnum : IOverlayEvent
@@ -48,7 +48,7 @@ namespace TPP.Core.Tests.Overlay
                 new EventWithEnum { EnumValue = EventWithEnum.TestEnum.FooBar },
                 CancellationToken.None);
             const string json = @"{""type"":""test"",""extra_parameters"":{""enum_value"":""foo_bar""}}";
-            _broadcastServerMock.Verify(s => s.Send(json, CancellationToken.None), Times.Once);
+            await _broadcastServerMock.Received(1).Send(json, CancellationToken.None);
         }
     }
 }
