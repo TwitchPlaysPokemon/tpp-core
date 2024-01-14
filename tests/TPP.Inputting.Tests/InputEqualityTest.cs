@@ -8,9 +8,10 @@ namespace TPP.Inputting.Tests
     public class InputEqualityTest
     {
         private static InputSet Set(params string[] inputs) =>
-            new(inputs.Select(s => new Input(s, s, s)).ToImmutableList());
+            new(inputs.Select(s => new Input(s, s, s)).ToImmutableList(), string.Join('+', inputs));
 
-        private static InputSequence Seq(params InputSet[] inputSets) => new(inputSets.ToImmutableList());
+        private static InputSequence Seq(params InputSet[] inputSets) => new(inputSets.ToImmutableList(),
+            string.Join("", inputSets.Select(i => i.OriginalText)));
 
         [Test]
         public void TestSameOutcomeRegularInput()
@@ -136,10 +137,10 @@ namespace TPP.Inputting.Tests
             var input4A = new Input("Foo", "a", "foo");
             var input4B = new Input("Bar", "a", "bar");
 
-            var setRef = new InputSet(ImmutableList.Create(inputRefA, inputRefB));
-            var setDifferentOrder = new InputSet(ImmutableList.Create(input1A, input1B));
-            var setDifferentLength = new InputSet(ImmutableList.Create(input2));
-            var setDifferentEffectiveInput = new InputSet(ImmutableList.Create(input4A, input4B));
+            var setRef = new InputSet(ImmutableList.Create(inputRefA, inputRefB), "foo+bar");
+            var setDifferentOrder = new InputSet(ImmutableList.Create(input1A, input1B), "baz+quz");
+            var setDifferentLength = new InputSet(ImmutableList.Create(input2), "foo");
+            var setDifferentEffectiveInput = new InputSet(ImmutableList.Create(input4A, input4B), "foo+bar");
 
             Assert.AreNotEqual(setRef, setDifferentOrder);
             Assert.IsTrue(setRef.HasSameOutcomeAs(setDifferentOrder));

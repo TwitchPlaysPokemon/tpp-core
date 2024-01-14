@@ -51,7 +51,7 @@ namespace TPP.Inputting
                 sleepDuration = _minSleepDuration;
             }
 
-            return new TimedInputSet(new InputSet(inputsWithoutHold), holdDuration, sleepDuration);
+            return new TimedInputSet(inputSet with { Inputs = inputsWithoutHold }, holdDuration, sleepDuration);
         }
     }
 }

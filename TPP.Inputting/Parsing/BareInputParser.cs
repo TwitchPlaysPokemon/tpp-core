@@ -62,9 +62,9 @@ namespace TPP.Inputting.Parsing
             }
 
             // Get the indexes that each input set ends at
-            IEnumerable<int> inputSetEndIndexes = match.Groups["inputset"].Captures
+            IEnumerable<(int, int)> inputSetRanges = match.Groups["inputset"].Captures
                 .OrderBy(c => c.Index)
-                .Select(c => c.Index + c.Length);
+                .Select(c => (c.Index, c.Index + c.Length));
             // Get all captures as queues for easy consumption
             Dictionary<IInputDefinition, Queue<Capture>> defsToCaptureQueues = _inputDefinitions
                 .Select((def, i) =>
@@ -75,7 +75,7 @@ namespace TPP.Inputting.Parsing
             var capturesRepeat = new Queue<Capture>(match.Groups["repeat"].Captures.OrderBy(c => c.Index));
 
             var inputSets = new List<InputSet>();
-            foreach (int endIndex in inputSetEndIndexes)
+            foreach ((int startIndex, int endIndex) in inputSetRanges)
             {
                 var inputs = new List<Input>();
                 var inputWithIndexes = new List<(int, Input)>();
@@ -99,12 +99,19 @@ namespace TPP.Inputting.Parsing
                     inputs.Add(HoldInput.Instance);
                     capturesHold.Dequeue();
                 }
+                string originalText;
                 int numRepeat = 1;
-                if (capturesRepeat.Any() && capturesRepeat.Peek().Index < endIndex)
+                int capturesRepeatIndex = capturesRepeat.Any() ? capturesRepeat.Peek().Index : endIndex;
+                if (capturesRepeatIndex < endIndex)
                 {
                     numRepeat = int.Parse(capturesRepeat.Dequeue().Value);
+                    originalText = text[startIndex..capturesRepeatIndex];
                 }
-                var inputSet = new InputSet(inputs.ToImmutableList());
+                else
+                {
+                    originalText = text[startIndex..endIndex];
+                }
+                var inputSet = new InputSet(inputs.ToImmutableList(), originalText);
                 inputSets.AddRange(Enumerable.Repeat(inputSet, numRepeat));
                 // we need to check the length, because the regex cannot enforce the max length since the sequence may
                 // have been lengthened with a specified number of repetitions for a button set.
@@ -113,7 +120,7 @@ namespace TPP.Inputting.Parsing
                     return null;
                 }
             }
-            return new InputSequence(inputSets.ToImmutableList());
+            return new InputSequence(inputSets.ToImmutableList(), text);
         }
     }
 }

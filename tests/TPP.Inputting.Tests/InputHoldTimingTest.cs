@@ -9,10 +9,10 @@ namespace TPP.Inputting.Tests
         private const float Delta = 1 / 600f;
 
         private static readonly InputSet DummyInput =
-            new(ImmutableList.Create(new Input("A", "A", "A")));
+            new(ImmutableList.Create(new Input("A", "A", "A")), "A");
 
         private static readonly InputSet DummyInputHeld =
-            new(ImmutableList.Create(new Input("A", "A", "A"), HoldInput.Instance));
+            new(ImmutableList.Create(new Input("A", "A", "A"), HoldInput.Instance), "A-");
 
         [Test]
         public void regular_with_spare_time_divides_normally()

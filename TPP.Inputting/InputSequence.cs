@@ -8,11 +8,13 @@ namespace TPP.Inputting
     /// An input sequence is a sequence of <see cref="InputSet"/> that are inputted in sequence.
     /// This is used e.g. in democracy mode.
     /// </summary>
-    public sealed record InputSequence(IImmutableList<InputSet> InputSets)
+    public sealed record InputSequence(IImmutableList<InputSet> InputSets, string OriginalText)
     {
         // Need to manually define these, because lists don't implement a proper Equals and GetHashCode themselves.
-        public bool Equals(InputSequence? other) => other != null && InputSets.SequenceEqual(other.InputSets);
-        public override int GetHashCode() => InputSets.Select(i => i.GetHashCode()).Aggregate(HashCode.Combine);
+        public bool Equals(InputSequence? other) =>
+            other != null && InputSets.SequenceEqual(other.InputSets) && OriginalText == other.OriginalText;
+        public override int GetHashCode() =>
+            InputSets.Select(i => i.GetHashCode()).Aggregate(HashCode.Combine) + OriginalText.GetHashCode();
 
         /// <summary>
         /// Determines whether this input sequence is effectively equal to another input sequence,
@@ -32,6 +34,7 @@ namespace TPP.Inputting
             return true;
         }
 
-        public override string ToString() => $"{nameof(InputSequence)}({string.Join(", ", InputSets)})";
+        public override string ToString() =>
+            $"{nameof(InputSequence)}([{string.Join(", ", InputSets)}] '{OriginalText}')";
     }
 }

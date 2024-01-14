@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.Serialization;
+using NodaTime;
 using TPP.Inputting;
 using TPP.Inputting.Inputs;
 using TPP.Model;
@@ -66,11 +67,81 @@ namespace TPP.Core.Overlay.Events
     }
 
     [DataContract]
-    public sealed class ButtonPressUpdate : IOverlayEvent
+    public sealed class ButtonPressesCountUpdate : IOverlayEvent
     {
         public string OverlayEventType => "button_press_update";
 
         [DataMember(Name = "presses")] public long NumTotalButtonPresses { get; set; }
-        public ButtonPressUpdate(long numTotalButtonPresses) => NumTotalButtonPresses = numTotalButtonPresses;
+        public ButtonPressesCountUpdate(long numTotalButtonPresses) => NumTotalButtonPresses = numTotalButtonPresses;
+    }
+
+    [DataContract]
+    public readonly struct NewVote
+    {
+        [DataMember(Name = "command")] public string Command { get; init; }
+        [DataMember(Name = "user")] public User User { get; init; }
+        // [DataMember(Name = "button_sequence")] public InputSequence InputSequence { get; init; } // unused
+        // [DataMember(Name = "ts")] public Instant Timestamp { get; init; } // unused
+    }
+
+    [DataContract]
+    public readonly struct Vote
+    {
+        [DataMember(Name = "command")] public string Command { get; init; }
+        [DataMember(Name = "count")] public int Count { get; init; }
+        // [DataMember(Name = "button_sequence")] public InputSequence InputSequence { get; init; } // unused
+    }
+
+    [DataContract]
+    public sealed class DemocracyVotesUpdate : IOverlayEvent
+    {
+        public string OverlayEventType => "democracy_new_vote";
+
+        [DataMember(Name = "new_vote")] public NewVote NewVote { get; init; }
+        [DataMember(Name = "votes")] public List<Vote> Votes { get; init; }
+
+        public DemocracyVotesUpdate(
+            User newVoteUser,
+            InputSequence votedInput,
+            IReadOnlyDictionary<InputSequence, int> votes)
+        {
+            NewVote = new NewVote { User = newVoteUser, Command = votedInput.OriginalText };
+            Votes = votes
+                .Select(kvp => new Vote { Command = kvp.Key.OriginalText, Count = kvp.Value })
+                .OrderBy(vote => vote.Count)
+                .ToList();
+        }
+    }
+
+    [DataContract]
+    public sealed class DemocracyReset : IOverlayEvent
+    {
+        public string OverlayEventType => "democracy_reset";
+
+        [DataMember(Name = "vote_ends_at")] public Instant Timestamp { get; init; }
+        public DemocracyReset(Instant timestamp) => Timestamp = timestamp;
+    }
+
+    [DataContract]
+    public sealed class DemocracyVotingOver : IOverlayEvent
+    {
+        public string OverlayEventType => "democracy_voting_over";
+
+        [DataMember(Name = "winning_button_sequence")] public string WinningSequence { get; init; }
+        public DemocracyVotingOver(InputSequence input) => WinningSequence = input.OriginalText;
+    }
+
+    [DataContract]
+    public sealed class DemocracySequenceStart : IOverlayEvent
+    {
+        public string OverlayEventType => "democracy_sequence_start";
+
+        [DataMember(Name = "button_sequence")] public List<List<string>> Sequence { get; init; }
+        public DemocracySequenceStart(InputSequence input)
+        {
+            Sequence = input.InputSets
+                .Select(set => set.Inputs
+                    .Select(i => i.DisplayedText).ToList()).ToList();
+        }
     }
 }

@@ -184,7 +184,7 @@ namespace TPP.Core.Modes
             if (runNumber != null && !user.ParticipationEmblems.Contains(runNumber.Value))
                 await _userRepo.GiveEmblem(user, runNumber.Value);
             long counter = await _runCounterRepo.Increment(runNumber, incrementBy: input.InputSets.Count);
-            await _overlayConnection.Send(new ButtonPressUpdate(counter), CancellationToken.None);
+            await _overlayConnection.Send(new ButtonPressesCountUpdate(counter), CancellationToken.None);
         }
 
         public async Task Run()
