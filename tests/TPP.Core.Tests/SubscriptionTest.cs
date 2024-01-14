@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
 using NodaTime;
+using NSubstitute;
 using NUnit.Framework;
 using TPP.Common;
 using TPP.Model;
@@ -33,16 +34,16 @@ namespace TPP.Core.Tests
             Instant subscribedAt = Instant.FromUnixTimeSeconds(123);
             User user = MockUser("user", monthsSubscribed: 2, subscriptionTier, loyaltyLeague: 4);
 
-            Mock<IBank<User>> bankMock = new();
-            Mock<IUserRepo> userRepoMock = new();
-            Mock<ISubscriptionLogRepo> subscriptionLogRepoMock = new();
+            var bankMock = Substitute.For<IBank<User>>();
+            var userRepoMock = Substitute.For<IUserRepo>();
+            var subscriptionLogRepoMock = Substitute.For<ISubscriptionLogRepo>();
             ISubscriptionProcessor subscriptionProcessor = new SubscriptionProcessor(
                 NullLogger<SubscriptionProcessor>.Instance,
-                bankMock.Object, userRepoMock.Object, subscriptionLogRepoMock.Object, Mock.Of<ILinkedAccountRepo>());
+                bankMock, userRepoMock, subscriptionLogRepoMock, Substitute.For<ILinkedAccountRepo>());
 
-            userRepoMock.Setup(r => r.SetIsSubscribed(user, It.IsAny<bool>())).ReturnsAsync(user);
-            userRepoMock.Setup(r => r.SetSubscriptionInfo(user, It.IsAny<int>(), It.IsAny<SubscriptionTier>(),
-                It.IsAny<int>(), It.IsAny<Instant>())).ReturnsAsync(user);
+            userRepoMock.SetIsSubscribed(user, Arg.Any<bool>()).Returns(user);
+            userRepoMock.SetSubscriptionInfo(user, Arg.Any<int>(), Arg.Any<SubscriptionTier>(),
+                Arg.Any<int>(), Arg.Any<Instant>()).Returns(user);
 
             // WHEN
             ISubscriptionProcessor.SubResult subResult = await subscriptionProcessor.ProcessSubscription(
@@ -71,21 +72,19 @@ namespace TPP.Core.Tests
                 ["new_loyalty_tier"] = 6,
                 ["loyalty_completions"] = 2,
             };
-            bankMock.Verify(b =>
-                b.PerformTransaction(new Transaction<User>(user, expectedTokens, "subscription", expectedData),
-                    CancellationToken.None), Times.Once);
+            await bankMock.Received(1).PerformTransaction(
+                new Transaction<User>(user, expectedTokens, "subscription", expectedData), CancellationToken.None);
 
             // verify user data was adjusted
-            userRepoMock.Verify(r => r.SetIsSubscribed(user, true), Times.Once);
-            userRepoMock.Verify(r => r.SetSubscriptionInfo(user, 3, subscriptionTier, 6, subscribedAt), Times.Once);
+            await userRepoMock.Received(1).SetIsSubscribed(user, true);
+            await userRepoMock.Received(1).SetSubscriptionInfo(user, 3, subscriptionTier, 6, subscribedAt);
 
             // verify subscription was logged
-            subscriptionLogRepoMock.Verify(r => r.LogSubscription(
-                    user.Id, subscribedAt,
-                    2, 2, 3, 1,
-                    4, 6, 2, expectedTokens,
-                    "HeyGuys", subscriptionTier, "Tier 2"),
-                Times.Once);
+            await subscriptionLogRepoMock.Received(1).LogSubscription(
+                user.Id, subscribedAt,
+                2, 2, 3, 1,
+                4, 6, 2, expectedTokens,
+                "HeyGuys", subscriptionTier, "Tier 2");
         }
 
         [Test]
@@ -93,12 +92,12 @@ namespace TPP.Core.Tests
         {
             // GIVEN
             User user = MockUser("user", monthsSubscribed: 2, SubscriptionTier.Tier1, loyaltyLeague: 2);
-            Mock<IBank<User>> bankMock = new();
-            Mock<IUserRepo> userRepoMock = new();
-            Mock<ISubscriptionLogRepo> subscriptionLogRepoMock = new();
+            var bankMock = Substitute.For<IBank<User>>();
+            var userRepoMock = Substitute.For<IUserRepo>();
+            var subscriptionLogRepoMock = Substitute.For<ISubscriptionLogRepo>();
             ISubscriptionProcessor subscriptionProcessor = new SubscriptionProcessor(
                 NullLogger<SubscriptionProcessor>.Instance,
-                bankMock.Object, userRepoMock.Object, subscriptionLogRepoMock.Object, Mock.Of<ILinkedAccountRepo>());
+                bankMock, userRepoMock, subscriptionLogRepoMock, Substitute.For<ILinkedAccountRepo>());
 
             // WHEN
             ISubscriptionProcessor.SubResult subResult = await subscriptionProcessor.ProcessSubscription(
@@ -112,13 +111,13 @@ namespace TPP.Core.Tests
             var sameMonthResult = (ISubscriptionProcessor.SubResult.SameMonth)subResult;
             Assert.That(sameMonthResult.Month, Is.EqualTo(2));
             // no tokens were awarded
-            bankMock.VerifyNoOtherCalls();
+            Assert.That(bankMock.ReceivedCalls().Count(), Is.EqualTo(0));
             // no user data was adjusted
-            userRepoMock.Verify(r => r.SetIsSubscribed(It.IsAny<User>(), It.IsAny<bool>()), Times.Never);
-            userRepoMock.Verify(r => r.SetSubscriptionInfo(It.IsAny<User>(), It.IsAny<int>(),
-                It.IsAny<SubscriptionTier>(), It.IsAny<int>(), It.IsAny<Instant>()), Times.Never);
+            await userRepoMock.DidNotReceive().SetIsSubscribed(Arg.Any<User>(), Arg.Any<bool>());
+            await userRepoMock.DidNotReceive().SetSubscriptionInfo(Arg.Any<User>(), Arg.Any<int>(),
+                Arg.Any<SubscriptionTier>(), Arg.Any<int>(), Arg.Any<Instant>());
             // no subscription was logged
-            subscriptionLogRepoMock.VerifyNoOtherCalls();
+            Assert.That(subscriptionLogRepoMock.ReceivedCalls().Count(), Is.EqualTo(0));
         }
 
         [Test]
@@ -127,16 +126,16 @@ namespace TPP.Core.Tests
             // GIVEN
             User user = MockUser("user", monthsSubscribed: 2, SubscriptionTier.Prime, loyaltyLeague: 2);
             Instant subscribedAt = Instant.FromUnixTimeSeconds(123);
-            Mock<IBank<User>> bankMock = new();
-            Mock<IUserRepo> userRepoMock = new();
-            Mock<ISubscriptionLogRepo> subscriptionLogRepoMock = new();
+            var bankMock = Substitute.For<IBank<User>>();
+            var userRepoMock = Substitute.For<IUserRepo>();
+            var subscriptionLogRepoMock = Substitute.For<ISubscriptionLogRepo>();
             ISubscriptionProcessor subscriptionProcessor = new SubscriptionProcessor(
                 NullLogger<SubscriptionProcessor>.Instance,
-                bankMock.Object, userRepoMock.Object, subscriptionLogRepoMock.Object, Mock.Of<ILinkedAccountRepo>());
+                bankMock, userRepoMock, subscriptionLogRepoMock, Substitute.For<ILinkedAccountRepo>());
 
-            userRepoMock.Setup(r => r.SetIsSubscribed(user, It.IsAny<bool>())).ReturnsAsync(user);
-            userRepoMock.Setup(r => r.SetSubscriptionInfo(user, It.IsAny<int>(), It.IsAny<SubscriptionTier>(),
-                It.IsAny<int>(), It.IsAny<Instant>())).ReturnsAsync(user);
+            userRepoMock.SetIsSubscribed(user, Arg.Any<bool>()).Returns(user);
+            userRepoMock.SetSubscriptionInfo(user, Arg.Any<int>(), Arg.Any<SubscriptionTier>(),
+                Arg.Any<int>(), Arg.Any<Instant>()).Returns(user);
 
             // WHEN
             ISubscriptionProcessor.SubResult subResult = await subscriptionProcessor.ProcessSubscription(
@@ -161,20 +160,18 @@ namespace TPP.Core.Tests
                 ["new_loyalty_tier"] = 6,
                 ["loyalty_completions"] = 4,
             };
-            bankMock.Verify(b => b.PerformTransaction(
+            await bankMock.Received(1).PerformTransaction(
                 new Transaction<User>(user, expectedTokens, "subscription", expectedData),
-                CancellationToken.None), Times.Once);
+                CancellationToken.None);
             // verify user data was adjusted
-            userRepoMock.Verify(r => r.SetIsSubscribed(user, true), Times.Once);
-            userRepoMock.Verify(r => r.SetSubscriptionInfo(user, 2, SubscriptionTier.Tier3, 6, subscribedAt),
-                Times.Once);
+            await userRepoMock.Received(1).SetIsSubscribed(user, true);
+            await userRepoMock.Received(1).SetSubscriptionInfo(user, 2, SubscriptionTier.Tier3, 6, subscribedAt);
             // verify subscription was logged
-            subscriptionLogRepoMock.Verify(r => r.LogSubscription(
-                    user.Id, subscribedAt,
-                    2, 2, 2, 0,
-                    2, 6, 4, expectedTokens,
-                    "Repeated", SubscriptionTier.Tier3, "Sub Plan Name"),
-                Times.Once);
+            await subscriptionLogRepoMock.Received(1).LogSubscription(
+                user.Id, subscribedAt,
+                2, 2, 2, 0,
+                2, 6, 4, expectedTokens,
+                "Repeated", SubscriptionTier.Tier3, "Sub Plan Name");
         }
 
         [Test]
@@ -182,14 +179,14 @@ namespace TPP.Core.Tests
         {
             User gifter = MockUser("gifter", monthsSubscribed: 2, SubscriptionTier.Prime, loyaltyLeague: 2);
             User recipient = MockUser("recipient", monthsSubscribed: 0, subscriptionTier: null, loyaltyLeague: 0);
-            Mock<IBank<User>> bankMock = new();
-            Mock<IUserRepo> userRepoMock = new();
+            var bankMock = Substitute.For<IBank<User>>();
+            var userRepoMock = Substitute.For<IUserRepo>();
             ISubscriptionProcessor subscriptionProcessor = new SubscriptionProcessor(
                 NullLogger<SubscriptionProcessor>.Instance,
-                bankMock.Object, userRepoMock.Object, Mock.Of<ISubscriptionLogRepo>(), Mock.Of<ILinkedAccountRepo>());
-            userRepoMock.Setup(r => r.SetIsSubscribed(recipient, It.IsAny<bool>())).ReturnsAsync(recipient);
-            userRepoMock.Setup(r => r.SetSubscriptionInfo(recipient, It.IsAny<int>(), It.IsAny<SubscriptionTier>(),
-                It.IsAny<int>(), It.IsAny<Instant>())).ReturnsAsync(recipient);
+                bankMock, userRepoMock, Substitute.For<ISubscriptionLogRepo>(), Substitute.For<ILinkedAccountRepo>());
+            userRepoMock.SetIsSubscribed(recipient, Arg.Any<bool>()).Returns(recipient);
+            userRepoMock.SetSubscriptionInfo(recipient, Arg.Any<int>(), Arg.Any<SubscriptionTier>(),
+                Arg.Any<int>(), Arg.Any<Instant>()).Returns(recipient);
 
             SubscriptionInfo subscriptionInfo = new(recipient, 1, 0, SubscriptionTier.Tier3, "Sub Plan Name",
                 Instant.MinValue, "sub message", ImmutableList<EmoteOccurrence>.Empty);
@@ -202,9 +199,9 @@ namespace TPP.Core.Tests
             var okGiftResult = (ISubscriptionProcessor.SubGiftResult.Ok)subGiftResult;
             Assert.That(okGiftResult.GifterTokens, Is.EqualTo(expectedGiftTokens));
             IDictionary<string, object?> expectedGiftData = new Dictionary<string, object?>();
-            bankMock.Verify(b => b.PerformTransaction(
+            await bankMock.Received(1).PerformTransaction(
                 new Transaction<User>(gifter, expectedGiftTokens, "subscription gift", expectedGiftData),
-                CancellationToken.None), Times.Once);
+                CancellationToken.None);
 
             const int expectedSubTokens = 10 + 12 + 14 + 16 + 18; // Tier 3 = 5 ranks with increasing loyalty league
             Assert.IsInstanceOf<ISubscriptionProcessor.SubResult.Ok>(subResult);
@@ -223,9 +220,9 @@ namespace TPP.Core.Tests
                 ["new_loyalty_tier"] = 5,
                 ["loyalty_completions"] = 5,
             };
-            bankMock.Verify(b => b.PerformTransaction(
+            await bankMock.Received(1).PerformTransaction(
                 new Transaction<User>(recipient, expectedSubTokens, "subscription", expectedSubData),
-                CancellationToken.None), Times.Once);
+                CancellationToken.None);
         }
 
         [Test]
@@ -234,11 +231,11 @@ namespace TPP.Core.Tests
             User gifter = MockUser("gifter", monthsSubscribed: 2, SubscriptionTier.Prime, loyaltyLeague: 2);
             const SubscriptionTier tier = SubscriptionTier.Tier3;
             User recipient = MockUser("recipient", monthsSubscribed: 1, subscriptionTier: tier, loyaltyLeague: 5);
-            Mock<IBank<User>> bankMock = new();
-            Mock<IUserRepo> userRepoMock = new();
+            var bankMock = Substitute.For<IBank<User>>();
+            var userRepoMock = Substitute.For<IUserRepo>();
             ISubscriptionProcessor subscriptionProcessor = new SubscriptionProcessor(
                 NullLogger<SubscriptionProcessor>.Instance,
-                bankMock.Object, userRepoMock.Object, Mock.Of<ISubscriptionLogRepo>(), Mock.Of<ILinkedAccountRepo>());
+                bankMock, userRepoMock, Substitute.For<ISubscriptionLogRepo>(), Substitute.For<ILinkedAccountRepo>());
 
             SubscriptionInfo subscriptionInfo = new(recipient, NumMonths: 1, StreakMonths: 0, tier, "Sub Plan Name",
                 Instant.MinValue, "sub message", ImmutableList<EmoteOccurrence>.Empty);
@@ -249,12 +246,12 @@ namespace TPP.Core.Tests
             Assert.IsInstanceOf<ISubscriptionProcessor.SubGiftResult.SameMonth>(subGiftResult);
             var sameMonthGiftResult = (ISubscriptionProcessor.SubGiftResult.SameMonth)subGiftResult;
             Assert.That(sameMonthGiftResult.Month, Is.EqualTo(1));
-            bankMock.VerifyNoOtherCalls();
+            Assert.That(bankMock.ReceivedCalls().Count(), Is.EqualTo(0));
 
             Assert.IsInstanceOf<ISubscriptionProcessor.SubResult.SameMonth>(subResult);
             var sameMonthSubResult = (ISubscriptionProcessor.SubResult.SameMonth)subResult;
             Assert.That(sameMonthSubResult.Month, Is.EqualTo(1));
-            bankMock.VerifyNoOtherCalls();
+            Assert.That(bankMock.ReceivedCalls().Count(), Is.EqualTo(0));
         }
 
         [Test]
@@ -265,14 +262,14 @@ namespace TPP.Core.Tests
             User userWithoutTier = MockUser("user", monthsSubscribed: 1, null, loyaltyLeague: 1);
             User userWithTier = MockUser("user", monthsSubscribed: 1, SubscriptionTier.Tier1, loyaltyLeague: 1);
 
-            Mock<ILogger<SubscriptionProcessor>> logMock = new();
-            Mock<IUserRepo> userRepoMock = new();
-            Mock<ISubscriptionLogRepo> subscriptionLogRepoMock = new();
+            var logMock = Substitute.For<VerifiableMockLogger<SubscriptionProcessor>>();
+            var userRepoMock = Substitute.For<IUserRepo>();
+            var subscriptionLogRepoMock = Substitute.For<ISubscriptionLogRepo>();
             ISubscriptionProcessor subscriptionProcessor = new SubscriptionProcessor(
-                logMock.Object, Mock.Of<IBank<User>>(), userRepoMock.Object,
-                subscriptionLogRepoMock.Object, Mock.Of<ILinkedAccountRepo>());
-            userRepoMock.Setup(r => r.SetSubscriptionInfo(userWithoutTier, It.IsAny<int>(), It.IsAny<SubscriptionTier>(),
-                It.IsAny<int>(), It.IsAny<Instant?>())).ReturnsAsync(userWithTier);
+                logMock, Substitute.For<IBank<User>>(), userRepoMock,
+                subscriptionLogRepoMock, Substitute.For<ILinkedAccountRepo>());
+            userRepoMock.SetSubscriptionInfo(userWithoutTier, Arg.Any<int>(), Arg.Any<SubscriptionTier>(),
+                Arg.Any<int>(), Arg.Any<Instant?>()).Returns(userWithTier);
 
             // WHEN
             ISubscriptionProcessor.SubResult subResult = await subscriptionProcessor.ProcessSubscription(
@@ -282,11 +279,11 @@ namespace TPP.Core.Tests
 
             // THEN
             Assert.IsInstanceOf<ISubscriptionProcessor.SubResult.SameMonth>(subResult);
-            logMock.VerifyLog(l => l.LogInformation(
+            logMock.Received(1).Log(LogLevel.Information,
                 $"Subscriber {userWithoutTier} has no subscription tier recorded. " +
-                "Assuming this user was subscribed before tiers were a thing and is equivalent to Tier 1"));
-            userRepoMock.Verify(r => r.SetSubscriptionInfo(userWithoutTier, 1,
-                SubscriptionTier.Tier1, userWithoutTier.LoyaltyLeague, userWithoutTier.SubscriptionUpdatedAt));
+                "Assuming this user was subscribed before tiers were a thing and is equivalent to Tier 1");
+            await userRepoMock.Received(1).SetSubscriptionInfo(userWithoutTier, 1,
+                SubscriptionTier.Tier1, userWithoutTier.LoyaltyLeague, userWithoutTier.SubscriptionUpdatedAt);
         }
     }
 }

@@ -3,8 +3,8 @@ using System.Collections.Immutable;
 using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Moq;
 using NodaTime;
+using NSubstitute;
 using NUnit.Framework;
 using TPP.Common;
 using TPP.Model;
@@ -17,14 +17,14 @@ public class LogRepoTests : MongoTestBase
     [Test]
     public async Task CommandLogger()
     {
-        Mock<IClock> clock = new();
-        CommandLogger repo = new(CreateTemporaryDatabase(), clock.Object);
+        var clock = Substitute.For<IClock>();
+        CommandLogger repo = new(CreateTemporaryDatabase(), clock);
         const string userId = "123";
         const string command = "irc line text";
         IImmutableList<string> args = ImmutableList.Create("a", "b", "c");
         const string response = "message text";
         Instant timestamp = Instant.FromUnixTimeSeconds(123);
-        clock.Setup(c => c.GetCurrentInstant()).Returns(timestamp);
+        clock.GetCurrentInstant().Returns(timestamp);
 
         // persist to db
         CommandLog written = await repo.Log(userId, command, args, response);

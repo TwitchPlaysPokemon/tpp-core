@@ -5,8 +5,8 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
 using NodaTime;
+using NSubstitute;
 using NUnit.Framework;
 using TPP.ArgsParsing;
 using TPP.Core.Commands;
@@ -18,7 +18,7 @@ namespace TPP.Core.Tests.Commands
     public class CommandProcessorTest
     {
         private readonly ILogger<CommandProcessor> _nullLogger = new NullLogger<CommandProcessor>();
-        private readonly Mock<ICommandLogger> _commandLoggerMock = new();
+        private readonly ICommandLogger _commandLoggerMock = Substitute.For<ICommandLogger>();
         private readonly ImmutableList<string> _noArgs = ImmutableList<string>.Empty;
         private readonly User _mockUser = new User(
             id: Guid.NewGuid().ToString(),
@@ -32,7 +32,7 @@ namespace TPP.Core.Tests.Commands
         [Test]
         public async Task TestUnknownCommand()
         {
-            var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock.Object, new ArgsParser());
+            var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock, new ArgsParser());
 
             CommandResult? result = await commandProcessor.Process("unknown", _noArgs, MockMessage());
 
@@ -42,24 +42,23 @@ namespace TPP.Core.Tests.Commands
         [Test]
         public async Task TestCommandThrowsError()
         {
-            var loggerMock = new Mock<ILogger<CommandProcessor>>();
-            var commandProcessor = new CommandProcessor(loggerMock.Object, _commandLoggerMock.Object, new ArgsParser());
+            var loggerMock = Substitute.For<VerifiableMockLogger<CommandProcessor>>();
+            var commandProcessor = new CommandProcessor(loggerMock, _commandLoggerMock, new ArgsParser());
             commandProcessor.InstallCommand(new Command("broken",
                 _ => throw new InvalidOperationException("this command is busted!")));
 
             CommandResult? result = await commandProcessor.Process("broken", _noArgs, MockMessage("bla"));
 
             Assert.That(result?.Response, Is.EqualTo("An error occurred."));
-            string errorTextRegex = @"^An exception occured while executing command 'broken'\. " +
-                                     $@"User: {Regex.Escape(_mockUser.ToString())}, Original text: bla$";
-            loggerMock.VerifyLog(logger => logger.LogError(
-                new InvalidOperationException("this command is busted!"), It.IsRegex(errorTextRegex)));
+            var errorTextRegex = new Regex(@"^An exception occured while executing command 'broken'\. " +
+                      $"User: {Regex.Escape(_mockUser.ToString())}, Original text: bla$");
+            loggerMock.Received(1).Log(LogLevel.Error, Arg.Is<string>(str => errorTextRegex.IsMatch(str)));
         }
 
         [Test]
         public async Task TestCaseInsensitive()
         {
-            var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock.Object, new ArgsParser());
+            var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock, new ArgsParser());
             commandProcessor.InstallCommand(new Command("MiXeD", CommandUtils.StaticResponse("Hi!")));
 
             foreach (string command in ImmutableList.Create("MiXeD", "mixed", "MIXED"))
@@ -72,7 +71,7 @@ namespace TPP.Core.Tests.Commands
         [Test]
         public async Task TestAliases()
         {
-            var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock.Object, new ArgsParser());
+            var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock, new ArgsParser());
             commandProcessor.InstallCommand(new Command("main", CommandUtils.StaticResponse("Hi!"))
             { Aliases = new[] { "alias1", "alias2" } });
 
@@ -86,7 +85,7 @@ namespace TPP.Core.Tests.Commands
         [Test]
         public void InstallConflictName()
         {
-            var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock.Object, new ArgsParser());
+            var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock, new ArgsParser());
 
             commandProcessor.InstallCommand(new Command("a", CommandUtils.StaticResponse("Hi!")));
             ArgumentException ex = Assert.Throws<ArgumentException>(() => commandProcessor
@@ -97,7 +96,7 @@ namespace TPP.Core.Tests.Commands
         [Test]
         public void InstallConflictAlias()
         {
-            var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock.Object, new ArgsParser());
+            var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock, new ArgsParser());
 
             commandProcessor.InstallCommand(new Command("a", CommandUtils.StaticResponse("Hi!"))
             { Aliases = new[] { "x" } });
@@ -109,7 +108,7 @@ namespace TPP.Core.Tests.Commands
         [Test]
         public void InstallConflictNameVsAlias()
         {
-            var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock.Object, new ArgsParser());
+            var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock, new ArgsParser());
 
             commandProcessor.InstallCommand(new Command("a", CommandUtils.StaticResponse("Hi!"))
             { Aliases = new[] { "b" } });
@@ -121,7 +120,7 @@ namespace TPP.Core.Tests.Commands
         [Test]
         public async Task TestPermissions()
         {
-            var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock.Object, new ArgsParser());
+            var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock, new ArgsParser());
             commandProcessor.InstallCommand(new Command("opsonly", CommandUtils.StaticResponse("you are an operator")).WithCondition(
             canExecute: ctx => IsOperator(ctx.Message.User),
             ersatzResult: new CommandResult { Response = "Only operators can use that command" }));

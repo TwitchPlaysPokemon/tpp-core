@@ -3,9 +3,9 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Moq;
 using NodaTime;
 using NodaTime.Text;
+using NSubstitute;
 using NUnit.Framework;
 using TPP.ArgsParsing.TypeParsers;
 using TPP.ArgsParsing.Types;
@@ -411,15 +411,15 @@ namespace TPP.ArgsParsing.Tests
                 color: null,
                 firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
                 lastMessageAt: null, pokeyen: 0, tokens: 0);
-            var userRepoMock = new Mock<IUserRepo>();
+            var userRepoMock = Substitute.For<IUserRepo>();
             userRepoMock
-                .Setup(r => r.FindBySimpleName(username))
-                .ReturnsAsync(origUser);
+                .FindBySimpleName(username)
+                .Returns(origUser);
             userRepoMock
-                .Setup(r => r.FindByDisplayName(displayName))
-                .ReturnsAsync(origUser);
+                .FindByDisplayName(displayName)
+                .Returns(origUser);
             var argsParser = new ArgsParser();
-            argsParser.AddArgumentParser(new UserParser(userRepoMock.Object));
+            argsParser.AddArgumentParser(new UserParser(userRepoMock));
 
             var resultUser = await argsParser.Parse<User>(args: ImmutableList.Create(username));
             Assert.That(resultUser, Is.EqualTo(origUser));

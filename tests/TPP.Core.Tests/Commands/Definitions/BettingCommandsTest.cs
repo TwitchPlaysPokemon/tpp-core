@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
-using Moq;
 using NodaTime;
+using NSubstitute;
 using NUnit.Framework;
 using TPP.ArgsParsing;
 using TPP.ArgsParsing.TypeParsers;
@@ -54,9 +54,9 @@ namespace TPP.Core.Tests.Commands.Definitions
             [Test]
             public async Task deny_if_betting_closed()
             {
-                Mock<IBettingPeriod<User>> bettingPeriodMock = new();
-                bettingPeriodMock.Setup(b => b.IsBettingOpen).Returns(false);
-                var commands = new BettingCommands(() => bettingPeriodMock.Object);
+                var bettingPeriodMock = Substitute.For<IBettingPeriod<User>>();
+                bettingPeriodMock.IsBettingOpen.Returns(false);
+                var commands = new BettingCommands(() => bettingPeriodMock);
 
                 CommandResult result = await commands.Bet(new CommandContext(MockMessage(MockUser("me")),
                     ImmutableList.Create("!bet 1 blue"), ArgsParser));
@@ -68,8 +68,8 @@ namespace TPP.Core.Tests.Commands.Definitions
             public async Task only_allow_from_chat()
             {
                 User user = MockUser("me");
-                Mock<IBettingPeriod<User>> bettingPeriodMock = new();
-                var commands = new BettingCommands(() => bettingPeriodMock.Object);
+                var bettingPeriodMock = Substitute.For<IBettingPeriod<User>>();
+                var commands = new BettingCommands(() => bettingPeriodMock);
 
                 CommandResult result = await commands.Bet(new CommandContext(
                     MockMessage(user, source: MessageSource.Whisper),
@@ -82,13 +82,13 @@ namespace TPP.Core.Tests.Commands.Definitions
             public async Task propagate_failure()
             {
                 User user = MockUser("me");
-                Mock<IBettingShop<User>> bettingShopMock = new();
-                Mock<IBettingPeriod<User>> bettingPeriodMock = new();
-                bettingPeriodMock.Setup(b => b.IsBettingOpen).Returns(true);
-                bettingPeriodMock.Setup(b => b.BettingShop).Returns(bettingShopMock.Object);
-                bettingShopMock.Setup(b => b.PlaceBet(user, Side.Blue, 100))
+                var bettingShopMock = Substitute.For<IBettingShop<User>>();
+                var bettingPeriodMock = Substitute.For<IBettingPeriod<User>>();
+                bettingPeriodMock.IsBettingOpen.Returns(true);
+                bettingPeriodMock.BettingShop.Returns(bettingShopMock);
+                bettingShopMock.PlaceBet(user, Side.Blue, 100)
                     .Returns(Task.FromResult((PlaceBetFailure?)new PlaceBetFailure.InsufficientFunds(50)));
-                var commands = new BettingCommands(() => bettingPeriodMock.Object);
+                var commands = new BettingCommands(() => bettingPeriodMock);
 
                 CommandResult result = await commands.Bet(new CommandContext(MockMessage(user),
                     ImmutableList.Create("100", "blue"), ArgsParser));
@@ -100,13 +100,13 @@ namespace TPP.Core.Tests.Commands.Definitions
             public async Task announce_in_chat()
             {
                 User user = MockUser("me");
-                Mock<IBettingPeriod<User>> bettingPeriodMock = new();
-                Mock<IBettingShop<User>> bettingShopMock = new();
-                bettingPeriodMock.Setup(b => b.IsBettingOpen).Returns(true);
-                bettingPeriodMock.Setup(b => b.BettingShop).Returns(bettingShopMock.Object);
-                bettingShopMock.Setup(b => b.PlaceBet(user, Side.Blue, 100))
+                var bettingPeriodMock = Substitute.For<IBettingPeriod<User>>();
+                var bettingShopMock = Substitute.For<IBettingShop<User>>();
+                bettingPeriodMock.IsBettingOpen.Returns(true);
+                bettingPeriodMock.BettingShop.Returns(bettingShopMock);
+                bettingShopMock.PlaceBet(user, Side.Blue, 100)
                     .Returns(Task.FromResult((PlaceBetFailure?)null));
-                var commands = new BettingCommands(() => bettingPeriodMock.Object);
+                var commands = new BettingCommands(() => bettingPeriodMock);
 
                 CommandResult result = await commands.Bet(new CommandContext(MockMessage(user),
                     ImmutableList.Create("100", "blue"), ArgsParser));

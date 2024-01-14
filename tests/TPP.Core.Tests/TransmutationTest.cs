@@ -4,8 +4,8 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Moq;
 using NodaTime;
+using NSubstitute;
 using NUnit.Framework;
 using TPP.Common;
 using TPP.Model;
@@ -29,7 +29,7 @@ public class TransmutationCalculatorTest
         PkmnSpecies speciesUncommon2 = PkmnSpecies.RegisterName("3", "uncommon2");
         PkmnSpecies speciesRare = PkmnSpecies.RegisterName("4", "rare");
 
-        var badgeStatsRepoMock = new Mock<IBadgeStatsRepo>();
+        var badgeStatsRepoMock = Substitute.For<IBadgeStatsRepo>();
         var badgeStats = new Dictionary<PkmnSpecies, BadgeStat>
         {
             [speciesCommon] = new(speciesCommon, 10000, 10000, 10000, 10000, Rarity: 0.1),
@@ -37,11 +37,11 @@ public class TransmutationCalculatorTest
             [speciesUncommon2] = new(speciesUncommon2, 100, 100, 100, 100, Rarity: 0.001),
             [speciesRare] = new(speciesRare, 1, 1, 1, 1, Rarity: 0.00001),
         }.ToImmutableSortedDictionary();
-        badgeStatsRepoMock.Setup(bsr => bsr.GetBadgeStats()).ReturnsAsync(badgeStats);
+        badgeStatsRepoMock.GetBadgeStats().Returns(badgeStats);
 
         var random = new Random(numTransmutations);
         ITransmutationCalculator transmutationCalculator = new TransmutationCalculator(
-            badgeStatsRepoMock.Object,
+            badgeStatsRepoMock,
             badgeStats.Keys.ToImmutableSortedSet(),
             random: random.NextDouble
         );
@@ -69,18 +69,18 @@ public class TransmutationCalculatorTest
         PkmnSpecies speciesRare = PkmnSpecies.RegisterName("2", "rare");
         PkmnSpecies speciesNonExisting = PkmnSpecies.RegisterName("3", "non-existing");
 
-        var badgeStatsRepoMock = new Mock<IBadgeStatsRepo>();
+        var badgeStatsRepoMock = Substitute.For<IBadgeStatsRepo>();
         var badgeStats = new Dictionary<PkmnSpecies, BadgeStat>
         {
             [speciesUncommon] = new(speciesUncommon, 100, 100, 100, 100, Rarity: 0.001),
             [speciesRare] = new(speciesRare, 1, 1, 1, 1, Rarity: 0.00001),
             [speciesNonExisting] = new(speciesRare, 0, 0, 0, 0, Rarity: 0),
         }.ToImmutableSortedDictionary();
-        badgeStatsRepoMock.Setup(bsr => bsr.GetBadgeStats()).ReturnsAsync(badgeStats);
+        badgeStatsRepoMock.GetBadgeStats().Returns(badgeStats);
 
         var random = new Random(numTransmutations);
         ITransmutationCalculator transmutationCalculator = new TransmutationCalculator(
-            badgeStatsRepoMock.Object,
+            badgeStatsRepoMock,
             badgeStats.Keys.ToImmutableSortedSet(),
             random: random.NextDouble
         );
@@ -109,15 +109,15 @@ public class TransmutationCalculatorTest
         PkmnSpecies speciesTransmutable = PkmnSpecies.RegisterName("1", "yes");
         PkmnSpecies speciesUntransmutable = PkmnSpecies.RegisterName("2", "no");
 
-        var badgeStatsRepoMock = new Mock<IBadgeStatsRepo>();
+        var badgeStatsRepoMock = Substitute.For<IBadgeStatsRepo>();
         var badgeStats = new Dictionary<PkmnSpecies, BadgeStat>
         {
             [speciesTransmutable] = new(speciesTransmutable, 100, 100, 100, 100, Rarity: 0.001),
         }.ToImmutableSortedDictionary();
-        badgeStatsRepoMock.Setup(bsr => bsr.GetBadgeStats()).ReturnsAsync(badgeStats);
+        badgeStatsRepoMock.GetBadgeStats().Returns(badgeStats);
 
         ITransmutationCalculator transmutationCalculator = new TransmutationCalculator(
-            badgeStatsRepoMock.Object,
+            badgeStatsRepoMock,
             ImmutableHashSet.Create(speciesTransmutable),
             random: () => 12345
         );
@@ -144,11 +144,11 @@ public class TransmuterTest
         PkmnSpecies speciesOut = PkmnSpecies.RegisterName("2", "SpeciesOutput");
         Instant instant = Instant.FromUnixTimeSeconds(123);
 
-        var badgeRepoMock = new Mock<IBadgeRepo>();
-        var transmutationCalculatorMock = new Mock<ITransmutationCalculator>();
-        var bankMock = new Mock<IBank<User>>();
-        var transmutationLogMock = new Mock<ITransmutationLogRepo>();
-        var clockMock = new Mock<IClock>();
+        var badgeRepoMock = Substitute.For<IBadgeRepo>();
+        var transmutationCalculatorMock = Substitute.For<ITransmutationCalculator>();
+        var bankMock = Substitute.For<IBank<User>>();
+        var transmutationLogMock = Substitute.For<ITransmutationLogRepo>();
+        var clockMock = Substitute.For<IClock>();
 
         ImmutableList<PkmnSpecies> inputSpeciesList = ImmutableList.Create(speciesIn, speciesIn, speciesIn);
         IImmutableList<Badge> inputBadges = new List<Badge>
@@ -159,25 +159,27 @@ public class TransmuterTest
         }.ToImmutableList();
         Badge outputBadge = new("badgeOut", user.Id, speciesOut, Badge.BadgeSource.Transmutation, Instant.MinValue);
 
-        bankMock.Setup(b => b.GetAvailableMoney(user)).ReturnsAsync(1);
+        bankMock.GetAvailableMoney(user).Returns(1);
         List<Dictionary<string, object?>> transferData = new();
-        transmutationCalculatorMock.Setup(c => c.Transmute(inputSpeciesList)).ReturnsAsync(speciesOut);
-        badgeRepoMock.Setup(r => r.FindByUserAndSpecies(user.Id, speciesIn, inputSpeciesList.Count))
-            .ReturnsAsync(inputBadges);
-        badgeRepoMock.Setup(r => r.TransferBadges(inputBadges, null, "transmutation", Capture.In(transferData)))
-            .ReturnsAsync(inputBadges);
-        badgeRepoMock.Setup(r => r.AddBadge(user.Id, speciesOut, Badge.BadgeSource.Transmutation, null))
-            .ReturnsAsync(outputBadge);
+        transmutationCalculatorMock.Transmute(inputSpeciesList).Returns(speciesOut);
+        badgeRepoMock.FindByUserAndSpecies(user.Id, speciesIn, inputSpeciesList.Count)
+            .Returns(inputBadges);
+        badgeRepoMock.TransferBadges(inputBadges, null, "transmutation",
+                Arg.Do<Dictionary<string, object?>>(td => transferData.Add(td)))
+            .ReturnsForAnyArgs(inputBadges);
+        badgeRepoMock.AddBadge(user.Id, speciesOut, Badge.BadgeSource.Transmutation, null)
+            .Returns(outputBadge);
         List<Transaction<User>> transactionData = new();
-        bankMock.Setup(b => b.PerformTransaction(Capture.In(transactionData), CancellationToken.None))
-            .ReturnsAsync(default(TransactionLog)!); // result is not used, no need to mock a response
-        clockMock.Setup(c => c.GetCurrentInstant()).Returns(instant);
+        bankMock.PerformTransaction(
+                Arg.Do<Transaction<User>>(u => transactionData.Add(u)), CancellationToken.None)
+            .Returns(default(TransactionLog)!); // result is not used, no need to mock a response
+        clockMock.GetCurrentInstant().Returns(instant);
 
         List<TransmuteEventArgs> transmuteEventArgsList = new();
 
         ITransmuter transmuter = new Transmuter(
-            badgeRepoMock.Object, transmutationCalculatorMock.Object, bankMock.Object,
-            transmutationLogMock.Object, clockMock.Object);
+            badgeRepoMock, transmutationCalculatorMock, bankMock,
+            transmutationLogMock, clockMock);
         transmuter.Transmuted += (_, args) => transmuteEventArgsList.Add(args);
         Badge result = await transmuter.Transmute(user, 1, inputSpeciesList);
 
@@ -195,55 +197,56 @@ public class TransmuterTest
         Assert.That(transmuteEventArgsList.Single().User, Is.EqualTo(user));
         Assert.That(transmuteEventArgsList.Single().InputSpecies, Is.EqualTo(inputSpeciesList));
         Assert.That(transmuteEventArgsList.Single().OutputSpecies, Is.EqualTo(speciesOut));
-        transmutationLogMock.Verify(l => l.Log(user.Id, instant, 1, inputBadgeIds, outputBadge.Id), Times.Once);
+        await transmutationLogMock.Received(1).Log(user.Id, instant, 1,
+            Arg.Is<IImmutableList<string>>(lst => lst.SequenceEqual(inputBadgeIds)), outputBadge.Id);
     }
 
     [Test]
-    public void TestTransmuteBadgeNotOwned()
+    public async Task TestTransmuteBadgeNotOwned()
     {
         User user = MockUser("user");
         PkmnSpecies speciesIn = PkmnSpecies.RegisterName("1", "SpeciesInput");
-        var badgeRepoMock = new Mock<IBadgeRepo>();
-        var bankMock = new Mock<IBank<User>>();
+        var badgeRepoMock = Substitute.For<IBadgeRepo>();
+        var bankMock = Substitute.For<IBank<User>>();
 
-        bankMock.Setup(b => b.GetAvailableMoney(user)).ReturnsAsync(1);
+        bankMock.GetAvailableMoney(user).Returns(1);
         ImmutableList<PkmnSpecies> inputSpeciesList = ImmutableList.Create(speciesIn, speciesIn, speciesIn);
-        badgeRepoMock.Setup(r => r.FindByUserAndSpecies(user.Id, speciesIn, inputSpeciesList.Count))
-            .ReturnsAsync(ImmutableList<Badge>.Empty);
+        badgeRepoMock.FindByUserAndSpecies(user.Id, speciesIn, inputSpeciesList.Count)
+            .Returns(ImmutableList<Badge>.Empty);
 
         ITransmuter transmuter = new Transmuter(
-            badgeRepoMock.Object, Mock.Of<ITransmutationCalculator>(), bankMock.Object,
-            Mock.Of<ITransmutationLogRepo>(), Mock.Of<IClock>());
+            badgeRepoMock, Substitute.For<ITransmutationCalculator>(), bankMock,
+            Substitute.For<ITransmutationLogRepo>(), Substitute.For<IClock>());
         var exception = Assert.ThrowsAsync<TransmuteException>(async () =>
             await transmuter.Transmute(user, 1, inputSpeciesList))!;
         Assert.That(exception.Message, Is.EqualTo("You don't have enough #001 SpeciesInput badges."));
 
-        badgeRepoMock.Verify(r => r.FindByUserAndSpecies(user.Id, speciesIn, inputSpeciesList.Count), Times.Once);
-        badgeRepoMock.VerifyNoOtherCalls();
-        bankMock.Verify(b => b.GetAvailableMoney(user), Times.Once);
-        bankMock.VerifyNoOtherCalls();
+        await badgeRepoMock.Received(1).FindByUserAndSpecies(user.Id, speciesIn, inputSpeciesList.Count);
+        Assert.That(badgeRepoMock.ReceivedCalls().Count(), Is.EqualTo(1));
+        await bankMock.Received(1).GetAvailableMoney(user);
+        Assert.That(bankMock.ReceivedCalls().Count(), Is.EqualTo(1));
     }
 
     [Test]
-    public void TestTransmuteNotEnoughTokens()
+    public async Task TestTransmuteNotEnoughTokens()
     {
         User user = MockUser("user");
         PkmnSpecies speciesIn = PkmnSpecies.RegisterName("1", "SpeciesInput");
-        var badgeRepoMock = new Mock<IBadgeRepo>();
-        var bankMock = new Mock<IBank<User>>();
+        var badgeRepoMock = Substitute.For<IBadgeRepo>();
+        var bankMock = Substitute.For<IBank<User>>();
 
-        bankMock.Setup(b => b.GetAvailableMoney(user)).ReturnsAsync(0);
+        bankMock.GetAvailableMoney(user).Returns(0);
         ImmutableList<PkmnSpecies> inputSpeciesList = ImmutableList.Create(speciesIn, speciesIn, speciesIn);
 
         ITransmuter transmuter = new Transmuter(
-            badgeRepoMock.Object, Mock.Of<ITransmutationCalculator>(), bankMock.Object,
-            Mock.Of<ITransmutationLogRepo>(), Mock.Of<IClock>());
+            badgeRepoMock, Substitute.For<ITransmutationCalculator>(), bankMock,
+            Substitute.For<ITransmutationLogRepo>(), Substitute.For<IClock>());
         var exception = Assert.ThrowsAsync<TransmuteException>(async () =>
             await transmuter.Transmute(user, 1, inputSpeciesList))!;
         Assert.That(exception.Message, Is.EqualTo("You don't have the T1 required to transmute."));
 
-        badgeRepoMock.VerifyNoOtherCalls();
-        bankMock.Verify(b => b.GetAvailableMoney(user), Times.Once);
-        bankMock.VerifyNoOtherCalls();
+        Assert.That(badgeRepoMock.ReceivedCalls().Count(), Is.EqualTo(0));
+        await bankMock.Received(1).GetAvailableMoney(user);
+        Assert.That(bankMock.ReceivedCalls().Count(), Is.EqualTo(1));
     }
 }

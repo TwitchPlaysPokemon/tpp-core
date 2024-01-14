@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
-using Moq;
 using NodaTime;
+using NSubstitute;
 using NUnit.Framework;
 using TPP.ArgsParsing;
 using TPP.ArgsParsing.TypeParsers;
@@ -26,13 +26,13 @@ public class TransmuteCommandsTest
     private static Message MockMessage(User user, string text = "") =>
         new(user, text, MessageSource.Chat, string.Empty);
 
-    private Mock<IBadgeRepo> _badgeRepoMock = null!;
+    private IBadgeRepo _badgeRepoMock = null!;
     private ArgsParser _argsParser = null!;
 
     [SetUp]
     public void SetUp()
     {
-        _badgeRepoMock = new Mock<IBadgeRepo>();
+        _badgeRepoMock = Substitute.For<IBadgeRepo>();
         _argsParser = new ArgsParser();
         _argsParser.AddArgumentParser(new AnyOrderParser(_argsParser));
         _argsParser.AddArgumentParser(new ManyOfParser(_argsParser));
@@ -46,15 +46,15 @@ public class TransmuteCommandsTest
         PkmnSpecies species = PkmnSpecies.RegisterName("1", "mon");
         _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
         User user = MockUser("MockUser");
-        _badgeRepoMock.Setup(repo => repo.FindByUserAndSpecies(user.Id, species, null))
-            .ReturnsAsync(ImmutableList<Badge>.Empty);
+        _badgeRepoMock.FindByUserAndSpecies(user.Id, species, null)
+            .Returns(ImmutableList<Badge>.Empty);
 
-        Mock<ITransmuter> transmuter = new();
-        transmuter.Setup(t => t.Transmute(user, 1, It.IsAny<IImmutableList<PkmnSpecies>>()))
-            .ReturnsAsync(new Badge("badge1", user.Id, species, Badge.BadgeSource.Transmutation,
+        var transmuter = Substitute.For<ITransmuter>();
+        transmuter.Transmute(user, 1, Arg.Any<IImmutableList<PkmnSpecies>>())
+            .Returns(new Badge("badge1", user.Id, species, Badge.BadgeSource.Transmutation,
                 Instant.FromUnixTimeSeconds(0)));
 
-        TransmuteCommands transmuteCommands = new(transmuter.Object, transmutationCooldown: Duration.Zero);
+        TransmuteCommands transmuteCommands = new(transmuter, transmutationCooldown: Duration.Zero);
         {
             CommandResult result = await transmuteCommands.Transmute(new CommandContext(MockMessage(user),
                 ImmutableList.Create("T1", "mon", "mon", "mon"), _argsParser));
