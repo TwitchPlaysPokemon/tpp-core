@@ -54,13 +54,13 @@ namespace TPP.Core.Tests
             // THEN
             const int expectedTokens = 10 + (2 * 4) + 10 + (2 * 5); // per rank: 10 base tokens + 2 tokens per league
             // verify result
-            Assert.IsInstanceOf<ISubscriptionProcessor.SubResult.Ok>(subResult);
+            Assert.That(subResult, Is.InstanceOf<ISubscriptionProcessor.SubResult.Ok>());
             var okResult = (ISubscriptionProcessor.SubResult.Ok)subResult;
             Assert.That(okResult.CumulativeMonths, Is.EqualTo(3));
             Assert.That(okResult.DeltaTokens, Is.EqualTo(expectedTokens));
             Assert.That(okResult.OldLoyaltyLeague, Is.EqualTo(4));
             Assert.That(okResult.NewLoyaltyLeague, Is.EqualTo(6));
-            Assert.IsFalse(okResult.SubCountCorrected);
+            Assert.That(okResult.SubCountCorrected, Is.False);
 
             // verify tokens were awarded
             IDictionary<string, object?> expectedData = new Dictionary<string, object?>
@@ -107,7 +107,7 @@ namespace TPP.Core.Tests
 
             // THEN
             // negative result
-            Assert.IsInstanceOf<ISubscriptionProcessor.SubResult.SameMonth>(subResult);
+            Assert.That(subResult, Is.InstanceOf<ISubscriptionProcessor.SubResult.SameMonth>());
             var sameMonthResult = (ISubscriptionProcessor.SubResult.SameMonth)subResult;
             Assert.That(sameMonthResult.Month, Is.EqualTo(2));
             // no tokens were awarded
@@ -146,7 +146,7 @@ namespace TPP.Core.Tests
             // THEN
             const int expectedTokens = 14 + 16 + 18 + 20; // Tier 1 -> Tier 3: 4 loyalty completions difference
             // negative result
-            Assert.IsInstanceOf<ISubscriptionProcessor.SubResult.Ok>(subResult);
+            Assert.That(subResult, Is.InstanceOf<ISubscriptionProcessor.SubResult.Ok>());
             var okResult = (ISubscriptionProcessor.SubResult.Ok)subResult;
             Assert.That(okResult.NewLoyaltyLeague, Is.EqualTo(6));
             Assert.That(okResult.CumulativeMonths, Is.EqualTo(2));
@@ -195,7 +195,7 @@ namespace TPP.Core.Tests
                     new SubscriptionGiftInfo(subscriptionInfo, gifter, 2, false));
 
             const int expectedGiftTokens = 10 * 5 * 2; // 10 per rank. Tier 3 has rank 5 because $25 = 5 * $5, 2 months
-            Assert.IsInstanceOf<ISubscriptionProcessor.SubGiftResult.Ok>(subGiftResult);
+            Assert.That(subGiftResult, Is.InstanceOf<ISubscriptionProcessor.SubGiftResult.Ok>());
             var okGiftResult = (ISubscriptionProcessor.SubGiftResult.Ok)subGiftResult;
             Assert.That(okGiftResult.GifterTokens, Is.EqualTo(expectedGiftTokens));
             IDictionary<string, object?> expectedGiftData = new Dictionary<string, object?>();
@@ -204,13 +204,13 @@ namespace TPP.Core.Tests
                 CancellationToken.None);
 
             const int expectedSubTokens = 10 + 12 + 14 + 16 + 18; // Tier 3 = 5 ranks with increasing loyalty league
-            Assert.IsInstanceOf<ISubscriptionProcessor.SubResult.Ok>(subResult);
+            Assert.That(subResult, Is.InstanceOf<ISubscriptionProcessor.SubResult.Ok>());
             var okResult = (ISubscriptionProcessor.SubResult.Ok)subResult;
             Assert.That(okResult.CumulativeMonths, Is.EqualTo(1));
             Assert.That(okResult.DeltaTokens, Is.EqualTo(expectedSubTokens));
             Assert.That(okResult.OldLoyaltyLeague, Is.EqualTo(0));
             Assert.That(okResult.NewLoyaltyLeague, Is.EqualTo(5));
-            Assert.IsFalse(okResult.SubCountCorrected);
+            Assert.That(okResult.SubCountCorrected, Is.False);
             IDictionary<string, object?> expectedSubData = new Dictionary<string, object?>
             {
                 ["previous_months_subscribed"] = 0,
@@ -243,12 +243,12 @@ namespace TPP.Core.Tests
                 await subscriptionProcessor.ProcessSubscriptionGift(
                     new SubscriptionGiftInfo(subscriptionInfo, gifter, 1, false));
 
-            Assert.IsInstanceOf<ISubscriptionProcessor.SubGiftResult.SameMonth>(subGiftResult);
+            Assert.That(subGiftResult, Is.InstanceOf<ISubscriptionProcessor.SubGiftResult.SameMonth>());
             var sameMonthGiftResult = (ISubscriptionProcessor.SubGiftResult.SameMonth)subGiftResult;
             Assert.That(sameMonthGiftResult.Month, Is.EqualTo(1));
             Assert.That(bankMock.ReceivedCalls().Count(), Is.EqualTo(0));
 
-            Assert.IsInstanceOf<ISubscriptionProcessor.SubResult.SameMonth>(subResult);
+            Assert.That(subResult, Is.InstanceOf<ISubscriptionProcessor.SubResult.SameMonth>());
             var sameMonthSubResult = (ISubscriptionProcessor.SubResult.SameMonth)subResult;
             Assert.That(sameMonthSubResult.Month, Is.EqualTo(1));
             Assert.That(bankMock.ReceivedCalls().Count(), Is.EqualTo(0));
@@ -278,7 +278,7 @@ namespace TPP.Core.Tests
                     subscribedAt, Message: "HeyGuys", ImmutableList<EmoteOccurrence>.Empty));
 
             // THEN
-            Assert.IsInstanceOf<ISubscriptionProcessor.SubResult.SameMonth>(subResult);
+            Assert.That(subResult, Is.InstanceOf<ISubscriptionProcessor.SubResult.SameMonth>());
             logMock.Received(1).Log(LogLevel.Information,
                 $"Subscriber {userWithoutTier} has no subscription tier recorded. " +
                 "Assuming this user was subscribed before tiers were a thing and is equivalent to Tier 1");

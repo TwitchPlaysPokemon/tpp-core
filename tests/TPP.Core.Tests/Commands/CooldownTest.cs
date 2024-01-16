@@ -25,15 +25,15 @@ namespace TPP.Core.Tests.Commands
             var cooldown = new GlobalCooldown(clockMock, Duration.FromSeconds(2));
 
             clockMock.GetCurrentInstant().Returns(t1);
-            Assert.IsTrue(cooldown.CheckLapsedThenReset());
-            Assert.IsFalse(cooldown.CheckLapsedThenReset());
+            Assert.That(cooldown.CheckLapsedThenReset(), Is.True);
+            Assert.That(cooldown.CheckLapsedThenReset(), Is.False);
 
             clockMock.GetCurrentInstant().Returns(t2);
-            Assert.IsFalse(cooldown.CheckLapsedThenReset());
+            Assert.That(cooldown.CheckLapsedThenReset(), Is.False);
 
             clockMock.GetCurrentInstant().Returns(t3);
-            Assert.IsTrue(cooldown.CheckLapsedThenReset());
-            Assert.IsFalse(cooldown.CheckLapsedThenReset());
+            Assert.That(cooldown.CheckLapsedThenReset(), Is.True);
+            Assert.That(cooldown.CheckLapsedThenReset(), Is.False);
         }
 
         [Test]
@@ -48,20 +48,20 @@ namespace TPP.Core.Tests.Commands
             var cooldown = new PerUserCooldown(clockMock, Duration.FromSeconds(2));
 
             clockMock.GetCurrentInstant().Returns(t1);
-            Assert.IsTrue(cooldown.CheckLapsedThenReset(user1));
-            Assert.IsFalse(cooldown.CheckLapsedThenReset(user1));
-            Assert.IsTrue(cooldown.CheckLapsedThenReset(user2));
-            Assert.IsFalse(cooldown.CheckLapsedThenReset(user2));
+            Assert.That(cooldown.CheckLapsedThenReset(user1), Is.True);
+            Assert.That(cooldown.CheckLapsedThenReset(user1), Is.False);
+            Assert.That(cooldown.CheckLapsedThenReset(user2), Is.True);
+            Assert.That(cooldown.CheckLapsedThenReset(user2), Is.False);
 
             clockMock.GetCurrentInstant().Returns(t2);
-            Assert.IsFalse(cooldown.CheckLapsedThenReset(user1));
-            Assert.IsFalse(cooldown.CheckLapsedThenReset(user2));
+            Assert.That(cooldown.CheckLapsedThenReset(user1), Is.False);
+            Assert.That(cooldown.CheckLapsedThenReset(user2), Is.False);
 
             clockMock.GetCurrentInstant().Returns(t3);
-            Assert.IsTrue(cooldown.CheckLapsedThenReset(user1));
-            Assert.IsFalse(cooldown.CheckLapsedThenReset(user1));
-            Assert.IsTrue(cooldown.CheckLapsedThenReset(user2));
-            Assert.IsFalse(cooldown.CheckLapsedThenReset(user2));
+            Assert.That(cooldown.CheckLapsedThenReset(user1), Is.True);
+            Assert.That(cooldown.CheckLapsedThenReset(user1), Is.False);
+            Assert.That(cooldown.CheckLapsedThenReset(user2), Is.True);
+            Assert.That(cooldown.CheckLapsedThenReset(user2), Is.False);
         }
     }
 }

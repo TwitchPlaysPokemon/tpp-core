@@ -10,7 +10,7 @@ namespace TPP.Core.Tests
         public void successfully_loads_known_species()
         {
             PokedexData pokedexData = PokedexData.Load();
-            Assert.IsTrue(pokedexData.KnownSpecies.Any(), "pokemon name data missing or empty");
+            Assert.That(pokedexData.KnownSpecies.Any(), Is.True, "pokemon name data missing or empty");
         }
 
         [Test]
@@ -18,7 +18,7 @@ namespace TPP.Core.Tests
         {
             PokedexData pokedexData = PokedexData.Load();
             foreach (PkmnSpecies species in pokedexData.KnownSpecies)
-                Assert.NotNull(PokedexData.GetGeneration(species), $"no gen associated with {species}");
+                Assert.DoesNotThrow(() => PokedexData.GetGeneration(species), $"no gen associated with {species}");
         }
 
         [TestFixture]

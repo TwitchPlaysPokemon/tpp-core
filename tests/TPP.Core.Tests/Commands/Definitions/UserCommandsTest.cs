@@ -301,11 +301,11 @@ public class UserCommandsTest
             ImmutableList.Create("T1", "Recipient"), _argsParser));
 
         Assert.That(result.Response, Is.EqualTo("You successfully donated T1 to @Recipient!"));
-        CollectionAssert.AreEquivalent(new List<Transaction<User>>
+        Assert.That(transactions, Is.EquivalentTo(new List<Transaction<User>>
         {
             new(userSelf, -1, "donation_give"),
             new(userRecipient, 1, "donation_recieve"),
-        }, transactions);
+        }));
     }
 
     [Test]

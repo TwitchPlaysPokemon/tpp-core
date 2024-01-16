@@ -33,7 +33,7 @@ public class LogRepoTests : MongoTestBase
         Assert.That(written.Args, Is.EqualTo(args));
         Assert.That(written.Response, Is.EqualTo(response));
         Assert.That(written.Timestamp, Is.EqualTo(timestamp));
-        Assert.NotNull(written.Id);
+        Assert.That(written.Id, Is.Not.Null);
 
         // read from db
         List<CommandLog> allItems = await repo.Collection.Find(FilterDefinition<CommandLog>.Empty).ToListAsync();
@@ -64,7 +64,7 @@ public class LogRepoTests : MongoTestBase
         Assert.That(written.UserId, Is.EqualTo(userId));
         Assert.That(written.Timestamp, Is.EqualTo(timestamp));
         Assert.That(written.AdditionalData, Is.EqualTo(data));
-        Assert.NotNull(written.Id);
+        Assert.That(written.Id, Is.Not.Null);
 
         // read from db
         List<BadgeLog> allItems = await repo.Collection.Find(FilterDefinition<BadgeLog>.Empty).ToListAsync();
@@ -93,7 +93,7 @@ public class LogRepoTests : MongoTestBase
         Assert.That(written.IrcLine, Is.EqualTo(ircLine));
         Assert.That(written.Message, Is.EqualTo(message));
         Assert.That(written.Timestamp, Is.EqualTo(timestamp));
-        Assert.NotNull(written.Id);
+        Assert.That(written.Id, Is.Not.Null);
 
         // read from db
         List<Messagelog> allItems = await repo.Collection.Find(FilterDefinition<Messagelog>.Empty).ToListAsync();
@@ -115,7 +115,7 @@ public class LogRepoTests : MongoTestBase
         // persist to db
         OutgoingMessagequeueItem written = await repo.EnqueueMessage(ircLine);
         Assert.That(written.IrcLine, Is.EqualTo(ircLine));
-        Assert.NotNull(written.Id);
+        Assert.That(written.Id, Is.Not.Null);
 
         // read from db
         List<OutgoingMessagequeueItem> allItems = await repo.Collection
@@ -162,7 +162,7 @@ public class LogRepoTests : MongoTestBase
         Assert.That(written.SubMessage, Is.EqualTo(subMessage));
         Assert.That(written.SubPlan, Is.EqualTo(subPlan));
         Assert.That(written.SubPlanName, Is.EqualTo(subPlanName));
-        Assert.NotNull(written.Id);
+        Assert.That(written.Id, Is.Not.Null);
 
         // read from db
         List<SubscriptionLog> allItems =
@@ -199,7 +199,7 @@ public class LogRepoTests : MongoTestBase
         Assert.That(written.UserId, Is.EqualTo(userId));
         Assert.That(written.Message, Is.EqualTo(message));
         Assert.That(written.Timestamp, Is.EqualTo(timestamp));
-        Assert.NotNull(written.Id);
+        Assert.That(written.Id, Is.Not.Null);
 
         // read from db
         List<InputLog> allItems = await repo.Collection.Find(FilterDefinition<InputLog>.Empty).ToListAsync();
@@ -228,7 +228,7 @@ public class LogRepoTests : MongoTestBase
         Assert.That(written.Reason, Is.EqualTo(reason));
         Assert.That(written.IssuerUserId, Is.EqualTo(issuerUserId));
         Assert.That(written.Timestamp, Is.EqualTo(timestamp));
-        Assert.NotNull(written.Id);
+        Assert.That(written.Id, Is.Not.Null);
 
         // read from db
         List<BanLog> allItems = await repo.Collection.Find(FilterDefinition<BanLog>.Empty).ToListAsync();
@@ -261,7 +261,7 @@ public class LogRepoTests : MongoTestBase
         Assert.That(written.IssuerUserId, Is.EqualTo(issuerUserId));
         Assert.That(written.Timestamp, Is.EqualTo(timestamp));
         Assert.That(written.Duration, Is.EqualTo(duration));
-        Assert.NotNull(written.Id);
+        Assert.That(written.Id, Is.Not.Null);
 
         // read from db
         List<TimeoutLog> allItems = await repo.Collection.Find(FilterDefinition<TimeoutLog>.Empty).ToListAsync();
@@ -305,7 +305,7 @@ public class LogRepoTests : MongoTestBase
         Assert.That(written.ChatterIds, Is.EqualTo(userIds));
         Assert.That(written.Channel, Is.EqualTo(channel));
         Assert.That(written.Timestamp, Is.EqualTo(timestamp));
-        Assert.NotNull(written.Id);
+        Assert.That(written.Id, Is.Not.Null);
 
         // read from db
         List<ChattersSnapshot> allItems = await repo.Collection.Find(FilterDefinition<ChattersSnapshot>.Empty).ToListAsync();

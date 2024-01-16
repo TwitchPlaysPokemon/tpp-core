@@ -172,7 +172,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
                 usersCollection.Database.GetCollection<BsonDocument>("transactionLog");
             BsonDocument log = await transactionLogCollection.Find(FilterDefinition<BsonDocument>.Empty).FirstAsync();
 
-            Assert.IsInstanceOf<BsonObjectId>(log["_id"]);
+            Assert.That(log["_id"], Is.InstanceOf<BsonObjectId>());
             Assert.That(log["user"], Is.EqualTo(BsonString.Create(user.Id)));
             Assert.That(log["change"], Is.EqualTo(BsonInt64.Create(1)));
             Assert.That(log["old_balance"], Is.EqualTo(BsonInt64.Create(10)));
@@ -215,7 +215,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             Assert.That(log.OldBalance, Is.EqualTo(25));
             Assert.That(log.NewBalance, Is.EqualTo(16));
             Assert.That(log.CreatedAt, Is.EqualTo(instant));
-            Assert.IsNull(log.Type);
+            Assert.That(log.Type, Is.Null);
             Assert.That(log.AdditionalData, Is.EqualTo(new Dictionary<string, object?> { ["match"] = 35510 }));
         }
 

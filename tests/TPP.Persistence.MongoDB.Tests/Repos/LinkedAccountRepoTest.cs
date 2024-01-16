@@ -23,44 +23,44 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             ILinkedAccountRepo linkedAccountRepo = new LinkedAccountRepo(database, userRepo.Collection);
 
             // no initial links
-            CollectionAssert.IsEmpty(await linkedAccountRepo.FindLinkedUsers("user1"));
-            CollectionAssert.IsEmpty(await linkedAccountRepo.FindLinkedUsers("user2"));
+            Assert.That(await linkedAccountRepo.FindLinkedUsers("user1"), Is.Empty);
+            Assert.That(await linkedAccountRepo.FindLinkedUsers("user2"), Is.Empty);
             // successfully create links
-            Assert.IsTrue(await linkedAccountRepo.Link(ImmutableHashSet.Create("user1", "user2")));
+            Assert.That(await linkedAccountRepo.Link(ImmutableHashSet.Create("user1", "user2")), Is.True);
             List<User> links1And2 = new() { user1, user2 };
-            CollectionAssert.AreEquivalent(links1And2, await linkedAccountRepo.FindLinkedUsers("user1"));
-            CollectionAssert.AreEquivalent(links1And2, await linkedAccountRepo.FindLinkedUsers("user2"));
-            Assert.IsTrue(await linkedAccountRepo.AreLinked("user1", "user2"));
+            Assert.That(await linkedAccountRepo.FindLinkedUsers("user1"), Is.EquivalentTo(links1And2));
+            Assert.That(await linkedAccountRepo.FindLinkedUsers("user2"), Is.EquivalentTo(links1And2));
+            Assert.That(await linkedAccountRepo.AreLinked("user1", "user2"), Is.True);
             // links already exist
-            Assert.IsFalse(await linkedAccountRepo.Link(ImmutableHashSet.Create("user1", "user2")));
-            CollectionAssert.AreEquivalent(links1And2, await linkedAccountRepo.FindLinkedUsers("user1"));
-            CollectionAssert.AreEquivalent(links1And2, await linkedAccountRepo.FindLinkedUsers("user2"));
-            Assert.IsTrue(await linkedAccountRepo.AreLinked("user1", "user2"));
+            Assert.That(await linkedAccountRepo.Link(ImmutableHashSet.Create("user1", "user2")), Is.False);
+            Assert.That(await linkedAccountRepo.FindLinkedUsers("user1"), Is.EquivalentTo(links1And2));
+            Assert.That(await linkedAccountRepo.FindLinkedUsers("user2"), Is.EquivalentTo(links1And2));
+            Assert.That(await linkedAccountRepo.AreLinked("user1", "user2"), Is.True);
             // link undone
-            Assert.IsTrue(await linkedAccountRepo.Unlink("user1"));
-            CollectionAssert.IsEmpty(await linkedAccountRepo.FindLinkedUsers("user1"));
-            CollectionAssert.IsEmpty(await linkedAccountRepo.FindLinkedUsers("user2"));
-            Assert.IsFalse(await linkedAccountRepo.AreLinked("user1", "user2"));
+            Assert.That(await linkedAccountRepo.Unlink("user1"), Is.True);
+            Assert.That(await linkedAccountRepo.FindLinkedUsers("user1"), Is.Empty);
+            Assert.That(await linkedAccountRepo.FindLinkedUsers("user2"), Is.Empty);
+            Assert.That(await linkedAccountRepo.AreLinked("user1", "user2"), Is.False);
             // already not linked
-            Assert.IsFalse(await linkedAccountRepo.Unlink("user2"));
-            CollectionAssert.IsEmpty(await linkedAccountRepo.FindLinkedUsers("user1"));
-            CollectionAssert.IsEmpty(await linkedAccountRepo.FindLinkedUsers("user2"));
-            Assert.IsFalse(await linkedAccountRepo.AreLinked("user1", "user2"));
+            Assert.That(await linkedAccountRepo.Unlink("user2"), Is.False);
+            Assert.That(await linkedAccountRepo.FindLinkedUsers("user1"), Is.Empty);
+            Assert.That(await linkedAccountRepo.FindLinkedUsers("user2"), Is.Empty);
+            Assert.That(await linkedAccountRepo.AreLinked("user1", "user2"), Is.False);
             // other users linked
-            Assert.IsTrue(await linkedAccountRepo.Link(ImmutableHashSet.Create("user1", "user3")));
+            Assert.That(await linkedAccountRepo.Link(ImmutableHashSet.Create("user1", "user3")), Is.True);
             List<User> links1And3 = new() { user1, user3 };
-            CollectionAssert.AreEquivalent(links1And3, await linkedAccountRepo.FindLinkedUsers("user1"));
-            CollectionAssert.IsEmpty(await linkedAccountRepo.FindLinkedUsers("user2"));
-            Assert.IsFalse(await linkedAccountRepo.AreLinked("user1", "user2"));
-            Assert.IsTrue(await linkedAccountRepo.AreLinked("user1", "user3"));
+            Assert.That(await linkedAccountRepo.FindLinkedUsers("user1"), Is.EquivalentTo(links1And3));
+            Assert.That(await linkedAccountRepo.FindLinkedUsers("user2"), Is.Empty);
+            Assert.That(await linkedAccountRepo.AreLinked("user1", "user2"), Is.False);
+            Assert.That(await linkedAccountRepo.AreLinked("user1", "user3"), Is.True);
             // user1=user3 and user2=user3 implies user1=user2
-            Assert.IsTrue(await linkedAccountRepo.Link(ImmutableHashSet.Create("user2", "user3")));
-            Assert.IsTrue(await linkedAccountRepo.AreLinked("user2", "user3"));
-            Assert.IsTrue(await linkedAccountRepo.AreLinked("user1", "user2"));
+            Assert.That(await linkedAccountRepo.Link(ImmutableHashSet.Create("user2", "user3")), Is.True);
+            Assert.That(await linkedAccountRepo.AreLinked("user2", "user3"), Is.True);
+            Assert.That(await linkedAccountRepo.AreLinked("user1", "user2"), Is.True);
             // links from user1 undone, user2 and user3 are still linked
-            Assert.IsTrue(await linkedAccountRepo.Unlink("user1"));
-            Assert.IsTrue(await linkedAccountRepo.AreLinked("user2", "user3"));
-            CollectionAssert.IsEmpty(await linkedAccountRepo.FindLinkedUsers("user1"));
+            Assert.That(await linkedAccountRepo.Unlink("user1"), Is.True);
+            Assert.That(await linkedAccountRepo.AreLinked("user2", "user3"), Is.True);
+            Assert.That(await linkedAccountRepo.FindLinkedUsers("user1"), Is.Empty);
         }
     }
 }

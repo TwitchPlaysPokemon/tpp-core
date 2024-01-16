@@ -143,14 +143,14 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
 
             // when, then
             User userNew = await userRepo.RecordUser(userInfo);
-            Assert.NotNull(userNew.ParticipationEmblems);
+            Assert.That(userNew.ParticipationEmblems, Is.Not.Null);
             Assert.That(userNew.ParticipationEmblems, Is.EqualTo(new SortedSet<int>()));
 
             await userRepo.Collection.UpdateOneAsync(u => u.Id == userInfo.Id, Builders<User>.Update
                 .Set(u => u.ParticipationEmblems, new SortedSet<int> { 42 }));
             // when, then
             User userExisting = await userRepo.RecordUser(userInfo);
-            Assert.NotNull(userExisting.ParticipationEmblems);
+            Assert.That(userExisting.ParticipationEmblems, Is.Not.Null);
             Assert.That(userExisting.ParticipationEmblems, Is.EqualTo(new SortedSet<int> { 42 }));
         }
 
@@ -173,8 +173,8 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             User? deserializedUser = await userRepo.FindBySimpleName(userInfo.SimpleName);
 
             // then
-            Assert.NotNull(deserializedUser);
-            Assert.NotNull(deserializedUser!.ParticipationEmblems);
+            Assert.That(deserializedUser, Is.Not.Null);
+            Assert.That(deserializedUser!.ParticipationEmblems, Is.Not.Null);
             Assert.That(deserializedUser.ParticipationEmblems, Is.EqualTo(new SortedSet<int>()));
         }
 
@@ -231,7 +231,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             Assert.That(userFromRecording.Tokens, Is.EqualTo(tokens));
 
             User? userFromReading = await userRepo.FindBySimpleName("x");
-            Assert.NotNull(userFromReading);
+            Assert.That(userFromReading, Is.Not.Null);
             Assert.That(userFromRecording, Is.Not.SameAs(userFromReading!));
             Assert.That(userFromReading!.Pokeyen, Is.EqualTo(pokeyen));
             Assert.That(userFromReading!.Tokens, Is.EqualTo(tokens));
@@ -244,9 +244,9 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
                 CreateTemporaryDatabase(), 0, 0, ImmutableList<string>.Empty, Substitute.For<IClock>());
 
             User userBeforeUpdate = await userRepo.RecordUser(new UserInfo("123", "X", "x"));
-            Assert.IsFalse(userBeforeUpdate.IsSubscribed);
+            Assert.That(userBeforeUpdate.IsSubscribed, Is.False);
             User userAfterUpdate = await userRepo.SetIsSubscribed(userBeforeUpdate, true);
-            Assert.IsTrue(userAfterUpdate.IsSubscribed);
+            Assert.That(userAfterUpdate.IsSubscribed, Is.True);
         }
 
         [Test]
@@ -257,9 +257,9 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
 
             User userBeforeUpdate = await userRepo.RecordUser(new UserInfo("123", "X", "x"));
             Assert.That(userBeforeUpdate.MonthsSubscribed, Is.EqualTo(0));
-            Assert.IsNull(userBeforeUpdate.SubscriptionTier);
+            Assert.That(userBeforeUpdate.SubscriptionTier, Is.Null);
             Assert.That(userBeforeUpdate.LoyaltyLeague, Is.EqualTo(0));
-            Assert.IsNull(userBeforeUpdate.SubscriptionUpdatedAt);
+            Assert.That(userBeforeUpdate.SubscriptionUpdatedAt, Is.Null);
 
             User userAfterUpdate = await userRepo.SetSubscriptionInfo(userBeforeUpdate,
                 42, SubscriptionTier.Tier2, 10, Instant.FromUnixTimeSeconds(123));

@@ -12,7 +12,8 @@ using TPP.Core.Overlay;
 
 namespace TPP.Core.Tests.Overlay
 {
-    [Category("IntegrationTest"), Timeout(10_000)]
+    [Category("IntegrationTest")]
+    [CancelAfter(10_000)]
     public class WebsocketBroadcastServerTest
     {
         private int _port;
@@ -115,7 +116,7 @@ namespace TPP.Core.Tests.Overlay
             WebsocketMessageStreamClient client = await CreateClient();
 
             await client.WriteAsync("Hi server!", CancellationToken.None);
-            Assert.IsNull(await client.ReadAsync(CancellationToken.None)); // server is terminating the connection
+            Assert.That(await client.ReadAsync(CancellationToken.None), Is.Null); // server is terminating the connection
             WebSocketException ex = Assert.ThrowsAsync<WebSocketException>(()
                 => client.WriteAsync("Websocket is already dead", CancellationToken.None))!;
             Assert.That(ex.WebSocketErrorCode, Is.EqualTo(WebSocketError.InvalidState));

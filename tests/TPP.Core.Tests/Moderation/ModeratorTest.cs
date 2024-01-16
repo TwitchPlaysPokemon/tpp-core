@@ -44,19 +44,19 @@ namespace TPP.Core.Tests.Moderation
                 pointsForTimeout: 100);
 
             const string msg1 = "not enough points yet";
-            Assert.IsTrue(await moderator.Check(new Message(user, msg1, MessageSource.Chat, string.Empty)));
+            Assert.That(await moderator.Check(new Message(user, msg1, MessageSource.Chat, string.Empty)), Is.True);
             await executor.DidNotReceive().Timeout(user, Arg.Any<string>(), Duration.FromMinutes(2));
 
             const string msg2 = "enough points for timeout";
-            Assert.IsFalse(await moderator.Check(new Message(user, msg2, MessageSource.Chat, string.Empty)));
+            Assert.That(await moderator.Check(new Message(user, msg2, MessageSource.Chat, string.Empty)), Is.False);
             await executor.Received(1).Timeout(user, Arg.Any<string>(), Duration.FromMinutes(2));
 
             const string msg3 = "points reset after timeout, no additional timeout yet";
-            Assert.IsTrue(await moderator.Check(new Message(user, msg3, MessageSource.Chat, string.Empty)));
+            Assert.That(await moderator.Check(new Message(user, msg3, MessageSource.Chat, string.Empty)), Is.True);
             await executor.Received(1).Timeout(user, Arg.Any<string>(), Duration.FromMinutes(2));
 
             const string msg4 = "timeout again after points were reached a second time";
-            Assert.IsFalse(await moderator.Check(new Message(user, msg4, MessageSource.Chat, string.Empty)));
+            Assert.That(await moderator.Check(new Message(user, msg4, MessageSource.Chat, string.Empty)), Is.False);
             await executor.Received(2).Timeout(user, Arg.Any<string>(), Duration.FromMinutes(2));
         }
 
@@ -74,20 +74,20 @@ namespace TPP.Core.Tests.Moderation
                 pointsDecayPerSecond: 1, pointsForTimeout: 100);
 
             const string msg1 = "not enough points yet";
-            Assert.IsTrue(await moderator.Check(new Message(user, msg1, MessageSource.Chat, string.Empty)));
+            Assert.That(await moderator.Check(new Message(user, msg1, MessageSource.Chat, string.Empty)), Is.True);
 
             const string msg2 = "some time passed, so still not enough points for a timeout (2*50 - 1 = 99)";
             clock.GetCurrentInstant().Returns(Instant.FromUnixTimeSeconds(1));
-            Assert.IsTrue(await moderator.Check(new Message(user, msg2, MessageSource.Chat, string.Empty)));
+            Assert.That(await moderator.Check(new Message(user, msg2, MessageSource.Chat, string.Empty)), Is.True);
 
             const string msg3 = "some more time passed, still barely not enough for a timeout (3*50 - 51 = 99)";
             clock.GetCurrentInstant().Returns(Instant.FromUnixTimeSeconds(51));
-            Assert.IsTrue(await moderator.Check(new Message(user, msg3, MessageSource.Chat, string.Empty)));
+            Assert.That(await moderator.Check(new Message(user, msg3, MessageSource.Chat, string.Empty)), Is.True);
 
             const string msg4 = "a little more time passed, not enough points decayed (4*50 - 99 = 101) " +
                                 "and therefore a timeout is issued";
             clock.GetCurrentInstant().Returns(Instant.FromUnixTimeSeconds(99));
-            Assert.IsFalse(await moderator.Check(new Message(user, msg4, MessageSource.Chat, string.Empty)));
+            Assert.That(await moderator.Check(new Message(user, msg4, MessageSource.Chat, string.Empty)), Is.False);
             const string reasons = "points for testing #1, points for testing #2, " +
                                    "points for testing #3 and points for testing #4";
             await executor.Received(1).Timeout(user, reasons, Duration.FromMinutes(2));
@@ -106,12 +106,12 @@ namespace TPP.Core.Tests.Moderation
                 NullLogger<Moderator>.Instance, executor, rules, modbotLogRepo, clock,
                 minPoints: 51, pointsForTimeout: 100);
 
-            Assert.IsTrue(await moderator.Check(new Message(user, "no points",
-                MessageSource.Chat, string.Empty)));
-            Assert.IsTrue(await moderator.Check(new Message(user, "still no points",
-                MessageSource.Chat, string.Empty)));
-            Assert.IsTrue(await moderator.Check(new Message(user, "everything is fine",
-                MessageSource.Chat, string.Empty)));
+            Assert.That(await moderator.Check(new Message(user, "no points",
+                MessageSource.Chat, string.Empty)), Is.True);
+            Assert.That(await moderator.Check(new Message(user, "still no points",
+                MessageSource.Chat, string.Empty)), Is.True);
+            Assert.That(await moderator.Check(new Message(user, "everything is fine",
+                MessageSource.Chat, string.Empty)), Is.True);
         }
 
         [Test]
@@ -128,13 +128,13 @@ namespace TPP.Core.Tests.Moderation
                 pointsDecayPerSecond: 1, pointsForTimeout: 100);
 
             const string msg1 = "not enough points";
-            Assert.IsTrue(await moderator.Check(new Message(user, msg1, MessageSource.Chat, string.Empty)));
+            Assert.That(await moderator.Check(new Message(user, msg1, MessageSource.Chat, string.Empty)), Is.True);
 
             const string msg2 = "first violation's points completely decayed, but not enough points for a timeout";
             clock.GetCurrentInstant().Returns(Instant.FromUnixTimeSeconds(50));
-            Assert.IsTrue(await moderator.Check(new Message(user, msg2, MessageSource.Chat, string.Empty)));
+            Assert.That(await moderator.Check(new Message(user, msg2, MessageSource.Chat, string.Empty)), Is.True);
             const string msg4 = "enough points for a timeout now";
-            Assert.IsFalse(await moderator.Check(new Message(user, msg4, MessageSource.Chat, string.Empty)));
+            Assert.That(await moderator.Check(new Message(user, msg4, MessageSource.Chat, string.Empty)), Is.False);
             // listed reasons do not include the first completely decayed violation
             const string reasons = "points for testing #2 and points for testing #3";
             await executor.Received(1).Timeout(user, reasons, Duration.FromMinutes(2));

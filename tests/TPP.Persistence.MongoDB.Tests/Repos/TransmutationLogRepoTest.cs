@@ -33,7 +33,7 @@ public class TransmutationLogRepoTest : MongoTestBase
         Assert.That(written.Cost, Is.EqualTo(cost));
         Assert.That(written.InputBadges, Is.EqualTo(inputBadges));
         Assert.That(written.OutputBadge, Is.EqualTo(outputBadge));
-        Assert.NotNull(written.Id);
+        Assert.That(written.Id, Is.Not.Null);
 
         // read from db
         List<TransmutationLog> allItems =

@@ -19,7 +19,7 @@ namespace TPP.Inputting.Tests.Parsing
 
         private void AssertInput(string rawInput, InputSequence? expectedSequence)
         {
-            Assert.AreEqual(expectedSequence, _inputParser.Parse(rawInput));
+            Assert.That(expectedSequence, Is.EqualTo(_inputParser.Parse(rawInput)));
         }
 
         [Test]
@@ -47,14 +47,14 @@ namespace TPP.Inputting.Tests.Parsing
                 .Touchscreen(width: 240, height: 160, multitouch: true, allowDrag: true)
                 .Build();
 
-            Assert.AreEqual(Seq(new InputSet(ImmutableList.Create<Input>(
+            Assert.That(Seq(new InputSet(ImmutableList.Create<Input>(
                 new TouchscreenInput("234,123", "touchscreen", "234,123", 234, 123),
                 new TouchscreenInput("11,22", "touchscreen", "11,22", 11, 22)))
-            ), _inputParser.Parse("234,123+11,22"));
-            Assert.AreEqual(Seq(new InputSet(ImmutableList.Create<Input>(
+            ), Is.EqualTo(_inputParser.Parse("234,123+11,22")));
+            Assert.That(Seq(new InputSet(ImmutableList.Create<Input>(
                 new TouchscreenInput("234,123", "touchscreen", "234,123", 234, 123),
                 new TouchscreenDragInput("11,22>33,44", "touchscreen", "11,22>33,44", 11, 22, 33, 44)))
-            ), _inputParser.Parse("234,123+11,22>33,44"));
+            ), Is.EqualTo(_inputParser.Parse("234,123+11,22>33,44")));
 
             // multitouch disabled
             _inputParser = InputParserBuilder.FromBare()
@@ -62,9 +62,9 @@ namespace TPP.Inputting.Tests.Parsing
                 .Touchscreen(width: 240, height: 160, multitouch: false, allowDrag: true)
                 .Build();
 
-            Assert.IsNull(_inputParser.Parse("234,123+11,22"));
-            Assert.IsNull(_inputParser.Parse("234,123+11,22>33,44"));
-            Assert.IsNull(_inputParser.Parse("234,123>0,0+11,22>33,44"));
+            Assert.That(_inputParser.Parse("234,123+11,22"), Is.Null);
+            Assert.That(_inputParser.Parse("234,123+11,22>33,44"), Is.Null);
+            Assert.That(_inputParser.Parse("234,123>0,0+11,22>33,44"), Is.Null);
         }
 
         [Test]
@@ -79,12 +79,12 @@ namespace TPP.Inputting.Tests.Parsing
                 .LengthRestrictions(maxSetLength: 2, maxSequenceLength: 4)
                 .Build();
 
-            Assert.IsNull(_inputParser.Parse("a+a"));
-            Assert.IsNull(_inputParser.Parse("up+up.1"));
-            Assert.IsNull(_inputParser.Parse("n+up"));
-            Assert.IsNull(_inputParser.Parse("11,22+11,22"));
-            Assert.IsNull(_inputParser.Parse("11,22>50,60+11,22>50,60"));
-            Assert.IsNull(_inputParser.Parse("11,22+move1"));
+            Assert.That(_inputParser.Parse("a+a"), Is.Null);
+            Assert.That(_inputParser.Parse("up+up.1"), Is.Null);
+            Assert.That(_inputParser.Parse("n+up"), Is.Null);
+            Assert.That(_inputParser.Parse("11,22+11,22"), Is.Null);
+            Assert.That(_inputParser.Parse("11,22>50,60+11,22>50,60"), Is.Null);
+            Assert.That(_inputParser.Parse("11,22+move1"), Is.Null);
         }
 
         [Test]
@@ -119,7 +119,7 @@ namespace TPP.Inputting.Tests.Parsing
             stopwatch.Stop();
             // check for 1k inputs per second. I get around 30k inputs per second on an i5-7600k @ 3.80GHz,
             // but this test should only fail if something got horribly slow.
-            Assert.Less(stopwatch.Elapsed, TimeSpan.FromSeconds(1));
+            Assert.That(stopwatch.Elapsed, Is.LessThan(TimeSpan.FromSeconds(1)));
         }
 
         [Test]
@@ -130,8 +130,8 @@ namespace TPP.Inputting.Tests.Parsing
                 .LengthRestrictions(maxSetLength: 2, maxSequenceLength: 4)
                 .Build();
 
-            Assert.AreEqual(Seq(Set("a"), Set("wait")), _inputParser.Parse("await"));
-            Assert.IsNull(_inputParser.Parse("a+wait"));
+            Assert.That(Seq(Set("a"), Set("wait")), Is.EqualTo(_inputParser.Parse("await")));
+            Assert.That(_inputParser.Parse("a+wait"), Is.Null);
         }
     }
 }

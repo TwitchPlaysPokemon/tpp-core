@@ -53,8 +53,8 @@ namespace TPP.ArgsParsing.Tests
             // this used to cause a stack overflow in the any order parser
             (Optional<SignedInt> optionalInt, Optional<string> optionalString) = await argsParser
                 .Parse<AnyOrder<Optional<SignedInt>, Optional<string>>>(ImmutableList<string>.Empty);
-            Assert.False(optionalInt.IsPresent);
-            Assert.False(optionalString.IsPresent);
+            Assert.That(optionalInt.IsPresent, Is.False);
+            Assert.That(optionalString.IsPresent, Is.False);
         }
 
         [Test]
@@ -70,7 +70,7 @@ namespace TPP.ArgsParsing.Tests
             // instead of continuing to try all permutations and return the one consuming the most arguments.
             (Optional<SignedInt> optionalInt, string str) = await argsParser
                 .Parse<AnyOrder<Optional<SignedInt>, string>>(ImmutableList.Create("abc", "123"));
-            Assert.True(optionalInt.IsPresent);
+            Assert.That(optionalInt.IsPresent, Is.True);
             Assert.That((int)optionalInt.Value, Is.EqualTo(123));
             Assert.That(str, Is.EqualTo("abc"));
         }
@@ -181,11 +181,11 @@ namespace TPP.ArgsParsing.Tests
                 await argsParser.Parse<OneOf<SignedInt, string>>(ImmutableList.Create("123"));
             OneOf<SignedInt, string> result2 =
                 await argsParser.Parse<OneOf<SignedInt, string>>(ImmutableList.Create("foo"));
-            Assert.IsTrue(result1.Item1.IsPresent);
-            Assert.IsFalse(result1.Item2.IsPresent);
+            Assert.That(result1.Item1.IsPresent, Is.True);
+            Assert.That(result1.Item2.IsPresent, Is.False);
             Assert.That((int)result1.Item1.Value, Is.EqualTo(123));
-            Assert.IsFalse(result2.Item1.IsPresent);
-            Assert.IsTrue(result2.Item2.IsPresent);
+            Assert.That(result2.Item1.IsPresent, Is.False);
+            Assert.That(result2.Item2.IsPresent, Is.True);
             Assert.That(result2.Item2.Value, Is.EqualTo("foo"));
 
             ArgsParseFailure exUnrecognized = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
@@ -210,10 +210,10 @@ namespace TPP.ArgsParsing.Tests
             var result2 = await argsParser.Parse<Optional<SignedInt>>(args: ImmutableList<string>.Empty);
             (Optional<SignedInt> result3, string _) = await argsParser
                 .Parse<Optional<SignedInt>, string>(args: ImmutableList.Create("foo"));
-            Assert.IsTrue(result1.IsPresent);
+            Assert.That(result1.IsPresent, Is.True);
             Assert.That((int)result1.Value, Is.EqualTo(123));
-            Assert.IsFalse(result2.IsPresent);
-            Assert.IsFalse(result3.IsPresent);
+            Assert.That(result2.IsPresent, Is.False);
+            Assert.That(result3.IsPresent, Is.False);
         }
 
         [Test]
@@ -449,11 +449,11 @@ namespace TPP.ArgsParsing.Tests
 
             ImmutableList<PositiveInt> threeInts = await argsParser
                 .Parse<ManyOf<PositiveInt>>(ImmutableList.Create("1", "3", "2"));
-            CollectionAssert.AreEqual(new[] { 1, 3, 2 }, threeInts.Select(i => i.Number));
+            Assert.That(threeInts.Select(i => i.Number), Is.EqualTo(new[] { 1, 3, 2 }).AsCollection);
 
             ImmutableList<PositiveInt> zeroInts = await argsParser
                 .Parse<ManyOf<PositiveInt>>(ImmutableList.Create<string>());
-            CollectionAssert.AreEqual(Array.Empty<int>(), zeroInts.Select(i => i.Number));
+            Assert.That(zeroInts.Select(i => i.Number), Is.EqualTo(Array.Empty<int>()).AsCollection);
 
             ArgsParseFailure failure = Assert.ThrowsAsync<ArgsParseFailure>(() => argsParser
                 .Parse<ManyOf<PositiveInt>>(ImmutableList.Create<string>("1", "c", "2")))!;
