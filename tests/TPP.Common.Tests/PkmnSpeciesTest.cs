@@ -10,10 +10,10 @@ namespace TPP.Common.Tests
         [Test]
         public void TestSpeciesIdLegality()
         {
-            Assert.NotNull(PkmnSpecies.OfId("1"));
-            Assert.NotNull(PkmnSpecies.OfId("99999999"));
-            Assert.NotNull(PkmnSpecies.OfId("123-somedex"));
-            Assert.NotNull(PkmnSpecies.OfId("123-somedex-with-more-hyphens"));
+            Assert.That(PkmnSpecies.OfId("1"), Is.Not.Null);
+            Assert.That(PkmnSpecies.OfId("99999999"), Is.Not.Null);
+            Assert.That(PkmnSpecies.OfId("123-somedex"), Is.Not.Null);
+            Assert.That(PkmnSpecies.OfId("123-somedex-with-more-hyphens"), Is.Not.Null);
             Assert.Throws<ArgumentException>(() => PkmnSpecies.OfId("garbage"));
         }
 
@@ -23,18 +23,18 @@ namespace TPP.Common.Tests
             PkmnSpecies.RegisterName("1", "Bulbasaur");
             PkmnSpecies.RegisterName("16", "Pidgey");
 
-            Assert.AreEqual("Bulbasaur", PkmnSpecies.OfId("1").Name);
-            Assert.AreEqual("Pidgey", PkmnSpecies.OfId("16").Name);
-            Assert.AreEqual("???", PkmnSpecies.OfId("123").Name);
-            Assert.IsNotNull(PkmnSpecies.OfIdWithKnownName("1"));
-            Assert.IsNotNull(PkmnSpecies.OfIdWithKnownName("16"));
-            Assert.IsNull(PkmnSpecies.OfIdWithKnownName("123"));
+            Assert.That("Bulbasaur", Is.EqualTo(PkmnSpecies.OfId("1").Name));
+            Assert.That("Pidgey", Is.EqualTo(PkmnSpecies.OfId("16").Name));
+            Assert.That("???", Is.EqualTo(PkmnSpecies.OfId("123").Name));
+            Assert.That(PkmnSpecies.OfIdWithKnownName("1"), Is.Not.Null);
+            Assert.That(PkmnSpecies.OfIdWithKnownName("16"), Is.Not.Null);
+            Assert.That(PkmnSpecies.OfIdWithKnownName("123"), Is.Null);
 
             PkmnSpecies.ClearNames();
 
-            Assert.IsNull(PkmnSpecies.OfIdWithKnownName("1"));
-            Assert.IsNull(PkmnSpecies.OfIdWithKnownName("16"));
-            Assert.IsNull(PkmnSpecies.OfIdWithKnownName("123"));
+            Assert.That(PkmnSpecies.OfIdWithKnownName("1"), Is.Null);
+            Assert.That(PkmnSpecies.OfIdWithKnownName("16"), Is.Null);
+            Assert.That(PkmnSpecies.OfIdWithKnownName("123"), Is.Null);
         }
 
         [Test]
@@ -49,7 +49,7 @@ namespace TPP.Common.Tests
             };
 
             List<string> sorted = species.OrderBy(p => p).Select(p => p.Id).ToList();
-            Assert.AreEqual(new List<string> { "5", "22", "2-customdex", "11-customdex" }, sorted);
+            Assert.That(new List<string> { "5", "22", "2-customdex", "11-customdex" }, Is.EqualTo(sorted));
         }
 
         [Test]
@@ -61,9 +61,9 @@ namespace TPP.Common.Tests
             PkmnSpecies instance2 = PkmnSpecies.OfId("16");
             string name2 = instance2.Name;
 
-            Assert.AreEqual(instance1, instance2);
-            Assert.IsTrue(instance1 == instance2);
-            Assert.AreNotEqual(name1, name2);
+            Assert.That(instance1, Is.EqualTo(instance2));
+            Assert.That(instance1 == instance2, Is.True);
+            Assert.That(name1, Is.Not.EqualTo(name2));
         }
     }
 }

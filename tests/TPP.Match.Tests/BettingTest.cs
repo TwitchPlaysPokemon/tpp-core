@@ -19,33 +19,33 @@ namespace TPP.Match.Tests
 
                 // not a useful case, but it should gracefully handle a possibly 0/0
                 IImmutableDictionary<Side, double> odds = bettingShop.GetOdds();
-                Assert.AreEqual(1.0d, odds[Side.Blue]);
-                Assert.AreEqual(1.0d, odds[Side.Red]);
+                Assert.That(1.0d, Is.EqualTo(odds[Side.Blue]));
+                Assert.That(1.0d, Is.EqualTo(odds[Side.Red]));
             }
 
             [Test]
             public async Task bets_on_only_one_side_bets_is_no_error()
             {
                 IBettingShop<string> bettingShop = new DefaultBettingShop<string>(_ => Task.FromResult(long.MaxValue));
-                Assert.Null(await bettingShop.PlaceBet("user", Side.Blue, 1));
+                Assert.That(await bettingShop.PlaceBet("user", Side.Blue, 1), Is.Null);
 
                 // not a useful case, but it should gracefully handle a possibly x/0
                 IImmutableDictionary<Side, double> odds = bettingShop.GetOdds();
-                Assert.AreEqual(0.0d, odds[Side.Blue]);
-                Assert.AreEqual(double.PositiveInfinity, odds[Side.Red]);
+                Assert.That(0.0d, Is.EqualTo(odds[Side.Blue]));
+                Assert.That(double.PositiveInfinity, Is.EqualTo(odds[Side.Red]));
             }
 
             [Test]
             public async Task heavily_one_sided_bets_are_accurate()
             {
                 IBettingShop<string> bettingShop = new DefaultBettingShop<string>(_ => Task.FromResult(long.MaxValue));
-                Assert.Null(await bettingShop.PlaceBet("userBlue", Side.Blue, 1));
-                Assert.Null(await bettingShop.PlaceBet("userRedSmall", Side.Red, 1));
-                Assert.Null(await bettingShop.PlaceBet("userRedBig", Side.Red, 999_999_999_999));
+                Assert.That(await bettingShop.PlaceBet("userBlue", Side.Blue, 1), Is.Null);
+                Assert.That(await bettingShop.PlaceBet("userRedSmall", Side.Red, 1), Is.Null);
+                Assert.That(await bettingShop.PlaceBet("userRedBig", Side.Red, 999_999_999_999), Is.Null);
 
                 IImmutableDictionary<Side, double> odds = bettingShop.GetOdds();
-                Assert.AreEqual(1_000_000_000_000d, odds[Side.Blue]);
-                Assert.AreEqual(0.000_000_000_001d, odds[Side.Red]);
+                Assert.That(1_000_000_000_000d, Is.EqualTo(odds[Side.Blue]));
+                Assert.That(0.000_000_000_001d, Is.EqualTo(odds[Side.Red]));
             }
 
             [Test]
@@ -54,14 +54,14 @@ namespace TPP.Match.Tests
                 IBettingShop<string> bettingShop = new DefaultBettingShop<string>(_ => Task.FromResult(long.MaxValue));
 
                 var (blue1, blue2, red1, red2) = (100, 150, 180, 220);
-                Assert.Null(await bettingShop.PlaceBet("userBlue1", Side.Blue, blue1));
-                Assert.Null(await bettingShop.PlaceBet("userBlue2", Side.Blue, blue2));
-                Assert.Null(await bettingShop.PlaceBet("userRed1", Side.Red, red1));
-                Assert.Null(await bettingShop.PlaceBet("userRed2", Side.Red, red2));
+                Assert.That(await bettingShop.PlaceBet("userBlue1", Side.Blue, blue1), Is.Null);
+                Assert.That(await bettingShop.PlaceBet("userBlue2", Side.Blue, blue2), Is.Null);
+                Assert.That(await bettingShop.PlaceBet("userRed1", Side.Red, red1), Is.Null);
+                Assert.That(await bettingShop.PlaceBet("userRed2", Side.Red, red2), Is.Null);
 
                 IImmutableDictionary<Side, double> odds = bettingShop.GetOdds();
-                Assert.AreEqual(red1 + red2, (blue1 + blue2) * odds[Side.Blue]); // if blue won
-                Assert.AreEqual(blue1 + blue2, (red1 + red2) * odds[Side.Red]); // if red won
+                Assert.That(red1 + red2, Is.EqualTo((blue1 + blue2) * odds[Side.Blue])); // if blue won
+                Assert.That(blue1 + blue2, Is.EqualTo((red1 + red2) * odds[Side.Red])); // if red won
             }
         }
 
@@ -74,16 +74,16 @@ namespace TPP.Match.Tests
                 user => Task.FromResult(100 - bettingShop.GetBetsForUser(user).Sum(kvp => kvp.Value)));
 
             PlaceBetFailure? failure1 = await bettingShop.PlaceBet("user", Side.Blue, 101);
-            Assert.IsInstanceOf<PlaceBetFailure.InsufficientFunds>(failure1);
-            Assert.AreEqual(100, (failure1 as PlaceBetFailure.InsufficientFunds)?.AvailableMoney);
+            Assert.That(failure1, Is.InstanceOf<PlaceBetFailure.InsufficientFunds>());
+            Assert.That(100, Is.EqualTo((failure1 as PlaceBetFailure.InsufficientFunds)?.AvailableMoney));
 
-            Assert.Null(await bettingShop.PlaceBet("user", Side.Blue, 99));
+            Assert.That(await bettingShop.PlaceBet("user", Side.Blue, 99), Is.Null);
             // already bet amount must be incorporated into available money, since the bet gets replaced
-            Assert.Null(await bettingShop.PlaceBet("user", Side.Blue, 100));
+            Assert.That(await bettingShop.PlaceBet("user", Side.Blue, 100), Is.Null);
 
             PlaceBetFailure? failure2 = await bettingShop.PlaceBet("user", Side.Blue, 101);
-            Assert.IsInstanceOf<PlaceBetFailure.InsufficientFunds>(failure2);
-            Assert.AreEqual(100, (failure2 as PlaceBetFailure.InsufficientFunds)?.AvailableMoney);
+            Assert.That(failure2, Is.InstanceOf<PlaceBetFailure.InsufficientFunds>());
+            Assert.That(100, Is.EqualTo((failure2 as PlaceBetFailure.InsufficientFunds)?.AvailableMoney));
         }
 
         [Test]
@@ -91,10 +91,10 @@ namespace TPP.Match.Tests
         {
             IBettingShop<string> bettingShop = new DefaultBettingShop<string>(_ => Task.FromResult(long.MaxValue));
 
-            Assert.Null(await bettingShop.PlaceBet("user", Side.Blue, 100));
+            Assert.That(await bettingShop.PlaceBet("user", Side.Blue, 100), Is.Null);
             PlaceBetFailure? failure = await bettingShop.PlaceBet("user", Side.Blue, 99);
-            Assert.IsInstanceOf<PlaceBetFailure.CannotLowerBet>(failure);
-            Assert.AreEqual(100, (failure as PlaceBetFailure.CannotLowerBet)?.ExistingBet);
+            Assert.That(failure, Is.InstanceOf<PlaceBetFailure.CannotLowerBet>());
+            Assert.That(100, Is.EqualTo((failure as PlaceBetFailure.CannotLowerBet)?.ExistingBet));
         }
 
         [Test]
@@ -102,10 +102,10 @@ namespace TPP.Match.Tests
         {
             IBettingShop<string> bettingShop = new DefaultBettingShop<string>(_ => Task.FromResult(long.MaxValue));
 
-            Assert.Null(await bettingShop.PlaceBet("user", Side.Blue, 100));
+            Assert.That(await bettingShop.PlaceBet("user", Side.Blue, 100), Is.Null);
             PlaceBetFailure? failure = await bettingShop.PlaceBet("user", Side.Red, 200);
-            Assert.IsInstanceOf<PlaceBetFailure.CannotChangeSide>(failure);
-            Assert.AreEqual(Side.Blue, (failure as PlaceBetFailure.CannotChangeSide)?.SideBetOn);
+            Assert.That(failure, Is.InstanceOf<PlaceBetFailure.CannotChangeSide>());
+            Assert.That(Side.Blue, Is.EqualTo((failure as PlaceBetFailure.CannotChangeSide)?.SideBetOn));
         }
 
         [Test]
@@ -115,20 +115,20 @@ namespace TPP.Match.Tests
                 _ => Task.FromResult(101L), minBet: 100, maxBet: 101);
 
             PlaceBetFailure? failureTooLow = await bettingShop.PlaceBet("user", Side.Blue, 99);
-            Assert.IsInstanceOf<PlaceBetFailure.BetTooLow>(failureTooLow);
-            Assert.AreEqual(100, (failureTooLow as PlaceBetFailure.BetTooLow)?.MinBet);
+            Assert.That(failureTooLow, Is.InstanceOf<PlaceBetFailure.BetTooLow>());
+            Assert.That(100, Is.EqualTo((failureTooLow as PlaceBetFailure.BetTooLow)?.MinBet));
 
             PlaceBetFailure? failureTooHigh = await bettingShop.PlaceBet("user", Side.Blue, 102);
-            Assert.IsInstanceOf<PlaceBetFailure.BetTooHigh>(failureTooHigh);
-            Assert.AreEqual(101, (failureTooHigh as PlaceBetFailure.BetTooHigh)?.MaxBet);
+            Assert.That(failureTooHigh, Is.InstanceOf<PlaceBetFailure.BetTooHigh>());
+            Assert.That(101, Is.EqualTo((failureTooHigh as PlaceBetFailure.BetTooHigh)?.MaxBet));
 
-            Assert.Null(await bettingShop.PlaceBet("user", Side.Blue, 100));
-            Assert.Null(await bettingShop.PlaceBet("user", Side.Blue, 101));
+            Assert.That(await bettingShop.PlaceBet("user", Side.Blue, 100), Is.Null);
+            Assert.That(await bettingShop.PlaceBet("user", Side.Blue, 101), Is.Null);
 
             IImmutableDictionary<Side, IImmutableDictionary<string, long>> bets = bettingShop.GetBets();
-            Assert.AreEqual(1, bets[Side.Blue].Count);
-            Assert.AreEqual(0, bets[Side.Red].Count);
-            Assert.AreEqual(101, bets[Side.Blue]["user"]);
+            Assert.That(1, Is.EqualTo(bets[Side.Blue].Count));
+            Assert.That(0, Is.EqualTo(bets[Side.Red].Count));
+            Assert.That(101, Is.EqualTo(bets[Side.Blue]["user"]));
         }
 
         [Test]

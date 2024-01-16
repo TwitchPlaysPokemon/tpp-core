@@ -28,7 +28,7 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             // then
             Assert.That(badge.Id, Is.Not.EqualTo(string.Empty));
             Badge badgeFromDatabase = await badgeRepo.Collection.Find(b => b.Id == badge.Id).FirstOrDefaultAsync();
-            Assert.NotNull(badgeFromDatabase);
+            Assert.That(badgeFromDatabase, Is.Not.Null);
             Assert.That(badge, Is.Not.SameAs(badgeFromDatabase));
             Assert.That(badge, Is.EqualTo(badgeFromDatabase));
         }
@@ -157,10 +157,10 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             bool hasUserSpecies4 = await badgeRepo.HasUserBadge("user", PkmnSpecies.OfId("4"));
 
             // then
-            Assert.IsFalse(hasUserSpecies1);
-            Assert.IsTrue(hasUserSpecies2);
-            Assert.IsTrue(hasUserSpecies3);
-            Assert.IsFalse(hasUserSpecies4);
+            Assert.That(hasUserSpecies1, Is.False);
+            Assert.That(hasUserSpecies2, Is.True);
+            Assert.That(hasUserSpecies3, Is.True);
+            Assert.That(hasUserSpecies4, Is.False);
         }
 
         [TestFixture]
@@ -201,12 +201,12 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
                     ImmutableList.Create(badge), "recipient", "reason", new Dictionary<string, object?>());
 
                 Assert.That(updatedBadges.Count, Is.EqualTo(1));
-                Assert.IsNull(updatedBadges[0].SellingSince);
-                Assert.IsNull(updatedBadges[0].SellPrice);
+                Assert.That(updatedBadges[0].SellingSince, Is.Null);
+                Assert.That(updatedBadges[0].SellPrice, Is.Null);
                 Badge updatedBadge = await badgeRepo.Collection.Find(b => b.Id == badge.Id).FirstAsync();
                 Assert.That(updatedBadges[0], Is.EqualTo(updatedBadge));
-                Assert.IsNull(updatedBadge.SellingSince);
-                Assert.IsNull(updatedBadge.SellPrice);
+                Assert.That(updatedBadge.SellingSince, Is.Null);
+                Assert.That(updatedBadge.SellPrice, Is.Null);
             }
 
             [Test]

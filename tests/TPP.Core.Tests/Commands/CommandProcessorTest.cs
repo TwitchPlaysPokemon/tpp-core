@@ -36,7 +36,7 @@ namespace TPP.Core.Tests.Commands
 
             CommandResult? result = await commandProcessor.Process("unknown", _noArgs, MockMessage());
 
-            Assert.IsNull(result);
+            Assert.That(result, Is.Null);
         }
 
         [Test]

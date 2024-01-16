@@ -54,11 +54,11 @@ namespace TPP.Core.Tests
                 Assert.That(tx.Type, Is.EqualTo("match"));
                 Assert.That(tx.AdditionalData, Is.EqualTo(new Dictionary<string, object?> { ["match"] = 1234 }));
             }
-            CollectionAssert.AreEquivalent(new[]
+            Assert.That(transactions.Select(tx => (tx.User, tx.Change)), Is.EquivalentTo(new[]
             {
                 ("userBlue", 250),
                 ("userRed", -250)
-            }, transactions.Select(tx => (tx.User, tx.Change)));
+            }));
         }
 
         [Test]
@@ -85,11 +85,11 @@ namespace TPP.Core.Tests
                 Assert.That(tx.Type, Is.EqualTo("match"));
                 Assert.That(tx.AdditionalData, Is.EqualTo(new Dictionary<string, object?> { ["match"] = 1234 }));
             }
-            CollectionAssert.AreEquivalent(new[]
+            Assert.That(transactions.Select(tx => (tx.User, tx.Change)), Is.EquivalentTo(new[]
             {
                 ("userBlue", -200),
                 ("userRed", 200),
-            }, transactions.Select(tx => (tx.User, tx.Change)));
+            }));
         }
 
         [Test]

@@ -16,8 +16,8 @@ namespace TPP.Inputting.Tests
         private static InputSet ParseInput(string inputStr)
         {
             InputSequence? inputSequence = InputParser.Parse(inputStr);
-            Assert.NotNull(inputSequence);
-            Assert.AreEqual(1, inputSequence!.InputSets.Count);
+            Assert.That(inputSequence, Is.Not.Null);
+            Assert.That(1, Is.EqualTo(inputSequence!.InputSets.Count));
             return inputSequence.InputSets[0];
         }
 
@@ -39,7 +39,7 @@ namespace TPP.Inputting.Tests
             };
             IDictionary<string, object> producedInputMap = inputMapper.Map(
                 new TimedInputSet(ParseInput("10,20>30,40+A+b+start"), 1, 2));
-            Assert.AreEqual(expectedInputMap, producedInputMap);
+            Assert.That(expectedInputMap, Is.EqualTo(producedInputMap));
         }
     }
 }

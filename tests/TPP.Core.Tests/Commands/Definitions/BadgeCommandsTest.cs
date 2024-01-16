@@ -196,7 +196,7 @@ namespace TPP.Core.Tests.Commands.Definitions
                 ImmutableList<string>.Empty, _argsParser));
 
             Assert.That(result.Response, Is.EqualTo("You don't have a badge equipped."));
-            CollectionAssert.IsEmpty(_userRepoMock.ReceivedCalls());
+            Assert.That(_userRepoMock.ReceivedCalls(), Is.Empty);
         }
 
         [Test]

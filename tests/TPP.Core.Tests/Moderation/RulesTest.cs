@@ -31,15 +31,15 @@ namespace TPP.Core.Tests.Moderation
 
                 clockMock.GetCurrentInstant().Returns(Instant.FromUnixTimeSeconds(0));
                 RuleResult resultFirstSeen = rule.Check(TextMessage(copypasta));
-                Assert.IsInstanceOf<RuleResult.Nothing>(resultFirstSeen);
+                Assert.That(resultFirstSeen, Is.InstanceOf<RuleResult.Nothing>());
 
                 clockMock.GetCurrentInstant().Returns(Instant.FromUnixTimeSeconds(5));
                 RuleResult resultCopypasted = rule.Check(TextMessage(copypasta));
-                Assert.IsInstanceOf<RuleResult.GivePoints>(resultCopypasted);
+                Assert.That(resultCopypasted, Is.InstanceOf<RuleResult.GivePoints>());
 
                 clockMock.GetCurrentInstant().Returns(Instant.FromUnixTimeSeconds(16));
                 RuleResult resultLapsed = rule.Check(TextMessage(copypasta));
-                Assert.IsInstanceOf<RuleResult.Nothing>(resultLapsed);
+                Assert.That(resultLapsed, Is.InstanceOf<RuleResult.Nothing>());
             }
 
             [Test]
@@ -55,11 +55,11 @@ namespace TPP.Core.Tests.Moderation
 
                 clockMock.GetCurrentInstant().Returns(Instant.FromUnixTimeSeconds(0));
                 RuleResult resultFirstSeen = rule.Check(TextMessage(copypasta1));
-                Assert.IsInstanceOf<RuleResult.Nothing>(resultFirstSeen);
+                Assert.That(resultFirstSeen, Is.InstanceOf<RuleResult.Nothing>());
 
                 clockMock.GetCurrentInstant().Returns(Instant.FromUnixTimeSeconds(5));
                 RuleResult resultSimilarCopypasted = rule.Check(TextMessage(copypasta2));
-                Assert.IsInstanceOf<RuleResult.GivePoints>(resultSimilarCopypasted);
+                Assert.That(resultSimilarCopypasted, Is.InstanceOf<RuleResult.GivePoints>());
             }
 
             [Test]
@@ -75,11 +75,11 @@ namespace TPP.Core.Tests.Moderation
 
                 clockMock.GetCurrentInstant().Returns(Instant.FromUnixTimeSeconds(0));
                 RuleResult resultFirstSeen = rule.Check(TextMessage(copypasta1));
-                Assert.IsInstanceOf<RuleResult.Nothing>(resultFirstSeen);
+                Assert.That(resultFirstSeen, Is.InstanceOf<RuleResult.Nothing>());
 
                 clockMock.GetCurrentInstant().Returns(Instant.FromUnixTimeSeconds(5));
                 RuleResult resultSimilarCopypasted = rule.Check(TextMessage(copypasta2));
-                Assert.IsInstanceOf<RuleResult.Nothing>(resultSimilarCopypasted);
+                Assert.That(resultSimilarCopypasted, Is.InstanceOf<RuleResult.Nothing>());
             }
         }
 
@@ -164,8 +164,8 @@ namespace TPP.Core.Tests.Moderation
                 UnicodeCharacterCategoryRule rule = new(pointsPerBadChar: 2);
                 RuleResult result = rule.Check(TextMessage(
                     "A҉̳͎̘̮͚̖ ̮̘̮͉̭̕m̕a̸̻̺̗n̙͉̹̣̝̜̰ ͍̩̰̬͇i̷̺͇͈̼̝s͇ s̰͇͎̱̼̥t̵̪̳̖͔̟ị̣̥̫͓̤̭̕l̯̣̹ḽ̸͓ i̥̱̬͚n̤͍ ̥̮̭͎͔͞c̷̼͇̦̪̤̜̖r͎͎̟̱͙i̵͓̖̫̱̫̘̦t͔͕̠̻i͓̱̙̯c͈̭̣a͏l̠̳̝͟ ̭̳͖̤̭̯c҉o҉͈͈̠̙͔ͅn̨̗͖͈̝͇̜d̯̠͇͜ͅi̟͚͉͇̣t̴̜̫͇͉i̠͎̮̯̙͍̤o̧̺̹̝̫̰̯̻n̻͈͚͚̪̗̦ ̧͈͍̟̝̠͚̞a҉̩̻͈f̶t̗̞͙̭e̱͖̳̪͖ͅr͕ ̣s̝w̖̰̤͍̱̳͞a͕̪ͅl̳̫̬͕̞͡l̗̘ọ̵̺͖͍̗͍̺w̻̰̙̕ͅi̻͈͍̙͚̙͇n̲͈̩̝̠̺g̝̻͝ ͍̝̰̻̖̺͘$̶̫2͕̹̫̘5̶0̴̦,͚̖00̡̺͚̭̩͉0̙̪͠ ̠͉͓̭͖͚inͅ ̡͖̩͚̖͉̺̖l͖̞͍̼̟a͖̞̜r͈̘͖̺̬̼g̻̦̭̩̪e̼̠͍̩̤̬ ̸̦ͅb̞̱i͍̮̯l̟̳̺͘l̴͕͕̙̘s͏̭̫̤̝͓͇̘.̺ ͇̰̹̹̙̗̥N҉̟̼̘̘o̵͍̹̰̻̼̱ ̳͚̥̻͚c̮h̷̠̰̞̣̦͙a̷̮̮̘͈̪̘n͔̞͜ge̱͈̮͝s̱͓̣͉͔ ̗͖e̫̗̰̗̜x̗͖͉̗͚͍̼p̪̜̺̦͓͍̯e̝̰͚̕ct̺̞͇͔e̲͍̝d̥̬̮͉.̥̠̜̹̠"));
-                Assert.IsInstanceOf<RuleResult.GivePoints>(result);
-                Assert.IsTrue(((RuleResult.GivePoints)result).Points > 150);
+                Assert.That(result, Is.InstanceOf<RuleResult.GivePoints>());
+                Assert.That(((RuleResult.GivePoints)result).Points > 150, Is.True);
             }
 
             [Test]
@@ -174,8 +174,8 @@ namespace TPP.Core.Tests.Moderation
                 UnicodeCharacterCategoryRule rule = new(pointsPerBadChar: 2);
                 RuleResult result = rule.Check(TextMessage(
                     "⣿⣿⣿⣿⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠛⠻⣿⣿⣿⣿⣿⣿ ⣿⣿⣿⣿⣿⣦⠀⠀⠀⠀⠀⠀⠀⠀⢀⣤⣄⡀⠀⢻⣿⣿⣿⣿⣿ ⣿⣿⣿⣿⣿⣿⣇⠀⠀⠀⠀⠀⠀⠀⠸⣿⣿⣿⠃⢰⣿⣿⣿⣿⣿ ⣿⣿⣿⣿⣿⣿⣿⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣼⣿⣿⣿⣿⣿ ⣿⣿⣿⣿⣿⣿⣿⣿⡆⠀⠀⠀⠀⠀⠀⢶⣶⣶⣾⣿⣿⣿⣿⣿⣿ ⣿⣿⣿⣿⣿⣿⣿⣿⣧⠀⢠⡀⠐⠀⠀⠀⠻⢿⣿⣿⣿⣿⣿⣿⣿ ⣿⣿⣿⣿⣿⣿⣿⣿⣿⡄⢸⣷⡄⠀⠣⣄⡀⠀⠉⠛⢿⣿⣿⣿⣿ ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣇⠀⣿⣿⣦⠀⠹⣿⣷⣶⣦⣼⣿⣿⣿⣿ ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣼⣿⣿⣿⣷⣄⣸⣿⣿⣿⣿⣿⣿⣿⣿ ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿ ⣿⣿⡿⢛⡙⢻⠛⣉⢻⣉⢈⣹⣿⣿⠟⣉⢻⡏⢛⠙⣉⢻⣿⣿⣿ ⣿⣿⣇⠻⠃⣾⠸⠟⣸⣿⠈⣿⣿⣿⡀⠴⠞⡇⣾⡄⣿⠘⣿⣿⣿ ⣿⣿⣟⠛⣃⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣿⣿⣿⣿⣿ ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿"));
-                Assert.IsInstanceOf<RuleResult.GivePoints>(result);
-                Assert.IsTrue(((RuleResult.GivePoints)result).Points > 150);
+                Assert.That(result, Is.InstanceOf<RuleResult.GivePoints>());
+                Assert.That(((RuleResult.GivePoints)result).Points > 150, Is.True);
             }
 
             [Test]
@@ -186,18 +186,18 @@ namespace TPP.Core.Tests.Moderation
                 UnicodeCharacterCategoryRule rule = new(pointsPerBadChar: 2);
                 RuleResult result = rule.Check(TextMessage(
                     "P A R T Y L I K E I T S T E N P M P A R T Y L I K E I T S T E N P M"));
-                Assert.IsInstanceOf<RuleResult.GivePoints>(result);
-                Assert.IsTrue(((RuleResult.GivePoints)result).Points > 50);
+                Assert.That(result, Is.InstanceOf<RuleResult.GivePoints>());
+                Assert.That(((RuleResult.GivePoints)result).Points > 50, Is.True);
             }
 
             [Test]
             public void ignores_short_messages()
             {
                 UnicodeCharacterCategoryRule rule = new();
-                Assert.IsInstanceOf<RuleResult.Nothing>(rule.Check(TextMessage(
-                    "♫ ┌༼ຈل͜ຈ༽┘ ♪ DANCE RIOT ♪ └༼ຈل͜ຈ༽┐♫")));
-                Assert.IsInstanceOf<RuleResult.Nothing>(rule.Check(TextMessage(
-                    "♫ └༼ຈل͜ຈ༽┐♫ O E A E A U I E O E A ♫ └༼ຈل͜ຈ༽┐ ♫")));
+                Assert.That(rule.Check(TextMessage(
+                    "♫ ┌༼ຈل͜ຈ༽┘ ♪ DANCE RIOT ♪ └༼ຈل͜ຈ༽┐♫")), Is.InstanceOf<RuleResult.Nothing>());
+                Assert.That(rule.Check(TextMessage(
+                    "♫ └༼ຈل͜ຈ༽┐♫ O E A E A U I E O E A ♫ └༼ຈل͜ຈ༽┐ ♫")), Is.InstanceOf<RuleResult.Nothing>());
             }
         }
 

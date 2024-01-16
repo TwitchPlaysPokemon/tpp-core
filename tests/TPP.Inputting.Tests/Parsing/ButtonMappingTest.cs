@@ -1,12 +1,5 @@
-using NUnit.Framework;
-using NUnit.Framework.Internal;
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TPP.ArgsParsing.TypeParsers;
+using NUnit.Framework;
 using TPP.Core;
 using TPP.Inputting.Inputs;
 using TPP.Inputting.Parsing;
@@ -29,14 +22,14 @@ public class ButtonMappingTest
         var mappedInputs = _inputMapper.Map(new TimedInputSet(ParseInput(rawInput), 1, 2));
         foreach (var button in buttons)
         {
-            Assert.IsTrue(mappedInputs.ContainsKey(button), $"Output should contain {button}.");
+            Assert.That(mappedInputs.ContainsKey(button), Is.True, $"Output should contain {button}.");
         }
     }
 
     private void AssertEmptyMap(string rawInput, string? message = null)
     {
         var mappedInputs = _inputMapper.Map(new TimedInputSet(ParseInput(rawInput), 1, 2));
-        Assert.IsTrue(mappedInputs.Keys.Count == 2, message ?? "Mapped output should contain no buttons.");
+        Assert.That(mappedInputs.Keys, Has.Count.EqualTo(2), message ?? "Mapped output should contain no buttons.");
     }
 
     [Test]

@@ -17,7 +17,7 @@ namespace TPP.Inputting.Tests.Parsing
 
         private void AssertInput(string rawInput, InputSequence? expectedSequence)
         {
-            Assert.AreEqual(expectedSequence, _inputParser.Parse(rawInput));
+            Assert.That(expectedSequence, Is.EqualTo(_inputParser.Parse(rawInput)));
         }
 
         [Test]
@@ -52,10 +52,10 @@ namespace TPP.Inputting.Tests.Parsing
             // hold enabled
             _inputParser = builder.HoldEnabled(true).Build();
             AssertInput("a", Seq(Set("a")));
-            Assert.AreEqual(Seq(new InputSet(ImmutableList.Create(
+            Assert.That(Seq(new InputSet(ImmutableList.Create(
                 new Input("a", "a", "a"),
                 HoldInput.Instance))
-            ), _inputParser.Parse("a-"));
+            ), Is.EqualTo(_inputParser.Parse("a-")));
 
             // hold disabled
             _inputParser = builder.HoldEnabled(false).Build();
@@ -73,10 +73,10 @@ namespace TPP.Inputting.Tests.Parsing
                 .Build();
 
             InputSequence? result = _inputParser.Parse("honky");
-            Assert.AreEqual(Seq(
+            Assert.That(Seq(
                 new InputSet(ImmutableList.Create(new Input("honk", "y", "honk"))),
                 new InputSet(ImmutableList.Create(new Input("y", "y", "y")))
-            ), result);
+            ), Is.EqualTo(result));
         }
 
         [Test]
@@ -89,10 +89,10 @@ namespace TPP.Inputting.Tests.Parsing
                 .Build();
 
             InputSequence? result = _inputParser.Parse("honky");
-            Assert.AreEqual(Seq(
+            Assert.That(Seq(
                 new InputSet(ImmutableList.Create(new Input("y", "y", "honk"))),
                 new InputSet(ImmutableList.Create(new Input("y", "y", "y")))
-            ), result);
+            ), Is.EqualTo(result));
         }
 
         [Test]
@@ -104,34 +104,34 @@ namespace TPP.Inputting.Tests.Parsing
                 .LengthRestrictions(maxSetLength: 2, maxSequenceLength: 4)
                 .Build();
 
-            Assert.AreEqual(Seq(
+            Assert.That(Seq(
                 new InputSet(ImmutableList.Create<Input>(new Input("a", "a", "a"))),
                 new InputSet(ImmutableList.Create<Input>(
                     new TouchscreenInput("234,123", "touchscreen", "234,123", 234, 123))),
                 new InputSet(ImmutableList.Create<Input>(new Input("a", "a", "a")))
-            ), _inputParser.Parse("a234,123a"));
-            Assert.AreEqual(Seq(
+            ), Is.EqualTo(_inputParser.Parse("a234,123a")));
+            Assert.That(Seq(
                 new InputSet(ImmutableList.Create<Input>(
                     new TouchscreenInput("239,159", "touchscreen", "239,159", 239, 159)))
-            ), _inputParser.Parse("239,159"));
-            Assert.AreEqual(Seq(
+            ), Is.EqualTo(_inputParser.Parse("239,159")));
+            Assert.That(Seq(
                 new InputSet(ImmutableList.Create<Input>(
                     new TouchscreenInput("0,0", "touchscreen", "0,0", 0, 0)))
-            ), _inputParser.Parse("0,0"));
+            ), Is.EqualTo(_inputParser.Parse("0,0")));
             // allow leading zeroes
-            Assert.AreEqual(Seq(
+            Assert.That(Seq(
                 new InputSet(ImmutableList.Create<Input>(
                     new TouchscreenInput("000,000", "touchscreen", "000,000", 0, 0)))
-            ), _inputParser.Parse("000,000"));
-            Assert.AreEqual(Seq(
+            ), Is.EqualTo(_inputParser.Parse("000,000")));
+            Assert.That(Seq(
                 new InputSet(ImmutableList.Create<Input>(
                     new TouchscreenInput("012,023", "touchscreen", "012,023", 12, 23)))
-            ), _inputParser.Parse("012,023"));
+            ), Is.EqualTo(_inputParser.Parse("012,023")));
             // out of bounds
-            Assert.IsNull(_inputParser.Parse("240,159"));
-            Assert.IsNull(_inputParser.Parse("239,160"));
+            Assert.That(_inputParser.Parse("240,159"), Is.Null);
+            Assert.That(_inputParser.Parse("239,160"), Is.Null);
             // reject non-ascii decimal number symbols
-            Assert.IsNull(_inputParser.Parse("১২৩,꧑꧒꧓"));
+            Assert.That(_inputParser.Parse("১২৩,꧑꧒꧓"), Is.Null);
         }
 
         [Test]
@@ -144,32 +144,32 @@ namespace TPP.Inputting.Tests.Parsing
                 .LengthRestrictions(maxSetLength: 2, maxSequenceLength: 4)
                 .Build();
 
-            Assert.AreEqual(Seq(
+            Assert.That(Seq(
                 new InputSet(ImmutableList.Create<Input>(new Input("a", "a", "a"))),
                 new InputSet(ImmutableList.Create<Input>(
                     new TouchscreenDragInput("234,123>222,111", "touchscreen", "234,123>222,111", 234, 123, 222, 111))),
                 new InputSet(ImmutableList.Create<Input>(new Input("a", "a", "a")))
-            ), _inputParser.Parse("a234,123>222,111a"));
-            Assert.AreEqual(Seq(
+            ), Is.EqualTo(_inputParser.Parse("a234,123>222,111a")));
+            Assert.That(Seq(
                 new InputSet(ImmutableList.Create<Input>(
                     new TouchscreenDragInput("239,159>0,0", "touchscreen", "239,159>0,0", 239, 159, 0, 0)))
-            ), _inputParser.Parse("239,159>0,0"));
+            ), Is.EqualTo(_inputParser.Parse("239,159>0,0")));
             // allow leading zeroes
-            Assert.AreEqual(Seq(
+            Assert.That(Seq(
                 new InputSet(ImmutableList.Create<Input>(
                     new TouchscreenDragInput("000,000>000,000", "touchscreen", "000,000>000,000", 0, 0, 0, 0)))
-            ), _inputParser.Parse("000,000>000,000"));
-            Assert.AreEqual(Seq(
+            ), Is.EqualTo(_inputParser.Parse("000,000>000,000")));
+            Assert.That(Seq(
                 new InputSet(ImmutableList.Create<Input>(
                     new TouchscreenDragInput("012,023>0,0", "touchscreen", "012,023>0,0", 12, 23, 0, 0)))
-            ), _inputParser.Parse("012,023>0,0"));
+            ), Is.EqualTo(_inputParser.Parse("012,023>0,0")));
             // out of bounds
-            Assert.IsNull(_inputParser.Parse("240,159>0,0"));
-            Assert.IsNull(_inputParser.Parse("239,160>0,0"));
-            Assert.IsNull(_inputParser.Parse("0,0>239,160"));
-            Assert.IsNull(_inputParser.Parse("0,0>239,160"));
+            Assert.That(_inputParser.Parse("240,159>0,0"), Is.Null);
+            Assert.That(_inputParser.Parse("239,160>0,0"), Is.Null);
+            Assert.That(_inputParser.Parse("0,0>239,160"), Is.Null);
+            Assert.That(_inputParser.Parse("0,0>239,160"), Is.Null);
             // reject non-ascii decimal number symbols
-            Assert.IsNull(_inputParser.Parse("১২৩,꧑꧒꧓>৪৫,꧔꧕"));
+            Assert.That(_inputParser.Parse("১২৩,꧑꧒꧓>৪৫,꧔꧕"), Is.Null);
 
             // drag disabled
             _inputParser = InputParserBuilder.FromBare()
@@ -178,8 +178,8 @@ namespace TPP.Inputting.Tests.Parsing
                 .LengthRestrictions(maxSetLength: 2, maxSequenceLength: 4)
                 .Build();
 
-            Assert.IsNull(_inputParser.Parse("a234,123>222,111a"));
-            Assert.IsNull(_inputParser.Parse("239,159>0,0"));
+            Assert.That(_inputParser.Parse("a234,123>222,111a"), Is.Null);
+            Assert.That(_inputParser.Parse("239,159>0,0"), Is.Null);
         }
 
         [Test]
@@ -192,21 +192,21 @@ namespace TPP.Inputting.Tests.Parsing
                 .LengthRestrictions(maxSetLength: 2, maxSequenceLength: 4)
                 .Build();
 
-            Assert.AreEqual(Seq(
+            Assert.That(Seq(
                 new InputSet(ImmutableList.Create<Input>(new Input("a", "a", "a"))),
                 new InputSet(ImmutableList.Create<Input>(
                     new TouchscreenInput("move1", "touchscreen", "move1", 42, 69))),
                 new InputSet(ImmutableList.Create<Input>(
                     new TouchscreenInput("move1", "touchscreen", "move1", 42, 69))),
                 new InputSet(ImmutableList.Create<Input>(new Input("a", "a", "a")))
-            ), _inputParser.Parse("amove12a"));
-            Assert.AreEqual(Seq(
+            ), Is.EqualTo(_inputParser.Parse("amove12a")));
+            Assert.That(Seq(
                 new InputSet(ImmutableList.Create<Input>(
                     new TouchscreenInput("234,123", "touchscreen", "234,123", 234, 123))),
                 new InputSet(ImmutableList.Create<Input>(
                     new TouchscreenInput("move1", "touchscreen", "move1", 42, 69)))
-            ), _inputParser.Parse("234,123move1"));
-            Assert.IsNull(_inputParser.Parse("234,123+move1"));
+            ), Is.EqualTo(_inputParser.Parse("234,123move1")));
+            Assert.That(_inputParser.Parse("234,123+move1"), Is.Null);
         }
 
         [Test]
@@ -218,21 +218,21 @@ namespace TPP.Inputting.Tests.Parsing
                 .LengthRestrictions(maxSetLength: 2, maxSequenceLength: 4)
                 .Build();
 
-            Assert.AreEqual(Seq(
+            Assert.That(Seq(
                 new InputSet(ImmutableList.Create<Input>(new Input("a", "a", "a"))),
                 new InputSet(ImmutableList.Create<Input>(new AnalogInput("up", "up", "up.2", 0.2f))),
                 new InputSet(ImmutableList.Create<Input>(new AnalogInput("up", "up", "up.2", 0.2f))),
                 new InputSet(ImmutableList.Create<Input>(new Input("a", "a", "a")))
-            ), _inputParser.Parse("aup.22a"));
-            Assert.AreEqual(Seq(
+            ), Is.EqualTo(_inputParser.Parse("aup.22a")));
+            Assert.That(Seq(
                 new InputSet(ImmutableList.Create<Input>(new AnalogInput("up", "up", "UP", 1.0f)))
-            ), _inputParser.Parse("UP"));
-            Assert.AreEqual(Seq(
+            ), Is.EqualTo(_inputParser.Parse("UP")));
+            Assert.That(Seq(
                 new InputSet(ImmutableList.Create<Input>(new AnalogInput("up", "up", "up.9", 0.9f)))
-            ), _inputParser.Parse("up.9"));
-            Assert.IsNull(_inputParser.Parse("up."));
-            Assert.IsNull(_inputParser.Parse("up.0"));
-            Assert.IsNull(_inputParser.Parse("up.10"));
+            ), Is.EqualTo(_inputParser.Parse("up.9")));
+            Assert.That(_inputParser.Parse("up."), Is.Null);
+            Assert.That(_inputParser.Parse("up.0"), Is.Null);
+            Assert.That(_inputParser.Parse("up.10"), Is.Null);
         }
 
         [Test]
@@ -247,19 +247,19 @@ namespace TPP.Inputting.Tests.Parsing
                 .LengthRestrictions(maxSetLength: 2, maxSequenceLength: 4)
                 .Build();
 
-            Assert.AreEqual(
-                Seq(new InputSet(ImmutableList.Create(new Input("A", "A", "a")))), _inputParser.Parse("a"));
-            Assert.AreEqual(
-                Seq(new InputSet(ImmutableList.Create(new Input("B", "X", "b")))), _inputParser.Parse("b"));
-            Assert.AreEqual(
-                Seq(new InputSet(ImmutableList.Create(new Input("Y", "Y", "c")))), _inputParser.Parse("c"));
-            Assert.AreEqual(
+            Assert.That(Seq(new InputSet(ImmutableList.Create(new Input("A", "A", "a")))),
+                Is.EqualTo(_inputParser.Parse("a")));
+            Assert.That(Seq(new InputSet(ImmutableList.Create(new Input("B", "X", "b")))),
+                Is.EqualTo(_inputParser.Parse("b")));
+            Assert.That(Seq(new InputSet(ImmutableList.Create(new Input("Y", "Y", "c")))),
+                Is.EqualTo(_inputParser.Parse("c")));
+            Assert.That(
                 Seq(new InputSet(ImmutableList.Create<Input>(new AnalogInput("UP", "UP", "up.2", 0.2f)))),
-                _inputParser.Parse("up.2"));
-            Assert.AreEqual(
+                Is.EqualTo(_inputParser.Parse("up.2")));
+            Assert.That(
                 Seq(new InputSet(
                     ImmutableList.Create<Input>(new TouchscreenInput("MOVE1", "touchscreen", "move1", 10, 20)))),
-                _inputParser.Parse("move1"));
+                Is.EqualTo(_inputParser.Parse("move1")));
         }
     }
 }
