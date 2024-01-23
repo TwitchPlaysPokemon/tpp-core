@@ -7,18 +7,14 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: TPP.Core
-
     steps:
-      - name: Setup .NET 6
+      - name: Setup .NET
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: 8.0.x
       - uses: actions/checkout@v2
       - name: Publish the core
-        run: dotnet publish -c Release -r linux-x64 -p:PublishSingleFile=true --no-self-contained -p:IncludeNativeLibrariesForSelfExtract=true
+        run: dotnet publish TPP.Core -c Release -r linux-x64 -p:PublishSingleFile=true --no-self-contained -p:IncludeNativeLibrariesForSelfExtract=true
       - name: Deploy the core to TPP
         env:
           SSHUSER: ${{ secrets.TPP_SSH_USER }}
@@ -28,5 +24,5 @@ jobs:
         run: |
           echo "$SSHPRIVKEY" > tpp.key
           chmod 600 tpp.key
-          scp -q -i tpp.key -o StrictHostKeyChecking=no -P ${SSHPORT} bin/Release/net6.0/linux-x64/publish/TPP.Core ${SSHUSER}@${SSHHOST}:core_update
-          cat ../.github/workflows/deploy.sh | ssh -q -i tpp.key -o StrictHostKeyChecking=no -p ${SSHPORT} ${SSHUSER}@${SSHHOST}
+          scp -q -i tpp.key -o StrictHostKeyChecking=no -P ${SSHPORT} artifacts/publish/TPP.Core/release_linux-x64/TPP.Core ${SSHUSER}@${SSHHOST}:core_update
+          cat .github/workflows/deploy.sh | ssh -q -i tpp.key -o StrictHostKeyChecking=no -p ${SSHPORT} ${SSHUSER}@${SSHHOST}

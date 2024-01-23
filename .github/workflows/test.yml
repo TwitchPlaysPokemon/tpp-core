@@ -10,11 +10,11 @@ jobs:
     strategy:
       matrix:
         dotnet-sdk-version:
-          - 6.0.201 # currently running on stream
-          - 6.0.x
+          - 8.0.101 # currently running on stream
+          - 8.0.x
 
     steps:
-      - name: Setup .NET 6
+      - name: Setup .NET
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: ${{ matrix.dotnet-sdk-version }}

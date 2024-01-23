@@ -80,8 +80,8 @@ and prevents the application from handling SIGTERM events on linux.
 
 If you want faster startup times or graceful SIGTERM handling,
 [publish](https://docs.microsoft.com/en-us/dotnet/core/deploying/) the project first.
-For example, making a release build and running the resulting `dll` with the dotnet runtime may look like this:
+For example, making a release build and running the resulting executable may look like this:
 ```
 dotnet publish -c Release
-dotnet ./bin/Release/net6.0/TPP.Core.dll --help
+../artifacts/publish/TPP.Core/release/TPP.Core.exe --help
 ```
