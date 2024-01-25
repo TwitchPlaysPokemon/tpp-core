@@ -20,7 +20,7 @@ namespace TPP.Inputting.Inputs
             Y2 = y2;
         }
 
-        public override string ToString() => $"{DisplayedText}({X},{Y}>{X2},{Y2})";
+        public override string ToInputString() => $"{X},{Y}>{X2},{Y2}";
 
         #region polymorphic equals boilerplate
 

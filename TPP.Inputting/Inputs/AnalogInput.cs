@@ -27,7 +27,7 @@ namespace TPP.Inputting.Inputs
             Strength = strength;
         }
 
-        public override string ToString() => $"{DisplayedText}({ButtonName}={Strength})";
+        public override string ToInputString() => ButtonName + "=" + Strength;
 
         #region polymorphic equals boilerplate
 

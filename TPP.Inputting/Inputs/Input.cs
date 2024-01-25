@@ -30,7 +30,15 @@ namespace TPP.Inputting.Inputs
             OriginalText = originalText;
         }
 
-        public override string ToString() => $"{DisplayedText}({ButtonName})";
+        public virtual string ToInputString() => ButtonName;
+
+        public override string ToString()
+        {
+            string inputString = ToInputString();
+            return DisplayedText == inputString
+                ? DisplayedText
+                : $"{DisplayedText}({inputString})";
+        }
 
         #region polymorphic equals boilerplate
 
