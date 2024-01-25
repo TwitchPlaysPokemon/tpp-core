@@ -88,7 +88,7 @@ namespace TPP.Core.Chat
             }
         }
 
-        public void Connect()
+        public Task Connect()
         {
             Task.Run(ReadInput).ContinueWith(task =>
             {
@@ -103,6 +103,7 @@ namespace TPP.Core.Chat
                 "Prefixing a message with '#username ' will post as a different user, e.g. '#someone !help'");
             Console.Out.WriteLine("Prefixing a message with '>' will make it a whisper, e.g. '>balance'");
             Console.Out.WriteLine("You can combine both, e.g. '#someone >balance'");
+            return Task.CompletedTask;
         }
 
         private static Task PrintAction(string message)

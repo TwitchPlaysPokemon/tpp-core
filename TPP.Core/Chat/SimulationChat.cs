@@ -68,7 +68,7 @@ namespace TPP.Core.Chat
             }
         }
 
-        public void Connect()
+        public Task Connect()
         {
             Task.Run(Simulate).ContinueWith(task =>
             {
@@ -77,6 +77,7 @@ namespace TPP.Core.Chat
                 else
                     _logger.LogInformation("simulation task finished");
             });
+            return Task.CompletedTask;
         }
 
         private static Task PrintAction(string message)
