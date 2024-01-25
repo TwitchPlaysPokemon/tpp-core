@@ -21,9 +21,9 @@ using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
 using TwitchLib.Communication.Clients;
 using TwitchLib.Communication.Events;
-using TwitchLib.Communication.Models;
 using static TPP.Core.Configuration.ConnectionConfig.Twitch;
 using static TPP.Core.EventUtils;
+using OnConnectedEventArgs = TwitchLib.Client.Events.OnConnectedEventArgs;
 
 namespace TPP.Core.Chat
 {
@@ -112,24 +112,18 @@ namespace TPP.Core.Chat
                 chatConfig.AppClientId,
                 chatConfig.AppClientSecret);
             _twitchClient = new TwitchClient(
-                client: new WebSocketClient(new ClientOptions
-                {
-                    // very liberal throttle values because we use our own queue beforehand
-                    MessagesAllowedInPeriod = 1000,
-                    WhispersAllowedInPeriod = 1000,
-                    SendDelay = 5,
-                }),
-                logger: loggerFactory.CreateLogger<TwitchClient>());
+                client: new WebSocketClient(),
+                loggerFactory: loggerFactory);
             var credentials = new ConnectionCredentials(
                 twitchUsername: chatConfig.Username,
                 twitchOAuth: chatConfig.Password,
                 disableUsernameCheck: true);
+            // disable TwitchLib's command features, we do that ourselves
+            _twitchClient.ChatCommandIdentifiers.Add('\0');
+            _twitchClient.WhisperCommandIdentifiers.Add('\0');
             _twitchClient.Initialize(
                 credentials: credentials,
-                channel: chatConfig.Channel,
-                // disable TwitchLib's command features, we do that ourselves
-                chatCommandIdentifier: '\0',
-                whisperCommandIdentifier: '\0');
+                channel: chatConfig.Channel);
 
             _twitchClient.OnConnected += Connected;
             _twitchClient.OnError += OnError;
@@ -148,25 +142,26 @@ namespace TPP.Core.Chat
                 _twitchClient);
         }
 
-        private void Connected(object? sender, OnConnectedArgs e) => _twitchClient.JoinChannel(_channel);
+        private Task Connected(object? sender, OnConnectedEventArgs e) => _twitchClient.JoinChannelAsync(_channel);
 
         // Subscribe to TwitchClient errors to hopefully prevent the very rare incidents where the bot effectively
         // gets disconnected, but the CheckConnectivityWorker cannot detect it and doesn't reconnect.
         // I've never caught this event firing (it doesn't fire when you pull the ethernet cable either)
         // but the theory is that if this bug occurs: https://github.com/dotnet/runtime/issues/48246 we can call
         // Disconnect() to force the underlying ClientWebSocket.State to change to Abort.
-        private void OnError(object? sender, OnErrorEventArgs e)
+        private async Task OnError(object? sender, OnErrorEventArgs e)
         {
             _logger.LogError(e.Exception, "The TwitchClient encountered an error. Forcing a disconnect");
-            _twitchClient.Disconnect();
+            await _twitchClient.DisconnectAsync();
             // let the CheckConnectivityWorker handle reconnecting
         }
 
-        private void OnConnectionError(object? sender, OnConnectionErrorArgs e)
+        private async Task OnConnectionError(object? sender, OnConnectionErrorArgs e)
         {
             // same procedure as above
-            _logger.LogError("The TwitchClient encountered a connection error. Forcing a disconnect. Error: {Error}", e.Error.Message);
-            _twitchClient.Disconnect();
+            _logger.LogError("The TwitchClient encountered a connection error. Forcing a disconnect. Error: {Error}",
+                e.Error.Message);
+            await _twitchClient.DisconnectAsync();
         }
 
         private static string BuildSubResponse(
@@ -278,8 +273,9 @@ namespace TPP.Core.Chat
                 foreach (string part in MessageSplitterRegular.FitToMaxLength(message))
                 {
                     if (_useTwitchReplies && responseTo?.Details.MessageId != null)
-                        _queue.Enqueue(responseTo.User, new OutgoingMessage
-                            .Reply(_channel, Message: "/me " + part, ReplyToId: responseTo.Details.MessageId));
+                        _queue.Enqueue(responseTo.User,
+                            new OutgoingMessage.Reply(_channel, Message: "/me " + part,
+                                ReplyToId: responseTo.Details.MessageId));
                     else
                         _queue.Enqueue(responseTo?.User, new OutgoingMessage.Chat(_channel, "/me " + part));
                 }
@@ -308,14 +304,14 @@ namespace TPP.Core.Chat
             });
         }
 
-        public void Connect()
+        public async Task Connect()
         {
             if (_connected)
             {
                 throw new InvalidOperationException("Can only ever connect once per chat instance.");
             }
             _connected = true;
-            _twitchClient.Connect();
+            await _twitchClient.ConnectAsync();
             var tokenSource = new CancellationTokenSource();
             Task sendWorker = _queue.StartSendWorker(tokenSource.Token);
             Task checkConnectivityWorker = CheckConnectivityWorker(tokenSource.Token);
@@ -347,7 +343,8 @@ namespace TPP.Core.Chat
                     _logger.LogError("Not connected to twitch, trying to reconnect...");
                     try
                     {
-                        _twitchClient.Reconnect();
+                        await _twitchClient.ReconnectAsync();
+                        _logger.LogInformation("Successfully reconnected to twitch.");
                     }
                     catch (Exception)
                     {
@@ -395,55 +392,49 @@ namespace TPP.Core.Chat
             }
         }
 
-        private void MessageReceived(object? sender, OnMessageReceivedArgs e)
+        private async Task MessageReceived(object? sender, OnMessageReceivedArgs e)
         {
-            TaskToVoidSafely(_logger, async () =>
+            _logger.LogDebug("<#{Channel} {Username}: {Message}",
+                _channel, e.ChatMessage.Username, e.ChatMessage.Message);
+            if (e.ChatMessage.Username == _twitchClient.TwitchUsername)
+                // new core sees messages posted by old core, but we don't want to process our own messages
+                return;
+            User user = await _userRepo.RecordUser(GetUserInfoFromTwitchMessage(e.ChatMessage, fromWhisper: false));
+            var message = new Message(user, e.ChatMessage.Message, MessageSource.Chat, e.ChatMessage.RawIrcMessage)
             {
-                _logger.LogDebug("<#{Channel} {Username}: {Message}",
-                    _channel, e.ChatMessage.Username, e.ChatMessage.Message);
-                if (e.ChatMessage.Username == _twitchClient.TwitchUsername)
-                    // new core sees messages posted by old core, but we don't want to process our own messages
-                    return;
-                User user = await _userRepo.RecordUser(GetUserInfoFromTwitchMessage(e.ChatMessage, fromWhisper: false));
-                var message = new Message(user, e.ChatMessage.Message, MessageSource.Chat, e.ChatMessage.RawIrcMessage)
-                {
-                    Details = new MessageDetails(
-                        MessageId: e.ChatMessage.Id,
-                        IsAction: e.ChatMessage.IsMe,
-                        IsStaff: e.ChatMessage.IsBroadcaster || e.ChatMessage.IsModerator,
-                        Emotes: e.ChatMessage.EmoteSet.Emotes
-                            .Select(em => new Emote(em.Id, em.Name, em.StartIndex, em.EndIndex)).ToImmutableList()
-                    )
-                };
-                IncomingMessage?.Invoke(this, new MessageEventArgs(message));
-            });
+                Details = new MessageDetails(
+                    MessageId: e.ChatMessage.Id,
+                    IsAction: e.ChatMessage.IsMe,
+                    IsStaff: e.ChatMessage.IsBroadcaster || e.ChatMessage.IsModerator,
+                    Emotes: e.ChatMessage.EmoteSet.Emotes
+                        .Select(em => new Emote(em.Id, em.Name, em.StartIndex, em.EndIndex)).ToImmutableList()
+                )
+            };
+            IncomingMessage?.Invoke(this, new MessageEventArgs(message));
         }
 
-        private void WhisperReceived(object? sender, OnWhisperReceivedArgs e)
+        private async Task WhisperReceived(object? sender, OnWhisperReceivedArgs e)
         {
-            TaskToVoidSafely(_logger, async () =>
+            _logger.LogDebug("<@{Username}: {Message}", e.WhisperMessage.Username, e.WhisperMessage.Message);
+            User user = await _userRepo.RecordUser(
+                GetUserInfoFromTwitchMessage(e.WhisperMessage, fromWhisper: true));
+            var message = new Message(user, e.WhisperMessage.Message, MessageSource.Whisper,
+                e.WhisperMessage.RawIrcMessage)
             {
-                _logger.LogDebug("<@{Username}: {Message}", e.WhisperMessage.Username, e.WhisperMessage.Message);
-                User user = await _userRepo.RecordUser(
-                    GetUserInfoFromTwitchMessage(e.WhisperMessage, fromWhisper: true));
-                var message = new Message(user, e.WhisperMessage.Message, MessageSource.Whisper,
-                    e.WhisperMessage.RawIrcMessage)
-                {
-                    Details = new MessageDetails(
-                        MessageId: null,
-                        IsAction: false,
-                        IsStaff: false,
-                        Emotes: e.WhisperMessage.EmoteSet.Emotes
-                            .Select(em => new Emote(em.Id, em.Name, em.StartIndex, em.EndIndex)).ToImmutableList()
-                    )
-                };
-                IncomingMessage?.Invoke(this, new MessageEventArgs(message));
-            });
+                Details = new MessageDetails(
+                    MessageId: null,
+                    IsAction: false,
+                    IsStaff: false,
+                    Emotes: e.WhisperMessage.EmoteSet.Emotes
+                        .Select(em => new Emote(em.Id, em.Name, em.StartIndex, em.EndIndex)).ToImmutableList()
+                )
+            };
+            IncomingMessage?.Invoke(this, new MessageEventArgs(message));
         }
 
         private UserInfo GetUserInfoFromTwitchMessage(TwitchLibMessage message, bool fromWhisper)
         {
-            string? colorHex = message.ColorHex;
+            string colorHex = message.HexColor;
             return new UserInfo(
                 Id: message.UserId,
                 TwitchDisplayName: message.DisplayName,
@@ -460,7 +451,7 @@ namespace TPP.Core.Chat
             if (_connected)
             {
                 _workersCleanup?.Invoke();
-                _twitchClient.Disconnect();
+                _twitchClient.DisconnectAsync();
             }
             _twitchClient.OnConnected -= Connected;
             _subscriptionWatcher.Subscribed -= OnSubscribed;
@@ -474,7 +465,8 @@ namespace TPP.Core.Chat
         private async Task<ChatSettings> GetChatSettings()
         {
             TwitchAPI twitchApi = await _twitchApiProvider.Get();
-            GetChatSettingsResponse settingsResponse = await twitchApi.Helix.Chat.GetChatSettingsAsync(ChannelId, _userId);
+            GetChatSettingsResponse settingsResponse =
+                await twitchApi.Helix.Chat.GetChatSettingsAsync(ChannelId, _userId);
             // From the Twitch API documentation https://dev.twitch.tv/docs/api/reference/#update-chat-settings
             //   'data': The list of chat settings. The list contains a single object with all the settings
             ChatSettingsResponseModel settings = settingsResponse.Data[0];

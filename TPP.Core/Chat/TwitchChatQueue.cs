@@ -99,9 +99,9 @@ namespace TPP.Core.Chat
         private async Task Send(OutgoingMessage message)
         {
             if (message is OutgoingMessage.Chat chat)
-                _twitchClient.SendMessage(chat.Channel, chat.Message);
+                await _twitchClient.SendMessageAsync(chat.Channel, chat.Message);
             else if (message is OutgoingMessage.Reply reply)
-                _twitchClient.SendReply(reply.Channel, replyToId: reply.ReplyToId, message: reply.Message);
+                await _twitchClient.SendReplyAsync(reply.Channel, replyToId: reply.ReplyToId, message: reply.Message);
             else if (message is OutgoingMessage.Whisper whisper)
             {
                 TwitchAPI twitchApi = await _twitchApiProvider.Get();

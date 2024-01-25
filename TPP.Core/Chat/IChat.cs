@@ -32,6 +32,6 @@ namespace TPP.Core.Chat
         /// Establishes the connection.
         /// All subsequent repeated invocations on this instance will fail.
         /// The connection gets closed by disposing this instance.
-        void Connect();
+        Task Connect();
     }
 }

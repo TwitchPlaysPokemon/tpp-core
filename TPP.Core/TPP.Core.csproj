@@ -10,14 +10,14 @@
         <PackageReference Include="JsonSubTypes" Version="2.0.1" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
-        <PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.14" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.15" />
         <PackageReference Include="Serilog.Extensions.Logging.File" Version="3.0.0" />
         <PackageReference Include="Serilog.Sinks.Discord.Lite" Version="0.2.0" />
         <PackageReference Include="String.Similarity" Version="3.0.0" />
-        <PackageReference Include="TwitchLib.Api" Version="3.9.0-preview-f7f2908" />
-        <!-- Earliest version to include this fix: https://github.com/TwitchLib/TwitchLib.Client/pull/170 -->
-        <PackageReference Include="TwitchLib.Client" Version="3.4.0-preview-01edbf25dc9a228a3022fe6fefc018841df8368b" />
+        <PackageReference Include="TwitchLib.Api" Version="3.9.0" />
+        <!-- No release since 2022-3-11, but we want new features and this fix: https://github.com/TwitchLib/TwitchLib.Client/pull/170 -->
+        <PackageReference Include="TwitchLib.Client" Version="4.0.0-preview-d4d9679aaa93409ab2b31471d17673bb5e06504c" />
     </ItemGroup>
 
     <ItemGroup>
