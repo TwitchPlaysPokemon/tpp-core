@@ -112,7 +112,13 @@ namespace TPP.Core.Modes
         private (IInputParser, AnarchyInputFeed) ConfigToInputStuff(InputConfig config)
         {
             // TODO endpoints to control configs at runtime?
-            IInputParser inputParser = config.ButtonsProfile.ToInputParserBuilder().Build();
+            var inputParserBuilder = config.ButtonsProfile.ToInputParserBuilder().HoldEnabled(config.AllowHeldInputs);
+            if (config.MaxSetLength > 0)
+                inputParserBuilder.MaxSetLength(config.MaxSetLength);
+            if (config.MaxSequenceLength > 0)
+                inputParserBuilder.MaxSequenceLength(config.MaxSequenceLength);
+
+            IInputParser inputParser = inputParserBuilder.Build();
             if (inputParser is SidedInputParser sidedInputParser)
                 sidedInputParser.AllowDirectedInputs = config.AllowDirectedInputs;
             var inputBufferQueue = new InputBufferQueue<QueuedInput>(CreateBufferConfig(config));

@@ -65,6 +65,26 @@ namespace TPP.Inputting
         }
 
         /// <summary>
+        /// Specify restrictions on input lengths.
+        /// </summary>
+        /// <param name="maxSetLength">maximum allowed number of inputs to be executed simultaneously.</param>
+        public InputParserBuilder MaxSetLength(int maxSetLength)
+        {
+            _maxSetLength = maxSetLength;
+            return this;
+        }
+
+        /// <summary>
+        /// Specify restrictions on input lengths.
+        /// </summary>
+        /// <param name="maxSequenceLength">maximum allowed number of input sets to be executed sequentially.</param>
+        public InputParserBuilder MaxSequenceLength(int maxSequenceLength)
+        {
+            _maxSequenceLength = maxSequenceLength;
+            return this;
+        }
+
+        /// <summary>
         /// Specify if hold inputs (prepending "-" to keep the inputs pressed) should be enabled.
         /// </summary>
         public InputParserBuilder HoldEnabled(bool holdEnabled)
