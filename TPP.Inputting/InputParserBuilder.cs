@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using TPP.Inputting.InputDefinitions;
 using TPP.Inputting.Parsing;
 
@@ -94,11 +95,26 @@ namespace TPP.Inputting
         }
 
         /// <summary>
+        /// Removes previously created inputs by name
+        /// </summary>
+        /// <param name="names">varargs of input names to be removed</param>
+        public InputParserBuilder RemoveInputs(params string[] names)
+        {
+            foreach (string name in names)
+            {
+                var simpleDef = new ButtonInputDefinition(name);
+                _inputDefinitions.RemoveAll(d => d.InputRegex == simpleDef.InputRegex);
+            }
+            return this;
+        }
+
+        /// <summary>
         /// Add some regular buttons.
         /// </summary>
         /// <param name="buttons">varargs of button names to be added</param>
         public InputParserBuilder Buttons(params string[] buttons)
         {
+            RemoveInputs(buttons); // Overwrite any old mappings
             foreach (string name in buttons)
             {
                 _inputDefinitions.Add(new ButtonInputDefinition(name: name, mapsTo: name, keepsName: true));
@@ -113,6 +129,7 @@ namespace TPP.Inputting
         /// <param name="aliases">varargs of alias tuples <c>(name, mapsTo)</c> to be added.</param>
         public InputParserBuilder AliasedButtons(params (string name, string mapsTo)[] aliases)
         {
+            RemoveInputs(aliases.Select(a => a.name).ToArray()); // Overwrite any old mappings
             foreach ((string name, string mapsTo) in aliases)
             {
                 _inputDefinitions.Add(new ButtonInputDefinition(name: name, mapsTo: mapsTo, keepsName: true));
@@ -127,6 +144,7 @@ namespace TPP.Inputting
         /// <param name="remappings">varargs of remapping tuples <c>(name, mapsTo)</c> to be added</param>
         public InputParserBuilder RemappedButtons(params (string name, string mapsTo)[] remappings)
         {
+            RemoveInputs(remappings.Select(a => a.name).ToArray()); // Overwrite any old mappings
             foreach ((string name, string mapsTo) in remappings)
             {
                 _inputDefinitions.Add(new ButtonInputDefinition(name: name, mapsTo: mapsTo, keepsName: false));
@@ -143,6 +161,7 @@ namespace TPP.Inputting
         /// <param name="allowDrag">if performing drags (e.g. <c>80,120>160,50</c>) is allowed.</param>
         public InputParserBuilder Touchscreen(uint width, uint height, bool multitouch, bool allowDrag)
         {
+            RemoveInputs(TouchscreenName); // Overwrite any old mappings
             _inputDefinitions.Add(new TouchscreenInputDefinition(TouchscreenName, width: width, height: height));
             if (allowDrag)
             {
@@ -161,6 +180,7 @@ namespace TPP.Inputting
         /// <param name="y">y-coordinate to map to</param>
         public InputParserBuilder AliasedTouchscreenInput(string name, uint x, uint y)
         {
+            RemoveInputs(name); // Overwrite any old mappings
             var buttonDefinition = new ButtonInputDefinition(name: name, mapsTo: name, keepsName: true);
             _inputDefinitions.Add(new AnyAsTouchscreenInputDefinition(
                 baseInputDefinition: buttonDefinition,
@@ -210,6 +230,7 @@ namespace TPP.Inputting
         /// <param name="names">varargs of analog input names to be added</param>
         public InputParserBuilder AnalogInputs(params string[] names)
         {
+            RemoveInputs(names); // Overwrite any old mappings
             foreach (string name in names)
             {
                 _inputDefinitions.Add(new AnalogInputDefinition(name: name, mapsTo: name, keepsName: true));
@@ -223,6 +244,7 @@ namespace TPP.Inputting
         /// <param name="aliases">varargs of alias tuples <c>(name, mapsTo)</c> to be added</param>
         public InputParserBuilder AliasedAnalogInputs(params (string name, string mapsTo)[] aliases)
         {
+            RemoveInputs(aliases.Select(a => a.name).ToArray()); // Overwrite any old mappings
             foreach ((string name, string mapsTo) in aliases)
             {
                 _inputDefinitions.Add(new AnalogInputDefinition(name: name, mapsTo: mapsTo, keepsName: true));
@@ -236,6 +258,7 @@ namespace TPP.Inputting
         /// <param name="remappings">varargs of remapping tuples <c>(name, mapsTo)</c> to be added</param>
         public InputParserBuilder RemappedAnalogInputs(params (string name, string mapsTo)[] remappings)
         {
+            RemoveInputs(remappings.Select(a => a.name).ToArray()); // Overwrite any old mappings
             foreach ((string name, string mapsTo) in remappings)
             {
                 _inputDefinitions.Add(new AnalogInputDefinition(name: name, mapsTo: mapsTo, keepsName: false));
