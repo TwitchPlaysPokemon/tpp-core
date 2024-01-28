@@ -74,6 +74,14 @@
         "MaxSequenceLength": {
           "description": "Overrides the input profile's max sequence length.",
           "type": "integer"
+        },
+        "ControllerPrefix": {
+          "description": "Adds/overrides the input profile's first controller's prefix.",
+          "type": "string"
+        }
+        "ControllerPrefix2": {
+          "description": "Adds/overrides the input profile's second controller's prefix.",
+          "type": "string"
         }
       }
     }

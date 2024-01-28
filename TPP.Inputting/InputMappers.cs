@@ -36,7 +36,7 @@ namespace TPP.Inputting
     ///     See <a href="http://tasvideos.org/LuaScripting/TableKeys.html">tasvideos.org/LuaScripting/TableKeys.html</a>
     ///     for a comprehensive list of possible casings.</li>
     /// <li>Unpressed buttons are omitted.</li>
-    /// <li>If an button set is sided, input keys are prefixed with "P1 " for left and "P2 " for right.</li>
+    /// <li>If an button set is sided, input keys are prefixed with "P1 " (by default) for left and "P2 " (by default) for right.</li>
     /// </ul>
     /// </summary>
     public class DefaultTppInputMapper : IInputMapper
@@ -46,24 +46,28 @@ namespace TPP.Inputting
         private readonly float _fps;
         private readonly MuteInputsToken _muteInputsToken;
 
+        private readonly string?[] controllerPrefixes;
+
         /// <summary>
         /// TODO trigger toggles
         /// TODO eternal holds
         /// </summary>
         /// <param name="fps">Required for games that don't run at 60fps to correctly compute the frame timings.</param>
         /// <param name="muteInputsToken">the token indicating whether inputs should be muted,
+        /// <param name="controllerPrefixes">Prefix strings to be put on each controller in order (ex: "P1 ", "P2 ")</param>
         /// meaning the inputs should be consumed as usual but not actually perform any actions.</param>
-        public DefaultTppInputMapper(float fps = 60, MuteInputsToken? muteInputsToken = null)
+        public DefaultTppInputMapper(float fps = 60, MuteInputsToken? muteInputsToken = null, params string?[] controllerPrefixes)
         {
             _fps = fps;
             _muteInputsToken = muteInputsToken ?? new MuteInputsToken { Muted = false };
+            this.controllerPrefixes = controllerPrefixes;
         }
 
         public IDictionary<string, object> Map(TimedInputSet timedInputSet)
         {
             Dictionary<string, object> inputMap = new();
             bool isTouched = false;
-            string buttonPrefix = "";
+            string buttonPrefix = controllerPrefixes.ElementAtOrDefault(0) ?? "";
             foreach (var input in timedInputSet.InputSet.Inputs)
             {
                 if (_muteInputsToken.Muted)
@@ -90,8 +94,8 @@ namespace TPP.Inputting
                 {
                     buttonPrefix = side.Side switch
                     {
-                        InputSide.Left => "P1 ",
-                        InputSide.Right => "P2 ",
+                        InputSide.Left => controllerPrefixes.ElementAtOrDefault(0) ?? "P1 ",
+                        InputSide.Right => controllerPrefixes.ElementAtOrDefault(1) ?? "P2 ",
                     };
                 }
                 else

@@ -92,7 +92,7 @@ namespace TPP.Core.Modes
         }
 
         private IInputMapper CreateInputMapperFromConfig(InputConfig config) =>
-            new DefaultTppInputMapper(config.FramesPerSecond, _muteInputsToken);
+            new DefaultTppInputMapper(config.FramesPerSecond, _muteInputsToken, config.ControllerPrefix, config.ControllerPrefix2);
 
         private static IInputHoldTiming CreateInputHoldTimingFromConfig(InputConfig config) =>
             new DefaultInputHoldTiming(

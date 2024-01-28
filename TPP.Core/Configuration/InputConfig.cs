@@ -29,5 +29,8 @@ namespace TPP.Core.Configuration
         public bool AllowHeldInputs { get; init; } = true;
         public int MaxSetLength { get; init; } = 0;
         public int MaxSequenceLength { get; init; } = 0;
+        public string? ControllerPrefix { get; set; } = null;
+        public string? ControllerPrefix2 { get; set; } = null;
+        
     }
 }
