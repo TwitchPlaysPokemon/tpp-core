@@ -46,9 +46,9 @@ namespace TPP.Inputting.Parsing
             {
                 inputSetRegex += @"(?<hold>-)?";
             }
-            // repeat-group matches lazily '??' to not match any touchscreen coords coming afterwards for example
+            // repeat-group matches lazily '*?' to not match any touchscreen coords coming afterwards for example
             string inputSequence = _maxSequenceLength > 1
-                ? $@"^(?<inputset>{inputSetRegex}(?<repeat>[1-{_maxSequenceLength}])??){{1,{_maxSequenceLength}}}$"
+                ? $@"^(?<inputset>{inputSetRegex}(?<repeat>[1-{_maxSequenceLength}])*?){{1,{_maxSequenceLength}}}$"
                 : $@"^(?<inputset>{inputSetRegex})$";
             _regex = new Regex(inputSequence, RegexOptions.Compiled | RegexOptions.IgnoreCase);
         }

@@ -19,7 +19,7 @@ namespace TPP.Inputting.Inputs
             Y = y;
         }
 
-        public override string ToString() => $"{DisplayedText}({X},{Y})";
+        public override string ToInputString() => X + "," + Y;
 
         #region polymorphic equals boilerplate
 

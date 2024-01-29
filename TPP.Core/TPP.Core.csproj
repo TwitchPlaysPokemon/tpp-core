@@ -1,34 +1,34 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <OutputType>Exe</OutputType>
-    </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+	</PropertyGroup>
 
-    <ItemGroup>
-        <PackageReference Include="docopt.net" Version="0.8.1" />
-        <PackageReference Include="JsonNet.ContractResolvers" Version="2.0.0" />
-        <PackageReference Include="JsonSubTypes" Version="2.0.1" />
-        <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-        <PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.15" />
-        <PackageReference Include="Serilog.Extensions.Logging.File" Version="3.0.0" />
-        <PackageReference Include="Serilog.Sinks.Discord.Lite" Version="0.2.0" />
-        <PackageReference Include="String.Similarity" Version="3.0.0" />
-        <PackageReference Include="TwitchLib.Api" Version="3.9.0" />
-        <!-- No release since 2022-3-11, but we want new features and this fix: https://github.com/TwitchLib/TwitchLib.Client/pull/170 -->
-        <PackageReference Include="TwitchLib.Client" Version="4.0.0-preview-d4d9679aaa93409ab2b31471d17673bb5e06504c" />
-    </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="docopt.net" Version="0.8.1" />
+		<PackageReference Include="JsonNet.ContractResolvers" Version="2.0.0" />
+		<PackageReference Include="JsonSubTypes" Version="2.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.15" />
+		<PackageReference Include="Serilog.Extensions.Logging.File" Version="3.0.0" />
+		<PackageReference Include="Serilog.Sinks.Discord.Lite" Version="0.2.0" />
+		<PackageReference Include="String.Similarity" Version="3.0.0" />
+		<PackageReference Include="TwitchLib.Api" Version="3.9.0" />
+		<!-- No release since 2022-3-11, but we want new features and this fix: https://github.com/TwitchLib/TwitchLib.Client/pull/170 -->
+		<PackageReference Include="TwitchLib.Client" Version="4.0.0-preview-d4d9679aaa93409ab2b31471d17673bb5e06504c" />
+	</ItemGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\TPP.ArgsParsing\TPP.ArgsParsing.csproj" />
-        <ProjectReference Include="..\TPP.Inputting\TPP.Inputting.csproj" />
-        <ProjectReference Include="..\TPP.Match\TPP.Match.csproj" />
-        <ProjectReference Include="..\TPP.Persistence.MongoDB\TPP.Persistence.MongoDB.csproj" />
-    </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\TPP.ArgsParsing\TPP.ArgsParsing.csproj" />
+		<ProjectReference Include="..\TPP.Inputting\TPP.Inputting.csproj" />
+		<ProjectReference Include="..\TPP.Match\TPP.Match.csproj" />
+		<ProjectReference Include="..\TPP.Persistence.MongoDB\TPP.Persistence.MongoDB.csproj" />
+	</ItemGroup>
 
-    <ItemGroup>
-        <EmbeddedResource Include="Resources/*" />
-    </ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="Resources/*" />
+	</ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-{
+﻿{
   "definitions": {
     "InputConfig": {
       "type": [
@@ -19,11 +19,17 @@
             "n64",
             "gc",
             "switch",
+            "sgb",
+            "gbt",
+            "gbp",
             "dualgb",
             "dualnes",
             "dualsnes",
             "dualn64",
-            "dualgc"
+            "dualgc",
+            "dualsgb",
+            "dualgbt",
+            "dualgbp"
           ]
         },
         "FramesPerSecond": {
@@ -64,24 +70,25 @@
           "type": "boolean"
         },
         "AllowHeldInputs": {
-          "description": "Overrides whether or not the input profile can use held inputs",
           "type": "boolean"
         },
         "MaxSetLength": {
-          "description": "Overrides the input profile's max set length. Be careful: increasing a profile's max set length may enable soft resetting.",
           "type": "integer"
         },
         "MaxSequenceLength": {
-          "description": "Overrides the input profile's max sequence length.",
           "type": "integer"
         },
         "ControllerPrefix": {
-          "description": "Adds/overrides the input profile's first controller's prefix.",
-          "type": "string"
-        }
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "ControllerPrefix2": {
-          "description": "Adds/overrides the input profile's second controller's prefix.",
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     }
