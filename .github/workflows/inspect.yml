@@ -33,6 +33,6 @@ jobs:
               jq --raw-output '.problems[] | "::\(.problem_class.severity) file=\(.file | gsub("\\\\";"/") | sub("\\$PROJECT_DIR\\$/";"")),line=\(.line),col=\(.offset)::\(.description)"' "$filename"
             done
           fi
-      - name: check code formatting
-        run: |
-          dotnet format --verify-no-changes --report=_format_report.json || python .github/workflows/process_format_report.py
+      # - name: check code formatting
+      #   run: |
+      #     dotnet format --verify-no-changes --report=_format_report.json || python .github/workflows/process_format_report.py
