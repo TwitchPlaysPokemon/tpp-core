@@ -48,9 +48,9 @@ namespace TPP.Inputting.Parsing
             }
             // repeat-group matches lazily '*?' to not match any touchscreen coords coming afterwards for example
             string inputSequence = _maxSequenceLength > 1
-                ? $@"^(?<inputset>{inputSetRegex}(?<repeat>[1-{_maxSequenceLength}])*?){{1,{_maxSequenceLength}}}$"
+                ? $@"^(?<inputset>{inputSetRegex}(?<repeat>[1-{_maxSequenceLength}])??){{1,{_maxSequenceLength}}}$"
                 : $@"^(?<inputset>{inputSetRegex})$";
-            _regex = new Regex(inputSequence, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            _regex = new Regex(inputSequence, RegexOptions.IgnoreCase);
         }
 
         public InputSequence? Parse(string text)
