@@ -1,26 +1,26 @@
-﻿{
+{
   "type": "object",
   "properties": {
-    "$schema": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "DefaultBettingDuration": {
-      "type": "string"
-    },
-    "WarningDuration": {
-      "type": "string"
-    },
-    "ResultDuration": {
-      "type": "string"
-    },
-    "MinimumPokeyen": {
-      "type": "integer"
-    },
-    "SubscriberMinimumPokeyen": {
-      "type": "integer"
-    }
+	"$schema": {
+	  "type": [
+		"string",
+		"null"
+	  ]
+	},
+	"DefaultBettingDuration": {
+	  "type": "string"
+	},
+	"WarningDuration": {
+	  "type": "string"
+	},
+	"ResultDuration": {
+	  "type": "string"
+	},
+	"MinimumPokeyen": {
+	  "type": "integer"
+	},
+	"SubscriberMinimumPokeyen": {
+	  "type": "integer"
+	}
   }
 }

@@ -1,134 +1,134 @@
 {
   "definitions": {
-    "InputConfig": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "ButtonsProfile": {
-          "type": "string",
-          "enum": [
-            "gb",
-            "gba",
-            "nds",
-            "3ds",
-            "nes",
-            "snes",
-            "n64",
-            "gc",
-            "switch",
-            "dualgb",
-            "dualnes",
-            "dualsnes",
-            "dualn64",
-            "dualgc"
-          ]
-        },
-        "FramesPerSecond": {
-          "type": "integer"
-        },
-        "MinSleepFrames": {
-          "type": "integer"
-        },
-        "MinPressFrames": {
-          "type": "integer"
-        },
-        "MaxPressFrames": {
-          "type": "integer"
-        },
-        "MaxHoldFrames": {
-          "type": "integer"
-        },
-        "BufferLengthSeconds": {
-          "type": "number"
-        },
-        "SpeedupRate": {
-          "type": "number"
-        },
-        "SlowdownRate": {
-          "type": "number"
-        },
-        "MinInputFrames": {
-          "type": "integer"
-        },
-        "MaxInputFrames": {
-          "type": "integer"
-        },
-        "MaxBufferLength": {
-          "type": "integer"
-        },
-        "AllowDirectedInputs": {
-          "description": "Whether players can choose an input side per-input using a side prefix, e.g. 'left:'. Disabling this typically means you expect players to choose a side using e.g. !left or !right. This has no effect for non-dual-sided input profiles.",
-          "type": "boolean"
-        },
-        "AllowHeldInputs": {
-          "description": "Overrides whether or not the input profile can use held inputs",
-          "type": "boolean"
-        },
-        "MaxSetLength": {
-          "description": "Overrides the input profile's max set length. Be careful: increasing a profile's max set length may enable soft resetting.",
-          "type": "integer"
-        },
-        "MaxSequenceLength": {
-          "description": "Overrides the input profile's max sequence length.",
-          "type": "integer"
-        },
-        "ControllerPrefix": {
-          "description": "Adds/overrides the input profile's first controller's prefix.",
-          "type": "string"
-        }
-        "ControllerPrefix2": {
-          "description": "Adds/overrides the input profile's second controller's prefix.",
-          "type": "string"
-        }
-      }
-    }
+	"InputConfig": {
+	  "type": [
+		"object",
+		"null"
+	  ],
+	  "additionalProperties": false,
+	  "properties": {
+		"ButtonsProfile": {
+		  "type": "string",
+		  "enum": [
+			"gb",
+			"gba",
+			"nds",
+			"3ds",
+			"nes",
+			"snes",
+			"n64",
+			"gc",
+			"switch",
+			"dualgb",
+			"dualnes",
+			"dualsnes",
+			"dualn64",
+			"dualgc"
+		  ]
+		},
+		"FramesPerSecond": {
+		  "type": "integer"
+		},
+		"MinSleepFrames": {
+		  "type": "integer"
+		},
+		"MinPressFrames": {
+		  "type": "integer"
+		},
+		"MaxPressFrames": {
+		  "type": "integer"
+		},
+		"MaxHoldFrames": {
+		  "type": "integer"
+		},
+		"BufferLengthSeconds": {
+		  "type": "number"
+		},
+		"SpeedupRate": {
+		  "type": "number"
+		},
+		"SlowdownRate": {
+		  "type": "number"
+		},
+		"MinInputFrames": {
+		  "type": "integer"
+		},
+		"MaxInputFrames": {
+		  "type": "integer"
+		},
+		"MaxBufferLength": {
+		  "type": "integer"
+		},
+		"AllowDirectedInputs": {
+		  "description": "Whether players can choose an input side per-input using a side prefix, e.g. 'left:'. Disabling this typically means you expect players to choose a side using e.g. !left or !right. This has no effect for non-dual-sided input profiles.",
+		  "type": "boolean"
+		},
+		"AllowHeldInputs": {
+		  "description": "Overrides whether or not the input profile can use held inputs",
+		  "type": "boolean"
+		},
+		"MaxSetLength": {
+		  "description": "Overrides the input profile's max set length. Be careful: increasing a profile's max set length may enable soft resetting.",
+		  "type": "integer"
+		},
+		"MaxSequenceLength": {
+		  "description": "Overrides the input profile's max sequence length.",
+		  "type": "integer"
+		},
+		"ControllerPrefix": {
+		  "description": "Adds/overrides the input profile's first controller's prefix.",
+		  "type": "string"
+		}
+		"ControllerPrefix2": {
+		  "description": "Adds/overrides the input profile's second controller's prefix.",
+		  "type": "string"
+		}
+	  }
+	}
   },
   "type": "object",
   "properties": {
-    "RunNumber": {
-      "description": "If this is not null, any user participating will get that run number's participation emblem.",
-      "type": [
-        "integer",
-        "null"
-      ]
-    },
-    "MuteInputsAtStartup": {
-      "description": "If true, inputs are muted until explicitly unmuted. Muting also implies that no emblems are handed out and no run statistics are recorded. Inputs can be unmuted at runtime using !unmuteinputs or calling /start_run on the inputserver. Inputs can be muted at runtime using !muteinputs or calling /stop_run on the inputserver. ",
-      "type": "boolean"
-    },
-    "$schema": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "InputServerHost": {
-      "description": "Host of the HTTP input server where inputs can be polled from.",
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "InputServerPort": {
-      "description": "Port of the HTTP input server where inputs can be polled from.",
-      "type": "integer"
-    },
-    "InputConfig": {
-      "$ref": "#/definitions/InputConfig"
-    },
-    "SwitchSidesCooldown": {
-      "description": "If not null, this amount of time must pass before a player can switch sides again.Only relevant for dual-sided input profiles.",
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "AutoAssignSide": {
-      "description": "If true, auto assigns users a side if they haven't picked one yet. Otherwise it would flip-flop their inputs between sides.",
-      "type": "boolean"
-    }
+	"RunNumber": {
+	  "description": "If this is not null, any user participating will get that run number's participation emblem.",
+	  "type": [
+		"integer",
+		"null"
+	  ]
+	},
+	"MuteInputsAtStartup": {
+	  "description": "If true, inputs are muted until explicitly unmuted. Muting also implies that no emblems are handed out and no run statistics are recorded. Inputs can be unmuted at runtime using !unmuteinputs or calling /start_run on the inputserver. Inputs can be muted at runtime using !muteinputs or calling /stop_run on the inputserver. ",
+	  "type": "boolean"
+	},
+	"$schema": {
+	  "type": [
+		"string",
+		"null"
+	  ]
+	},
+	"InputServerHost": {
+	  "description": "Host of the HTTP input server where inputs can be polled from.",
+	  "type": [
+		"string",
+		"null"
+	  ]
+	},
+	"InputServerPort": {
+	  "description": "Port of the HTTP input server where inputs can be polled from.",
+	  "type": "integer"
+	},
+	"InputConfig": {
+	  "$ref": "#/definitions/InputConfig"
+	},
+	"SwitchSidesCooldown": {
+	  "description": "If not null, this amount of time must pass before a player can switch sides again.Only relevant for dual-sided input profiles.",
+	  "type": [
+		"string",
+		"null"
+	  ]
+	},
+	"AutoAssignSide": {
+	  "description": "If true, auto assigns users a side if they haven't picked one yet. Otherwise it would flip-flop their inputs between sides.",
+	  "type": "boolean"
+	}
   }
 }
