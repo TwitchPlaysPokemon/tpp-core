@@ -18,6 +18,8 @@ namespace TPP.Inputting.InputDefinitions
             _mapsTo = mapsTo;
             _keepsName = keepsName;
         }
+        public ButtonInputDefinition(string name) : this(name, name, true)
+        { }
 
         public string InputRegex => Regex.Escape(_name);
         public Input? Parse(string str) => new Input(_keepsName ? _name : _mapsTo, _mapsTo, str);

@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -50,6 +51,16 @@ namespace TPP.Core
             if (_httpListener != null)
                 throw new InvalidOperationException("Cannot listen: The internal http listener is already running!");
             _httpListener = new HttpListener();
+
+            // Stop any lingering connections from filling the request queue
+            _httpListener.TimeoutManager.IdleConnection = TimeSpan.FromSeconds(1);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                _httpListener.TimeoutManager.RequestQueue = TimeSpan.FromMilliseconds(100);
+                _httpListener.TimeoutManager.HeaderWait = TimeSpan.FromMilliseconds(100);
+                _httpListener.TimeoutManager.EntityBody = TimeSpan.FromMilliseconds(100);
+            }
+
             _httpListener.Prefixes.Add($"http://{_host}:{_port}/");
             _httpListener.Start();
             _logger.LogInformation("Started input server on {Prefixes}", _httpListener.Prefixes);

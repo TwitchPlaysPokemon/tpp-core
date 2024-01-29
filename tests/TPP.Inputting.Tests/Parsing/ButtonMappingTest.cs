@@ -7,7 +7,7 @@ using TPP.Inputting.Parsing;
 namespace TPP.Inputting.Tests.Parsing;
 public class ButtonMappingTest
 {
-    private static readonly IInputMapper _inputMapper = new DefaultTppInputMapper();
+    private IInputMapper _inputMapper = new DefaultTppInputMapper();
 
     private IInputParser _inputParser = null!;
 
@@ -178,5 +178,33 @@ public class ButtonMappingTest
 
         // bad cases
         AssertEmptyMap("l:a+b+start+select", "Soft Reset should be blocked.");
+    }
+
+    [Test]
+    public void TestConfiguredPrefixes()
+    {
+        var originalMapper = _inputMapper;
+        try
+        {
+            _inputMapper = new DefaultTppInputMapper(controllerPrefixes: new string[] { "Left ", "Right " });
+            _inputParser = ButtonProfile.GameBoy.ToInputParserBuilder().Build();
+
+            // good cases
+            AssertMapped("up", "Left Up");
+
+            _inputParser = ButtonProfile.DualGameBoy.ToInputParserBuilder().Build();
+            if (_inputParser is SidedInputParser and not null)
+            {
+                ((SidedInputParser)_inputParser).AllowDirectedInputs = true;
+            }
+
+            // good cases
+            AssertMapped("lstart", "Left Start");
+            AssertMapped("r:b+n", "Right B", "Right Up");
+        }
+        finally
+        {
+            _inputMapper = originalMapper;
+        }
     }
 }

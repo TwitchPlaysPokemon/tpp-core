@@ -26,5 +26,11 @@ namespace TPP.Core.Configuration
                      "Disabling this typically means you expect players to choose a side using e.g. !left or !right. " +
                      "This has no effect for non-dual-sided input profiles.")]
         public bool AllowDirectedInputs { get; init; } = true;
+        public bool AllowHeldInputs { get; init; } = true;
+        public int MaxSetLength { get; init; } = 0;
+        public int MaxSequenceLength { get; init; } = 0;
+        public string? ControllerPrefix { get; set; } = null;
+        public string? ControllerPrefix2 { get; set; } = null;
+        
     }
 }

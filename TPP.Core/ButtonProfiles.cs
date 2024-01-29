@@ -17,11 +17,19 @@ namespace TPP.Core
         [EnumMember(Value = "gc")] GameCube,
         [EnumMember(Value = "switch")] Switch,
 
+        [EnumMember(Value = "sgb")] SuperGameBoy, // GameBoy on SNES
+        [EnumMember(Value = "gbt")] GameBoyTower, // GameBoy on N64 (Pokemon Stadium)
+        [EnumMember(Value = "gbp")] GameBoyPlayer,// GameBoy Advance on GameCube
+
         [EnumMember(Value = "dualgb")] DualGameBoy,
         [EnumMember(Value = "dualnes")] DualNES,
         [EnumMember(Value = "dualsnes")] DualSNES,
         [EnumMember(Value = "dualn64")] DualN64,
         [EnumMember(Value = "dualgc")] DualGameCube,
+
+        [EnumMember(Value = "dualsgb")] DualSuperGameBoy,
+        [EnumMember(Value = "dualgbt")] DualGameBoyTower,
+        [EnumMember(Value = "dualgbp")] DualGameBoyPlayer,
     }
 
     public static class ButtonProfileExtensions
@@ -76,6 +84,12 @@ namespace TPP.Core
                     .SimpleAliasedAnalogStick("c", "r", true)
                     .LengthRestrictions(maxSetLength: 4, maxSequenceLength: 1),
 
+                ButtonProfile.SuperGameBoy => ButtonProfile.GameBoy.ToInputParserBuilder(),
+                ButtonProfile.GameBoyTower => ButtonProfile.GameBoy.ToInputParserBuilder()
+                    .AliasedButtons(("select","l")),
+                ButtonProfile.GameBoyPlayer => ButtonProfile.GameBoyAdvance.ToInputParserBuilder()
+                    .AliasedButtons(("select","y")),
+
                 ButtonProfile.DualGameBoy => ButtonProfile.GameBoy.ToInputParserBuilder()
                     .LeftRightSidesEnabled(true),
                 ButtonProfile.DualNES => ButtonProfile.NES.ToInputParserBuilder()
@@ -85,6 +99,13 @@ namespace TPP.Core
                 ButtonProfile.DualN64 => ButtonProfile.DualN64.ToInputParserBuilder()
                     .LeftRightSidesEnabled(true),
                 ButtonProfile.DualGameCube => ButtonProfile.GameCube.ToInputParserBuilder()
+                    .LeftRightSidesEnabled(true),
+
+                ButtonProfile.DualSuperGameBoy => ButtonProfile.SuperGameBoy.ToInputParserBuilder()
+                    .LeftRightSidesEnabled(true),
+                ButtonProfile.DualGameBoyTower => ButtonProfile.GameBoyTower.ToInputParserBuilder()
+                    .LeftRightSidesEnabled(true),
+                ButtonProfile.DualGameBoyPlayer => ButtonProfile.GameBoyPlayer.ToInputParserBuilder()
                     .LeftRightSidesEnabled(true),
             };
     }

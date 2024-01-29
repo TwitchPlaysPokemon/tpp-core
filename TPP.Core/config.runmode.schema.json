@@ -1,4 +1,4 @@
-﻿{
+{
   "definitions": {
     "InputConfig": {
       "type": [
@@ -62,6 +62,26 @@
         "AllowDirectedInputs": {
           "description": "Whether players can choose an input side per-input using a side prefix, e.g. 'left:'. Disabling this typically means you expect players to choose a side using e.g. !left or !right. This has no effect for non-dual-sided input profiles.",
           "type": "boolean"
+        },
+        "AllowHeldInputs": {
+          "description": "Overrides whether or not the input profile can use held inputs",
+          "type": "boolean"
+        },
+        "MaxSetLength": {
+          "description": "Overrides the input profile's max set length. Be careful: increasing a profile's max set length may enable soft resetting.",
+          "type": "integer"
+        },
+        "MaxSequenceLength": {
+          "description": "Overrides the input profile's max sequence length.",
+          "type": "integer"
+        },
+        "ControllerPrefix": {
+          "description": "Adds/overrides the input profile's first controller's prefix.",
+          "type": "string"
+        }
+        "ControllerPrefix2": {
+          "description": "Adds/overrides the input profile's second controller's prefix.",
+          "type": "string"
         }
       }
     }
