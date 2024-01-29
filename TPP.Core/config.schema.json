@@ -1,192 +1,192 @@
-{
+﻿{
   "definitions": {
-	"ChatConfig": {
-	  "type": [
-		"object",
-		"null"
-	  ],
-	  "additionalProperties": false,
-	  "properties": {
-		"DefaultOperatorNames": {
-		  "type": [
-			"array",
-			"null"
-		  ],
-		  "items": {
-			"type": [
-			  "string",
-			  "null"
-			]
-		  }
-		},
-		"Connections": {
-		  "type": [
-			"array",
-			"null"
-		  ],
-		  "items": {
-			"$ref": "#/definitions/ConnectionConfig"
-		  }
-		},
-		"ForwardUnprocessedMessages": {
-		  "type": "boolean"
-		},
-		"SendOutForwardedMessages": {
-		  "type": "boolean"
-		}
-	  }
-	},
-	"ConnectionConfig": {
-	  "type": [
-		"object",
-		"null"
-	  ],
-	  "properties": {
-		"Type": {
-		  "type": [
-			"string",
-			"null"
-		  ]
-		},
-		"Name": {
-		  "type": [
-			"string",
-			"null"
-		  ]
-		}
-	  }
-	},
-	"DiscordLoggingConfig": {
-	  "description": "Required information to post log messages to discord. Logging to discord is disabled if null.",
-	  "type": [
-		"object",
-		"null"
-	  ],
-	  "additionalProperties": false,
-	  "properties": {
-		"WebhookId": {
-		  "type": "integer"
-		},
-		"WebhookToken": {
-		  "type": [
-			"string",
-			"null"
-		  ]
-		},
-		"MinLogLevel": {
-		  "type": "string",
-		  "enum": [
-			"Verbose",
-			"Debug",
-			"Information",
-			"Warning",
-			"Error",
-			"Fatal"
-		  ]
-		}
-	  }
-	}
+    "ChatConfig": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "DefaultOperatorNames": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "Connections": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/ConnectionConfig"
+          }
+        },
+        "ForwardUnprocessedMessages": {
+          "type": "boolean"
+        },
+        "SendOutForwardedMessages": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ConnectionConfig": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "Type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "Name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "DiscordLoggingConfig": {
+      "description": "Required information to post log messages to discord. Logging to discord is disabled if null.",
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "WebhookId": {
+          "type": "integer"
+        },
+        "WebhookToken": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "MinLogLevel": {
+          "type": "string",
+          "enum": [
+            "Verbose",
+            "Debug",
+            "Information",
+            "Warning",
+            "Error",
+            "Fatal"
+          ]
+        }
+      }
+    }
   },
   "type": "object",
   "additionalProperties": false,
   "properties": {
-	"$schema": {
-	  "type": [
-		"string",
-		"null"
-	  ]
-	},
-	"LogPath": {
-	  "description": "Directory under which log files will be created. Use `null` for no log files.",
-	  "type": [
-		"string",
-		"null"
-	  ]
-	},
-	"MongoDbConnectionUri": {
-	  "type": [
-		"string",
-		"null"
-	  ]
-	},
-	"MongoDbDatabaseName": {
-	  "type": [
-		"string",
-		"null"
-	  ]
-	},
-	"MongoDbDatabaseNameMessagelog": {
-	  "type": [
-		"string",
-		"null"
-	  ]
-	},
-	"Chat": {
-	  "$ref": "#/definitions/ChatConfig"
-	},
-	"StartingPokeyen": {
-	  "description": "Amount of pokeyen for brand new users (new entries in the database).",
-	  "type": "integer"
-	},
-	"StartingTokens": {
-	  "description": "Amount of tokens for brand new users (new entries in the database).",
-	  "type": "integer"
-	},
-	"OverlayWebsocketHost": {
-	  "description": "Host of the HTTP server one may connect to to get overlay events through a websocket.",
-	  "type": [
-		"string",
-		"null"
-	  ]
-	},
-	"OverlayWebsocketPort": {
-	  "description": "Port of the HTTP server one may connect to to get overlay events through a websocket.",
-	  "type": "integer"
-	},
-	"DiscordLoggingConfig": {
-	  "$ref": "#/definitions/DiscordLoggingConfig"
-	},
-	"DisabledModbotRules": {
-	  "type": [
-		"array",
-		"null"
-	  ],
-	  "items": {
-		"type": [
-		  "string",
-		  "null"
-		]
-	  }
-	},
-	"ModbotBannedWords": {
-	  "type": [
-		"array",
-		"null"
-	  ],
-	  "items": {
-		"type": [
-		  "string",
-		  "null"
-		]
-	  }
-	},
-	"AdvertisePollsInterval": {
-	  "type": "string"
-	},
-	"DisabledFeatures": {
-	  "type": [
-		"array",
-		"null"
-	  ],
-	  "items": {
-		"type": "string",
-		"enum": [
-		  "Badges",
-		  "Currencies",
-		  "Polls",
-		  "Cosmetics"
-		]
-	  }
-	}
+    "$schema": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "LogPath": {
+      "description": "Directory under which log files will be created. Use `null` for no log files.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "MongoDbConnectionUri": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "MongoDbDatabaseName": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "MongoDbDatabaseNameMessagelog": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Chat": {
+      "$ref": "#/definitions/ChatConfig"
+    },
+    "StartingPokeyen": {
+      "description": "Amount of pokeyen for brand new users (new entries in the database).",
+      "type": "integer"
+    },
+    "StartingTokens": {
+      "description": "Amount of tokens for brand new users (new entries in the database).",
+      "type": "integer"
+    },
+    "OverlayWebsocketHost": {
+      "description": "Host of the HTTP server one may connect to to get overlay events through a websocket.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "OverlayWebsocketPort": {
+      "description": "Port of the HTTP server one may connect to to get overlay events through a websocket.",
+      "type": "integer"
+    },
+    "DiscordLoggingConfig": {
+      "$ref": "#/definitions/DiscordLoggingConfig"
+    },
+    "DisabledModbotRules": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "ModbotBannedWords": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "AdvertisePollsInterval": {
+      "type": "string"
+    },
+    "DisabledFeatures": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string",
+        "enum": [
+          "Badges",
+          "Currencies",
+          "Polls",
+          "Cosmetics"
+        ]
+      }
+    }
   }
 }
