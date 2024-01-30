@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using TPP.Inputting.Inputs;
@@ -31,25 +33,34 @@ namespace TPP.Inputting.Parsing
             int maxSequenceLength,
             bool holdEnabled)
         {
+            if (maxSequenceLength > 9)
+                // If this feature is desired, need to rewrite the regex a bit because it's used as a digit below
+                throw new ArgumentException("maxSequenceLength must be at most 9, greater not supported yet");
             _inputDefinitions = inputDefinitions.ToList();
             _maxSequenceLength = maxSequenceLength;
 
-            IEnumerable<string> inputRegexGroups = _inputDefinitions
-                .Select((def, i) => $@"(?<input{i}>{def.InputRegex})");
-            string inputRegex = string.Join("|", inputRegexGroups);
-            string inputSetRegex = $@"(?:{inputRegex})";
+            // xyzFirst and xyzRepeats are the same, but re-using group names in regexes is not really allowed,
+            // and only worked before because the C# implementation is quite tolerant of non-standard behaviour.
+            IEnumerable<string> inputRegexGroupsFirst = _inputDefinitions
+                .Select((def, i) => $"(?<input{i}_1st>{def.InputRegex})");
+            IEnumerable<string> inputRegexGroupsRepeats = _inputDefinitions
+                .Select((def, i) => $"(?<input{i}_nth>{def.InputRegex})");
+            string inputRegexFirst = string.Join("|", inputRegexGroupsFirst);
+            string inputRegexRepeats = string.Join("|", inputRegexGroupsRepeats);
+            string inputSetRegex = $"(?:{inputRegexFirst})";
             if (maxSetLength > 1)
             {
-                inputSetRegex += $@"(?:\+(?:{inputRegex})){{0,{maxSetLength - 1}}}";
+                inputSetRegex += $@"(?:\+(?:{inputRegexRepeats})){{0,{maxSetLength - 1}}}";
             }
             if (holdEnabled)
             {
-                inputSetRegex += @"(?<hold>-)?";
+                inputSetRegex += "(?<hold>-)?";
             }
             // repeat-group matches lazily '*?' to not match any touchscreen coords coming afterwards for example
+            Debug.Assert(_maxSequenceLength <= 9, "the below regex only makes sense if this is a digit");
             string inputSequence = _maxSequenceLength > 1
-                ? $@"^(?<inputset>{inputSetRegex}(?<repeat>[1-{_maxSequenceLength}])??){{1,{_maxSequenceLength}}}$"
-                : $@"^(?<inputset>{inputSetRegex})$";
+                ? $"^(?<inputset>{inputSetRegex}(?<repeat>[1-{_maxSequenceLength}])??){{1,{_maxSequenceLength}}}$"
+                : $"^(?<inputset>{inputSetRegex})$";
             _regex = new Regex(inputSequence, RegexOptions.IgnoreCase);
         }
 
@@ -61,18 +72,21 @@ namespace TPP.Inputting.Parsing
                 return null;
             }
 
+            IOrderedEnumerable<Capture> CapturesFor(string groupName) => match
+                .Groups[groupName]
+                .Captures
+                .OrderBy(c => c.Index);
             // Get the indexes that each input set ends at
-            IEnumerable<int> inputSetEndIndexes = match.Groups["inputset"].Captures
-                .OrderBy(c => c.Index)
+            IEnumerable<int> inputSetEndIndexes = CapturesFor("inputset")
                 .Select(c => c.Index + c.Length);
             // Get all captures as queues for easy consumption
             Dictionary<IInputDefinition, Queue<Capture>> defsToCaptureQueues = _inputDefinitions
                 .Select((def, i) =>
-                    (def, new Queue<Capture>(match.Groups[$"input{i}"].Captures.OrderBy(c => c.Index))))
+                    (def, new Queue<Capture>(CapturesFor($"input{i}_1st").Concat(CapturesFor($"input{i}_nth")))))
                 .Where(tuple => tuple.Item2.Any())
                 .ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2);
-            var capturesHold = new Queue<Capture>(match.Groups["hold"].Captures.OrderBy(c => c.Index));
-            var capturesRepeat = new Queue<Capture>(match.Groups["repeat"].Captures.OrderBy(c => c.Index));
+            var capturesHold = new Queue<Capture>(CapturesFor("hold"));
+            var capturesRepeat = new Queue<Capture>(CapturesFor("repeat"));
 
             var inputSets = new List<InputSet>();
             foreach (int endIndex in inputSetEndIndexes)
