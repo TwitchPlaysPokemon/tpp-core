@@ -17,7 +17,7 @@ namespace TPP.Inputting.Tests.Parsing
 
         private void AssertInput(string rawInput, InputSequence? expectedSequence)
         {
-            Assert.That(expectedSequence, Is.EqualTo(_inputParser.Parse(rawInput)));
+            Assert.That(_inputParser.Parse(rawInput), Is.EqualTo(expectedSequence));
         }
 
         [Test]
