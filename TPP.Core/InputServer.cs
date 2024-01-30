@@ -18,6 +18,7 @@ namespace TPP.Core
         private readonly MuteInputsToken _muteInputsToken;
         private readonly Func<IInputFeed> _inputFeedSupplier;
 
+        private bool _stopped = false;
         private HttpListener? _httpListener;
 
         public InputServer(
@@ -90,60 +91,79 @@ namespace TPP.Core
                         return;
                     }
 
-                    HttpListenerRequest request = context.Request;
-                    HttpListenerResponse response = context.Response;
-
-                    string? responseText;
-                    string? requestUrl = request.RawUrl?.ToLower();
                     try
                     {
-                        if (requestUrl == "/start_run")
-                        {
-                            _muteInputsToken.Muted = false;
-                            responseText = "ok";
-                        }
-                        else if (requestUrl == "/stop_run")
-                        {
-                            _muteInputsToken.Muted = true;
-                            responseText = "ok";
-                        }
-                        else
-                        {
-                            InputMap? inputMap = await _inputFeedSupplier().HandleRequest(requestUrl);
-                            responseText = inputMap == null ? null : JsonSerializer.Serialize(inputMap);
-                        }
+                        const long timeoutMs = 1000;
+                        Task handleConnection = HandleSingleConnection(context.Request, context.Response);
+                        Task timeout = Task.Delay(TimeSpan.FromMilliseconds(timeoutMs));
+                        if (await Task.WhenAny(handleConnection, timeout) == timeout)
+                            throw new InvalidOperationException($"Request took too long, timeout was {timeoutMs}ms");
                     }
-                    catch (ArgumentException ex)
+                    catch (InvalidOperationException ex)
                     {
-                        byte[] buffer = Encoding.UTF8.GetBytes(ex.Message);
-                        try
-                        {
-                            response.ContentLength64 = buffer.Length;
-                            await response.OutputStream.WriteAsync(buffer.AsMemory(0, buffer.Length));
-                            response.StatusCode = 400;
-                            response.Close();
-                        }
-                        catch (HttpListenerException httpEx)
-                        {
-                            _logger.LogError(httpEx,
-                                "Failed to send input listener exception as response: {Exception}", ex.ToString());
-                        }
-                        continue;
+                        _logger.LogWarning(ex, "Encountered an error handling an incoming request, dropping connection");
+                        context.Response.Close();
                     }
-
-                    if (responseText != null)
-                    {
-                        byte[] buffer = Encoding.UTF8.GetBytes(responseText);
-                        response.ContentLength64 = buffer.Length;
-                        await response.OutputStream.WriteAsync(buffer.AsMemory(0, buffer.Length));
-                    }
-                    response.Close();
                 }
             });
+
+            if (!_stopped)
+                throw new InvalidOperationException(
+                    "Unexpectedly encountered a graceful shutdown (listening ended but no stop was requested)");
+        }
+
+        private async Task HandleSingleConnection(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            string? responseText;
+            string? requestUrl = request.RawUrl?.ToLower();
+            try
+            {
+                if (requestUrl == "/start_run")
+                {
+                    _muteInputsToken.Muted = false;
+                    responseText = "ok";
+                }
+                else if (requestUrl == "/stop_run")
+                {
+                    _muteInputsToken.Muted = true;
+                    responseText = "ok";
+                }
+                else
+                {
+                    InputMap? inputMap = await _inputFeedSupplier().HandleRequest(requestUrl);
+                    responseText = inputMap == null ? null : JsonSerializer.Serialize(inputMap);
+                }
+            }
+            catch (ArgumentException ex)
+            {
+                byte[] buffer = Encoding.UTF8.GetBytes(ex.Message);
+                try
+                {
+                    response.ContentLength64 = buffer.Length;
+                    await response.OutputStream.WriteAsync(buffer.AsMemory(0, buffer.Length));
+                    response.StatusCode = 400;
+                    response.Close();
+                }
+                catch (HttpListenerException httpEx)
+                {
+                    _logger.LogError(httpEx,
+                        "Failed to send input listener exception as response: {Exception}", ex.ToString());
+                }
+                return;
+            }
+
+            if (responseText != null)
+            {
+                byte[] buffer = Encoding.UTF8.GetBytes(responseText);
+                response.ContentLength64 = buffer.Length;
+                await response.OutputStream.WriteAsync(buffer.AsMemory(0, buffer.Length));
+            }
+            response.Close();
         }
 
         public void Stop()
         {
+            _stopped = true;
             if (_httpListener is { IsListening: true })
             {
                 _httpListener.Stop();

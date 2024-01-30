@@ -53,20 +53,24 @@ namespace TPP.Core.Modes
             _logger.LogInformation("Matchmode starting");
             _modeBase.Start();
             Task overlayWebsocketTask = _broadcastServer.Listen();
-            while (!_stopToken.ShouldStop)
+            Task handleStopTask = Task.Run(async () =>
             {
-                _loopCancelToken = new CancellationTokenSource();
-                try
+                while (!_stopToken.ShouldStop)
                 {
-                    await Loop(_loopCancelToken.Token);
+                    _loopCancelToken = new CancellationTokenSource();
+                    try
+                    {
+                        await Loop(_loopCancelToken.Token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        _logger.LogInformation("Match loop cancelled");
+                    }
                 }
-                catch (OperationCanceledException)
-                {
-                    _logger.LogInformation("Match loop cancelled");
-                }
-            }
-            await _broadcastServer.Stop();
-            await overlayWebsocketTask;
+                await _broadcastServer.Stop();
+            });
+            // Must wait on all concurrently running tasks simultaneously to know when one of them crashed
+            await Task.WhenAll(handleStopTask, overlayWebsocketTask);
             _logger.LogInformation("Matchmode ended");
         }
 
