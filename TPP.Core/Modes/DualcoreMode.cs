@@ -35,13 +35,15 @@ namespace TPP.Core.Modes
             _logger.LogInformation("Dualcore mode starting");
             _modeBase.Start();
             Task overlayWebsocketTask = _broadcastServer.Listen();
-            while (!_stopToken.ShouldStop)
+            Task handleStopTask = Task.Run(async () =>
             {
-                // there is no sequence, just busyloop
-                await Task.Delay(TimeSpan.FromMilliseconds(100));
-            }
-            await _broadcastServer.Stop();
-            await overlayWebsocketTask;
+                while (!_stopToken.ShouldStop)
+                    // Just wait until it is time to shut everything down
+                    await Task.Delay(TimeSpan.FromMilliseconds(100));
+                await _broadcastServer.Stop();
+            });
+            // Must wait on all concurrently running tasks simultaneously to know when one of them crashed
+            await Task.WhenAll(handleStopTask, overlayWebsocketTask);
             _logger.LogInformation("Dualcore mode ended");
         }
 

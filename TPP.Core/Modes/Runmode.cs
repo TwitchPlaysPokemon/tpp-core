@@ -199,15 +199,16 @@ namespace TPP.Core.Modes
             Task overlayWebsocketTask = _broadcastServer.Listen();
             Task inputServerTask = _inputServer.Listen();
             _modeBase.Start();
-            while (!_stopToken.ShouldStop)
+            Task handleStopTask = Task.Run(async () =>
             {
-                // TODO run main loop goes here
-                await Task.Delay(TimeSpan.FromMilliseconds(100));
-            }
-            _inputServer.Stop();
-            await inputServerTask;
-            await _broadcastServer.Stop();
-            await overlayWebsocketTask;
+                while (!_stopToken.ShouldStop)
+                    // Just wait until it is time to shut everything down
+                    await Task.Delay(TimeSpan.FromMilliseconds(100));
+                _inputServer.Stop();
+                await _broadcastServer.Stop();
+            });
+            // Must wait on all concurrently running tasks simultaneously to know when one of them crashed
+            await Task.WhenAll(handleStopTask, inputServerTask, overlayWebsocketTask);
             _logger.LogInformation("Runmode ended");
         }
 
