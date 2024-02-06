@@ -21,8 +21,7 @@ namespace TPP.Core.Chat
 
         public sealed record Chat(string Channel, string Message) : OutgoingMessage;
         public sealed record Reply(string Channel, string Message, string ReplyToId) : OutgoingMessage;
-        public sealed record Whisper
-            (string Receiver, string Message, bool NewRecipient) : OutgoingMessage;
+        public sealed record Whisper(string Receiver, string Message, bool NewRecipient) : OutgoingMessage;
     }
 
     public class TwitchChatQueue
@@ -130,8 +129,10 @@ namespace TPP.Core.Chat
                     }
                     else
                     {
-                        throw new Exception($"Error while sending whisper to {whisper.Receiver}. " +
-                                            $"Response: '{response}'. Whisper: '{whisper.Message}'", e);
+                        throw new Exception(
+                            $"Error while sending whisper to {whisper.Receiver}. " +
+                            $"New Recipient: {whisper.NewRecipient}, Status Code: {e.HttpResponse.StatusCode}, " +
+                            $"Response: '{response}'. Whisper: '{whisper.Message}'", e);
                     }
                 }
             }
