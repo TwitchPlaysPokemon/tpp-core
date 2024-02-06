@@ -138,8 +138,7 @@ namespace TPP.Core.Chat
             _queue = new TwitchChatQueue(
                 loggerFactory.CreateLogger<TwitchChatQueue>(),
                 chatConfig.UserId,
-                _twitchApiProvider,
-                _twitchClient);
+                _twitchApiProvider);
         }
 
         private Task Connected(object? sender, OnConnectedEventArgs e) => _twitchClient.JoinChannelAsync(_channel);
@@ -274,10 +273,10 @@ namespace TPP.Core.Chat
                 {
                     if (_useTwitchReplies && responseTo?.Details.MessageId != null)
                         _queue.Enqueue(responseTo.User,
-                            new OutgoingMessage.Reply(_channel, Message: "/me " + part,
+                            new OutgoingMessage.Reply(ChannelId, Message: "/me " + part,
                                 ReplyToId: responseTo.Details.MessageId));
                     else
-                        _queue.Enqueue(responseTo?.User, new OutgoingMessage.Chat(_channel, "/me " + part));
+                        _queue.Enqueue(responseTo?.User, new OutgoingMessage.Chat(ChannelId, "/me " + part));
                 }
             });
         }

@@ -7,7 +7,6 @@ using NodaTime;
 using TPP.Model;
 using TwitchLib.Api;
 using TwitchLib.Api.Core.Exceptions;
-using TwitchLib.Client;
 
 namespace TPP.Core.Chat
 {
@@ -19,8 +18,8 @@ namespace TPP.Core.Chat
             // closed set, simulating a sum type.
         }
 
-        public sealed record Chat(string Channel, string Message) : OutgoingMessage;
-        public sealed record Reply(string Channel, string Message, string ReplyToId) : OutgoingMessage;
+        public sealed record Chat(string ChannelId, string Message) : OutgoingMessage;
+        public sealed record Reply(string ChannelId, string Message, string ReplyToId) : OutgoingMessage;
         public sealed record Whisper(string Receiver, string Message, bool NewRecipient) : OutgoingMessage;
     }
 
@@ -31,7 +30,6 @@ namespace TPP.Core.Chat
         private readonly ILogger<TwitchChatQueue> _logger;
         private readonly string _senderUserId;
         private readonly TwitchApiProvider _twitchApiProvider;
-        private readonly TwitchClient _twitchClient;
         /// At which queue size messages get discarded.
         private readonly int _maxQueueLength;
         /// Shouldn't be smaller than either the minimum Task.Delay timer resolution
@@ -44,14 +42,12 @@ namespace TPP.Core.Chat
             ILogger<TwitchChatQueue> logger,
             string senderUserId,
             TwitchApiProvider twitchApiProvider,
-            TwitchClient twitchClient,
             int maxQueueLength = 100,
             Duration? sleepDuration = null)
         {
             _logger = logger;
             _senderUserId = senderUserId;
             _twitchApiProvider = twitchApiProvider;
-            _twitchClient = twitchClient;
             _maxQueueLength = maxQueueLength;
             _sleepDuration = sleepDuration ?? DefaultSleepDuration;
         }
@@ -97,49 +93,53 @@ namespace TPP.Core.Chat
 
         private async Task Send(OutgoingMessage message)
         {
+            TwitchAPI twitchApi = await _twitchApiProvider.Get();
             if (message is OutgoingMessage.Chat chat)
-                await _twitchClient.SendMessageAsync(chat.Channel, chat.Message);
+                await twitchApi.Helix.Chat.SendChatMessage(chat.ChannelId, _senderUserId, chat.Message);
             else if (message is OutgoingMessage.Reply reply)
-                await _twitchClient.SendReplyAsync(reply.Channel, replyToId: reply.ReplyToId, message: reply.Message);
+                // TODO https://github.com/TwitchLib/TwitchLib.Api/pull/386
+                await twitchApi.Helix.Chat.SendChatMessage(reply.ChannelId, _senderUserId, reply.Message /*, replyParentMessageId: reply.ReplyToId*/);
             else if (message is OutgoingMessage.Whisper whisper)
-            {
-                TwitchAPI twitchApi = await _twitchApiProvider.Get();
-                try
-                {
-                    await twitchApi.Helix.Whispers.SendWhisperAsync(
-                        _senderUserId,
-                        whisper.Receiver,
-                        whisper.Message,
-                        whisper.NewRecipient
-                    );
-                }
-                catch (HttpResponseException e)
-                {
-                    string response = await e.HttpResponse.Content.ReadAsStringAsync();
-                    if (e.HttpResponse.StatusCode == HttpStatusCode.Forbidden)
-                    {
-                        // Trying to whisper people can fail for mostly two reasons:
-                        // - The user has blocked the bot, which frequently happens.
-                        //   On a side note, we might want to stop whispering people for stuff like pinball drops,
-                        //   at lest until we know somehow they want that, e.g. because they whispered us first.
-                        // - The user has not whispered us before and has "Block whispers from strangers" enabled.
-                        // In both cases there's nothing we can do about that, so let's just ignore the failure.
-                        _logger.LogDebug(e,
-                            "Ignoring 403 whisper failure to {Receiver}. " +
-                            "New Recipient: {NewRecipient}, Response: '{Response}'. Whisper: '{Message}'",
-                            whisper.Receiver, whisper.NewRecipient, response, whisper.Message);
-                    }
-                    else
-                    {
-                        throw new Exception(
-                            $"Error while sending whisper to {whisper.Receiver}. " +
-                            $"New Recipient: {whisper.NewRecipient}, Status Code: {e.HttpResponse.StatusCode}, " +
-                            $"Response: '{response}'. Whisper: '{whisper.Message}'", e);
-                    }
-                }
-            }
+                await SendWhisperCatchingSomeErrors(twitchApi, whisper);
             else
                 throw new ArgumentException("Unknown outgoing message type: " + message);
+        }
+
+        private async Task SendWhisperCatchingSomeErrors(TwitchAPI twitchApi, OutgoingMessage.Whisper whisper)
+        {
+            try
+            {
+                await twitchApi.Helix.Whispers.SendWhisperAsync(
+                    _senderUserId,
+                    whisper.Receiver,
+                    whisper.Message,
+                    whisper.NewRecipient
+                );
+            }
+            catch (HttpResponseException e)
+            {
+                string response = await e.HttpResponse.Content.ReadAsStringAsync();
+                if (e.HttpResponse.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    // Trying to whisper people can fail for mostly two reasons:
+                    // - The user has blocked the bot, which frequently happens.
+                    //   On a side note, we might want to stop whispering people for stuff like pinball drops,
+                    //   at lest until we know somehow they want that, e.g. because they whispered us first.
+                    // - The user has not whispered us before and has "Block whispers from strangers" enabled.
+                    // In both cases there's nothing we can do about that, so let's just ignore the failure.
+                    _logger.LogDebug(e,
+                        "Ignoring 403 whisper failure to {Receiver}. " +
+                        "New Recipient: {NewRecipient}, Response: '{Response}'. Whisper: '{Message}'",
+                        whisper.Receiver, whisper.NewRecipient, response, whisper.Message);
+                }
+                else
+                {
+                    throw new Exception(
+                        $"Error while sending whisper to {whisper.Receiver}. " +
+                        $"New Recipient: {whisper.NewRecipient}, Status Code: {e.HttpResponse.StatusCode}, " +
+                        $"Response: '{response}'. Whisper: '{whisper.Message}'", e);
+                }
+            }
         }
     }
 }
