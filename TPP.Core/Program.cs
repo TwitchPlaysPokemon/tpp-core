@@ -132,7 +132,8 @@ Options:
                     ["TwitchLib.Client"] = LogLevel.Error,
                 };
 
-                builder.SetMinimumLevel(LogLevel.Debug);
+                const LogLevel minLogLevel = LogLevel.Debug;
+                builder.SetMinimumLevel(minLogLevel);
                 foreach ((string loggerPrefix, LogLevel logLevel) in levelOverrides)
                     builder.AddFilter(loggerPrefix, logLevel);
 
@@ -142,6 +143,7 @@ Options:
                     builder.AddFile(
                         pathFormat: Path.Combine(baseConfig.LogPath, "tpp-{Date}.log"),
                         outputTemplate: "{Timestamp:o} [{Level:u3}] {Message}{NewLine}{Exception}",
+                        minimumLevel: minLogLevel,
                         levelOverrides: levelOverrides);
                 }
                 if (baseConfig.DiscordLoggingConfig != null)
