@@ -102,8 +102,8 @@ namespace TPP.Core
             StopToken stopToken,
             MuteInputsToken? muteInputsToken,
             IMessageSender messageSender,
-            IChatModeChanger chatModeChanger,
-            IExecutor executor,
+            IChatModeChanger? chatModeChanger,
+            IExecutor? executor,
             IImmutableSet<Common.PkmnSpecies> knownSpecies,
             ITransmuter transmuter)
         {

@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using NodaTime;
 using TPP.Common;
 using TPP.Core.Configuration;
+using TPP.Core.Moderation;
 using TPP.Core.Overlay;
 using TPP.Core.Overlay.Events;
 using TPP.Model;
@@ -27,7 +28,7 @@ using OnConnectedEventArgs = TwitchLib.Client.Events.OnConnectedEventArgs;
 
 namespace TPP.Core.Chat
 {
-    public sealed class TwitchChat : IChat
+    public sealed class TwitchChat : IChat, IChatModeChanger, IExecutor
     {
         public string Name { get; }
         public event EventHandler<MessageEventArgs>? IncomingMessage;

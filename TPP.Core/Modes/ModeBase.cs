@@ -77,7 +77,9 @@ namespace TPP.Core.Modes
             _commandProcessors = _chats.Values.ToImmutableDictionary(
                 c => c.Name,
                 c => Setups.SetUpCommandProcessor(loggerFactory, baseConfig, argsParser, repos, stopToken,
-                    muteInputsToken, messageSender: c, chatModeChanger: c, executor: c, pokedexData.KnownSpecies, transmuter));
+                    muteInputsToken, messageSender: c,
+                    chatModeChanger: c as IChatModeChanger, executor: c as IExecutor,
+                    pokedexData.KnownSpecies, transmuter));
 
             _outgoingMessagequeueRepo = repos.OutgoingMessagequeueRepo;
             _messagelogRepo = repos.MessagelogRepo;
@@ -101,9 +103,11 @@ namespace TPP.Core.Modes
                 .Where(rule => !baseConfig.DisabledModbotRules.Contains(rule.Id))
                 .ToImmutableList();
 
-            _moderators = _chats.Values.ToImmutableDictionary(
-                c => c.Name,
-                c => (IModerator)new Moderator(moderatorLogger, c, rules, repos.ModbotLogRepo, clock));
+            _moderators = _chats.Values
+                .Where(c => c is IExecutor)
+                .ToImmutableDictionary(
+                    c => c.Name,
+                    c => (IModerator)new Moderator(moderatorLogger, (IExecutor)c, rules, repos.ModbotLogRepo, clock));
             if (!baseConfig.DisabledFeatures.Contains(TppFeatures.Polls))
                 _advertisePollsWorkers = _chats.Values.ToImmutableDictionary(
                     c => c.Name,
@@ -154,7 +158,8 @@ namespace TPP.Core.Modes
             bool isOk = message.Details.IsStaff
                         || message.User.Roles.Intersect(ExemptionRoles).Any()
                         || message.MessageSource != MessageSource.Chat
-                        || await _moderators[chat.Name].Check(message);
+                        || !_moderators.TryGetValue(chat.Name, out IModerator? moderator)
+                        || await moderator.Check(message);
             if (!isOk)
             {
                 return;

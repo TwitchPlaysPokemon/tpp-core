@@ -4,7 +4,6 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using NodaTime;
 using TPP.Core.Configuration;
 using TPP.Model;
 using TPP.Persistence;
@@ -88,12 +87,5 @@ namespace TPP.Core.Chat
 
         public Task SendMessage(string message, Message? responseTo = null) => PrintAction($"chat: {message}");
         public Task SendWhisper(User target, string message) => PrintAction($"whisper to {target}: {message}");
-        public Task EnableEmoteOnly() => PrintAction("enable emote only");
-        public Task DisableEmoteOnly() => PrintAction("disable emote only");
-        public Task DeleteMessage(string messageId) => PrintAction($"delete message with id {messageId}");
-        public Task Timeout(User user, string? message, Duration duration) =>
-            PrintAction($"time out {user.Name} for {duration}");
-        public Task Ban(User user, string? message) => PrintAction($"ban {user.Name}");
-        public Task Unban(User user, string? message) => PrintAction($"unban {user.Name}");
     }
 }

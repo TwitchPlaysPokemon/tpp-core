@@ -13,12 +13,12 @@ namespace TPP.Core.Commands.Definitions
     {
         private const string StaticResponsesCommandName = "responses";
 
-        private readonly IChatModeChanger _changer;
+        private readonly IChatModeChanger? _changer;
         private readonly ILinkedAccountRepo _linkedAccountRepo;
         private readonly IResponseCommandRepo _responseCommandRepo;
 
         public ModeratorCommands(
-            IChatModeChanger changer,
+            IChatModeChanger? changer,
             ILinkedAccountRepo linkedAccountRepo,
             IResponseCommandRepo responseCommandRepo)
         {
@@ -71,12 +71,16 @@ namespace TPP.Core.Commands.Definitions
 
         private async Task<CommandResult> EnableEmoteOnly(CommandContext context)
         {
+            if (_changer == null)
+                return new CommandResult {Response = "Not supported for this channel"};
             await _changer.EnableEmoteOnly();
             return new CommandResult();
         }
 
         private async Task<CommandResult> DisableEmoteOnly(CommandContext context)
         {
+            if (_changer == null)
+                return new CommandResult {Response = "Not supported for this channel"};
             await _changer.DisableEmoteOnly();
             return new CommandResult();
         }
