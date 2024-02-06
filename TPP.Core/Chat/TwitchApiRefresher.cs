@@ -20,7 +20,7 @@ public class TwitchApiProvider
     private readonly ILoggerFactory _loggerFactory;
     private readonly ILogger<TwitchApiProvider> _logger;
     private readonly IClock _clock;
-    private readonly string? _accessToken;
+    private readonly string? _infiniteAccessToken;
     private readonly string? _refreshToken;
     private readonly string _appClientId;
     private readonly string _appClientSecret;
@@ -31,17 +31,17 @@ public class TwitchApiProvider
     public TwitchApiProvider(
         ILoggerFactory loggerFactory,
         IClock clock,
-        string? accessToken,
+        string? infiniteAccessToken,
         string? refreshToken,
         string appClientId,
         string appClientSecret)
     {
-        if (accessToken == null && refreshToken == null)
+        if (infiniteAccessToken == null && refreshToken == null)
             throw new ArgumentException("Cannot omit both the access token and the refresh token in the twitch config");
         _loggerFactory = loggerFactory;
         _logger = loggerFactory.CreateLogger<TwitchApiProvider>();
         _clock = clock;
-        _accessToken = accessToken;
+        _infiniteAccessToken = infiniteAccessToken;
         _refreshToken = refreshToken;
         _authlessApi = new TwitchAPI();
         _appClientId = appClientId;
@@ -55,13 +55,13 @@ public class TwitchApiProvider
         {
             return _api;
         }
-        if (_api == null && _accessToken != null)
+        if (_api == null && _infiniteAccessToken != null)
         {
             _logger.LogDebug("Twitch-API access_token configured, assuming token with infinite validity, using it");
             _api = new TwitchAPI(_loggerFactory, settings: new ApiSettings
             {
                 ClientId = _appClientId,
-                AccessToken = _accessToken
+                AccessToken = _infiniteAccessToken
             });
             _apiValidUntil = Instant.MaxValue;
             return _api;

@@ -107,7 +107,7 @@ namespace TPP.Core.Chat
             _twitchApiProvider = new TwitchApiProvider(
                 loggerFactory,
                 clock,
-                chatConfig.AccessToken,
+                chatConfig.InfiniteAccessToken,
                 chatConfig.RefreshToken,
                 chatConfig.AppClientId,
                 chatConfig.AppClientSecret);
