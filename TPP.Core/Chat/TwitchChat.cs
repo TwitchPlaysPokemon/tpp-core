@@ -33,29 +33,6 @@ namespace TPP.Core.Chat
         public string Name { get; }
         public event EventHandler<MessageEventArgs>? IncomingMessage;
 
-        /// Twitch Messaging Interface (TMI, the somewhat IRC-compatible protocol twitch uses) maximum message length.
-        /// This limit is in characters, not bytes. See https://discuss.dev.twitch.tv/t/message-character-limit/7793/6
-        private const int MaxMessageLength = 500;
-        /// Maximum message length for whispers if the target user hasn't whispered us before.
-        /// See also https://dev.twitch.tv/docs/api/reference/#send-whisper
-        private const int MaxWhisperLength = 500;
-        /// Maximum message length for whispers if the target user _has_ whispered us before.
-        /// See also https://dev.twitch.tv/docs/api/reference/#send-whisper
-        /// TODO Either Twitch's API is broken or their documentation is wrong,
-        ///      because even for users that have whispered us before they just truncate the message to 500 characters.
-        ///      See also https://discuss.dev.twitch.tv/t/whisper-truncated-to-500-characters-even-for-users-that-have-whispered-us-before/44844?u=felk
-        // private const int MaxRepeatedWhisperLength = 10000;
-        private const int MaxRepeatedWhisperLength = 500;
-
-        private static readonly MessageSplitter MessageSplitterRegular = new(
-            maxMessageLength: MaxMessageLength - "/me ".Length);
-
-        private static readonly MessageSplitter MessageSplitterWhisperNeverWhispered = new(
-            maxMessageLength: MaxWhisperLength);
-
-        private static readonly MessageSplitter MessageSplitterWhisperWereWhisperedBefore = new(
-            maxMessageLength: MaxRepeatedWhisperLength);
-
         private readonly ILogger<TwitchChat> _logger;
         private readonly IClock _clock;
         private readonly string _channel;
@@ -70,10 +47,8 @@ namespace TPP.Core.Chat
         private readonly TwitchApiProvider _twitchApiProvider;
         private readonly TwitchLibSubscriptionWatcher _subscriptionWatcher;
         private readonly OverlayConnection _overlayConnection;
-        private readonly TwitchChatQueue _queue;
+        private readonly TwitchChatSender _twitchChatSender;
         private readonly Duration _getChattersInterval;
-
-        private readonly bool _useTwitchReplies;
 
         private bool _connected = false;
         private Action? _workersCleanup;
@@ -102,7 +77,6 @@ namespace TPP.Core.Chat
             _chattersSnapshotsRepo = chattersSnapshotsRepo;
             _subscriptionProcessor = subscriptionProcessor;
             _overlayConnection = overlayConnection;
-            _useTwitchReplies = useTwitchReplies;
             _getChattersInterval = chatConfig.GetChattersInterval;
 
             _twitchApiProvider = new TwitchApiProvider(
@@ -136,10 +110,7 @@ namespace TPP.Core.Chat
             _subscriptionWatcher.Subscribed += OnSubscribed;
             _subscriptionWatcher.SubscriptionGifted += OnSubscriptionGifted;
 
-            _queue = new TwitchChatQueue(
-                loggerFactory.CreateLogger<TwitchChatQueue>(),
-                chatConfig.UserId,
-                _twitchApiProvider);
+            _twitchChatSender = new TwitchChatSender(loggerFactory, _twitchApiProvider, chatConfig, useTwitchReplies);
         }
 
         private Task Connected(object? sender, OnConnectedEventArgs e) => _twitchClient.JoinChannelAsync(_channel);
@@ -207,7 +178,7 @@ namespace TPP.Core.Chat
             {
                 ISubscriptionProcessor.SubResult subResult = await _subscriptionProcessor.ProcessSubscription(e);
                 string response = BuildSubResponse(subResult, null, false);
-                await SendWhisper(e.Subscriber, response);
+                await _twitchChatSender.SendWhisper(e.Subscriber, response);
 
                 await _overlayConnection.Send(new NewSubscriber
                 {
@@ -227,7 +198,7 @@ namespace TPP.Core.Chat
                     await _subscriptionProcessor.ProcessSubscriptionGift(e);
 
                 string subResponse = BuildSubResponse(subResult, e.Gifter, e.IsAnonymous);
-                await SendWhisper(e.SubscriptionInfo.Subscriber, subResponse);
+                await _twitchChatSender.SendWhisper(e.SubscriptionInfo.Subscriber, subResponse);
 
                 string subGiftResponse = subGiftResult switch
                 {
@@ -245,7 +216,7 @@ namespace TPP.Core.Chat
                     _ => throw new ArgumentOutOfRangeException(nameof(subGiftResult))
                 };
                 if (!e.IsAnonymous)
-                    await SendWhisper(e.Gifter, subGiftResponse); // don't respond to the "AnAnonymousGifter" user
+                    await _twitchChatSender.SendWhisper(e.Gifter, subGiftResponse); // don't respond to the "AnAnonymousGifter" user
 
                 await _overlayConnection.Send(new NewSubscriber
                 {
@@ -254,53 +225,6 @@ namespace TPP.Core.Chat
                     SubMessage = e.SubscriptionInfo.Message,
                     ShareSub = false,
                 }, CancellationToken.None);
-            });
-        }
-
-        public async Task SendMessage(string message, Message? responseTo = null)
-        {
-            if (_suppressions.Contains(SuppressionType.Message) &&
-                !_suppressionOverrides.Contains(_channel))
-            {
-                _logger.LogDebug("(suppressed) >#{Channel}: {Message}", _channel, message);
-                return;
-            }
-            _logger.LogDebug(">#{Channel}: {Message}", _channel, message);
-            await Task.Run(() =>
-            {
-                if (responseTo != null && !_useTwitchReplies)
-                    message = $"@{responseTo.User.Name} " + message;
-                foreach (string part in MessageSplitterRegular.FitToMaxLength(message))
-                {
-                    if (_useTwitchReplies && responseTo?.Details.MessageId != null)
-                        _queue.Enqueue(responseTo.User,
-                            new OutgoingMessage.Reply(ChannelId, Message: "/me " + part,
-                                ReplyToId: responseTo.Details.MessageId));
-                    else
-                        _queue.Enqueue(responseTo?.User, new OutgoingMessage.Chat(ChannelId, "/me " + part));
-                }
-            });
-        }
-
-        public async Task SendWhisper(User target, string message)
-        {
-            if (_suppressions.Contains(SuppressionType.Whisper) &&
-                !_suppressionOverrides.Contains(target.SimpleName))
-            {
-                _logger.LogDebug("(suppressed) >@{Username}: {Message}", target.SimpleName, message);
-                return;
-            }
-            _logger.LogDebug(">@{Username}: {Message}", target.SimpleName, message);
-            bool newRecipient = target.LastWhisperReceivedAt == null;
-            MessageSplitter splitter = newRecipient
-                ? MessageSplitterWhisperNeverWhispered
-                : MessageSplitterWhisperWereWhisperedBefore;
-            await Task.Run(() =>
-            {
-                foreach (string part in splitter.FitToMaxLength(message))
-                {
-                    _queue.Enqueue(target, new OutgoingMessage.Whisper(target.Id, part, newRecipient));
-                }
             });
         }
 
@@ -313,13 +237,11 @@ namespace TPP.Core.Chat
             _connected = true;
             await _twitchClient.ConnectAsync();
             var tokenSource = new CancellationTokenSource();
-            Task sendWorker = _queue.StartSendWorker(tokenSource.Token);
             Task checkConnectivityWorker = CheckConnectivityWorker(tokenSource.Token);
             Task chattersWorker = ChattersWorker(tokenSource.Token);
             _workersCleanup = () =>
             {
                 tokenSource.Cancel();
-                if (!sendWorker.IsCanceled) sendWorker.Wait();
                 if (!checkConnectivityWorker.IsCanceled) checkConnectivityWorker.Wait();
                 if (!chattersWorker.IsCanceled) chattersWorker.Wait();
             };
@@ -453,6 +375,7 @@ namespace TPP.Core.Chat
                 _workersCleanup?.Invoke();
                 _twitchClient.DisconnectAsync();
             }
+            ValueTask _ = _twitchChatSender.DisposeAsync(); // TODO is this okay?
             _twitchClient.OnConnected -= Connected;
             _subscriptionWatcher.Subscribed -= OnSubscribed;
             _subscriptionWatcher.SubscriptionGifted -= OnSubscriptionGifted;
@@ -585,5 +508,10 @@ namespace TPP.Core.Chat
         }
 
         public async Task<TwitchAPI> GetTwitchApi() => await _twitchApiProvider.Get();
+
+        public Task SendMessage(string message, Message? responseTo = null) =>
+            _twitchChatSender.SendMessage(message, responseTo);
+        public Task SendWhisper(User target, string message) =>
+            _twitchChatSender.SendWhisper(target, message);
     }
 }

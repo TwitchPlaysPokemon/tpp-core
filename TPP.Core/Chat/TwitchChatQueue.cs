@@ -23,7 +23,7 @@ namespace TPP.Core.Chat
         public sealed record Whisper(string Receiver, string Message, bool NewRecipient) : OutgoingMessage;
     }
 
-    public class TwitchChatQueue
+    public sealed class TwitchChatQueue : IAsyncDisposable
     {
         private static readonly Duration DefaultSleepDuration = Duration.FromMilliseconds(100);
 
@@ -38,6 +38,9 @@ namespace TPP.Core.Chat
 
         private readonly KeyCountPrioritizedQueue<string, OutgoingMessage> _queue = new();
 
+        private readonly CancellationTokenSource _cancellationToken;
+        private readonly Task _sendWorker;
+
         public TwitchChatQueue(
             ILogger<TwitchChatQueue> logger,
             string senderUserId,
@@ -50,6 +53,8 @@ namespace TPP.Core.Chat
             _twitchApiProvider = twitchApiProvider;
             _maxQueueLength = maxQueueLength;
             _sleepDuration = sleepDuration ?? DefaultSleepDuration;
+            _cancellationToken = new CancellationTokenSource();
+            _sendWorker = Task.Run(() => SendWorker(_cancellationToken.Token));
         }
 
         public void Enqueue(User? user, OutgoingMessage message)
@@ -64,16 +69,13 @@ namespace TPP.Core.Chat
             }
         }
 
-        public Task StartSendWorker(CancellationToken cancellationToken)
+        private async Task SendWorker(CancellationToken cancellationToken)
         {
-            return Task.Run(async () =>
+            while (!cancellationToken.IsCancellationRequested)
             {
-                while (!cancellationToken.IsCancellationRequested)
-                {
-                    await ProcessOne();
-                    await Task.Delay(_sleepDuration.ToTimeSpan(), cancellationToken);
-                }
-            }, cancellationToken);
+                await ProcessOne();
+                await Task.Delay(_sleepDuration.ToTimeSpan(), cancellationToken);
+            }
         }
 
         private async Task ProcessOne()
@@ -140,6 +142,12 @@ namespace TPP.Core.Chat
                         $"Response: '{response}'. Whisper: '{whisper.Message}'", e);
                 }
             }
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            await _cancellationToken.CancelAsync();
+            await _sendWorker;
         }
     }
 }
