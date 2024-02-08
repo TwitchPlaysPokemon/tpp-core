@@ -16,7 +16,6 @@ namespace TPP.Core.Chat
         private readonly ILogger<SimulationChat> _logger;
         private readonly ConnectionConfig.Simulation _config;
         private readonly IUserRepo _userRepo;
-        private readonly CancellationTokenSource _cancellationTokenSource;
 
         public SimulationChat(
             string name,
@@ -28,24 +27,17 @@ namespace TPP.Core.Chat
             _logger = loggerFactory.CreateLogger<SimulationChat>();
             _config = config;
             _userRepo = userRepo;
-            _cancellationTokenSource = new CancellationTokenSource();
-        }
-
-        public void Dispose()
-        {
-            _cancellationTokenSource.Cancel();
-            _cancellationTokenSource.Dispose();
         }
 
         public string Name { get; }
         public event EventHandler<MessageEventArgs>? IncomingMessage;
 
-        public async Task Simulate()
+        public async Task Start(CancellationToken cancellationToken)
         {
             Random random = new();
             var timeSinceStart = Stopwatch.StartNew();
             long numInputsSentSinceStart = 0;
-            while (!_cancellationTokenSource.Token.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 double targetNumInputs = _config.InputsPerSecond * timeSinceStart.Elapsed.TotalSeconds;
                 while (numInputsSentSinceStart < targetNumInputs)
@@ -63,20 +55,12 @@ namespace TPP.Core.Chat
                     numInputsSentSinceStart++;
                 }
 
-                await Task.Delay(TimeSpan.FromMilliseconds(random.Next(10, 100)), _cancellationTokenSource.Token);
+                try
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(random.Next(10, 100)), cancellationToken);
+                }
+                catch (OperationCanceledException) { break; }
             }
-        }
-
-        public Task Connect()
-        {
-            Task.Run(Simulate).ContinueWith(task =>
-            {
-                if (task.IsFaulted)
-                    _logger.LogError(task.Exception, "simulation task failed");
-                else
-                    _logger.LogInformation("simulation task finished");
-            });
-            return Task.CompletedTask;
         }
 
         private static Task PrintAction(string message)

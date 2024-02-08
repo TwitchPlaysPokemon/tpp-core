@@ -11,16 +11,13 @@ namespace TPP.Core.Chat;
 /// <summary>
 /// Sends out messages that the old core queued in the database.
 /// </summary>
-public sealed class SendOutQueuedMessagesWorker : IDisposable
+public sealed class SendOutQueuedMessagesWorker : IWithLifecycle
 {
     private readonly ILogger<SendOutQueuedMessagesWorker> _logger;
     private readonly IIncomingMessagequeueRepo _incomingMessagequeueRepo;
     private readonly IUserRepo _userRepo;
     private readonly IMessageSender _messageSender;
     private readonly IClock _clock;
-
-    private readonly CancellationTokenSource _cancellationTokenSource;
-    private Task? _runTask = null;
 
     public SendOutQueuedMessagesWorker(
         ILogger<SendOutQueuedMessagesWorker> logger,
@@ -34,29 +31,9 @@ public sealed class SendOutQueuedMessagesWorker : IDisposable
         _userRepo = userRepo;
         _messageSender = messageSender;
         _clock = clock;
-        _cancellationTokenSource = new CancellationTokenSource();
     }
 
-    public void Start()
-    {
-        if (_runTask != null) throw new InvalidOperationException("the worker is already running!");
-        _runTask = Run();
-    }
-
-    private async Task Stop()
-    {
-        if (_runTask == null) throw new InvalidOperationException("the worker is not running!");
-        _cancellationTokenSource.Cancel();
-        try
-        {
-            await _runTask;
-        }
-        catch (OperationCanceledException)
-        {
-        }
-    }
-
-    public async Task Run()
+    public async Task Start(CancellationToken cancellationToken)
     {
         Instant olderThan = _clock.GetCurrentInstant() - Duration.FromMinutes(5);
         await _incomingMessagequeueRepo.Prune(olderThan);
@@ -81,13 +58,6 @@ public sealed class SendOutQueuedMessagesWorker : IDisposable
             {
                 throw new ArgumentException("Unknown message type {}", item.MessageType.ToString());
             }
-        }, _cancellationTokenSource.Token);
-    }
-
-    public void Dispose()
-    {
-        if (_runTask != null) Stop().Wait();
-        _cancellationTokenSource.Dispose();
-        _runTask?.Dispose();
+        }, cancellationToken);
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
@@ -41,19 +42,21 @@ namespace TPP.Core.Chat
             return Task.CompletedTask;
         }
 
-        public void Dispose()
-        {
-            Console.In.Close();
-        }
-
         public string Name { get; }
         public event EventHandler<MessageEventArgs>? IncomingMessage;
 
-        private async Task ReadInput()
+        private async Task ReadInput(CancellationToken cancellationToken)
         {
-            string? line;
-            while ((line = await Console.In.ReadLineAsync()) != null)
+            while (!cancellationToken.IsCancellationRequested)
             {
+                string line;
+                try
+                {
+                    string? maybeLine = await Console.In.ReadLineAsync(cancellationToken);
+                    if (maybeLine == null) break;
+                    line = maybeLine;
+                }
+                catch (OperationCanceledException) { break; }
                 string username = _config.Username;
                 if (line.StartsWith('#'))
                 {
@@ -88,22 +91,14 @@ namespace TPP.Core.Chat
             }
         }
 
-        public Task Connect()
+        public async Task Start(CancellationToken cancellationToken)
         {
-            Task.Run(ReadInput).ContinueWith(task =>
-            {
-                if (task.IsFaulted)
-                    _logger.LogError(task.Exception, "console read task failed");
-                else
-                    _logger.LogInformation("console read task finished");
-            });
-
             Console.Out.WriteLine($"Chatting via console is now enabled. You are known as '{_config.Username}'.");
             Console.Out.WriteLine(
                 "Prefixing a message with '#username ' will post as a different user, e.g. '#someone !help'");
             Console.Out.WriteLine("Prefixing a message with '>' will make it a whisper, e.g. '>balance'");
             Console.Out.WriteLine("You can combine both, e.g. '#someone >balance'");
-            return Task.CompletedTask;
+            await ReadInput(cancellationToken);
         }
     }
 }

@@ -35,13 +35,8 @@ namespace TPP.Core.Chat
     /// <see cref="IChatModeChanger"/> for mod commands to change the chat mode,
     /// <see cref="IExecutor"/> for automated chat moderation
     /// </summary>
-    public interface IChat : IMessageSender, IMessageSource, IDisposable
+    public interface IChat : IMessageSender, IMessageSource, IWithLifecycle
     {
         string Name { get; }
-
-        /// Establishes the connection.
-        /// All subsequent repeated invocations on this instance will fail.
-        /// The connection gets closed by disposing this instance.
-        Task Connect();
     }
 }

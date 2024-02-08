@@ -99,12 +99,12 @@ namespace TPP.Core
             BaseConfig config,
             ArgsParser argsParser,
             Databases databases,
-            StopToken stopToken,
+            IStopToken stopToken,
             MuteInputsToken? muteInputsToken,
             IMessageSender messageSender,
             IChatModeChanger? chatModeChanger,
             IExecutor? executor,
-            IImmutableSet<Common.PkmnSpecies> knownSpecies,
+            IImmutableSet<PkmnSpecies> knownSpecies,
             ITransmuter transmuter)
         {
             var commandProcessor = new CommandProcessor(

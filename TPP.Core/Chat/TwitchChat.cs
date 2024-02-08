@@ -50,9 +50,6 @@ namespace TPP.Core.Chat
         private readonly TwitchChatSender _twitchChatSender;
         private readonly Duration _getChattersInterval;
 
-        private bool _connected = false;
-        private Action? _workersCleanup;
-
         public TwitchChat(
             string name,
             ILoggerFactory loggerFactory,
@@ -228,23 +225,25 @@ namespace TPP.Core.Chat
             });
         }
 
-        public async Task Connect()
+        public async Task Start(CancellationToken cancellationToken)
         {
-            if (_connected)
-            {
-                throw new InvalidOperationException("Can only ever connect once per chat instance.");
-            }
-            _connected = true;
             await _twitchClient.ConnectAsync();
-            var tokenSource = new CancellationTokenSource();
-            Task checkConnectivityWorker = CheckConnectivityWorker(tokenSource.Token);
-            Task chattersWorker = ChattersWorker(tokenSource.Token);
-            _workersCleanup = () =>
-            {
-                tokenSource.Cancel();
-                if (!checkConnectivityWorker.IsCanceled) checkConnectivityWorker.Wait();
-                if (!chattersWorker.IsCanceled) chattersWorker.Wait();
-            };
+
+            // Must wait on all concurrently running tasks simultaneously to know when one of them crashed
+            await Task.WhenAll(
+                CheckConnectivityWorker(cancellationToken),
+                ChattersWorker(cancellationToken)
+            );
+
+            await _twitchClient.DisconnectAsync();
+            await _twitchChatSender.DisposeAsync();
+            _twitchClient.OnConnected -= Connected;
+            _subscriptionWatcher.Subscribed -= OnSubscribed;
+            _subscriptionWatcher.SubscriptionGifted -= OnSubscriptionGifted;
+            _subscriptionWatcher.Dispose();
+            _twitchClient.OnMessageReceived -= MessageReceived;
+            _twitchClient.OnWhisperReceived -= WhisperReceived;
+            _logger.LogDebug("twitch chat is now fully shut down");
         }
 
         /// TwitchClient's disconnect event appears to fire unreliably,
@@ -274,7 +273,8 @@ namespace TPP.Core.Chat
                     }
                 }
 
-                await Task.Delay(delay, cancellationToken);
+                try { await Task.Delay(delay, cancellationToken); }
+                catch (OperationCanceledException) { break; }
             }
         }
 
@@ -310,7 +310,8 @@ namespace TPP.Core.Chat
                     _logger.LogError(e, "Failed retrieving chatters list");
                 }
 
-                await Task.Delay(_getChattersInterval.ToTimeSpan(), cancellationToken);
+                try { await Task.Delay(_getChattersInterval.ToTimeSpan(), cancellationToken); }
+                catch (OperationCanceledException) { break; }
             }
         }
 
@@ -366,23 +367,6 @@ namespace TPP.Core.Chat
                 FromWhisper: fromWhisper,
                 UpdatedAt: _clock.GetCurrentInstant()
             );
-        }
-
-        public void Dispose()
-        {
-            if (_connected)
-            {
-                _workersCleanup?.Invoke();
-                _twitchClient.DisconnectAsync();
-            }
-            ValueTask _ = _twitchChatSender.DisposeAsync(); // TODO is this okay?
-            _twitchClient.OnConnected -= Connected;
-            _subscriptionWatcher.Subscribed -= OnSubscribed;
-            _subscriptionWatcher.SubscriptionGifted -= OnSubscriptionGifted;
-            _subscriptionWatcher.Dispose();
-            _twitchClient.OnMessageReceived -= MessageReceived;
-            _twitchClient.OnWhisperReceived -= WhisperReceived;
-            _logger.LogDebug("twitch chat is now fully shut down");
         }
 
         private async Task<ChatSettings> GetChatSettings()

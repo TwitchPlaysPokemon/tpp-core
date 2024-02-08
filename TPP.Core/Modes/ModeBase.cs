@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
@@ -19,7 +20,7 @@ using static TPP.Core.EventUtils;
 
 namespace TPP.Core.Modes
 {
-    public sealed class ModeBase : IDisposable
+    public sealed class ModeBase : IWithLifecycle
     {
         private static readonly Role[] ExemptionRoles = { Role.Operator, Role.Moderator, Role.ModbotExempt };
 
@@ -44,7 +45,7 @@ namespace TPP.Core.Modes
             ILoggerFactory loggerFactory,
             Setups.Databases repos,
             BaseConfig baseConfig,
-            StopToken stopToken,
+            IStopToken stopToken,
             MuteInputsToken? muteInputsToken,
             OverlayConnection overlayConnection,
             ProcessMessage? processMessage = null)
@@ -111,7 +112,8 @@ namespace TPP.Core.Modes
             if (!baseConfig.DisabledFeatures.Contains(TppFeatures.Polls))
                 _advertisePollsWorkers = _chats.Values.ToImmutableDictionary(
                     c => c.Name,
-                    c => new AdvertisePollsWorker(baseConfig.AdvertisePollsInterval, repos.PollRepo, c));
+                    c => new AdvertisePollsWorker(loggerFactory.CreateLogger<AdvertisePollsWorker>(),
+                        baseConfig.AdvertisePollsInterval, repos.PollRepo, c));
 
             if (baseConfig.Chat.SendOutForwardedMessages)
             {
@@ -214,27 +216,23 @@ namespace TPP.Core.Modes
             }
         }
 
-        public void Start()
+        public async Task Start(CancellationToken cancellationToken)
         {
-            foreach (IChat chat in _chats.Values)
-                chat.Connect();
+            List<Task> chatTasks = _chats.Values
+                .Select(chat => chat.Start(cancellationToken)).ToList();
+            List<Task> advertisePollsTasks = [];
             if (_advertisePollsWorkers != null)
-                foreach (var advertisePollsWorker in _advertisePollsWorkers.Values)
-                    advertisePollsWorker.Start();
-            _sendOutQueuedMessagesWorker?.Start();
-        }
+                advertisePollsTasks = _advertisePollsWorkers.Values
+                    .Select(worker => worker.Start(cancellationToken)).ToList();
+            Task? messageQueueTask = _sendOutQueuedMessagesWorker?.Start(cancellationToken);
 
-        public void Dispose()
-        {
+            // Must wait on all concurrently running tasks simultaneously to know when one of them crashed
+            await Task.WhenAll(chatTasks
+                    .Concat(advertisePollsTasks)
+                    .Concat([messageQueueTask]));
+
             foreach (IChat chat in _chats.Values)
-            {
-                chat.Dispose();
                 chat.IncomingMessage -= MessageReceived;
-            }
-            if (_advertisePollsWorkers != null)
-                foreach (var advertisePollsWorker in _advertisePollsWorkers.Values)
-                    advertisePollsWorker.Dispose();
-            _sendOutQueuedMessagesWorker?.Dispose();
         }
     }
 }

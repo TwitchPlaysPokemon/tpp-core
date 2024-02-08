@@ -76,7 +76,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             User user = MockOperator("MockOperator");
             _userRepoMock.FindBySimpleName(user.SimpleName).Returns(user);
             OperatorCommands operatorCommands = new OperatorCommands(
-                new StopToken(), new MuteInputsToken(),
+                new ToggleableStopToken(), new MuteInputsToken(),
                 _tokensBankMock, _tokensBankMock,
                 _messageSenderMock, _badgeRepoMock,
                 _userRepoMock, Substitute.For<IInputSidePicksRepo>());
@@ -113,7 +113,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             User userOther = MockUser("MockUserOther");
             _userRepoMock.FindBySimpleName(userOther.SimpleName).Returns(userOther);
             OperatorCommands operatorCommands = new OperatorCommands(
-                new StopToken(), new MuteInputsToken(),
+                new ToggleableStopToken(), new MuteInputsToken(),
                 _tokensBankMock, _tokensBankMock,
                 _messageSenderMock, _badgeRepoMock,
                 _userRepoMock, Substitute.For<IInputSidePicksRepo>());
@@ -158,7 +158,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             User gifter = MockUser("Gifter");
             User recipient = MockUser("Recipient");
             OperatorCommands operatorCommands = new(
-                new StopToken(), new MuteInputsToken(),
+                new ToggleableStopToken(), new MuteInputsToken(),
                 _tokensBankMock, _tokensBankMock,
                 _messageSenderMock, _badgeRepoMock,
                 _userRepoMock, Substitute.For<IInputSidePicksRepo>());
@@ -197,7 +197,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             User gifter = MockUser("Gifter");
             User recipient = MockUser("Recipient");
             OperatorCommands operatorCommands = new(
-                new StopToken(), new MuteInputsToken(),
+                new ToggleableStopToken(), new MuteInputsToken(),
                 _tokensBankMock, _tokensBankMock,
                 _messageSenderMock, _badgeRepoMock,
                 _userRepoMock, Substitute.For<IInputSidePicksRepo>());
@@ -224,7 +224,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             User gifter = MockUser("Gifter");
             User recipient = MockUser("Recipient");
             OperatorCommands operatorCommands = new(
-                new StopToken(), new MuteInputsToken(),
+                new ToggleableStopToken(), new MuteInputsToken(),
                 _tokensBankMock, _tokensBankMock,
                 _messageSenderMock, _badgeRepoMock,
                 _userRepoMock, Substitute.For<IInputSidePicksRepo>());
@@ -253,7 +253,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             User user = MockOperator("MockUser");
             User recipient = MockUser("Recipient");
             OperatorCommands operatorCommands = new(
-                new StopToken(), new MuteInputsToken(),
+                new ToggleableStopToken(), new MuteInputsToken(),
                 _tokensBankMock, _tokensBankMock,
                 _messageSenderMock, _badgeRepoMock,
                 _userRepoMock, Substitute.For<IInputSidePicksRepo>());
