@@ -34,7 +34,7 @@ public sealed class TwitchChatSender : IMessageSender, IAsyncDisposable
     private static readonly MessageSplitter MessageSplitterWhisperWereWhisperedBefore = new(
         maxMessageLength: MaxRepeatedWhisperLength);
 
-    private readonly ILogger<TwitchChat> _logger;
+    private readonly ILogger<TwitchChatSender> _logger;
     private readonly string _channel;
     private readonly string _channelId;
     private readonly ImmutableHashSet<SuppressionType> _suppressions;
@@ -49,7 +49,7 @@ public sealed class TwitchChatSender : IMessageSender, IAsyncDisposable
         ConnectionConfig.Twitch chatConfig,
         bool useTwitchReplies = true)
     {
-        _logger = loggerFactory.CreateLogger<TwitchChat>();
+        _logger = loggerFactory.CreateLogger<TwitchChatSender>();
         _channel = chatConfig.Channel;
         _channelId = chatConfig.ChannelId;
         _suppressions = chatConfig.Suppressions;

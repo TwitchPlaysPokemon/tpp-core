@@ -14,7 +14,6 @@ using TPP.Core.Overlay.Events;
 using TPP.Model;
 using TPP.Persistence;
 using TwitchLib.Api;
-using TwitchLib.Api.Helix.Models.Chat.ChatSettings;
 using TwitchLib.Api.Helix.Models.Chat.GetChatters;
 using TwitchLib.Api.Helix.Models.Moderation.BanUser;
 using TwitchLib.Client;
@@ -48,6 +47,7 @@ namespace TPP.Core.Chat
         private readonly TwitchLibSubscriptionWatcher _subscriptionWatcher;
         private readonly OverlayConnection _overlayConnection;
         private readonly TwitchChatSender _twitchChatSender;
+        private readonly TwitchChatModeChanger _twitchChatModeChanger;
         private readonly Duration _getChattersInterval;
 
         public TwitchChat(
@@ -108,6 +108,8 @@ namespace TPP.Core.Chat
             _subscriptionWatcher.SubscriptionGifted += OnSubscriptionGifted;
 
             _twitchChatSender = new TwitchChatSender(loggerFactory, _twitchApiProvider, chatConfig, useTwitchReplies);
+            _twitchChatModeChanger = new TwitchChatModeChanger(
+                loggerFactory.CreateLogger<TwitchChatModeChanger>(), _twitchApiProvider, chatConfig);
         }
 
         private Task Connected(object? sender, OnConnectedEventArgs e) => _twitchClient.JoinChannelAsync(_channel);
@@ -369,59 +371,8 @@ namespace TPP.Core.Chat
             );
         }
 
-        private async Task<ChatSettings> GetChatSettings()
-        {
-            TwitchAPI twitchApi = await _twitchApiProvider.Get();
-            GetChatSettingsResponse settingsResponse =
-                await twitchApi.Helix.Chat.GetChatSettingsAsync(ChannelId, _userId);
-            // From the Twitch API documentation https://dev.twitch.tv/docs/api/reference/#update-chat-settings
-            //   'data': The list of chat settings. The list contains a single object with all the settings
-            ChatSettingsResponseModel settings = settingsResponse.Data[0];
-            return new ChatSettings
-            {
-                EmoteMode = settings.EmoteMode,
-                FollowerMode = settings.FollowerMode,
-                FollowerModeDuration = settings.FollowerModeDuration,
-                SlowMode = settings.SlowMode,
-                SlowModeWaitTime = settings.SlowModeWaitDuration,
-                SubscriberMode = settings.SubscriberMode,
-                UniqueChatMode = settings.UniqueChatMode,
-                NonModeratorChatDelay = settings.NonModeratorChatDelay,
-                NonModeratorChatDelayDuration = settings.NonModeratorChatDelayDuration,
-            };
-        }
-
-        public async Task EnableEmoteOnly()
-        {
-            if (_suppressions.Contains(SuppressionType.Command) &&
-                !_suppressionOverrides.Contains(_channel))
-            {
-                _logger.LogDebug($"(suppressed) enabling emote only mode in #{_channel}");
-                return;
-            }
-
-            _logger.LogDebug($"enabling emote only mode in #{_channel}");
-            TwitchAPI twitchApi = await _twitchApiProvider.Get();
-            ChatSettings chatSettings = await GetChatSettings();
-            chatSettings.EmoteMode = true;
-            await twitchApi.Helix.Chat.UpdateChatSettingsAsync(ChannelId, _userId, chatSettings);
-        }
-
-        public async Task DisableEmoteOnly()
-        {
-            if (_suppressions.Contains(SuppressionType.Command) &&
-                !_suppressionOverrides.Contains(_channel))
-            {
-                _logger.LogDebug($"(suppressed) disabling emote only mode in #{_channel}");
-                return;
-            }
-
-            _logger.LogDebug($"disabling emote only mode in #{_channel}");
-            TwitchAPI twitchApi = await _twitchApiProvider.Get();
-            ChatSettings chatSettings = await GetChatSettings();
-            chatSettings.EmoteMode = false;
-            await twitchApi.Helix.Chat.UpdateChatSettingsAsync(ChannelId, _userId, chatSettings);
-        }
+        public Task EnableEmoteOnly() => _twitchChatModeChanger.EnableEmoteOnly();
+        public Task DisableEmoteOnly() => _twitchChatModeChanger.DisableEmoteOnly();
 
         public async Task DeleteMessage(string messageId)
         {
