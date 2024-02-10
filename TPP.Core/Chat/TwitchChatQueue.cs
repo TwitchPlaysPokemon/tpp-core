@@ -116,16 +116,18 @@ namespace TPP.Core.Chat
                 catch (HttpResponseException e)
                 {
                     string response = await e.HttpResponse.Content.ReadAsStringAsync();
-                    if (whisper.NewRecipient && e.HttpResponse.StatusCode == HttpStatusCode.Forbidden)
+                    if (e.HttpResponse.StatusCode == HttpStatusCode.Forbidden)
                     {
-                        // If we get a 403 while trying to whisper someone we haven't whispered before,
-                        // that's most likely due to their privacy settings:
-                        // Users can disable receiving whispers from users they haven't interacted with first.
-                        // There's nothing we can do about that, so let's just silently ignore the failure.
+                        // Trying to whisper people can fail for mostly two reasons:
+                        // - The user has blocked the bot, which frequently happens.
+                        //   On a side note, we might want to stop whispering people for stuff like pinball drops,
+                        //   at lest until we know somehow they want that, e.g. because they whispered us first.
+                        // - The user has not whispered us before and has "Block whispers from strangers" enabled.
+                        // In both cases there's nothing we can do about that, so let's just ignore the failure.
                         _logger.LogDebug(e,
-                            "Ignoring 403 whisper failure to {Receiver}, because it's likely their privacy settings. " +
-                            "Response: '{Response}'. Whisper: '{Message}'",
-                            whisper.Receiver, response, whisper.Message);
+                            "Ignoring 403 whisper failure to {Receiver}. " +
+                            "New Recipient: {NewRecipient}, Response: '{Response}'. Whisper: '{Message}'",
+                            whisper.Receiver, whisper.NewRecipient, response, whisper.Message);
                     }
                     else
                     {
