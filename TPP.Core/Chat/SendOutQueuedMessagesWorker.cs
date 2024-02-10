@@ -37,27 +37,33 @@ public sealed class SendOutQueuedMessagesWorker : IWithLifecycle
     {
         Instant olderThan = _clock.GetCurrentInstant() - Duration.FromMinutes(5);
         await _incomingMessagequeueRepo.Prune(olderThan);
-        await _incomingMessagequeueRepo.ForEachAsync(async item =>
+        try
         {
-            _logger.LogDebug("Received message from queue to send out: {Message}", item);
-            if (item.MessageType == MessageType.Chat)
-            {
-                await _messageSender.SendMessage(item.Message);
-            }
-            else if (item.MessageType == MessageType.Whisper)
-            {
-                User? user = await _userRepo.FindById(item.Target);
-                if (user == null)
-                    _logger.LogError(
-                        "Cannot send out queued whisper message because User-ID '{UserId}' is unknown: {Message}",
-                        item.Target, item);
-                else
-                    await _messageSender.SendWhisper(user, item.Message);
-            }
+            await _incomingMessagequeueRepo.ForEachAsync(ProcessOnce, cancellationToken);
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private async Task ProcessOnce(IncomingMessagequeueItem item)
+    {
+        _logger.LogDebug("Received message from queue to send out: {Message}", item);
+        if (item.MessageType == MessageType.Chat)
+        {
+            await _messageSender.SendMessage(item.Message);
+        }
+        else if (item.MessageType == MessageType.Whisper)
+        {
+            User? user = await _userRepo.FindById(item.Target);
+            if (user == null)
+                _logger.LogError(
+                    "Cannot send out queued whisper message because User-ID '{UserId}' is unknown: {Message}",
+                    item.Target, item);
             else
-            {
-                throw new ArgumentException("Unknown message type {}", item.MessageType.ToString());
-            }
-        }, cancellationToken);
+                await _messageSender.SendWhisper(user, item.Message);
+        }
+        else
+        {
+            throw new ArgumentException("Unknown message type {}", item.MessageType.ToString());
+        }
     }
 }
