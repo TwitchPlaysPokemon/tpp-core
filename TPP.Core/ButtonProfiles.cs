@@ -12,6 +12,7 @@ namespace TPP.Core
         [EnumMember(Value = "3ds")] Nintendo3DS,
 
         [EnumMember(Value = "nes")] NES,
+        [EnumMember(Value = "snes2nes")] SNEStoNES,
         [EnumMember(Value = "snes")] SNES,
         [EnumMember(Value = "n64")] N64,
         [EnumMember(Value = "gc")] GameCube,
@@ -23,6 +24,7 @@ namespace TPP.Core
 
         [EnumMember(Value = "dualgb")] DualGameBoy,
         [EnumMember(Value = "dualnes")] DualNES,
+        [EnumMember(Value = "dualsnes2nes")] DualSNEStoNES,
         [EnumMember(Value = "dualsnes")] DualSNES,
         [EnumMember(Value = "dualn64")] DualN64,
         [EnumMember(Value = "dualgc")] DualGameCube,
@@ -54,6 +56,8 @@ namespace TPP.Core
                     .Conflicts(("l", "select"), ("l", "start")),
 
                 ButtonProfile.NES => ButtonProfile.GameBoy.ToInputParserBuilder(),
+                ButtonProfile.SNEStoNES => ButtonProfile.NES.ToInputParserBuilder()
+                    .AliasedButtons(("a", "b"), ("b", "y")), // SNES B and Y map to NES A and B. SNES X and A do nothing.
                 ButtonProfile.SNES => ButtonProfile.GameBoyAdvance.ToInputParserBuilder()
                     .Buttons("x", "y"),
                 ButtonProfile.N64 => InputParserBuilder.FromBare()
@@ -86,13 +90,15 @@ namespace TPP.Core
 
                 ButtonProfile.SuperGameBoy => ButtonProfile.GameBoy.ToInputParserBuilder(),
                 ButtonProfile.GameBoyTower => ButtonProfile.GameBoy.ToInputParserBuilder()
-                    .AliasedButtons(("select","l")),
+                    .AliasedButtons(("select", "l")),
                 ButtonProfile.GameBoyPlayer => ButtonProfile.GameBoyAdvance.ToInputParserBuilder()
-                    .AliasedButtons(("select","y")),
+                    .AliasedButtons(("select", "y")),
 
                 ButtonProfile.DualGameBoy => ButtonProfile.GameBoy.ToInputParserBuilder()
                     .LeftRightSidesEnabled(true),
                 ButtonProfile.DualNES => ButtonProfile.NES.ToInputParserBuilder()
+                    .LeftRightSidesEnabled(true),
+                ButtonProfile.DualSNEStoNES => ButtonProfile.SNEStoNES.ToInputParserBuilder()
                     .LeftRightSidesEnabled(true),
                 ButtonProfile.DualSNES => ButtonProfile.SNES.ToInputParserBuilder()
                     .LeftRightSidesEnabled(true),

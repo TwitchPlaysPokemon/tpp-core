@@ -181,6 +181,19 @@ public class ButtonMappingTest
     }
 
     [Test]
+    public void TestSNES2NES()
+    {
+        _inputParser = ButtonProfile.SNEStoNES.ToInputParserBuilder().Build();
+
+        // good cases
+        AssertMapped("a", "B"); // SNES B maps to NES A
+        AssertMapped("b", "Y"); // SNES Y maps to NES B
+
+        // bad cases
+        AssertEmptyMap("x", "SNES X has no NES equivalent");
+    }
+
+    [Test]
     public void TestConfiguredPrefixes()
     {
         var originalMapper = _inputMapper;
