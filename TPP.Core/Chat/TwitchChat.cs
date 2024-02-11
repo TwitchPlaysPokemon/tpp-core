@@ -15,13 +15,11 @@ using TPP.Model;
 using TPP.Persistence;
 using TwitchLib.Api;
 using TwitchLib.Api.Helix.Models.Chat.GetChatters;
-using TwitchLib.Api.Helix.Models.Moderation.BanUser;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
 using TwitchLib.Communication.Clients;
 using TwitchLib.Communication.Events;
-using static TPP.Core.Configuration.ConnectionConfig.Twitch;
 using static TPP.Core.EventUtils;
 using OnConnectedEventArgs = TwitchLib.Client.Events.OnConnectedEventArgs;
 
@@ -37,8 +35,6 @@ namespace TPP.Core.Chat
         private readonly string _channel;
         public readonly string ChannelId;
         private readonly string _userId;
-        private readonly ImmutableHashSet<SuppressionType> _suppressions;
-        private readonly ImmutableHashSet<string> _suppressionOverrides;
         private readonly IUserRepo _userRepo;
         private readonly IChattersSnapshotsRepo _chattersSnapshotsRepo;
         private readonly ISubscriptionProcessor _subscriptionProcessor;
@@ -48,6 +44,7 @@ namespace TPP.Core.Chat
         private readonly OverlayConnection _overlayConnection;
         private readonly TwitchChatSender _twitchChatSender;
         private readonly TwitchChatModeChanger _twitchChatModeChanger;
+        private readonly TwitchChatExecutor _twitchChatExecutor;
         private readonly Duration _getChattersInterval;
 
         public TwitchChat(
@@ -67,9 +64,6 @@ namespace TPP.Core.Chat
             _channel = chatConfig.Channel;
             ChannelId = chatConfig.ChannelId;
             _userId = chatConfig.UserId;
-            _suppressions = chatConfig.Suppressions;
-            _suppressionOverrides = chatConfig.SuppressionOverrides
-                .Select(s => s.ToLowerInvariant()).ToImmutableHashSet();
             _userRepo = userRepo;
             _chattersSnapshotsRepo = chattersSnapshotsRepo;
             _subscriptionProcessor = subscriptionProcessor;
@@ -110,6 +104,8 @@ namespace TPP.Core.Chat
             _twitchChatSender = new TwitchChatSender(loggerFactory, _twitchApiProvider, chatConfig, useTwitchReplies);
             _twitchChatModeChanger = new TwitchChatModeChanger(
                 loggerFactory.CreateLogger<TwitchChatModeChanger>(), _twitchApiProvider, chatConfig);
+            _twitchChatExecutor = new TwitchChatExecutor(loggerFactory.CreateLogger<TwitchChatExecutor>(),
+                _twitchApiProvider, chatConfig);
         }
 
         private Task Connected(object? sender, OnConnectedEventArgs e) => _twitchClient.JoinChannelAsync(_channel);
@@ -215,7 +211,8 @@ namespace TPP.Core.Chat
                     _ => throw new ArgumentOutOfRangeException(nameof(subGiftResult))
                 };
                 if (!e.IsAnonymous)
-                    await _twitchChatSender.SendWhisper(e.Gifter, subGiftResponse); // don't respond to the "AnAnonymousGifter" user
+                    await _twitchChatSender.SendWhisper(e.Gifter,
+                        subGiftResponse); // don't respond to the "AnAnonymousGifter" user
 
                 await _overlayConnection.Send(new NewSubscriber
                 {
@@ -374,73 +371,11 @@ namespace TPP.Core.Chat
         public Task EnableEmoteOnly() => _twitchChatModeChanger.EnableEmoteOnly();
         public Task DisableEmoteOnly() => _twitchChatModeChanger.DisableEmoteOnly();
 
-        public async Task DeleteMessage(string messageId)
-        {
-            if (_suppressions.Contains(SuppressionType.Command) &&
-                !_suppressionOverrides.Contains(_channel))
-            {
-                _logger.LogDebug($"(suppressed) deleting message {messageId} in #{_channel}");
-                return;
-            }
-
-            _logger.LogDebug($"deleting message {messageId} in #{_channel}");
-            TwitchAPI twitchApi = await _twitchApiProvider.Get();
-            await twitchApi.Helix.Moderation.DeleteChatMessagesAsync(ChannelId, _userId, messageId);
-        }
-
-        public async Task Timeout(User user, string? message, Duration duration)
-        {
-            if (_suppressions.Contains(SuppressionType.Command) &&
-                !(_suppressionOverrides.Contains(_channel) && _suppressionOverrides.Contains(user.SimpleName)))
-            {
-                _logger.LogDebug($"(suppressed) time out {user} for {duration} in #{_channel}: {message}");
-                return;
-            }
-
-            _logger.LogDebug($"time out {user} for {duration} in #{_channel}: {message}");
-            TwitchAPI twitchApi = await _twitchApiProvider.Get();
-            var banUserRequest = new BanUserRequest
-            {
-                UserId = user.Id,
-                Duration = (int)duration.TotalSeconds,
-                Reason = message ?? "no timeout reason was given",
-            };
-            await twitchApi.Helix.Moderation.BanUserAsync(ChannelId, _userId, banUserRequest);
-        }
-
-        public async Task Ban(User user, string? message)
-        {
-            if (_suppressions.Contains(SuppressionType.Command) &&
-                !(_suppressionOverrides.Contains(_channel) && _suppressionOverrides.Contains(user.SimpleName)))
-            {
-                _logger.LogDebug($"(suppressed) ban {user} in #{_channel}: {message}");
-                return;
-            }
-
-            _logger.LogDebug($"ban {user} in #{_channel}: {message}");
-            TwitchAPI twitchApi = await _twitchApiProvider.Get();
-            var banUserRequest = new BanUserRequest
-            {
-                UserId = user.Id,
-                Duration = null,
-                Reason = message ?? "no ban reason was given",
-            };
-            await twitchApi.Helix.Moderation.BanUserAsync(ChannelId, _userId, banUserRequest);
-        }
-
-        public async Task Unban(User user, string? message)
-        {
-            if (_suppressions.Contains(SuppressionType.Command) &&
-                !(_suppressionOverrides.Contains(_channel) && _suppressionOverrides.Contains(user.SimpleName)))
-            {
-                _logger.LogDebug($"(suppressed) unban {user} in #{_channel}: {message}");
-                return;
-            }
-
-            _logger.LogDebug($"unban {user} in #{_channel}: {message}");
-            TwitchAPI twitchApi = await _twitchApiProvider.Get();
-            await twitchApi.Helix.Moderation.UnbanUserAsync(ChannelId, _userId, user.Id);
-        }
+        public Task DeleteMessage(string messageId) => _twitchChatExecutor.DeleteMessage(messageId);
+        public Task Timeout(User user, string? message, Duration duration) =>
+            _twitchChatExecutor.Timeout(user, message, duration);
+        public Task Ban(User user, string? message) => _twitchChatExecutor.Ban(user, message);
+        public Task Unban(User user, string? message) => _twitchChatExecutor.Unban(user, message);
 
         public async Task<TwitchAPI> GetTwitchApi() => await _twitchApiProvider.Get();
 
