@@ -45,6 +45,10 @@ namespace TPP.Core.Configuration
             public string AppClientId { get; init; } = "myappclientid";
             public string AppClientSecret { get; init; } = "myappclientsecret";
 
+            // If this Twitch chat connection should get monitored for subscriptions.
+            // Only enable this for the "main" channel, otherwise subs in other channels would e.g. give tokens too.
+            public bool MonitorSubscriptions { get; init; } = true;
+
             /* communication settings */
             public enum SuppressionType { Whisper, Message, Command }
             public ImmutableHashSet<SuppressionType> Suppressions { get; init; } = Enum
