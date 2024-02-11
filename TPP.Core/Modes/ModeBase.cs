@@ -36,6 +36,7 @@ namespace TPP.Core.Modes
         private readonly IMessagelogRepo _messagelogRepo;
         private readonly IClock _clock;
         private readonly ProcessMessage _processMessage;
+        private readonly ChattersWorker? _chattersWorker;
 
         /// Processes a message that wasn't already processed by the mode base,
         /// and returns whether the message was actively processed.
@@ -58,7 +59,7 @@ namespace TPP.Core.Modes
 
             var chats = new Dictionary<string, IChat>();
             var chatFactory = new ChatFactory(loggerFactory, clock,
-                repos.UserRepo, repos.ChattersSnapshotsRepo, repos.TokensBank, repos.SubscriptionLogRepo,
+                repos.UserRepo, repos.TokensBank, repos.SubscriptionLogRepo,
                 repos.LinkedAccountRepo, overlayConnection);
             foreach (ConnectionConfig connectorConfig in baseConfig.Chat.Connections)
             {
@@ -135,6 +136,20 @@ namespace TPP.Core.Modes
                         chat, clock);
                 }
             }
+
+            List<ConnectionConfig.Twitch> chatsWithChattersWorker = baseConfig.Chat.Connections
+                .OfType<ConnectionConfig.Twitch>()
+                .Where(con => con.GetChattersInterval != null)
+                .ToList();
+            ConnectionConfig.Twitch? primaryChat = chatsWithChattersWorker.FirstOrDefault();
+            if (chatsWithChattersWorker.Count > 1)
+                _logger.LogWarning("More than one twitch chat have GetChattersInterval configured: {ChatNames}. " +
+                                   "Using only the first one ('{ChosenChat}') for the chatters worker",
+                    string.Join(", ", chatsWithChattersWorker.Select(c => c.Name)), primaryChat?.Name);
+            _chattersWorker = primaryChat == null
+                ? null
+                : new ChattersWorker(loggerFactory, clock,
+                    ((TwitchChat)_chats[primaryChat.Name]).TwitchApiProvider, repos.ChattersSnapshotsRepo, primaryChat);
         }
 
         public void InstallAdditionalCommand(Command command)
@@ -218,18 +233,16 @@ namespace TPP.Core.Modes
 
         public async Task Start(CancellationToken cancellationToken)
         {
-            List<Task> chatTasks = _chats.Values
-                .Select(chat => chat.Start(cancellationToken)).ToList();
-            List<Task> advertisePollsTasks = [];
+            List<Task> tasks = [];
+            tasks.AddRange(_chats.Values.Select(chat => chat.Start(cancellationToken)));
             if (_advertisePollsWorkers != null)
-                advertisePollsTasks = _advertisePollsWorkers.Values
-                    .Select(worker => worker.Start(cancellationToken)).ToList();
-            Task? messageQueueTask = _sendOutQueuedMessagesWorker?.Start(cancellationToken);
-
+                tasks.AddRange(_advertisePollsWorkers.Values.Select(worker => worker.Start(cancellationToken)));
+            if (_sendOutQueuedMessagesWorker != null)
+                tasks.Add(_sendOutQueuedMessagesWorker.Start(cancellationToken));
+            if (_chattersWorker != null)
+                tasks.Add(_chattersWorker.Start(cancellationToken));
             // Must wait on all concurrently running tasks simultaneously to know when one of them crashed
-            await Task.WhenAll(chatTasks
-                    .Concat(advertisePollsTasks)
-                    .Concat([messageQueueTask]));
+            await Task.WhenAll(tasks);
 
             foreach (IChat chat in _chats.Values)
                 chat.IncomingMessage -= MessageReceived;

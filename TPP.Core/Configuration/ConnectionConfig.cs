@@ -54,7 +54,7 @@ namespace TPP.Core.Configuration
             // list of usernames and channels that may receive outbound messages even with suppression enabled
             public CaseInsensitiveImmutableHashSet SuppressionOverrides { get; init; } = new([]);
 
-            public Duration GetChattersInterval { get; init; } = Duration.FromMinutes(5);
+            public Duration? GetChattersInterval { get; init; } = Duration.FromMinutes(5);
         }
 
         public sealed class Simulation : ConnectionConfig

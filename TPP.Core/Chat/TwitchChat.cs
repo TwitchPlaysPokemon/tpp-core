@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
@@ -13,8 +12,6 @@ using TPP.Core.Overlay;
 using TPP.Core.Overlay.Events;
 using TPP.Model;
 using TPP.Persistence;
-using TwitchLib.Api;
-using TwitchLib.Api.Helix.Models.Chat.GetChatters;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
@@ -34,18 +31,15 @@ namespace TPP.Core.Chat
         private readonly IClock _clock;
         private readonly string _channel;
         public readonly string ChannelId;
-        private readonly string _userId;
         private readonly IUserRepo _userRepo;
-        private readonly IChattersSnapshotsRepo _chattersSnapshotsRepo;
         private readonly ISubscriptionProcessor _subscriptionProcessor;
         private readonly TwitchClient _twitchClient;
-        private readonly TwitchApiProvider _twitchApiProvider;
+        public readonly TwitchApiProvider TwitchApiProvider;
         private readonly TwitchLibSubscriptionWatcher _subscriptionWatcher;
         private readonly OverlayConnection _overlayConnection;
         private readonly TwitchChatSender _twitchChatSender;
         private readonly TwitchChatModeChanger _twitchChatModeChanger;
         private readonly TwitchChatExecutor _twitchChatExecutor;
-        private readonly Duration _getChattersInterval;
 
         public TwitchChat(
             string name,
@@ -53,7 +47,6 @@ namespace TPP.Core.Chat
             IClock clock,
             ConnectionConfig.Twitch chatConfig,
             IUserRepo userRepo,
-            IChattersSnapshotsRepo chattersSnapshotsRepo,
             ISubscriptionProcessor subscriptionProcessor,
             OverlayConnection overlayConnection,
             bool useTwitchReplies = true)
@@ -63,14 +56,11 @@ namespace TPP.Core.Chat
             _clock = clock;
             _channel = chatConfig.Channel;
             ChannelId = chatConfig.ChannelId;
-            _userId = chatConfig.UserId;
             _userRepo = userRepo;
-            _chattersSnapshotsRepo = chattersSnapshotsRepo;
             _subscriptionProcessor = subscriptionProcessor;
             _overlayConnection = overlayConnection;
-            _getChattersInterval = chatConfig.GetChattersInterval;
 
-            _twitchApiProvider = new TwitchApiProvider(
+            TwitchApiProvider = new TwitchApiProvider(
                 loggerFactory,
                 clock,
                 chatConfig.InfiniteAccessToken,
@@ -101,11 +91,11 @@ namespace TPP.Core.Chat
             _subscriptionWatcher.Subscribed += OnSubscribed;
             _subscriptionWatcher.SubscriptionGifted += OnSubscriptionGifted;
 
-            _twitchChatSender = new TwitchChatSender(loggerFactory, _twitchApiProvider, chatConfig, useTwitchReplies);
+            _twitchChatSender = new TwitchChatSender(loggerFactory, TwitchApiProvider, chatConfig, useTwitchReplies);
             _twitchChatModeChanger = new TwitchChatModeChanger(
-                loggerFactory.CreateLogger<TwitchChatModeChanger>(), _twitchApiProvider, chatConfig);
+                loggerFactory.CreateLogger<TwitchChatModeChanger>(), TwitchApiProvider, chatConfig);
             _twitchChatExecutor = new TwitchChatExecutor(loggerFactory.CreateLogger<TwitchChatExecutor>(),
-                _twitchApiProvider, chatConfig);
+                TwitchApiProvider, chatConfig);
         }
 
         private Task Connected(object? sender, OnConnectedEventArgs e) => _twitchClient.JoinChannelAsync(_channel);
@@ -230,8 +220,7 @@ namespace TPP.Core.Chat
 
             // Must wait on all concurrently running tasks simultaneously to know when one of them crashed
             await Task.WhenAll(
-                CheckConnectivityWorker(cancellationToken),
-                ChattersWorker(cancellationToken)
+                CheckConnectivityWorker(cancellationToken)
             );
 
             await _twitchClient.DisconnectAsync();
@@ -273,43 +262,6 @@ namespace TPP.Core.Chat
                 }
 
                 try { await Task.Delay(delay, cancellationToken); }
-                catch (OperationCanceledException) { break; }
-            }
-        }
-
-        private async Task<List<Chatter>> GetChatters()
-        {
-            List<Chatter> chatters = new();
-            string? nextCursor = null;
-            do
-            {
-                GetChattersResponse getChattersResponse = await (await _twitchApiProvider.Get()).Helix
-                    .Chat.GetChattersAsync(ChannelId, _userId, first: 1000, after: nextCursor);
-                chatters.AddRange(getChattersResponse.Data);
-                nextCursor = getChattersResponse.Pagination?.Cursor;
-            } while (nextCursor != null);
-            return chatters;
-        }
-
-        private async Task ChattersWorker(CancellationToken cancellationToken)
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                try
-                {
-                    List<Chatter> chatters = await GetChatters();
-
-                    ImmutableList<string> chatterNames = chatters.Select(c => c.UserLogin).ToImmutableList();
-                    ImmutableList<string> chatterIds = chatters.Select(c => c.UserId).ToImmutableList();
-                    await _chattersSnapshotsRepo.LogChattersSnapshot(
-                        chatterNames, chatterIds, _channel, _clock.GetCurrentInstant());
-                }
-                catch (Exception e)
-                {
-                    _logger.LogError(e, "Failed retrieving chatters list");
-                }
-
-                try { await Task.Delay(_getChattersInterval.ToTimeSpan(), cancellationToken); }
                 catch (OperationCanceledException) { break; }
             }
         }
@@ -376,8 +328,6 @@ namespace TPP.Core.Chat
             _twitchChatExecutor.Timeout(user, message, duration);
         public Task Ban(User user, string? message) => _twitchChatExecutor.Ban(user, message);
         public Task Unban(User user, string? message) => _twitchChatExecutor.Unban(user, message);
-
-        public async Task<TwitchAPI> GetTwitchApi() => await _twitchApiProvider.Get();
 
         public Task SendMessage(string message, Message? responseTo = null) =>
             _twitchChatSender.SendMessage(message, responseTo);
