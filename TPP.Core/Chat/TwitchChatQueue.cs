@@ -74,7 +74,8 @@ namespace TPP.Core.Chat
             while (!cancellationToken.IsCancellationRequested)
             {
                 await ProcessOne();
-                await Task.Delay(_sleepDuration.ToTimeSpan(), cancellationToken);
+                try { await Task.Delay(_sleepDuration.ToTimeSpan(), cancellationToken); }
+                catch(OperationCanceledException) {}
             }
         }
 
