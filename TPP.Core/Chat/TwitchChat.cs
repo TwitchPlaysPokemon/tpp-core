@@ -261,6 +261,8 @@ namespace TPP.Core.Chat
             }
         }
 
+        private readonly Dictionary<User, Instant> _lastInputPerUser = new();
+
         private async Task MessageReceived(object? sender, OnMessageReceivedArgs e)
         {
             _logger.LogDebug("<#{Channel} {Username}: {Message}",
@@ -269,13 +271,35 @@ namespace TPP.Core.Chat
                 // new core sees messages posted by old core, but we don't want to process our own messages
                 return;
             bool isPrimaryChat = e.ChatMessage.Channel.Equals(_channel, StringComparison.InvariantCultureIgnoreCase);
-            if (!isPrimaryChat && _channelState?.EmoteOnly == true)
-                // Emote-Only mode is often used by mods to disable inputs. We don't want this to be bypassable.
-                return;
             MessageSource source = isPrimaryChat
                 ? new MessageSource.PrimaryChat()
                 : new MessageSource.SecondaryChat(e.ChatMessage.Channel);
             User user = await _userRepo.RecordUser(GetUserInfoFromTwitchMessage(e.ChatMessage, fromWhisper: false));
+            if (source is MessageSource.SecondaryChat secondaryChat)
+            {
+                if (_channelState?.EmoteOnly == true)
+                {
+                    // Emote-Only mode is often used by mods to disable inputs. We don't want this to be bypass-able.
+                    _logger.LogDebug(
+                        "dropping input from co-stream channel {Channel} because we're in emote-only mode: {Input}",
+                        secondaryChat.ChannelName, e.ChatMessage.Message);
+                    return;
+                }
+                if (_channelState?.SlowMode != null)
+                {
+                    // If the main channel is in slow-mode, we don't want to accept faster inputs from other channels.
+                    // Emulate slow-mode by dropping too fast inputs on a per-user basis.
+                    Instant now = _clock.GetCurrentInstant();
+                    Instant cutoff = now - Duration.FromSeconds(_channelState.SlowMode.Value);
+                    if (_lastInputPerUser.TryGetValue(user, out Instant lastInput) && lastInput > cutoff)
+                    {
+                        _logger.LogDebug("dropping too-fast input from co-stream channel {Channel}: {Input}",
+                            secondaryChat.ChannelName, e.ChatMessage.Message);
+                        return;
+                    }
+                    _lastInputPerUser[user] = now;
+                }
+            }
             var message = new Message(user, e.ChatMessage.Message, source, e.ChatMessage.RawIrcMessage)
             {
                 Details = new MessageDetails(
