@@ -172,13 +172,17 @@ public sealed class Runmode : IWithLifecycle
 
     private async Task<bool> ProcessMessage(IChat chat, Message message)
     {
-        if (message.MessageSource != MessageSource.Chat) return false;
+        if (message.MessageSource is not MessageSource.PrimaryChat
+            && message.MessageSource is not MessageSource.SecondaryChat) return false;
         string potentialInput = message.MessageText.Split(' ', count: 2)[0];
         InputSequence? input = _inputParser.Parse(potentialInput);
         if (input == null) return false;
         await ProcessPotentialSidedInputs(chat, message, input);
         foreach (InputSet inputSet in input.InputSets)
-            await _anarchyInputFeed.Enqueue(inputSet, message.User);
+            if (message.MessageSource is MessageSource.SecondaryChat secondaryChat)
+                await _anarchyInputFeed.Enqueue(inputSet, message.User, secondaryChat.ChannelName);
+            else
+                await _anarchyInputFeed.Enqueue(inputSet, message.User, null);
         if (!_muteInputsToken.Muted)
             await CollectRunStatistics(message.User, input, rawInput: potentialInput);
         return true;

@@ -35,7 +35,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             selectedBadge: selectedBadge, roles: new HashSet<Role> { Role.Operator });
 
         private static Message MockMessage(User user, string text = "") =>
-            new(user, text, MessageSource.Chat, string.Empty);
+            new(user, text, new MessageSource.PrimaryChat(), string.Empty);
 
         private IUserRepo _userRepoMock = null!;
         private ArgsParser _argsParser = null!;

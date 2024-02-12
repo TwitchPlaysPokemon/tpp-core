@@ -9,14 +9,17 @@ using TPP.Common;
 using TPP.Core.Configuration;
 using TPP.Core.Moderation;
 using TPP.Core.Overlay;
-using TPP.Model;
 using TPP.Persistence;
+using TwitchLib.Api;
+using TwitchLib.Api.Helix.Models.Streams.GetStreams;
+using TwitchLib.Api.Helix.Models.Users.GetUsers;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
 using TwitchLib.Communication.Clients;
 using TwitchLib.Communication.Events;
 using OnConnectedEventArgs = TwitchLib.Client.Events.OnConnectedEventArgs;
+using User = TPP.Model.User;
 
 namespace TPP.Core.Chat
 {
@@ -36,6 +39,40 @@ namespace TPP.Core.Chat
         private readonly TwitchChatSender _twitchChatSender;
         private readonly TwitchChatModeChanger _twitchChatModeChanger;
         private readonly TwitchChatExecutor _twitchChatExecutor;
+
+        public enum JoinResult { Ok, AlreadyJoined, UserNotFound, StreamOffline }
+        public async Task<JoinResult> Join(string userLogin)
+        {
+            TwitchAPI api = await TwitchApiProvider.Get();
+            GetUsersResponse getUsersResponse = await api.Helix.Users.GetUsersAsync(logins: [userLogin]);
+            var user = getUsersResponse.Users.FirstOrDefault();
+            if (user == null)
+                return JoinResult.UserNotFound;
+
+            if (_twitchClient.JoinedChannels.Any(ch =>
+                    ch.Channel.Equals(user.Login, StringComparison.InvariantCultureIgnoreCase)))
+                return JoinResult.AlreadyJoined;
+
+            GetStreamsResponse getStreamsResponse = await api.Helix.Streams.GetStreamsAsync(userLogins: [userLogin]);
+            Stream? stream = getStreamsResponse.Streams.FirstOrDefault();
+            if (stream is null)
+                return JoinResult.StreamOffline;
+
+            await _twitchClient.JoinChannelAsync(userLogin);
+            await _twitchClient.SendMessageAsync(userLogin, "Joined channel, hello!");
+
+            return JoinResult.Ok;
+        }
+
+        public enum LeaveResult { Ok, NotJoined }
+        public async Task<LeaveResult> Leave(string userLogin)
+        {
+            if (!_twitchClient.JoinedChannels.Any(ch =>
+                    ch.Channel.Equals(userLogin, StringComparison.InvariantCultureIgnoreCase)))
+                return LeaveResult.NotJoined;
+            await _twitchClient.SendMessageAsync(userLogin, "Leaving channel, goodbye!");
+            return LeaveResult.Ok;
+        }
 
         public TwitchChat(
             string name,
@@ -171,8 +208,12 @@ namespace TPP.Core.Chat
             if (e.ChatMessage.Username == _twitchClient.TwitchUsername)
                 // new core sees messages posted by old core, but we don't want to process our own messages
                 return;
+            bool isPrimaryChat = e.ChatMessage.Channel.Equals(_channel, StringComparison.InvariantCultureIgnoreCase);
+            MessageSource source = isPrimaryChat
+                ? new MessageSource.PrimaryChat()
+                : new MessageSource.SecondaryChat(e.ChatMessage.Channel);
             User user = await _userRepo.RecordUser(GetUserInfoFromTwitchMessage(e.ChatMessage, fromWhisper: false));
-            var message = new Message(user, e.ChatMessage.Message, MessageSource.Chat, e.ChatMessage.RawIrcMessage)
+            var message = new Message(user, e.ChatMessage.Message, source, e.ChatMessage.RawIrcMessage)
             {
                 Details = new MessageDetails(
                     MessageId: e.ChatMessage.Id,
@@ -190,7 +231,7 @@ namespace TPP.Core.Chat
             _logger.LogDebug("<@{Username}: {Message}", e.WhisperMessage.Username, e.WhisperMessage.Message);
             User user = await _userRepo.RecordUser(
                 GetUserInfoFromTwitchMessage(e.WhisperMessage, fromWhisper: true));
-            var message = new Message(user, e.WhisperMessage.Message, MessageSource.Whisper,
+            var message = new Message(user, e.WhisperMessage.Message, new MessageSource.Whisper(),
                 e.WhisperMessage.RawIrcMessage)
             {
                 Details = new MessageDetails(

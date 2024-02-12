@@ -48,7 +48,7 @@ namespace TPP.Core.Chat
                     Message message = new(
                         user,
                         "a",
-                        MessageSource.Chat,
+                        new MessageSource.PrimaryChat(),
                         string.Empty
                     );
                     IncomingMessage?.Invoke(this, new MessageEventArgs(message));

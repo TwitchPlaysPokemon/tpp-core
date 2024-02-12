@@ -130,6 +130,7 @@ namespace TPP.Core
                 new MiscCommands(SystemClock.Instance).Commands,
                 new UserCommands(databases.UserRepo).Commands,
                 new TransmuteCommands(transmuter).Commands,
+                new JoinChatCommands().Commands,
                 new OperatorCommands(
                     stopToken, muteInputsToken, databases.PokeyenBank, databases.TokensBank,
                     messageSender: messageSender, databases.BadgeRepo, databases.UserRepo, databases.InputSidePicksRepo

@@ -68,11 +68,11 @@ namespace TPP.Core.Chat
                 }
                 string simpleName = username.ToLower();
 
-                var source = MessageSource.Chat;
+                MessageSource source = new MessageSource.PrimaryChat();
                 if (line.StartsWith('>'))
                 {
                     line = line[1..];
-                    source = MessageSource.Whisper;
+                    source = new MessageSource.Whisper();
                 }
 
                 // re-use already existing users if they exist, otherwise it gets confusing when you want to impersonate

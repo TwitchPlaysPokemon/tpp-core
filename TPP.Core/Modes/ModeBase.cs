@@ -174,7 +174,7 @@ namespace TPP.Core.Modes
 
             bool isOk = message.Details.IsStaff
                         || message.User.Roles.Intersect(ExemptionRoles).Any()
-                        || message.MessageSource != MessageSource.Chat
+                        || message.MessageSource is not MessageSource.PrimaryChat
                         || !_moderators.TryGetValue(chat.Name, out IModerator? moderator)
                         || await moderator.Check(message);
             if (!isOk)
@@ -198,10 +198,11 @@ namespace TPP.Core.Modes
             string? commandName = firstPart switch
             {
                 null => null,
-                var name when message.MessageSource == MessageSource.Whisper
-                    => name.StartsWith('!') ? name[1..] : name,
-                var name when message.MessageSource == MessageSource.Chat && name.StartsWith('!')
-                    => name[1..],
+                _ when message.MessageSource is MessageSource.SecondaryChat => null,
+                _ when message.MessageSource is MessageSource.Whisper
+                    => firstPart.StartsWith('!') ? firstPart[1..] : firstPart,
+                _ when message.MessageSource is MessageSource.PrimaryChat && firstPart.StartsWith('!')
+                    => firstPart[1..],
                 _ => null
             };
             bool wasProcessed = false;
@@ -225,7 +226,7 @@ namespace TPP.Core.Modes
                 }
             }
             wasProcessed |= await _processMessage(chat, message);
-            if (!wasProcessed && _forwardUnprocessedMessages)
+            if (!wasProcessed && _forwardUnprocessedMessages && message.MessageSource is MessageSource.PrimaryChat)
             {
                 await _outgoingMessagequeueRepo.EnqueueMessage(message.RawIrcMessage);
             }
