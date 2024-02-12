@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace TPP.Persistence;
 
-public interface IJoinedSecondaryChannelsRepo
+public interface ICoStreamChannelsRepo
 {
     public Task<bool> IsJoined(string channelName);
     public Task<IImmutableSet<string>> GetJoinedChannels();

@@ -32,8 +32,10 @@ namespace TPP.Core.Chat
         private readonly IClock _clock;
         private readonly string _channel;
         public readonly string ChannelId;
+        private readonly bool _coStreamInputsEnabled;
+        private readonly bool _coStreamInputsOnlyLive;
         private readonly IUserRepo _userRepo;
-        private readonly IJoinedSecondaryChannelsRepo _joinedSecondaryChannelsRepo;
+        private readonly ICoStreamChannelsRepo _coStreamChannelsRepo;
         private readonly TwitchClient _twitchClient;
         public readonly TwitchApiProvider TwitchApiProvider;
         private readonly TwitchLibSubscriptionWatcher? _subscriptionWatcher;
@@ -41,9 +43,12 @@ namespace TPP.Core.Chat
         private readonly TwitchChatModeChanger _twitchChatModeChanger;
         private readonly TwitchChatExecutor _twitchChatExecutor;
 
-        public enum JoinResult { Ok, AlreadyJoined, UserNotFound, StreamOffline }
+        public enum JoinResult { Ok, NotEnabled, AlreadyJoined, UserNotFound, StreamOffline }
         public async Task<JoinResult> Join(string userLogin)
         {
+            if (!_coStreamInputsEnabled)
+                return JoinResult.NotEnabled;
+
             TwitchAPI api = await TwitchApiProvider.Get();
             GetUsersResponse getUsersResponse = await api.Helix.Users.GetUsersAsync(logins: [userLogin]);
             var user = getUsersResponse.Users.FirstOrDefault();
@@ -54,12 +59,15 @@ namespace TPP.Core.Chat
                     ch.Channel.Equals(user.Login, StringComparison.InvariantCultureIgnoreCase)))
                 return JoinResult.AlreadyJoined;
 
-            GetStreamsResponse getStreamsResponse = await api.Helix.Streams.GetStreamsAsync(userLogins: [userLogin]);
-            Stream? stream = getStreamsResponse.Streams.FirstOrDefault();
-            if (stream is null)
-                return JoinResult.StreamOffline;
+            if (_coStreamInputsOnlyLive)
+            {
+                GetStreamsResponse getStreamsResponse = await api.Helix.Streams.GetStreamsAsync(userLogins: [userLogin]);
+                Stream? stream = getStreamsResponse.Streams.FirstOrDefault();
+                if (stream is null)
+                    return JoinResult.StreamOffline;
+            }
 
-            await _joinedSecondaryChannelsRepo.Add(userLogin);
+            await _coStreamChannelsRepo.Add(userLogin);
             await _twitchClient.JoinChannelAsync(userLogin);
             await _twitchClient.SendMessageAsync(userLogin, "Joined channel, hello!");
 
@@ -72,7 +80,7 @@ namespace TPP.Core.Chat
             if (!_twitchClient.JoinedChannels.Any(ch =>
                     ch.Channel.Equals(userLogin, StringComparison.InvariantCultureIgnoreCase)))
                 return LeaveResult.NotJoined;
-            await _joinedSecondaryChannelsRepo.Remove(userLogin);
+            await _coStreamChannelsRepo.Remove(userLogin);
             await _twitchClient.LeaveChannelAsync(userLogin);
             await _twitchClient.SendMessageAsync(userLogin, "Leaving channel, goodbye!");
             return LeaveResult.Ok;
@@ -84,7 +92,7 @@ namespace TPP.Core.Chat
             IClock clock,
             ConnectionConfig.Twitch chatConfig,
             IUserRepo userRepo,
-            IJoinedSecondaryChannelsRepo joinedSecondaryChannelsRepo,
+            ICoStreamChannelsRepo coStreamChannelsRepo,
             ISubscriptionProcessor subscriptionProcessor,
             OverlayConnection overlayConnection,
             bool useTwitchReplies = true)
@@ -94,8 +102,10 @@ namespace TPP.Core.Chat
             _clock = clock;
             _channel = chatConfig.Channel;
             ChannelId = chatConfig.ChannelId;
+            _coStreamInputsEnabled = chatConfig.CoStreamInputsEnabled;
+            _coStreamInputsOnlyLive = chatConfig.CoStreamInputsOnlyLive;
             _userRepo = userRepo;
-            _joinedSecondaryChannelsRepo = joinedSecondaryChannelsRepo;
+            _coStreamChannelsRepo = coStreamChannelsRepo;
 
             TwitchApiProvider = new TwitchApiProvider(
                 loggerFactory,
@@ -138,8 +148,9 @@ namespace TPP.Core.Chat
         private async Task Connected(object? sender, OnConnectedEventArgs e)
         {
             await _twitchClient.JoinChannelAsync(_channel);
-            foreach (string channel in await _joinedSecondaryChannelsRepo.GetJoinedChannels())
-                await _twitchClient.JoinChannelAsync(channel);
+            if (_coStreamInputsEnabled)
+                foreach (string channel in await _coStreamChannelsRepo.GetJoinedChannels())
+                    await _twitchClient.JoinChannelAsync(channel);
         }
 
         // Subscribe to TwitchClient errors to hopefully prevent the very rare incidents where the bot effectively

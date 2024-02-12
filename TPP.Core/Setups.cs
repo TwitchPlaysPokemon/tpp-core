@@ -196,7 +196,7 @@ namespace TPP.Core
             KeyValueStore KeyValueStore,
             ITransmutationLogRepo TransmutationLogRepo,
             IChattersSnapshotsRepo ChattersSnapshotsRepo,
-            IJoinedSecondaryChannelsRepo JoinedSecondaryChannelsRepo
+            ICoStreamChannelsRepo CoStreamChannelsRepo
         );
 
         public static Databases SetUpRepositories(ILoggerFactory loggerFactory, ILogger logger, BaseConfig baseConfig)
@@ -259,7 +259,7 @@ namespace TPP.Core
                 KeyValueStore: new KeyValueStore(mongoDatabase),
                 TransmutationLogRepo: new TransmutationLogRepo(mongoDatabase),
                 ChattersSnapshotsRepo: new ChattersSnapshotsRepo(mongoDatabase),
-                JoinedSecondaryChannelsRepo: new JoinedSecondaryChannelsRepo(mongoDatabase)
+                CoStreamChannelsRepo: new CoStreamChannelsRepo(mongoDatabase)
             );
         }
 

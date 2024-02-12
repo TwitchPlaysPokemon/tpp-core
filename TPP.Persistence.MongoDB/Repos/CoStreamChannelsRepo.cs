@@ -7,15 +7,15 @@ using NodaTime;
 
 namespace TPP.Persistence.MongoDB.Repos;
 
-public class JoinedSecondaryChannelsRepo : IJoinedSecondaryChannelsRepo
+public class CoStreamChannelsRepo : ICoStreamChannelsRepo
 {
-    private const string CollectionName = "joined_secondary_channels";
-    private const string LogCollectionName = "joined_secondary_channels_log";
+    private const string CollectionName = "costream_channels";
+    private const string LogCollectionName = "costream_channels_log";
 
     public readonly IMongoCollection<BsonDocument> Collection;
     public readonly IMongoCollection<BsonDocument> LogCollection;
 
-    public JoinedSecondaryChannelsRepo(IMongoDatabase database)
+    public CoStreamChannelsRepo(IMongoDatabase database)
     {
         database.CreateCollectionIfNotExists(CollectionName).Wait();
         Collection = database.GetCollection<BsonDocument>(CollectionName);

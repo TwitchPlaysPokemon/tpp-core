@@ -20,6 +20,7 @@ public class JoinChatCommands : ICommandCollection
         string response = result switch
         {
             TwitchChat.JoinResult.Ok => "Successfully joined channel",
+            TwitchChat.JoinResult.NotEnabled => "Channel joining is currently not enabled",
             TwitchChat.JoinResult.AlreadyJoined => "Already joined",
             TwitchChat.JoinResult.UserNotFound => "You don't exist according to Twitch",
             TwitchChat.JoinResult.StreamOffline => "You are not live",

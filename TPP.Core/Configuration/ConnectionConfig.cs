@@ -49,6 +49,11 @@ namespace TPP.Core.Configuration
             // Only enable this for the "main" channel, otherwise subs in other channels would e.g. give tokens too.
             public bool MonitorSubscriptions { get; init; } = true;
 
+            // Whether people can do !join in chat for tpp to join their channel, and consume inputs from there.
+            public bool CoStreamInputsEnabled { get; init; } = false;
+            // Whether the co-stream-inputs feature only allows !join for people currently streaming.
+            public bool CoStreamInputsOnlyLive { get; init; } = true;
+
             /* communication settings */
             public enum SuppressionType { Whisper, Message, Command }
             public ImmutableHashSet<SuppressionType> Suppressions { get; init; } = Enum
