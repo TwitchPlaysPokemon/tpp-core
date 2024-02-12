@@ -12,6 +12,7 @@ public class ChatFactory(
     ILoggerFactory loggerFactory,
     IClock clock,
     IUserRepo userRepo,
+    IJoinedSecondaryChannelsRepo joinedSecondaryChannelsRepo,
     IBank<User> tokenBank,
     ISubscriptionLogRepo subscriptionLogRepo,
     ILinkedAccountRepo linkedAccountRepo,
@@ -22,7 +23,7 @@ public class ChatFactory(
         {
             ConnectionConfig.Console cfg => new ConsoleChat(config.Name, loggerFactory, cfg, userRepo),
             ConnectionConfig.Twitch cfg => new TwitchChat(config.Name, loggerFactory, clock,
-                cfg, userRepo,
+                cfg, userRepo, joinedSecondaryChannelsRepo,
                 new SubscriptionProcessor(
                     loggerFactory.CreateLogger<SubscriptionProcessor>(),
                     tokenBank, userRepo, subscriptionLogRepo, linkedAccountRepo),

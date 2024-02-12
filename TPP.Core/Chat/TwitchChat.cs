@@ -33,6 +33,7 @@ namespace TPP.Core.Chat
         private readonly string _channel;
         public readonly string ChannelId;
         private readonly IUserRepo _userRepo;
+        private readonly IJoinedSecondaryChannelsRepo _joinedSecondaryChannelsRepo;
         private readonly TwitchClient _twitchClient;
         public readonly TwitchApiProvider TwitchApiProvider;
         private readonly TwitchLibSubscriptionWatcher? _subscriptionWatcher;
@@ -58,6 +59,7 @@ namespace TPP.Core.Chat
             if (stream is null)
                 return JoinResult.StreamOffline;
 
+            await _joinedSecondaryChannelsRepo.Add(userLogin);
             await _twitchClient.JoinChannelAsync(userLogin);
             await _twitchClient.SendMessageAsync(userLogin, "Joined channel, hello!");
 
@@ -70,6 +72,8 @@ namespace TPP.Core.Chat
             if (!_twitchClient.JoinedChannels.Any(ch =>
                     ch.Channel.Equals(userLogin, StringComparison.InvariantCultureIgnoreCase)))
                 return LeaveResult.NotJoined;
+            await _joinedSecondaryChannelsRepo.Remove(userLogin);
+            await _twitchClient.LeaveChannelAsync(userLogin);
             await _twitchClient.SendMessageAsync(userLogin, "Leaving channel, goodbye!");
             return LeaveResult.Ok;
         }
@@ -80,6 +84,7 @@ namespace TPP.Core.Chat
             IClock clock,
             ConnectionConfig.Twitch chatConfig,
             IUserRepo userRepo,
+            IJoinedSecondaryChannelsRepo joinedSecondaryChannelsRepo,
             ISubscriptionProcessor subscriptionProcessor,
             OverlayConnection overlayConnection,
             bool useTwitchReplies = true)
@@ -90,6 +95,7 @@ namespace TPP.Core.Chat
             _channel = chatConfig.Channel;
             ChannelId = chatConfig.ChannelId;
             _userRepo = userRepo;
+            _joinedSecondaryChannelsRepo = joinedSecondaryChannelsRepo;
 
             TwitchApiProvider = new TwitchApiProvider(
                 loggerFactory,
@@ -129,7 +135,12 @@ namespace TPP.Core.Chat
                 : null;
         }
 
-        private Task Connected(object? sender, OnConnectedEventArgs e) => _twitchClient.JoinChannelAsync(_channel);
+        private async Task Connected(object? sender, OnConnectedEventArgs e)
+        {
+            await _twitchClient.JoinChannelAsync(_channel);
+            foreach (string channel in await _joinedSecondaryChannelsRepo.GetJoinedChannels())
+                await _twitchClient.JoinChannelAsync(channel);
+        }
 
         // Subscribe to TwitchClient errors to hopefully prevent the very rare incidents where the bot effectively
         // gets disconnected, but the CheckConnectivityWorker cannot detect it and doesn't reconnect.
