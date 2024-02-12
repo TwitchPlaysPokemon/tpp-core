@@ -141,7 +141,7 @@ namespace TPP.Core.Chat
 
             _subscriptionWatcher = chatConfig.MonitorSubscriptions
                 ? new TwitchLibSubscriptionWatcher(loggerFactory, _userRepo, _twitchClient, clock,
-                    subscriptionProcessor, _twitchChatSender, overlayConnection)
+                    subscriptionProcessor, _twitchChatSender, overlayConnection, chatConfig.Channel)
                 : null;
         }
 

@@ -27,11 +27,12 @@ namespace TPP.Core
         private readonly ISubscriptionProcessor _subscriptionProcessor;
         private readonly IMessageSender _responseSender;
         private readonly OverlayConnection _overlayConnection;
+        private readonly string _monitoredChannel;
 
         public TwitchLibSubscriptionWatcher(
             ILoggerFactory loggerFactory, IUserRepo userRepo, TwitchClient twitchClient, IClock clock,
             ISubscriptionProcessor subscriptionProcessor, IMessageSender responseSender,
-            OverlayConnection overlayConnection)
+            OverlayConnection overlayConnection, string monitoredChannel)
         {
             _logger = loggerFactory.CreateLogger<TwitchLibSubscriptionWatcher>();
             _userRepo = userRepo;
@@ -40,6 +41,7 @@ namespace TPP.Core
             _subscriptionProcessor = subscriptionProcessor;
             _responseSender = responseSender;
             _overlayConnection = overlayConnection;
+            _monitoredChannel = monitoredChannel;
             _twitchClient.OnNewSubscriber += OnNewSubscriber;
             _twitchClient.OnReSubscriber += OnReSubscriber;
             _twitchClient.OnGiftedSubscription += OnGiftedSubscription;
@@ -135,6 +137,7 @@ namespace TPP.Core
 
         private async Task OnNewSubscriber(object? sender, OnNewSubscriberArgs e)
         {
+            if (!e.Channel.Equals(_monitoredChannel, StringComparison.InvariantCultureIgnoreCase)) return;
             SubscriptionInfo subscriptionInfo = await ParseSubscription(e.Subscriber,
                 e.Subscriber.MsgParamSubPlan, e.Subscriber.MsgParamSubPlanName, e.Subscriber.ResubMessage,
                 e.Subscriber.MsgParamStreakMonths, e.Subscriber.MsgParamCumulativeMonths);
@@ -143,6 +146,7 @@ namespace TPP.Core
 
         private async Task OnReSubscriber(object? sender, OnReSubscriberArgs e)
         {
+            if (!e.Channel.Equals(_monitoredChannel, StringComparison.InvariantCultureIgnoreCase)) return;
             SubscriptionInfo subscriptionInfo = await ParseSubscription(e.ReSubscriber,
                 e.ReSubscriber.MsgParamSubPlan, e.ReSubscriber.MsgParamSubPlanName, e.ReSubscriber.ResubMessage,
                 e.ReSubscriber.MsgParamStreakMonths, e.ReSubscriber.MsgParamCumulativeMonths);
@@ -151,6 +155,7 @@ namespace TPP.Core
 
         private async Task OnGiftedSubscription(object? sender, OnGiftedSubscriptionArgs e)
         {
+            if (!e.Channel.Equals(_monitoredChannel, StringComparison.InvariantCultureIgnoreCase)) return;
             GiftedSubscription subscriptionMessage = e.GiftedSubscription;
             User gifter = await _userRepo.RecordUser(new UserInfo(
                 subscriptionMessage.UserId,
