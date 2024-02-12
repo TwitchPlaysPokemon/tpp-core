@@ -43,6 +43,8 @@ namespace TPP.Core.Chat
         private readonly TwitchChatModeChanger _twitchChatModeChanger;
         private readonly TwitchChatExecutor _twitchChatExecutor;
 
+        private ChannelState? _channelState;
+
         public enum JoinResult { Ok, NotEnabled, AlreadyJoined, UserNotFound, StreamOffline }
         public async Task<JoinResult> Join(string userLogin)
         {
@@ -133,6 +135,7 @@ namespace TPP.Core.Chat
             _twitchClient.OnConnectionError += OnConnectionError;
             _twitchClient.OnMessageReceived += MessageReceived;
             _twitchClient.OnWhisperReceived += WhisperReceived;
+            _twitchClient.OnChannelStateChanged += ChannelStateChanged;
             _twitchChatSender = new TwitchChatSender(loggerFactory, TwitchApiProvider, chatConfig, useTwitchReplies);
             _twitchChatModeChanger = new TwitchChatModeChanger(
                 loggerFactory.CreateLogger<TwitchChatModeChanger>(), TwitchApiProvider, chatConfig);
@@ -188,6 +191,7 @@ namespace TPP.Core.Chat
             _subscriptionWatcher?.Dispose();
             _twitchClient.OnMessageReceived -= MessageReceived;
             _twitchClient.OnWhisperReceived -= WhisperReceived;
+            _twitchClient.OnChannelStateChanged -= ChannelStateChanged;
             _logger.LogDebug("twitch chat is now fully shut down");
         }
 
@@ -231,6 +235,9 @@ namespace TPP.Core.Chat
                 // new core sees messages posted by old core, but we don't want to process our own messages
                 return;
             bool isPrimaryChat = e.ChatMessage.Channel.Equals(_channel, StringComparison.InvariantCultureIgnoreCase);
+            if (!isPrimaryChat && _channelState?.EmoteOnly == true)
+                // Emote-Only mode is often used by mods to disable inputs. We don't want this to be bypassable.
+                return;
             MessageSource source = isPrimaryChat
                 ? new MessageSource.PrimaryChat()
                 : new MessageSource.SecondaryChat(e.ChatMessage.Channel);
@@ -246,6 +253,13 @@ namespace TPP.Core.Chat
                 )
             };
             IncomingMessage?.Invoke(this, new MessageEventArgs(message));
+        }
+
+        private async Task ChannelStateChanged(object? sender, OnChannelStateChangedArgs e)
+        {
+            if (!e.Channel.Equals(_channel, StringComparison.InvariantCultureIgnoreCase)) return;
+            _channelState = e.ChannelState;
+            await Task.CompletedTask;
         }
 
         private async Task WhisperReceived(object? sender, OnWhisperReceivedArgs e)
