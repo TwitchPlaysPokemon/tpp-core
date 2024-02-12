@@ -70,7 +70,7 @@ namespace TPP.Core.Chat
                     return JoinResult.StreamOffline;
             }
 
-            await _coStreamChannelsRepo.Add(userLogin);
+            await _coStreamChannelsRepo.Add(userLogin, user.ProfileImageUrl);
             await _twitchClient.JoinChannelAsync(userLogin);
             await _twitchClient.SendMessageAsync(userLogin, "Joined channel, hello!");
 

@@ -23,29 +23,40 @@ public class CoStreamChannelsRepo : ICoStreamChannelsRepo
     }
 
     public Task<bool> IsJoined(string channelName) =>
-        Collection.Find(doc => doc["_id"] == channelName).AnyAsync();
+        Collection.Find(doc => doc["_id"] == channelName.ToLower()).AnyAsync();
+
+    public async Task<string?> GetChannelImageUrl(string channelName)
+    {
+        BsonDocument? doc = await Collection.Find(doc => doc["_id"] == channelName.ToLower()).FirstOrDefaultAsync();
+        return doc?["profile_image_url"].AsString;
+    }
 
     public async Task<IImmutableSet<string>> GetJoinedChannels() =>
         (await Collection.Find(FilterDefinition<BsonDocument>.Empty).ToListAsync())
         .Select(doc => doc["_id"].AsString).ToImmutableHashSet();
 
-    public async Task Add(string channelName)
+    public async Task Add(string channelName, string? profileImageUrl)
     {
-        await Collection.InsertOneAsync(new BsonDocument { ["_id"] = channelName });
-        await LogJoin(channelName);
+        await Collection.InsertOneAsync(new BsonDocument
+        {
+            ["_id"] = channelName.ToLower(),
+            ["profile_image_url"] = profileImageUrl
+        });
+        await LogJoin(channelName.ToLower(), profileImageUrl);
     }
 
     public async Task Remove(string channelName)
     {
-        await Collection.DeleteOneAsync(doc => doc["_id"] == channelName);
-        await LogLeave(channelName);
+        await Collection.DeleteOneAsync(doc => doc["_id"] == channelName.ToLower());
+        await LogLeave(channelName.ToLower());
     }
 
-    private Task LogJoin(string channelName) =>
+    private Task LogJoin(string channelName, string? profileImageUrl) =>
         LogCollection.InsertOneAsync(new BsonDocument
         {
             ["_id"] = new ObjectId(),
             ["channel"] = channelName,
+            ["profile_image_url"] = profileImageUrl,
             ["type"] = "join",
             ["timestamp"] = SystemClock.Instance.GetCurrentInstant().ToDateTimeUtc()
         });

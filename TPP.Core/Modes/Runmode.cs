@@ -26,6 +26,7 @@ public sealed class Runmode : IWithLifecycle
     private readonly IRunCounterRepo _runCounterRepo;
     private readonly IInputLogRepo _inputLogRepo;
     private readonly IInputSidePicksRepo _inputSidePicksRepo;
+    private readonly ICoStreamChannelsRepo _coStreamChannelsRepo;
     private IInputParser _inputParser;
     private readonly InputServer _inputServer;
     private readonly WebsocketBroadcastServer _broadcastServer;
@@ -48,6 +49,7 @@ public sealed class Runmode : IWithLifecycle
         _runCounterRepo = repos.RunCounterRepo;
         _inputLogRepo = repos.InputLogRepo;
         _inputSidePicksRepo = repos.InputSidePicksRepo;
+        _coStreamChannelsRepo = repos.CoStreamChannelsRepo;
         (_broadcastServer, _overlayConnection) = Setups.SetUpOverlayServer(loggerFactory,
             baseConfig.OverlayWebsocketHost, baseConfig.OverlayWebsocketPort);
         _modeBase = new ModeBase(
@@ -180,9 +182,14 @@ public sealed class Runmode : IWithLifecycle
         await ProcessPotentialSidedInputs(chat, message, input);
         foreach (InputSet inputSet in input.InputSets)
             if (message.MessageSource is MessageSource.SecondaryChat secondaryChat)
-                await _anarchyInputFeed.Enqueue(inputSet, message.User, secondaryChat.ChannelName);
+            {
+                string? channelImageUrl = await _coStreamChannelsRepo.GetChannelImageUrl(secondaryChat.ChannelName);
+                await _anarchyInputFeed.Enqueue(inputSet, message.User, secondaryChat.ChannelName, channelImageUrl);
+            }
             else
-                await _anarchyInputFeed.Enqueue(inputSet, message.User, null);
+            {
+                await _anarchyInputFeed.Enqueue(inputSet, message.User, null, null);
+            }
         if (!_muteInputsToken.Muted)
             await CollectRunStatistics(message.User, input, rawInput: potentialInput);
         return true;
