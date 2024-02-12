@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
@@ -57,13 +58,13 @@ namespace TPP.Core.Chat
             if (user == null)
                 return JoinResult.UserNotFound;
 
-            if (_twitchClient.JoinedChannels.Any(ch =>
-                    ch.Channel.Equals(user.Login, StringComparison.InvariantCultureIgnoreCase)))
+            if (await _coStreamChannelsRepo.IsJoined(userLogin))
                 return JoinResult.AlreadyJoined;
 
             if (_coStreamInputsOnlyLive)
             {
-                GetStreamsResponse getStreamsResponse = await api.Helix.Streams.GetStreamsAsync(userLogins: [userLogin]);
+                GetStreamsResponse getStreamsResponse =
+                    await api.Helix.Streams.GetStreamsAsync(userLogins: [userLogin]);
                 Stream? stream = getStreamsResponse.Streams.FirstOrDefault();
                 if (stream is null)
                     return JoinResult.StreamOffline;
@@ -79,12 +80,11 @@ namespace TPP.Core.Chat
         public enum LeaveResult { Ok, NotJoined }
         public async Task<LeaveResult> Leave(string userLogin)
         {
-            if (!_twitchClient.JoinedChannels.Any(ch =>
-                    ch.Channel.Equals(userLogin, StringComparison.InvariantCultureIgnoreCase)))
+            if (!await _coStreamChannelsRepo.IsJoined(userLogin))
                 return LeaveResult.NotJoined;
-            await _coStreamChannelsRepo.Remove(userLogin);
-            await _twitchClient.LeaveChannelAsync(userLogin);
             await _twitchClient.SendMessageAsync(userLogin, "Leaving channel, goodbye!");
+            await _twitchClient.LeaveChannelAsync(userLogin);
+            await _coStreamChannelsRepo.Remove(userLogin);
             return LeaveResult.Ok;
         }
 
@@ -180,10 +180,12 @@ namespace TPP.Core.Chat
         {
             await _twitchClient.ConnectAsync();
 
+            List<Task> tasks = [];
+            tasks.Add(CheckConnectivityWorker(cancellationToken));
+            if (_coStreamInputsOnlyLive)
+                tasks.Add(CoStreamInputsLiveWorker(cancellationToken));
             // Must wait on all concurrently running tasks simultaneously to know when one of them crashed
-            await Task.WhenAll(
-                CheckConnectivityWorker(cancellationToken)
-            );
+            await Task.WhenAll(tasks);
 
             await _twitchClient.DisconnectAsync();
             await _twitchChatSender.DisposeAsync();
@@ -220,6 +222,38 @@ namespace TPP.Core.Chat
                     {
                         _logger.LogError("Failed to reconnect, trying again in {Delay} seconds", delay.TotalSeconds);
                     }
+                }
+
+                try { await Task.Delay(delay, cancellationToken); }
+                catch (OperationCanceledException) { break; }
+            }
+        }
+
+        /// Check channels that have co-stream inputs enabled whether they are still live,
+        /// and if they aren't, make them leave.
+        private async Task CoStreamInputsLiveWorker(CancellationToken cancellationToken)
+        {
+            TimeSpan delay = TimeSpan.FromMinutes(1);
+            const int chunkSize = 100;
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                IImmutableSet<string> joinedChannels = await _coStreamChannelsRepo.GetJoinedChannels();
+                TwitchAPI api = await TwitchApiProvider.Get();
+
+                HashSet<string> liveChannels = [];
+                foreach (string[] chunk in joinedChannels.Chunk(chunkSize))
+                {
+                    GetStreamsResponse getStreamsResponse =
+                        await api.Helix.Streams.GetStreamsAsync(userLogins: [..chunk], first: chunkSize);
+                    foreach (Stream s in getStreamsResponse.Streams)
+                        liveChannels.Add(s.UserLogin);
+                }
+                IImmutableSet<string> offlineChannels = joinedChannels.Except(liveChannels);
+                foreach (string channel in offlineChannels)
+                {
+                    _logger.LogDebug("auto-leaving co-stream-inputs channel {Channel} because it's not live", channel);
+                    await Leave(channel);
                 }
 
                 try { await Task.Delay(delay, cancellationToken); }
