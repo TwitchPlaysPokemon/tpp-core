@@ -25,4 +25,4 @@ jobs:
           git add config.matchmode.schema.json
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git commit -m "update json schema" && git push
+          (git commit -m "update json schema" && git push) || echo "no schema changes"
