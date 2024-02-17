@@ -179,6 +179,8 @@ namespace TPP.Core.Chat
         public async Task Start(CancellationToken cancellationToken)
         {
             await _twitchClient.ConnectAsync();
+            _logger.LogInformation("Connected to Twitch, channels: {Channels}",
+                string.Join(", ", _twitchClient.JoinedChannels.Select(c => c.Channel)));
 
             List<Task> tasks = [];
             tasks.Add(CheckConnectivityWorker(cancellationToken));
