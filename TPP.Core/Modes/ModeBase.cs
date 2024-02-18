@@ -13,10 +13,12 @@ using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
 using TPP.Core.Moderation;
 using TPP.Core.Overlay;
+using TPP.Core.Utils;
 using TPP.Inputting;
 using TPP.Model;
 using TPP.Persistence;
 using static TPP.Core.EventUtils;
+using static TPP.Core.MessageSource;
 
 namespace TPP.Core.Modes
 {
@@ -166,6 +168,8 @@ namespace TPP.Core.Modes
             });
         }
 
+        private static readonly CaseInsensitiveImmutableHashSet CoStreamAllowedCommands =
+            new(["left", "right"]);
         private async Task ProcessIncomingMessage(IChat chat, Message message)
         {
             Instant now = _clock.GetCurrentInstant();
@@ -174,7 +178,7 @@ namespace TPP.Core.Modes
 
             bool isOk = message.Details.IsStaff
                         || message.User.Roles.Intersect(ExemptionRoles).Any()
-                        || message.MessageSource is not MessageSource.PrimaryChat
+                        || message.MessageSource is not PrimaryChat
                         || !_moderators.TryGetValue(chat.Name, out IModerator? moderator)
                         || await moderator.Check(message);
             if (!isOk)
@@ -190,7 +194,8 @@ namespace TPP.Core.Modes
             string cleanedMessage = message.MessageText;
             // The 7tv browser extension's setting "Allow sending the same message twice" (general.allow_send_twice)
             // appends ` \u{E0000}` to messages to bypass Twitch's "message is identical" notice. That is noise.
-            if (cleanedMessage.EndsWith("\U000E0000")) cleanedMessage = cleanedMessage[..^2]; // 2 characters because it's a surrogate pair in UTF-16
+            if (cleanedMessage.EndsWith("\U000E0000"))
+                cleanedMessage = cleanedMessage[..^2]; // 2 characters because it's a surrogate pair in UTF-16
 
             List<string> parts = cleanedMessage.Split(" ")
                 .Where(s => !string.IsNullOrEmpty(s)).ToList();
@@ -198,10 +203,12 @@ namespace TPP.Core.Modes
             string? commandName = firstPart switch
             {
                 null => null,
-                _ when message.MessageSource is MessageSource.SecondaryChat => null,
-                _ when message.MessageSource is MessageSource.Whisper
+                _ when message.MessageSource is Whisper
                     => firstPart.StartsWith('!') ? firstPart[1..] : firstPart,
-                _ when message.MessageSource is MessageSource.PrimaryChat && firstPart.StartsWith('!')
+                _ when message.MessageSource is PrimaryChat && firstPart.StartsWith('!')
+                    => firstPart[1..],
+                _ when message.MessageSource is SecondaryChat && firstPart.StartsWith('!')
+                                                              && CoStreamAllowedCommands.Contains(firstPart[1..])
                     => firstPart[1..],
                 _ => null
             };
@@ -226,7 +233,7 @@ namespace TPP.Core.Modes
                 }
             }
             wasProcessed |= await _processMessage(chat, message);
-            if (!wasProcessed && _forwardUnprocessedMessages && message.MessageSource is MessageSource.PrimaryChat)
+            if (!wasProcessed && _forwardUnprocessedMessages && message.MessageSource is PrimaryChat)
             {
                 await _outgoingMessagequeueRepo.EnqueueMessage(message.RawIrcMessage);
             }

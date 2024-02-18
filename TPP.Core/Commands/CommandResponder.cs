@@ -32,7 +32,7 @@ namespace TPP.Core.Commands
                 case ResponseTarget.Source:
                     if (message.MessageSource is MessageSource.PrimaryChat)
                         await RespondViaChat();
-                    else if (message.MessageSource is MessageSource.Whisper)
+                    else if (message.MessageSource is MessageSource.Whisper or MessageSource.SecondaryChat)
                         await RespondViaWhisper();
                     break;
                 case ResponseTarget.Chat:
