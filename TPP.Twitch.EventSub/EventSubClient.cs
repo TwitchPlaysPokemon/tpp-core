@@ -5,6 +5,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using NodaTime;
 using TPP.Common.Utils;
 using TPP.Twitch.EventSub.Messages;
@@ -22,6 +23,7 @@ public class EventSubClient
     private static readonly Task<WebsocketChangeover> NoChangeoverTask =
         new TaskCompletionSource<WebsocketChangeover>().Task; // a task that never gets completed
 
+    private readonly ILogger<EventSubClient> _logger;
     private readonly IClock _clock;
     private readonly Uri _uri;
     private int? _keepaliveTimeSeconds;
@@ -39,10 +41,6 @@ public class EventSubClient
     public event EventHandler<SessionWelcome>? Connected;
     public event EventHandler<DisconnectReason>? ConnectionLost;
 
-    public event EventHandler<string>? UnknownMessageTypeReceived;
-    public event EventHandler<string>? UnknownSubscriptionTypeReceived;
-    public event EventHandler<string>? MessageParsingFailed;
-
     private void Reset()
     {
         _webSocket.Abort();
@@ -56,10 +54,12 @@ public class EventSubClient
     }
 
     public EventSubClient(
+        ILoggerFactory loggerFactory,
         IClock clock,
         string url = "wss://eventsub.wss.twitch.tv/ws",
         int? keepaliveTimeSeconds = null)
     {
+        _logger = loggerFactory.CreateLogger<EventSubClient>();
         if (keepaliveTimeSeconds is < 10 or > 600)
             throw new ArgumentException(
                 "Twitch only allows keepalive timeouts between 10 and 600 seconds", nameof(keepaliveTimeSeconds));
@@ -157,11 +157,11 @@ public class EventSubClient
             if (parseResult is not ParseResult.Ok(var message))
             {
                 if (parseResult is ParseResult.InvalidMessage(var error))
-                    MessageParsingFailed?.Invoke(this, error);
+                    _logger.LogError("A message skipped because it failed to parse: {Error}", error);
                 else if (parseResult is ParseResult.UnknownMessageType(var messageType))
-                    UnknownMessageTypeReceived?.Invoke(this, messageType);
+                    _logger.LogWarning("Unknown message type received and skipped: {MessageType}", messageType);
                 else if (parseResult is ParseResult.UnknownSubscriptionType(var subType))
-                    UnknownSubscriptionTypeReceived?.Invoke(this, subType);
+                    _logger.LogWarning("Unknown subscription type received and skipped: {SubscriptionType}", subType);
                 else
                     throw new ArgumentOutOfRangeException(nameof(parseResult));
                 continue;
@@ -217,8 +217,7 @@ public class EventSubClient
             }
             else
             {
-                // TODO Maybe this shouldn't be a crash. Better just log as error.
-                throw new ProtocolViolationException("Unprocessed message type: " + message);
+                _logger.LogError("Known message was not handled and skipped: {Message}", message);
             }
         }
     }
