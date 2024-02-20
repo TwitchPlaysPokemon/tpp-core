@@ -24,6 +24,15 @@ public class SessionReconnect(Metadata metadata, SessionReconnect.ReconnectPaylo
     public record ReconnectPayload(Session Session) : Payload;
 }
 
+public class Revocation(NotificationMetadata metadata, Revocation.RevocationPayload payload)
+    : Message<NotificationMetadata, Revocation.RevocationPayload>(metadata, payload), IHasMessageType
+{
+    public static string MessageType => "revocation";
+
+    // TODO implement revocation conditions somehow. Right now they are just not deserialized.
+    public record RevocationPayload(Subscription<Condition> Subscription) : Payload;
+}
+
 public abstract class Notification<C, E>(NotificationMetadata metadata, NotificationPayload<C, E> payload)
     : Message<NotificationMetadata, NotificationPayload<C, E>>(metadata, payload), INotification
     where C : Condition

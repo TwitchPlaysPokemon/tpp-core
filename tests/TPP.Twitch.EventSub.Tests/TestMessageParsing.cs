@@ -59,7 +59,8 @@ public class Tests
             }
             """;
 
-        SessionKeepalive? eventSubMessage = (Parsing.Parse(json) as Parsing.ParseResult.Ok)!.Message as SessionKeepalive;
+        SessionKeepalive? eventSubMessage =
+            (Parsing.Parse(json) as Parsing.ParseResult.Ok)!.Message as SessionKeepalive;
         Assert.That(eventSubMessage!.Metadata, Is.EqualTo(new Metadata(
             "84c1e79a-2a4b-4c13-ba0b-4312293e9308",
             "session_keepalive",
@@ -90,7 +91,8 @@ public class Tests
             }
             """;
 
-        SessionReconnect? eventSubMessage = (Parsing.Parse(json) as Parsing.ParseResult.Ok)!.Message as SessionReconnect;
+        SessionReconnect? eventSubMessage =
+            (Parsing.Parse(json) as Parsing.ParseResult.Ok)!.Message as SessionReconnect;
         Assert.That(eventSubMessage!.Metadata, Is.EqualTo(new Metadata(
             "84c1e79a-2a4b-4c13-ba0b-4312293e9308",
             "session_reconnect",
@@ -174,5 +176,59 @@ public class Tests
                 "twitch",
                 "Twitch",
                 Instant.FromUtc(2023, 7, 15, 18, 16, 11).PlusNanoseconds(171067130))));
+    }
+
+    [Test]
+    public void ParseRevocation()
+    {
+        const string json =
+            """
+            {
+
+                "metadata": {
+                    "message_id": "84c1e79a-2a4b-4c13-ba0b-4312293e9308",
+                    "message_type": "revocation",
+                    "message_timestamp": "2022-11-16T10:11:12.464757833Z",
+                    "subscription_type": "channel.follow",
+                    "subscription_version": "1"
+                },
+                "payload": {
+                    "subscription": {
+                        "id": "f1c2a387-161a-49f9-a165-0f21d7a4e1c4",
+                        "status": "authorization_revoked",
+                        "type": "channel.follow",
+                        "version": "1",
+                        "cost": 1,
+                        "condition": {
+                            "broadcaster_user_id": "12826"
+                        },
+                        "transport": {
+                            "method": "websocket",
+                            "session_id": "AQoQexAWVYKSTIu4ec_2VAxyuhAB"
+                        },
+                        "created_at": "2022-11-16T10:11:12.464757833Z"
+                    }
+                }
+            }
+            """;
+
+        Revocation? eventSubMessage = (Parsing.Parse(json) as Parsing.ParseResult.Ok)!.Message as Revocation;
+        Assert.That(eventSubMessage!.Metadata, Is.EqualTo(new NotificationMetadata(
+            "84c1e79a-2a4b-4c13-ba0b-4312293e9308",
+            "revocation",
+            Instant.FromUtc(2022, 11, 16, 10, 11, 12).PlusNanoseconds(464757833),
+            "channel.follow",
+            "1")));
+        Assert.That(eventSubMessage.Payload, Is.InstanceOf<Revocation.RevocationPayload>());
+        Assert.That(eventSubMessage.Payload, Is.EqualTo(new Revocation.RevocationPayload(
+            new Subscription<Condition>(
+                "f1c2a387-161a-49f9-a165-0f21d7a4e1c4",
+                "authorization_revoked",
+                "channel.follow",
+                "1",
+                1,
+                new Condition(),
+                new Transport("websocket", "AQoQexAWVYKSTIu4ec_2VAxyuhAB"),
+                Instant.FromUtc(2022, 11, 16, 10, 11, 12).PlusNanoseconds(464757833)))));
     }
 }

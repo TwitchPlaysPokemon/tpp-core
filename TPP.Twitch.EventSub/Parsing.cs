@@ -31,6 +31,7 @@ public static class Parsing
         RegisterMessageType<SessionKeepalive>();
         RegisterMessageType<SessionWelcome>();
         RegisterMessageType<SessionReconnect>();
+        RegisterMessageType<Revocation>();
         // The "notification" message type is implicitly known
         RegisterSubscriptionType<ChannelFollow>();
     }
