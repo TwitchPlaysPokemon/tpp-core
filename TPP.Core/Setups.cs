@@ -99,12 +99,12 @@ namespace TPP.Core
             BaseConfig config,
             ArgsParser argsParser,
             Databases databases,
-            StopToken stopToken,
+            IStopToken stopToken,
             MuteInputsToken? muteInputsToken,
             IMessageSender messageSender,
-            IChatModeChanger chatModeChanger,
-            IExecutor executor,
-            IImmutableSet<Common.PkmnSpecies> knownSpecies,
+            IChatModeChanger? chatModeChanger,
+            IExecutor? executor,
+            IImmutableSet<PkmnSpecies> knownSpecies,
             ITransmuter transmuter)
         {
             var commandProcessor = new CommandProcessor(
@@ -130,6 +130,7 @@ namespace TPP.Core
                 new MiscCommands(SystemClock.Instance).Commands,
                 new UserCommands(databases.UserRepo).Commands,
                 new TransmuteCommands(transmuter).Commands,
+                new JoinChatCommands().Commands,
                 new OperatorCommands(
                     stopToken, muteInputsToken, databases.PokeyenBank, databases.TokensBank,
                     messageSender: messageSender, databases.BadgeRepo, databases.UserRepo, databases.InputSidePicksRepo
@@ -194,7 +195,8 @@ namespace TPP.Core
             IInputSidePicksRepo InputSidePicksRepo,
             KeyValueStore KeyValueStore,
             ITransmutationLogRepo TransmutationLogRepo,
-            IChattersSnapshotsRepo ChattersSnapshotsRepo
+            IChattersSnapshotsRepo ChattersSnapshotsRepo,
+            ICoStreamChannelsRepo CoStreamChannelsRepo
         );
 
         public static Databases SetUpRepositories(ILoggerFactory loggerFactory, ILogger logger, BaseConfig baseConfig)
@@ -256,7 +258,8 @@ namespace TPP.Core
                 InputSidePicksRepo: new InputSidePicksRepo(mongoDatabase, clock),
                 KeyValueStore: new KeyValueStore(mongoDatabase),
                 TransmutationLogRepo: new TransmutationLogRepo(mongoDatabase),
-                ChattersSnapshotsRepo: new ChattersSnapshotsRepo(mongoDatabase)
+                ChattersSnapshotsRepo: new ChattersSnapshotsRepo(mongoDatabase),
+                CoStreamChannelsRepo: new CoStreamChannelsRepo(mongoDatabase)
             );
         }
 

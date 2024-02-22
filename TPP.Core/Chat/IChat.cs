@@ -23,15 +23,20 @@ namespace TPP.Core.Chat
         public Task DisableEmoteOnly();
     }
 
-    public interface IChat : IMessageSender, IChatModeChanger, IExecutor, IDisposable
+    public interface IMessageSource
+    {
+        event EventHandler<MessageEventArgs> IncomingMessage;
+    }
+
+    /// <summary>
+    /// Interface that describes a chat where messages can be received from and sent to,
+    /// in the context of a connection lifecycle.
+    /// Classes that implement this interface may also implement some of these to enable some additional features:
+    /// <see cref="IChatModeChanger"/> for mod commands to change the chat mode,
+    /// <see cref="IExecutor"/> for automated chat moderation
+    /// </summary>
+    public interface IChat : IMessageSender, IMessageSource, IWithLifecycle
     {
         string Name { get; }
-
-        event EventHandler<MessageEventArgs> IncomingMessage;
-
-        /// Establishes the connection.
-        /// All subsequent repeated invocations on this instance will fail.
-        /// The connection gets closed by disposing this instance.
-        Task Connect();
     }
 }

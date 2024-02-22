@@ -2,6 +2,7 @@ using System;
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using NodaTime;
 using TPP.Core.Chat;
 using TPP.Core.Commands.Definitions;
@@ -13,67 +14,55 @@ namespace TPP.Core
     /// <summary>
     /// Advertises polls in chat on an interval.
     /// </summary>
-    public sealed class AdvertisePollsWorker : IDisposable
+    public sealed class AdvertisePollsWorker : IWithLifecycle
     {
+        private readonly ILogger<AdvertisePollsWorker> _logger;
         private readonly Duration _interval;
         private readonly IPollRepo _pollRepo;
         private readonly IMessageSender _messageSender;
 
-        private readonly CancellationTokenSource _cancellationTokenSource;
-        private Task? _runTask = null;
-
-        public AdvertisePollsWorker(Duration interval, IPollRepo pollRepo, IMessageSender messageSender)
+        public AdvertisePollsWorker(ILogger<AdvertisePollsWorker> logger, Duration interval, IPollRepo pollRepo,
+            IMessageSender messageSender)
         {
+            _logger = logger;
             _interval = interval;
             _pollRepo = pollRepo;
             _messageSender = messageSender;
-            _cancellationTokenSource = new CancellationTokenSource();
         }
 
-        public void Start()
+        public async Task Start(CancellationToken cancellationToken)
         {
-            if (_runTask != null) throw new InvalidOperationException("the worker is already running!");
-            _runTask = Run();
-        }
-
-        private async Task Stop()
-        {
-            if (_runTask == null) throw new InvalidOperationException("the worker is not running!");
-            _cancellationTokenSource.Cancel();
-            try
+            try { await Task.Delay(_interval.ToTimeSpan(), cancellationToken); }
+            catch (OperationCanceledException) { return; }
+            while (!cancellationToken.IsCancellationRequested)
             {
-                await _runTask;
-            }
-            catch (OperationCanceledException)
-            {
-            }
-        }
-
-        public async Task Run()
-        {
-            while (!_cancellationTokenSource.Token.IsCancellationRequested)
-            {
-                await Task.Delay(_interval.ToTimeSpan(), _cancellationTokenSource.Token);
-                IImmutableList<Poll> polls = await _pollRepo.FindPolls(onlyActive: true);
-                if (polls.Count == 0) continue;
-                if (polls.Count == 1)
+                try
                 {
-                    await _messageSender.SendMessage(
-                        "Please vote in the currently active poll: " +
-                        PollCommands.FormatSinglePollAdvertisement(polls[0]));
+                    await DoLoop();
                 }
-                else
+                catch (Exception ex)
                 {
-                    await _messageSender.SendMessage(PollCommands.FormatPollsAdvertisement(polls));
+                    _logger.LogError(ex, "Failed to advertise polls");
                 }
+                try { await Task.Delay(_interval.ToTimeSpan(), cancellationToken); }
+                catch (OperationCanceledException) { break; }
             }
         }
 
-        public void Dispose()
+        private async Task DoLoop()
         {
-            if (_runTask != null) Stop().Wait();
-            _cancellationTokenSource.Dispose();
-            _runTask?.Dispose();
+            IImmutableList<Poll> polls = await _pollRepo.FindPolls(onlyActive: true);
+            if (polls.Count == 0) return;
+            if (polls.Count == 1)
+            {
+                await _messageSender.SendMessage(
+                    "Please vote in the currently active poll: " +
+                    PollCommands.FormatSinglePollAdvertisement(polls[0]));
+            }
+            else
+            {
+                await _messageSender.SendMessage(PollCommands.FormatPollsAdvertisement(polls));
+            }
         }
     }
 }

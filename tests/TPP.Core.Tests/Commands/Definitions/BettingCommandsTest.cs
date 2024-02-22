@@ -22,8 +22,8 @@ namespace TPP.Core.Tests.Commands.Definitions
             lastMessageAt: null, pokeyen: 0, tokens: 0,
             selectedBadge: null);
 
-        private static Message MockMessage(User user, MessageSource source = MessageSource.Chat) =>
-            new(user, string.Empty, source, string.Empty);
+        private static Message MockMessage(User user, MessageSource? source = null) =>
+            new(user, string.Empty, source ?? new MessageSource.PrimaryChat(), string.Empty);
 
         private static readonly ArgsParser ArgsParser;
 
@@ -72,7 +72,7 @@ namespace TPP.Core.Tests.Commands.Definitions
                 var commands = new BettingCommands(() => bettingPeriodMock);
 
                 CommandResult result = await commands.Bet(new CommandContext(
-                    MockMessage(user, source: MessageSource.Whisper),
+                    MockMessage(user, source: new MessageSource.Whisper()),
                     ImmutableList.Create("100", "blue"), ArgsParser));
 
                 Assert.That(result.Response, Is.EqualTo("you may only bet through chat"));

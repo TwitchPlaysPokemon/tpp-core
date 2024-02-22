@@ -38,7 +38,7 @@ public class UserCommandsTest
         participationEmblems: emblems);
 
     private static Message MockMessage(User user, string text = "")
-        => new Message(user, text, MessageSource.Chat, string.Empty);
+        => new Message(user, text, new MessageSource.PrimaryChat(), string.Empty);
 
     private IUserRepo _userRepoMock = null!;
     private IBank<User> _pokeyenBankMock = null!;
@@ -116,7 +116,7 @@ public class UserCommandsTest
         _userRepoMock.FindBySimpleName(user.SimpleName)
             .Returns(user);
 
-        var message = new Message(MockUser("Someone_Else"), "", MessageSource.Chat, string.Empty);
+        var message = new Message(MockUser("Someone_Else"), "", new MessageSource.PrimaryChat(), string.Empty);
         CommandResult result = await _currencyCommands.CheckBalance(new CommandContext(message,
             ImmutableList.Create(user.Name), _argsParser));
 

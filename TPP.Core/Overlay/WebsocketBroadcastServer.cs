@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using TPP.Core.Utils;
 
 namespace TPP.Core.Overlay
 {
@@ -38,7 +39,7 @@ namespace TPP.Core.Overlay
 
     /// A websocket server capable of accepting new connections and broadcasting messages.
     /// It cannot receive messages.
-    public class WebsocketBroadcastServer : IBroadcastServer, IAsyncDisposable
+    public class WebsocketBroadcastServer : IBroadcastServer, IWithLifecycle, IDisposable
     {
         private readonly List<Connection> _connections = new List<Connection>();
         private readonly string _host;
@@ -47,7 +48,6 @@ namespace TPP.Core.Overlay
         private readonly SemaphoreSlim _connectionsSemaphore = new SemaphoreSlim(initialCount: 1, maxCount: 1);
 
         private HttpListener? _httpListener;
-        private CancellationTokenSource? _stopListenerToken;
 
         public WebsocketBroadcastServer(ILogger<WebsocketBroadcastServer> logger, string host, int port)
         {
@@ -160,26 +160,8 @@ namespace TPP.Core.Overlay
             _logger.LogInformation("New websocket connection from: {IP}", remoteEndPoint);
         }
 
-        /// Using listener.GetContextAsync does not support passing a cancellation token
-        /// and closes uncleanly when the listener is stopped, e.g. with an ObjectDisposedException.
-        /// Using BeginGetContext and EndGetContext lets us abort in-between using a cancellation token.
-        private static Task<HttpListenerContext> GetContextAsync(
-            HttpListener listener, CancellationToken cancellationToken)
-        {
-            var taskCompletionSource = new TaskCompletionSource<HttpListenerContext>();
-            void Accept(IAsyncResult result)
-            {
-                if (cancellationToken.IsCancellationRequested)
-                    taskCompletionSource.SetCanceled(cancellationToken);
-                else
-                    taskCompletionSource.SetResult(listener.EndGetContext(result));
-            }
-            listener.BeginGetContext(Accept, null);
-            return taskCompletionSource.Task;
-        }
-
         /// Keeps accepting new incoming websocket connections until the server is stopped with <see cref="Stop"/>.
-        public async Task Listen()
+        public async Task Start(CancellationToken cancellationToken)
         {
             if (_httpListener != null)
                 throw new InvalidOperationException("Cannot listen: The internal http listener is already running!");
@@ -187,14 +169,17 @@ namespace TPP.Core.Overlay
             _httpListener.Prefixes.Add($"http://{_host}:{_port}/");
             _httpListener.Start();
             _logger.LogInformation("Started websocket server on {Prefixes}", _httpListener.Prefixes);
-            _stopListenerToken = new CancellationTokenSource();
 
-            while (_httpListener.IsListening)
+            while (!cancellationToken.IsCancellationRequested && _httpListener.IsListening)
             {
                 HttpListenerContext context;
                 try
                 {
-                    context = await GetContextAsync(_httpListener, _stopListenerToken.Token);
+                    // workaround for GetContextAsync not taking a cancellation token
+                    Task<HttpListenerContext> contextTask = _httpListener.GetContextAsync();
+                    if (await Task.WhenAny(contextTask, cancellationToken.WhenCanceled()) != contextTask)
+                        break;
+                    context = await contextTask;
                 }
                 catch (SystemException ex) when (ex is OperationCanceledException or HttpListenerException)
                 {
@@ -206,13 +191,18 @@ namespace TPP.Core.Overlay
                     continue;
                 }
 
-                HttpListenerWebSocketContext webSocketContext = await context.AcceptWebSocketAsync(null!);
-                WebSocket webSocket = webSocketContext.WebSocket;
+                // workaround for AcceptWebSocketAsync not taking a cancellation token
+                Task<HttpListenerWebSocketContext> acceptTask = context.AcceptWebSocketAsync(null!);
+                if (await Task.WhenAny(acceptTask, cancellationToken.WhenCanceled()) != acceptTask)
+                    break;
+                WebSocket webSocket = (await acceptTask).WebSocket;
                 await AddWebSocket(webSocket, context.Request.RemoteEndPoint);
             }
+            await Stop();
+            await PruneDeadConnections();
         }
 
-        public async Task Stop(TimeSpan? closeHandshakeTimeout = null)
+        private async Task Stop(TimeSpan? closeHandshakeTimeout = null)
         {
             TimeSpan timeout = closeHandshakeTimeout ?? TimeSpan.FromSeconds(1);
             await _connectionsSemaphore.WaitAsync();
@@ -250,16 +240,13 @@ namespace TPP.Core.Overlay
             }
             if (_httpListener is { IsListening: true })
             {
-                _stopListenerToken?.Cancel();
                 _httpListener.Stop();
             }
             _httpListener = null;
         }
 
-        public async ValueTask DisposeAsync()
+        public void Dispose()
         {
-            await Stop();
-            await PruneDeadConnections();
             _connectionsSemaphore.Dispose();
         }
     }

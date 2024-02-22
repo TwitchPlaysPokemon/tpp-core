@@ -48,12 +48,12 @@ namespace TPP.Core
             _fps = fps;
         }
 
-        public async Task Enqueue(InputSet inputSet, User user)
+        public async Task Enqueue(InputSet inputSet, User user, string? channel, string? channelImageUrl)
         {
             QueuedInput queuedInput = new(_inputIdSeq++, inputSet);
             bool enqueued = _inputBufferQueue.Enqueue(queuedInput);
             if (enqueued)
-                await _overlayConnection.Send(new NewAnarchyInput(queuedInput.InputId, queuedInput.InputSet, user),
+                await _overlayConnection.Send(new NewAnarchyInput(queuedInput.InputId, queuedInput.InputSet, user, channel, channelImageUrl),
                     CancellationToken.None);
         }
 

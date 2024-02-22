@@ -3,10 +3,17 @@ using TPP.Model;
 
 namespace TPP.Core
 {
-    public enum MessageSource
+    public record MessageSource
     {
-        Chat,
-        Whisper,
+        private MessageSource()
+        {
+            // Having a private constructor and all subtypes be sealed makes the set of all possible subtypes a
+            // closed set, simulating a sum type.
+        }
+
+        public sealed record PrimaryChat : MessageSource;
+        public sealed record SecondaryChat(string ChannelName) : MessageSource;
+        public sealed record Whisper : MessageSource;
     }
 
     public record Emote(string Id, string Name, int StartIndex, int EndIndex);

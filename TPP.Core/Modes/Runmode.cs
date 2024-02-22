@@ -18,7 +18,7 @@ using TPP.Persistence;
 
 namespace TPP.Core.Modes;
 
-public sealed class Runmode : IMode, IDisposable
+public sealed class Runmode : IWithLifecycle
 {
     private readonly ILogger<Runmode> _logger;
 
@@ -26,32 +26,34 @@ public sealed class Runmode : IMode, IDisposable
     private readonly IRunCounterRepo _runCounterRepo;
     private readonly IInputLogRepo _inputLogRepo;
     private readonly IInputSidePicksRepo _inputSidePicksRepo;
+    private readonly ICoStreamChannelsRepo _coStreamChannelsRepo;
     private IInputParser _inputParser;
     private readonly InputServer _inputServer;
     private readonly WebsocketBroadcastServer _broadcastServer;
     private AnarchyInputFeed _anarchyInputFeed;
     private readonly OverlayConnection _overlayConnection;
 
-    private readonly StopToken _stopToken;
     private readonly MuteInputsToken _muteInputsToken;
     private readonly ModeBase _modeBase;
     private RunmodeConfig _runmodeConfig;
 
-    public Runmode(ILoggerFactory loggerFactory, BaseConfig baseConfig, Func<RunmodeConfig> configLoader)
+    public Runmode(ILoggerFactory loggerFactory, BaseConfig baseConfig,
+        CancellationTokenSource cancellationTokenSource, Func<RunmodeConfig> configLoader)
     {
         _runmodeConfig = configLoader();
         _logger = loggerFactory.CreateLogger<Runmode>();
-        _stopToken = new StopToken();
+        IStopToken stopToken = new CancellationStopToken(cancellationTokenSource);
         _muteInputsToken = new MuteInputsToken { Muted = _runmodeConfig.MuteInputsAtStartup };
         Setups.Databases repos = Setups.SetUpRepositories(loggerFactory, _logger, baseConfig);
         _userRepo = repos.UserRepo;
         _runCounterRepo = repos.RunCounterRepo;
         _inputLogRepo = repos.InputLogRepo;
         _inputSidePicksRepo = repos.InputSidePicksRepo;
+        _coStreamChannelsRepo = repos.CoStreamChannelsRepo;
         (_broadcastServer, _overlayConnection) = Setups.SetUpOverlayServer(loggerFactory,
             baseConfig.OverlayWebsocketHost, baseConfig.OverlayWebsocketPort);
         _modeBase = new ModeBase(
-            loggerFactory, repos, baseConfig, _stopToken, _muteInputsToken, _overlayConnection, ProcessMessage);
+            loggerFactory, repos, baseConfig, stopToken, _muteInputsToken, _overlayConnection, ProcessMessage);
         _modeBase.InstallAdditionalCommand(new Command("reloadrunconfig", _ =>
         {
             RunmodeConfig config = configLoader();
@@ -92,7 +94,8 @@ public sealed class Runmode : IMode, IDisposable
     }
 
     private IInputMapper CreateInputMapperFromConfig(InputConfig config) =>
-        new DefaultTppInputMapper(config.FramesPerSecond, _muteInputsToken, config.ControllerPrefix, config.ControllerPrefix2);
+        new DefaultTppInputMapper(config.FramesPerSecond, _muteInputsToken, config.ControllerPrefix,
+            config.ControllerPrefix2);
 
     private static IInputHoldTiming CreateInputHoldTimingFromConfig(InputConfig config) =>
         new DefaultInputHoldTiming(
@@ -171,13 +174,22 @@ public sealed class Runmode : IMode, IDisposable
 
     private async Task<bool> ProcessMessage(IChat chat, Message message)
     {
-        if (message.MessageSource != MessageSource.Chat) return false;
+        if (message.MessageSource is not MessageSource.PrimaryChat
+            && message.MessageSource is not MessageSource.SecondaryChat) return false;
         string potentialInput = message.MessageText.Split(' ', count: 2)[0];
         InputSequence? input = _inputParser.Parse(potentialInput);
         if (input == null) return false;
         await ProcessPotentialSidedInputs(chat, message, input);
         foreach (InputSet inputSet in input.InputSets)
-            await _anarchyInputFeed.Enqueue(inputSet, message.User);
+            if (message.MessageSource is MessageSource.SecondaryChat secondaryChat)
+            {
+                string? channelImageUrl = await _coStreamChannelsRepo.GetChannelImageUrl(secondaryChat.ChannelName);
+                await _anarchyInputFeed.Enqueue(inputSet, message.User, secondaryChat.ChannelName, channelImageUrl);
+            }
+            else
+            {
+                await _anarchyInputFeed.Enqueue(inputSet, message.User, null, null);
+            }
         if (!_muteInputsToken.Muted)
             await CollectRunStatistics(message.User, input, rawInput: potentialInput);
         return true;
@@ -193,34 +205,15 @@ public sealed class Runmode : IMode, IDisposable
         await _overlayConnection.Send(new ButtonPressUpdate(counter), CancellationToken.None);
     }
 
-    public async Task Run()
+    public async Task Start(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Runmode starting");
-        Task overlayWebsocketTask = _broadcastServer.Listen();
-        Task inputServerTask = _inputServer.Listen();
-        _modeBase.Start();
-        Task handleStopTask = Task.Run(async () =>
-        {
-            while (!_stopToken.ShouldStop)
-                // Just wait until it is time to shut everything down
-                await Task.Delay(TimeSpan.FromMilliseconds(100));
-            _inputServer.Stop();
-            await _broadcastServer.Stop();
-        });
         // Must wait on all concurrently running tasks simultaneously to know when one of them crashed
-        await Task.WhenAll(handleStopTask, inputServerTask, overlayWebsocketTask);
+        await Task.WhenAll(
+            _broadcastServer.Start(cancellationToken),
+            _inputServer.Start(cancellationToken),
+            _modeBase.Start(cancellationToken)
+        );
         _logger.LogInformation("Runmode ended");
-    }
-
-    public void Cancel()
-    {
-        // once the mainloop is not just busylooping, this needs to be replaced with something
-        // that makes the mode stop immediately
-        _stopToken.ShouldStop = true;
-    }
-
-    public void Dispose()
-    {
-        _modeBase.Dispose();
     }
 }
