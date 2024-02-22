@@ -34,6 +34,7 @@ public static class Parsing
         RegisterMessageType<Revocation>();
         // The "notification" message type is implicitly known
         RegisterSubscriptionType<ChannelFollow>();
+        RegisterSubscriptionType<ChannelChatMessage>();
     }
 
     private static readonly Dictionary<string, Type> MessageTypes = new();

@@ -116,6 +116,7 @@ namespace TPP.Core.Chat
                 chatConfig.RefreshToken,
                 chatConfig.AppClientId,
                 chatConfig.AppClientSecret);
+            _twitchEventSubChat = new TwitchEventSubChat(loggerFactory, clock, TwitchApiProvider);
             _twitchClient = new TwitchClient(
                 client: new WebSocketClient(),
                 loggerFactory: loggerFactory);
@@ -186,6 +187,7 @@ namespace TPP.Core.Chat
             tasks.Add(CheckConnectivityWorker(cancellationToken));
             if (_coStreamInputsOnlyLive)
                 tasks.Add(CoStreamInputsLiveWorker(cancellationToken));
+            tasks.Add(_twitchEventSubChat.Start(cancellationToken));
             // Must wait on all concurrently running tasks simultaneously to know when one of them crashed
             await Task.WhenAll(tasks);
 
@@ -264,6 +266,7 @@ namespace TPP.Core.Chat
         }
 
         private readonly Dictionary<User, Instant> _lastInputPerUser = new();
+        private TwitchEventSubChat _twitchEventSubChat;
 
         private async Task MessageReceived(object? sender, OnMessageReceivedArgs e)
         {

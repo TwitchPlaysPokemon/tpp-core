@@ -29,29 +29,12 @@ public class EventSubClient
     private int? _keepaliveTimeSeconds;
     private Duration KeepaliveDuration => Duration.FromSeconds(_keepaliveTimeSeconds ?? 600);
 
-    private ClientWebSocket _webSocket;
-    private Task<WebsocketChangeover> _changeoverTask = NoChangeoverTask;
-    private TtlSet<string> _seenMessageIDs;
-    private Instant _lastMessageTimestamp;
-    private bool _welcomeReceived = false;
+    private readonly TtlSet<string> _seenMessageIDs;
 
     public enum DisconnectReason { KeepaliveTimeout, RemoteDisconnected }
     public event EventHandler<INotification>? NotificationReceived;
     public event EventHandler<Revocation>? RevocationReceived;
     public event EventHandler<SessionWelcome>? Connected;
-    public event EventHandler<DisconnectReason>? ConnectionLost;
-
-    private void Reset()
-    {
-        _webSocket.Abort();
-        _webSocket.Dispose();
-        _webSocket = new ClientWebSocket();
-        if (_keepaliveTimeSeconds != null)
-            _webSocket.Options.KeepAliveInterval = TimeSpan.FromSeconds(_keepaliveTimeSeconds.Value);
-        _changeoverTask = NoChangeoverTask;
-        _seenMessageIDs = new TtlSet<string>(MaxMessageAge, _clock);
-        _welcomeReceived = false;
-    }
 
     public EventSubClient(
         ILoggerFactory loggerFactory,
@@ -70,9 +53,6 @@ public class EventSubClient
             : new Uri(url + "?keepalive_timeout_seconds=" + keepaliveTimeSeconds);
         _keepaliveTimeSeconds = keepaliveTimeSeconds;
         _seenMessageIDs = new TtlSet<string>(MaxMessageAge, _clock);
-        _webSocket = new ClientWebSocket();
-        if (_keepaliveTimeSeconds != null)
-            _webSocket.Options.KeepAliveInterval = TimeSpan.FromSeconds(_keepaliveTimeSeconds.Value);
     }
 
     private static async Task<string?> ReadMessageText(WebSocket webSocket, CancellationToken cancellationToken)
@@ -112,48 +92,61 @@ public class EventSubClient
         return Parse(json);
     }
 
-    public async Task Connect(CancellationToken cancellationToken)
+    /// <summary>
+    /// You cannot usually swap variables used in a using declaration.
+    /// But by deferring the disposal to a mutable inner instance, we can achieve declaring this with "using",
+    /// but swapping its content midway.
+    /// </summary>
+    private class WebSocketBox : IDisposable
     {
-        await _webSocket.ConnectAsync(_uri, cancellationToken);
-        _lastMessageTimestamp = _clock.GetCurrentInstant(); // treat a fresh connection as a received message
+        public ClientWebSocket WebSocket { get; private set; } = new();
+        public ClientWebSocket SwapWith(ClientWebSocket newWebSocket)
+        {
+            ClientWebSocket oldWebSocket = WebSocket;
+            WebSocket = newWebSocket;
+            return oldWebSocket;
+        }
+        public void Dispose() => WebSocket.Dispose();
+    }
+
+    public async Task<DisconnectReason> ConnectAndReceive(CancellationToken cancellationToken)
+    {
+        bool welcomeReceived = false;
+        Task<WebsocketChangeover> changeoverTask = NoChangeoverTask;
+
+        using var webSocketBox = new WebSocketBox();
+        if (_keepaliveTimeSeconds != null)
+            webSocketBox.WebSocket.Options.KeepAliveInterval = TimeSpan.FromSeconds(_keepaliveTimeSeconds.Value);
+        await webSocketBox.WebSocket.ConnectAsync(_uri, cancellationToken);
+        Instant lastMessageTimestamp = _clock.GetCurrentInstant(); // treat a fresh connection as a received message
         while (!cancellationToken.IsCancellationRequested)
         {
-            Task<ParseResult?> readTask = ReadMessage(_webSocket, cancellationToken);
-            Instant assumeDeadAt = _lastMessageTimestamp + KeepaliveDuration + KeepAliveGrace;
+            Task<ParseResult?> readTask = ReadMessage(webSocketBox.WebSocket, cancellationToken);
+            Instant assumeDeadAt = lastMessageTimestamp + KeepaliveDuration + KeepAliveGrace;
             Duration assumeDeadIn = assumeDeadAt - _clock.GetCurrentInstant();
             Task timeoutTask = Task.Delay(assumeDeadIn.ToTimeSpan(), cancellationToken);
-            Task firstFinishedTask = await Task.WhenAny(_changeoverTask, readTask, timeoutTask);
+            Task firstFinishedTask = await Task.WhenAny(changeoverTask, readTask, timeoutTask);
             if (cancellationToken.IsCancellationRequested)
-            {
                 break;
-            }
-            if (firstFinishedTask == _changeoverTask)
+            if (firstFinishedTask == changeoverTask)
             {
-                ClientWebSocket oldWebsocket = _webSocket;
-                WebsocketChangeover changeover = await _changeoverTask;
-                _webSocket = changeover.NewWebSocket;
+                WebsocketChangeover changeover = await changeoverTask;
                 _keepaliveTimeSeconds = changeover.Welcome.Payload.Session.KeepaliveTimeoutSeconds;
-                _lastMessageTimestamp = changeover.Welcome.Metadata.MessageTimestamp;
-                _changeoverTask = NoChangeoverTask;
+                lastMessageTimestamp = changeover.Welcome.Metadata.MessageTimestamp;
+                changeoverTask = NoChangeoverTask;
+                ClientWebSocket oldWebsocket = webSocketBox.SwapWith(changeover.NewWebSocket);
                 await oldWebsocket.CloseAsync(WebSocketCloseStatus.NormalClosure, null, cancellationToken);
+                oldWebsocket.Dispose();
                 continue;
             }
             if (firstFinishedTask == timeoutTask)
-            {
                 // Regarding "Keepalive message", Twitch recommends:
                 // If your client doesn't receive an event or keepalive message for longer than keepalive_timeout_seconds,
                 // you should assume the connection is lost and reconnect to the server and resubscribe to the events.
-                Reset();
-                ConnectionLost?.Invoke(this, DisconnectReason.KeepaliveTimeout);
-                break;
-            }
+                return DisconnectReason.KeepaliveTimeout;
             ParseResult? parseResult = await readTask;
             if (parseResult == null) // connection closed
-            {
-                Reset();
-                ConnectionLost?.Invoke(this, DisconnectReason.RemoteDisconnected);
-                break;
-            }
+                return DisconnectReason.RemoteDisconnected;
             if (parseResult is not ParseResult.Ok(var message))
             {
                 if (parseResult is ParseResult.InvalidMessage(var error))
@@ -179,17 +172,17 @@ public class EventSubClient
                 // Make sure you haven’t seen the ID in the message_id field before.
                 continue; // Just drop silently. TODO maybe log or issue an optional "duplicate message" event?
             }
-            _lastMessageTimestamp = message.Metadata.MessageTimestamp;
+            lastMessageTimestamp = message.Metadata.MessageTimestamp;
             if (message is SessionWelcome welcome)
             {
-                if (_welcomeReceived)
+                if (welcomeReceived)
                     throw new ProtocolViolationException(
                         $"Unexpected received a second welcome message on websocket: {message}");
-                _welcomeReceived = true;
+                welcomeReceived = true;
                 _keepaliveTimeSeconds = welcome.Payload.Session.KeepaliveTimeoutSeconds;
                 Connected?.Invoke(this, welcome);
             }
-            else if (!_welcomeReceived)
+            else if (!welcomeReceived)
             {
                 throw new ProtocolViolationException(
                     $"Expected first message on websocket to be {SessionWelcome.MessageType}, " +
@@ -204,7 +197,7 @@ public class EventSubClient
                 var reconnectUri = new Uri(reconnect.Payload.Session
                     .ReconnectUrl ?? throw new ProtocolViolationException(
                     "twitch must provide a reconnect URL in a reconnect message"));
-                _changeoverTask = PerformChangeover(reconnectUri, cancellationToken);
+                changeoverTask = PerformChangeover(reconnectUri, cancellationToken);
             }
             else if (message is Revocation revocation)
             {
@@ -220,6 +213,8 @@ public class EventSubClient
                 _logger.LogError("Known message was not handled and skipped: {Message}", message);
             }
         }
+        await webSocketBox.WebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
+        throw new TaskCanceledException();
     }
 
     private static async Task<WebsocketChangeover> PerformChangeover(Uri reconnectUri,
