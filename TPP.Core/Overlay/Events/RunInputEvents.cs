@@ -21,8 +21,10 @@ namespace TPP.Core.Overlay.Events
         [DataMember(Name = "id")] public int InputId { get; set; }
         [DataMember(Name = "side", EmitDefaultValue = false)] public string? Side { get; set; }
         [DataMember(Name = "direct", EmitDefaultValue = false)] public bool? Direct { get; set; }
+        [DataMember(Name = "channel")] public string? Channel { get; set; }
+        [DataMember(Name = "channel_image_url")] public string? ChannelImageUrl { get; set; }
 
-        public NewAnarchyInput(int inputId, InputSet inputSet, User user)
+        public NewAnarchyInput(int inputId, InputSet inputSet, User user, string? channel, string? channelImageUrl)
         {
             IEnumerable<Input> InputsForOverlay() => inputSet.Inputs.Where(i => i is not SideInput);
             ButtonSet = InputsForOverlay().Select(i => i.ButtonName).ToImmutableList();
@@ -34,6 +36,8 @@ namespace TPP.Core.Overlay.Events
             SideInput? sideInput = inputSet.Inputs.Where(i => i is SideInput).Cast<SideInput>().FirstOrDefault();
             Side = (sideInput?.Side)?.GetSideString();
             Direct = sideInput?.Direct;
+            Channel = channel;
+            ChannelImageUrl = channelImageUrl;
         }
     }
 

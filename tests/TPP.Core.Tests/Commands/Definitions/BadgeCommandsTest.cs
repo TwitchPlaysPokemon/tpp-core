@@ -27,7 +27,7 @@ namespace TPP.Core.Tests.Commands.Definitions
             selectedBadge: selectedBadge);
 
         private static Message MockMessage(User user, string text = "") =>
-            new(user, text, MessageSource.Chat, string.Empty);
+            new(user, text, new MessageSource.PrimaryChat(), string.Empty);
 
         private IBadgeRepo _badgeRepoMock = null!;
         private IBadgeStatsRepo _badgeStatsRepoMock = null!;

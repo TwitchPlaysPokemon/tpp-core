@@ -27,7 +27,7 @@ namespace TPP.Core.Tests.Commands
             lastMessageAt: null, pokeyen: 0, tokens: 0);
 
         private Message MockMessage(string text = "")
-            => new Message(_mockUser, text, MessageSource.Chat, string.Empty);
+            => new Message(_mockUser, text, new MessageSource.PrimaryChat(), string.Empty);
 
         [Test]
         public async Task TestUnknownCommand()
@@ -132,10 +132,10 @@ namespace TPP.Core.Tests.Commands
             firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
             lastMessageAt: null, pokeyen: 0, tokens: 0, roles: new HashSet<Role> { Role.Operator });
 
-            CommandResult? userResult = await commandProcessor.Process("opsonly", _noArgs, new Message(_mockUser, "", MessageSource.Chat, ""));
+            CommandResult? userResult = await commandProcessor.Process("opsonly", _noArgs, new Message(_mockUser, "", new MessageSource.PrimaryChat(), ""));
             Assert.That(userResult?.Response, Is.EqualTo("Only operators can use that command"));
 
-            CommandResult? opResult = await commandProcessor.Process("opsonly", _noArgs, new Message(op, "", MessageSource.Chat, ""));
+            CommandResult? opResult = await commandProcessor.Process("opsonly", _noArgs, new Message(op, "", new MessageSource.PrimaryChat(), ""));
             Assert.That(opResult?.Response, Is.EqualTo("you are an operator"));
         }
     }

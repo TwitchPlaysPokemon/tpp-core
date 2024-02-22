@@ -126,11 +126,28 @@ namespace TPP.Persistence.MongoDB.Repos
                 update = update.Set(u => u.LastWhisperReceivedAt, updatedAt);
             }
 
-            async Task<User?> UpdateExistingUser() => await Collection.FindOneAndUpdateAsync<User>(
-                filter: u => u.Id == userInfo.Id,
-                update: update,
-                options: new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After, IsUpsert = false }
-            );
+            // We want our custom display name to only differ to the simple name in capitalization.
+            // If Twitch already provides that, great! Otherwise don't use Twitch's display name.
+            string initialCustomName =
+                userInfo.TwitchDisplayName.Equals(userInfo.SimpleName, StringComparison.OrdinalIgnoreCase)
+                    ? userInfo.TwitchDisplayName
+                    : userInfo.SimpleName;
+
+            async Task<User?> UpdateExistingUser()
+            {
+                var user = await Collection.FindOneAndUpdateAsync<User>(
+                    filter: u => u.Id == userInfo.Id,
+                    update: update,
+                    new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After, IsUpsert = false }
+                );
+                if (user == null || user.SimpleName.Equals(user.Name, StringComparison.OrdinalIgnoreCase))
+                    return user;
+                else
+                    // The name field doesn't come from Twitch, we assign this ourselves the first time we see an user,
+                    // and allow users to change the capitalization using a command. But people can change their names
+                    // entirely on Twitch, so we need to check if that happened and update our custom name field.
+                    return await SetDisplayName(user, initialCustomName);
+            }
 
             User? user = await UpdateExistingUser();
             if (user != null)
@@ -142,7 +159,7 @@ namespace TPP.Persistence.MongoDB.Repos
 
             user = new User(
                 id: userInfo.Id,
-                name: userInfo.SimpleName,
+                name: initialCustomName,
                 twitchDisplayName: userInfo.TwitchDisplayName,
                 simpleName: userInfo.SimpleName,
                 color: userInfo.Color?.StringWithoutHash,

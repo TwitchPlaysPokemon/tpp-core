@@ -69,6 +69,7 @@ public class ModerationCommands : ICommandCollection
             {
                 BanResult.Ok => $"Banned {targetUser.Name}. Reason: {reason}",
                 BanResult.UserIsModOrOp => "User is a moderator or operator, they cannot be banned.",
+                BanResult.NotSupportedInChannel => "Not supported for this channel.",
             }
         };
     }
@@ -83,6 +84,7 @@ public class ModerationCommands : ICommandCollection
             {
                 BanResult.Ok => $"Unbanned {targetUser.Name}. Reason: {reason}",
                 BanResult.UserIsModOrOp => "User is a moderator or operator, they cannot be banned.",
+                BanResult.NotSupportedInChannel => "Not supported for this channel.",
             }
         };
     }
@@ -121,6 +123,7 @@ public class ModerationCommands : ICommandCollection
                 TimeoutResult.MustBe2WeeksOrLess => "Twitch timeouts must be 2 weeks or less.",
                 TimeoutResult.UserIsBanned => "User is banned. Unban them first to issue a timeout.",
                 TimeoutResult.UserIsModOrOp => "User is a moderator or operator, they cannot be timed out.",
+                TimeoutResult.NotSupportedInChannel => "Not supported for this channel.",
             }
         };
     }
@@ -138,6 +141,7 @@ public class ModerationCommands : ICommandCollection
                 TimeoutResult.MustBe2WeeksOrLess => "Twitch timeouts must be 2 weeks or less.",
                 TimeoutResult.UserIsBanned => "User is banned. Unban them instead if desired.",
                 TimeoutResult.UserIsModOrOp => "User is a moderator or operator, they cannot be timed out.",
+                TimeoutResult.NotSupportedInChannel => "Not supported for this channel.",
             }
         };
     }

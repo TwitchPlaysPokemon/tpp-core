@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using TPP.ArgsParsing.Types;
 using TPP.Common;
@@ -11,14 +12,35 @@ using TPP.Persistence;
 
 namespace TPP.Core.Commands.Definitions
 {
-    public class StopToken
+    public interface IStopToken
     {
-        public bool ShouldStop { get; set; }
+        bool IsCancellationRequested();
+        void Cancel();
+        bool TryUndoCancel();
+    }
+
+    public class ToggleableStopToken : IStopToken
+    {
+        private bool ShouldStop { get; set; }
+        public bool IsCancellationRequested() => ShouldStop;
+        public void Cancel() => ShouldStop = true;
+        public bool TryUndoCancel()
+        {
+            ShouldStop = false;
+            return true;
+        }
+    }
+
+    public class CancellationStopToken(CancellationTokenSource cancellationTokenSource) : IStopToken
+    {
+        public bool IsCancellationRequested() => cancellationTokenSource.IsCancellationRequested;
+        public void Cancel() => cancellationTokenSource.Cancel();
+        public bool TryUndoCancel() => false;
     }
 
     public class OperatorCommands : ICommandCollection
     {
-        private readonly StopToken _stopToken;
+        private readonly IStopToken _stopToken;
         private readonly MuteInputsToken? _muteInputsToken;
         private readonly IBank<User> _pokeyenBank;
         private readonly IBank<User> _tokensBank;
@@ -28,7 +50,7 @@ namespace TPP.Core.Commands.Definitions
         private readonly IInputSidePicksRepo _inputSidePicksRepo;
 
         public OperatorCommands(
-            StopToken stopToken,
+            IStopToken stopToken,
             MuteInputsToken? muteInputsToken,
             IBank<User> pokeyenBank,
             IBank<User> tokensBank,
@@ -116,14 +138,26 @@ namespace TPP.Core.Commands.Definitions
             if (argSet.Count > 0)
                 return Task.FromResult(new CommandResult { Response = "too many arguments" });
 
-            string message = cancel
-                ? _stopToken.ShouldStop
-                    ? "cancelled a prior stop command (new core)"
-                    : "main loop already not stopping (new core)"
-                : _stopToken.ShouldStop
-                    ? "main loop already stopping (new core)"
-                    : "stopping main loop (new core)";
-            _stopToken.ShouldStop = !cancel;
+            string message;
+            if (cancel)
+            {
+                if (!_stopToken.IsCancellationRequested())
+                    message = "main loop already not stopping (new core)";
+                else if (!_stopToken.TryUndoCancel())
+                    message = "stop request cannot be undone (new core)";
+                else
+                    message = "cancelled a prior stop command (new core)";
+            }
+            else
+            {
+                if (_stopToken.IsCancellationRequested())
+                    message = "main loop already stopping (new core)";
+                else
+                {
+                    _stopToken.Cancel();
+                    message = "stopping main loop (new core)";
+                }
+            }
             return Task.FromResult(new CommandResult { Response = message });
         }
 

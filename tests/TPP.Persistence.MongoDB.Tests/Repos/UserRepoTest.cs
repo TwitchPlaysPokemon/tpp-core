@@ -54,6 +54,45 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             Assert.That(userAfter.TwitchDisplayName, Is.EqualTo(displayNameAfter));
             Assert.That(userBefore.SimpleName, Is.EqualTo(usernameBefore));
             Assert.That(userAfter.SimpleName, Is.EqualTo(usernameAfter));
+            Assert.That(userBefore.Name, Is.EqualTo(usernameBefore));
+            Assert.That(userAfter.Name, Is.EqualTo(usernameAfter));
+            Assert.That(userBefore.Color, Is.EqualTo("123456"));
+            Assert.That(userAfter.Color, Is.EqualTo("abcdef"));
+        }
+
+        /// <summary>
+        /// Tests that our custom "Name" field gets derived from Twitch's display name if it only differs from the
+        /// simple name in capitalization.
+        /// </summary>
+        [Test]
+        public async Task recording_user_name_derived_from_displayname_if_capitalization_ok()
+        {
+            // given
+            UserRepo userRepo = CreateUserRepo();
+            const string userId = "123";
+            const string displayNameBefore = "USERname";
+            const string displayNameAfter = "I_changed_MY_name";
+            const string usernameBefore = "username";
+            const string usernameAfter = "i_changed_my_name";
+
+            // when
+            User userBefore = await userRepo.RecordUser(new UserInfo(
+                userId, TwitchDisplayName: displayNameBefore, SimpleName: usernameBefore,
+                HexColor.FromWithHash("#123456")));
+            User userAfter = await userRepo.RecordUser(new UserInfo(
+                userId, TwitchDisplayName: displayNameAfter, SimpleName: usernameAfter,
+                HexColor.FromWithHash("#abcdef")));
+
+            // then
+            Assert.That(await userRepo.Collection.CountDocumentsAsync(FilterDefinition<User>.Empty), Is.EqualTo(1));
+            Assert.That(userBefore.Id, Is.EqualTo(userId));
+            Assert.That(userAfter.Id, Is.EqualTo(userId));
+            Assert.That(userBefore.TwitchDisplayName, Is.EqualTo(displayNameBefore));
+            Assert.That(userAfter.TwitchDisplayName, Is.EqualTo(displayNameAfter));
+            Assert.That(userBefore.SimpleName, Is.EqualTo(usernameBefore));
+            Assert.That(userAfter.SimpleName, Is.EqualTo(usernameAfter));
+            Assert.That(userBefore.Name, Is.EqualTo(displayNameBefore));
+            Assert.That(userAfter.Name, Is.EqualTo(displayNameAfter));
             Assert.That(userBefore.Color, Is.EqualTo("123456"));
             Assert.That(userAfter.Color, Is.EqualTo("abcdef"));
         }

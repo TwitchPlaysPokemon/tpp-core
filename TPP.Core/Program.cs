@@ -180,22 +180,23 @@ Options:
             BaseConfig baseConfig = ReadConfig<BaseConfig>(baseConfigFilename);
             ILoggerFactory loggerFactory = BuildLoggerFactory(baseConfig);
             ILogger logger = loggerFactory.CreateLogger("main");
-            IMode mode = modeName switch
+            CancellationTokenSource cts = new();
+            IWithLifecycle mode = modeName switch
             {
-                "run" => new Runmode(loggerFactory, baseConfig, () => ReadConfig<RunmodeConfig>(modeConfigFilename)),
-                "match" => new Matchmode(loggerFactory, baseConfig, ReadConfig<MatchmodeConfig>(modeConfigFilename)),
-                "dualcore" => new DualcoreMode(loggerFactory, baseConfig),
+                "run" => new Runmode(loggerFactory, baseConfig, cts, () => ReadConfig<RunmodeConfig>(modeConfigFilename)),
+                "match" => new Matchmode(loggerFactory, baseConfig, cts, ReadConfig<MatchmodeConfig>(modeConfigFilename)),
+                "dualcore" => new DualcoreMode(loggerFactory, baseConfig, cts),
                 "dummy" => new DummyMode(loggerFactory, baseConfig),
                 _ => throw new NotSupportedException($"Invalid mode '{modeName}'")
             };
             TaskCompletionSource<bool> cleanupDone = new();
             try
             {
-                Task modeTask = mode.Run();
+                Task modeTask = mode.Start(cts.Token);
                 void Abort(object? sender, EventArgs args)
                 {
                     logger.LogInformation("Aborting mode...");
-                    mode.Cancel();
+                    cts.Cancel();
                     cleanupDone.Task.Wait();
                 }
                 AppDomain.CurrentDomain.ProcessExit += Abort; // SIGTERM

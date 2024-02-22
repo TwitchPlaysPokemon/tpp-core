@@ -15,7 +15,7 @@ namespace TPP.Core.Tests.Moderation
             lastMessageAt: null, pokeyen: 0, tokens: 0);
 
         private static Message TextMessage(string text) =>
-            new(MockUser("MockUser"), text, MessageSource.Chat, string.Empty);
+            new(MockUser("MockUser"), text, new MessageSource.PrimaryChat(), string.Empty);
 
         [TestFixture]
         private class Copypasta

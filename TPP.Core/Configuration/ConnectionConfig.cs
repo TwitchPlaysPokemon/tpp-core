@@ -4,6 +4,7 @@ using System.Linq;
 using JsonSubTypes;
 using Newtonsoft.Json;
 using NodaTime;
+using TPP.Core.Utils;
 
 namespace TPP.Core.Configuration
 {
@@ -44,6 +45,15 @@ namespace TPP.Core.Configuration
             public string AppClientId { get; init; } = "myappclientid";
             public string AppClientSecret { get; init; } = "myappclientsecret";
 
+            // If this Twitch chat connection should get monitored for subscriptions.
+            // Only enable this for the "main" channel, otherwise subs in other channels would e.g. give tokens too.
+            public bool MonitorSubscriptions { get; init; } = true;
+
+            // Whether people can do !join in chat for tpp to join their channel, and consume inputs from there.
+            public bool CoStreamInputsEnabled { get; init; } = false;
+            // Whether the co-stream-inputs feature only allows !join for people currently streaming.
+            public bool CoStreamInputsOnlyLive { get; init; } = true;
+
             /* communication settings */
             public enum SuppressionType { Whisper, Message, Command }
             public ImmutableHashSet<SuppressionType> Suppressions { get; init; } = Enum
@@ -51,9 +61,9 @@ namespace TPP.Core.Configuration
                 .Cast<SuppressionType>()
                 .ToImmutableHashSet(); // all by default
             // list of usernames and channels that may receive outbound messages even with suppression enabled
-            public ImmutableHashSet<string> SuppressionOverrides { get; init; } = ImmutableHashSet.Create<string>();
+            public CaseInsensitiveImmutableHashSet SuppressionOverrides { get; init; } = new([]);
 
-            public Duration GetChattersInterval { get; init; } = Duration.FromMinutes(5);
+            public Duration? GetChattersInterval { get; init; } = Duration.FromMinutes(5);
         }
 
         public sealed class Simulation : ConnectionConfig
