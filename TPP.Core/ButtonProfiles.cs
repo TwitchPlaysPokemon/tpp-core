@@ -102,7 +102,7 @@ namespace TPP.Core
                     .LeftRightSidesEnabled(true),
                 ButtonProfile.DualSNES => ButtonProfile.SNES.ToInputParserBuilder()
                     .LeftRightSidesEnabled(true),
-                ButtonProfile.DualN64 => ButtonProfile.DualN64.ToInputParserBuilder()
+                ButtonProfile.DualN64 => ButtonProfile.N64.ToInputParserBuilder()
                     .LeftRightSidesEnabled(true),
                 ButtonProfile.DualGameCube => ButtonProfile.GameCube.ToInputParserBuilder()
                     .LeftRightSidesEnabled(true),
