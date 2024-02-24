@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using NUnit.Framework;
 using TPP.Core;
@@ -30,6 +31,14 @@ public class ButtonMappingTest
     {
         var mappedInputs = _inputMapper.Map(new TimedInputSet(ParseInput(rawInput), 1, 2));
         Assert.That(mappedInputs.Keys, Has.Count.EqualTo(2), message ?? "Mapped output should contain no buttons.");
+    }
+
+    [Test]
+    public void TestBuildEveryProfile()
+    {
+        foreach (string profile in Enum.GetNames<ButtonProfile>()) {
+            Assert.DoesNotThrow(() => Enum.Parse<ButtonProfile>(profile).ToInputParserBuilder().Build(), $"Button Profile {profile} failed to build.");
+        }
     }
 
     [Test]
