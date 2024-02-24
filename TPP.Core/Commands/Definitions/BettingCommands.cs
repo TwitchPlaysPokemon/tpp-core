@@ -31,7 +31,7 @@ namespace TPP.Core.Commands.Definitions
 
         public async Task<CommandResult> Bet(CommandContext context)
         {
-            if (context.Message.MessageSource != MessageSource.Chat)
+            if (context.Message.MessageSource is not MessageSource.PrimaryChat)
                 return new CommandResult { Response = "you may only bet through chat" };
             IBettingPeriod<User>? bettingPeriod = _bettingPeriodProvider();
             if (bettingPeriod == null)

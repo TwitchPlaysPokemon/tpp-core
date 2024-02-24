@@ -17,13 +17,13 @@ using static TPP.Core.EventUtils;
 
 namespace TPP.Core.Modes;
 
-public sealed class Matchmode : IMode, IDisposable
+public sealed class Matchmode : IWithLifecycle
 {
     private readonly MatchmodeConfig _matchmodeConfig;
     private readonly ILogger<Matchmode> _logger;
     private readonly ILoggerFactory _loggerFactory;
-    private readonly StopToken _stopToken;
-    private CancellationTokenSource? _loopCancelToken;
+    private readonly IStopToken _stopToken;
+    private readonly CancellationTokenSource _cancellationTokenSource;
     private readonly ModeBase _modeBase;
     private readonly WebsocketBroadcastServer _broadcastServer;
     private readonly OverlayConnection _overlayConnection;
@@ -31,12 +31,14 @@ public sealed class Matchmode : IMode, IDisposable
     private readonly IUserRepo _userRepo;
     private IBettingPeriod<User>? _bettingPeriod = null;
 
-    public Matchmode(ILoggerFactory loggerFactory, BaseConfig baseConfig, MatchmodeConfig matchmodeConfig)
+    public Matchmode(ILoggerFactory loggerFactory, BaseConfig baseConfig,
+        CancellationTokenSource cancellationTokenSource, MatchmodeConfig matchmodeConfig)
     {
         _matchmodeConfig = matchmodeConfig;
         _loggerFactory = loggerFactory;
         _logger = loggerFactory.CreateLogger<Matchmode>();
-        _stopToken = new StopToken();
+        _stopToken = new ToggleableStopToken();
+        _cancellationTokenSource = cancellationTokenSource;
         Setups.Databases repos = Setups.SetUpRepositories(loggerFactory, _logger, baseConfig);
         _pokeyenBank = repos.PokeyenBank;
         _userRepo = repos.UserRepo;
@@ -48,29 +50,24 @@ public sealed class Matchmode : IMode, IDisposable
             _modeBase.InstallAdditionalCommand(command);
     }
 
-    public async Task Run()
+    public async Task Start(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Matchmode starting");
-        _modeBase.Start();
-        Task overlayWebsocketTask = _broadcastServer.Listen();
+        Task modeBaseTask = _modeBase.Start(cancellationToken);
+        Task overlayWebsocketTask = _broadcastServer.Start(cancellationToken);
         Task handleStopTask = Task.Run(async () =>
         {
-            while (!_stopToken.ShouldStop)
+            while (!cancellationToken.IsCancellationRequested && !_stopToken.IsCancellationRequested())
             {
-                _loopCancelToken = new CancellationTokenSource();
-                try
-                {
-                    await Loop(_loopCancelToken.Token);
-                }
-                catch (OperationCanceledException)
-                {
-                    _logger.LogInformation("Match loop cancelled");
-                }
+                try { await Loop(cancellationToken); }
+                catch (OperationCanceledException) { break; }
             }
-            await _broadcastServer.Stop();
+            if (!cancellationToken.IsCancellationRequested)
+                // We reached here through the stop token. Need to shut down the rest using the regular stop token now.
+                _cancellationTokenSource.Cancel();
         });
         // Must wait on all concurrently running tasks simultaneously to know when one of them crashed
-        await Task.WhenAll(handleStopTask, overlayWebsocketTask);
+        await Task.WhenAll(modeBaseTask, overlayWebsocketTask, handleStopTask);
         _logger.LogInformation("Matchmode ended");
     }
 
@@ -164,17 +161,6 @@ public sealed class Matchmode : IMode, IDisposable
 
         await Task.Delay(_matchmodeConfig.ResultDuration.ToTimeSpan(), cancellationToken);
         await _overlayConnection.Send(new ResultsFinishedEvent(), cancellationToken);
-    }
-
-    public void Cancel()
-    {
-        _stopToken.ShouldStop = true;
-        _loopCancelToken?.Cancel();
-    }
-
-    public void Dispose()
-    {
-        _modeBase.Dispose();
     }
 
     private async Task ResetBalances()

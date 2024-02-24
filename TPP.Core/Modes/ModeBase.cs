@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
@@ -12,14 +13,16 @@ using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
 using TPP.Core.Moderation;
 using TPP.Core.Overlay;
+using TPP.Core.Utils;
 using TPP.Inputting;
 using TPP.Model;
 using TPP.Persistence;
 using static TPP.Core.EventUtils;
+using static TPP.Core.MessageSource;
 
 namespace TPP.Core.Modes
 {
-    public sealed class ModeBase : IDisposable
+    public sealed class ModeBase : IWithLifecycle
     {
         private static readonly Role[] ExemptionRoles = { Role.Operator, Role.Moderator, Role.ModbotExempt };
 
@@ -35,6 +38,7 @@ namespace TPP.Core.Modes
         private readonly IMessagelogRepo _messagelogRepo;
         private readonly IClock _clock;
         private readonly ProcessMessage _processMessage;
+        private readonly ChattersWorker? _chattersWorker;
 
         /// Processes a message that wasn't already processed by the mode base,
         /// and returns whether the message was actively processed.
@@ -44,7 +48,7 @@ namespace TPP.Core.Modes
             ILoggerFactory loggerFactory,
             Setups.Databases repos,
             BaseConfig baseConfig,
-            StopToken stopToken,
+            IStopToken stopToken,
             MuteInputsToken? muteInputsToken,
             OverlayConnection overlayConnection,
             ProcessMessage? processMessage = null)
@@ -57,7 +61,7 @@ namespace TPP.Core.Modes
 
             var chats = new Dictionary<string, IChat>();
             var chatFactory = new ChatFactory(loggerFactory, clock,
-                repos.UserRepo, repos.ChattersSnapshotsRepo, repos.TokensBank, repos.SubscriptionLogRepo,
+                repos.UserRepo, repos.CoStreamChannelsRepo, repos.TokensBank, repos.SubscriptionLogRepo,
                 repos.LinkedAccountRepo, overlayConnection);
             foreach (ConnectionConfig connectorConfig in baseConfig.Chat.Connections)
             {
@@ -77,7 +81,9 @@ namespace TPP.Core.Modes
             _commandProcessors = _chats.Values.ToImmutableDictionary(
                 c => c.Name,
                 c => Setups.SetUpCommandProcessor(loggerFactory, baseConfig, argsParser, repos, stopToken,
-                    muteInputsToken, messageSender: c, chatModeChanger: c, executor: c, pokedexData.KnownSpecies, transmuter));
+                    muteInputsToken, messageSender: c,
+                    chatModeChanger: c as IChatModeChanger, executor: c as IExecutor,
+                    pokedexData.KnownSpecies, transmuter));
 
             _outgoingMessagequeueRepo = repos.OutgoingMessagequeueRepo;
             _messagelogRepo = repos.MessagelogRepo;
@@ -101,13 +107,16 @@ namespace TPP.Core.Modes
                 .Where(rule => !baseConfig.DisabledModbotRules.Contains(rule.Id))
                 .ToImmutableList();
 
-            _moderators = _chats.Values.ToImmutableDictionary(
-                c => c.Name,
-                c => (IModerator)new Moderator(moderatorLogger, c, rules, repos.ModbotLogRepo, clock));
+            _moderators = _chats.Values
+                .Where(c => c is IExecutor)
+                .ToImmutableDictionary(
+                    c => c.Name,
+                    c => (IModerator)new Moderator(moderatorLogger, (IExecutor)c, rules, repos.ModbotLogRepo, clock));
             if (!baseConfig.DisabledFeatures.Contains(TppFeatures.Polls))
                 _advertisePollsWorkers = _chats.Values.ToImmutableDictionary(
                     c => c.Name,
-                    c => new AdvertisePollsWorker(baseConfig.AdvertisePollsInterval, repos.PollRepo, c));
+                    c => new AdvertisePollsWorker(loggerFactory.CreateLogger<AdvertisePollsWorker>(),
+                        baseConfig.AdvertisePollsInterval, repos.PollRepo, c));
 
             if (baseConfig.Chat.SendOutForwardedMessages)
             {
@@ -129,6 +138,20 @@ namespace TPP.Core.Modes
                         chat, clock);
                 }
             }
+
+            List<ConnectionConfig.Twitch> chatsWithChattersWorker = baseConfig.Chat.Connections
+                .OfType<ConnectionConfig.Twitch>()
+                .Where(con => con.GetChattersInterval != null)
+                .ToList();
+            ConnectionConfig.Twitch? primaryChat = chatsWithChattersWorker.FirstOrDefault();
+            if (chatsWithChattersWorker.Count > 1)
+                _logger.LogWarning("More than one twitch chat have GetChattersInterval configured: {ChatNames}. " +
+                                   "Using only the first one ('{ChosenChat}') for the chatters worker",
+                    string.Join(", ", chatsWithChattersWorker.Select(c => c.Name)), primaryChat?.Name);
+            _chattersWorker = primaryChat == null
+                ? null
+                : new ChattersWorker(loggerFactory, clock,
+                    ((TwitchChat)_chats[primaryChat.Name]).TwitchApiProvider, repos.ChattersSnapshotsRepo, primaryChat);
         }
 
         public void InstallAdditionalCommand(Command command)
@@ -145,6 +168,8 @@ namespace TPP.Core.Modes
             });
         }
 
+        private static readonly CaseInsensitiveImmutableHashSet CoStreamAllowedCommands =
+            new(["left", "right"]);
         private async Task ProcessIncomingMessage(IChat chat, Message message)
         {
             Instant now = _clock.GetCurrentInstant();
@@ -153,8 +178,9 @@ namespace TPP.Core.Modes
 
             bool isOk = message.Details.IsStaff
                         || message.User.Roles.Intersect(ExemptionRoles).Any()
-                        || message.MessageSource != MessageSource.Chat
-                        || await _moderators[chat.Name].Check(message);
+                        || message.MessageSource is not PrimaryChat
+                        || !_moderators.TryGetValue(chat.Name, out IModerator? moderator)
+                        || await moderator.Check(message);
             if (!isOk)
             {
                 return;
@@ -168,7 +194,8 @@ namespace TPP.Core.Modes
             string cleanedMessage = message.MessageText;
             // The 7tv browser extension's setting "Allow sending the same message twice" (general.allow_send_twice)
             // appends ` \u{E0000}` to messages to bypass Twitch's "message is identical" notice. That is noise.
-            if (cleanedMessage.EndsWith("\U000E0000")) cleanedMessage = cleanedMessage[..^2]; // 2 characters because it's a surrogate pair in UTF-16
+            if (cleanedMessage.EndsWith("\U000E0000"))
+                cleanedMessage = cleanedMessage[..^2]; // 2 characters because it's a surrogate pair in UTF-16
 
             List<string> parts = cleanedMessage.Split(" ")
                 .Where(s => !string.IsNullOrEmpty(s)).ToList();
@@ -176,10 +203,13 @@ namespace TPP.Core.Modes
             string? commandName = firstPart switch
             {
                 null => null,
-                var name when message.MessageSource == MessageSource.Whisper
-                    => name.StartsWith('!') ? name[1..] : name,
-                var name when message.MessageSource == MessageSource.Chat && name.StartsWith('!')
-                    => name[1..],
+                _ when message.MessageSource is Whisper
+                    => firstPart.StartsWith('!') ? firstPart[1..] : firstPart,
+                _ when message.MessageSource is PrimaryChat && firstPart.StartsWith('!')
+                    => firstPart[1..],
+                _ when message.MessageSource is SecondaryChat && firstPart.StartsWith('!')
+                                                              && CoStreamAllowedCommands.Contains(firstPart[1..])
+                    => firstPart[1..],
                 _ => null
             };
             bool wasProcessed = false;
@@ -203,33 +233,27 @@ namespace TPP.Core.Modes
                 }
             }
             wasProcessed |= await _processMessage(chat, message);
-            if (!wasProcessed && _forwardUnprocessedMessages)
+            if (!wasProcessed && _forwardUnprocessedMessages && message.MessageSource is PrimaryChat)
             {
                 await _outgoingMessagequeueRepo.EnqueueMessage(message.RawIrcMessage);
             }
         }
 
-        public void Start()
+        public async Task Start(CancellationToken cancellationToken)
         {
-            foreach (IChat chat in _chats.Values)
-                chat.Connect();
+            List<Task> tasks = [];
+            tasks.AddRange(_chats.Values.Select(chat => chat.Start(cancellationToken)));
             if (_advertisePollsWorkers != null)
-                foreach (var advertisePollsWorker in _advertisePollsWorkers.Values)
-                    advertisePollsWorker.Start();
-            _sendOutQueuedMessagesWorker?.Start();
-        }
+                tasks.AddRange(_advertisePollsWorkers.Values.Select(worker => worker.Start(cancellationToken)));
+            if (_sendOutQueuedMessagesWorker != null)
+                tasks.Add(_sendOutQueuedMessagesWorker.Start(cancellationToken));
+            if (_chattersWorker != null)
+                tasks.Add(_chattersWorker.Start(cancellationToken));
+            // Must wait on all concurrently running tasks simultaneously to know when one of them crashed
+            await Task.WhenAll(tasks);
 
-        public void Dispose()
-        {
             foreach (IChat chat in _chats.Values)
-            {
-                chat.Dispose();
                 chat.IncomingMessage -= MessageReceived;
-            }
-            if (_advertisePollsWorkers != null)
-                foreach (var advertisePollsWorker in _advertisePollsWorkers.Values)
-                    advertisePollsWorker.Dispose();
-            _sendOutQueuedMessagesWorker?.Dispose();
         }
     }
 }

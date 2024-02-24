@@ -3,14 +3,16 @@ using System.Net;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using TPP.Core.Utils;
 using TPP.Inputting;
 using InputMap = System.Collections.Generic.IDictionary<string, object>;
 
 namespace TPP.Core;
 
-public sealed class InputServer : IDisposable
+public sealed class InputServer : IWithLifecycle
 {
     private readonly ILogger<InputServer> _logger;
     private readonly string _host;
@@ -18,7 +20,6 @@ public sealed class InputServer : IDisposable
     private readonly MuteInputsToken _muteInputsToken;
     private readonly Func<IInputFeed> _inputFeedSupplier;
 
-    private bool _stopped = false;
     private HttpListener? _httpListener;
 
     public InputServer(
@@ -47,7 +48,7 @@ public sealed class InputServer : IDisposable
     /// <summary>
     /// Keeps responding to new incoming requests until the server is stopped with <see cref="Stop"/>.
     /// </summary>
-    public async Task Listen()
+    public async Task Start(CancellationToken cancellationToken)
     {
         if (_httpListener != null)
             throw new InvalidOperationException("Cannot listen: The internal http listener is already running!");
@@ -66,11 +67,12 @@ public sealed class InputServer : IDisposable
         _httpListener.Start();
         _logger.LogInformation("Started input server on {Prefixes}", _httpListener.Prefixes);
 
-        // put responding to input requests on its own thread to avoid any potential
-        // delays due to cooperative multitasking
-        await Task.Run(async () =>
+        // put responding to input requests on its own thread for two reasons:
+        // - to avoid any potential delays due to cooperative multitasking, and
+        // - because we need to react to the cancellation token,
+        //   but waiting for incoming connections (GetContextAsync) doesn't take a cancellation token.
+        Task webserverTask = Task.Run(async () =>
         {
-
             while (_httpListener.IsListening)
             {
                 HttpListenerContext context;
@@ -106,10 +108,18 @@ public sealed class InputServer : IDisposable
                 }
             }
         });
-
-        if (!_stopped)
+        Task cancellationTask = cancellationToken.WhenCanceled();
+        if (await Task.WhenAny(webserverTask, cancellationTask) == cancellationTask)
+        {
+            _httpListener.Stop();
+            _httpListener = null;
+            await webserverTask;
+        }
+        else
+        {
             throw new InvalidOperationException(
                 "Unexpectedly encountered a graceful shutdown (listening ended but no stop was requested)");
+        }
     }
 
     private async Task HandleSingleConnection(HttpListenerRequest request, HttpListenerResponse response)
@@ -159,20 +169,5 @@ public sealed class InputServer : IDisposable
             await response.OutputStream.WriteAsync(buffer.AsMemory(0, buffer.Length));
         }
         response.Close();
-    }
-
-    public void Stop()
-    {
-        _stopped = true;
-        if (_httpListener is { IsListening: true })
-        {
-            _httpListener.Stop();
-        }
-        _httpListener = null;
-    }
-
-    public void Dispose()
-    {
-        Stop();
     }
 }

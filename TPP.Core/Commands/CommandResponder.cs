@@ -30,9 +30,9 @@ namespace TPP.Core.Commands
             switch (result.ResponseTarget)
             {
                 case ResponseTarget.Source:
-                    if (message.MessageSource == MessageSource.Chat)
+                    if (message.MessageSource is MessageSource.PrimaryChat)
                         await RespondViaChat();
-                    else if (message.MessageSource == MessageSource.Whisper)
+                    else if (message.MessageSource is MessageSource.Whisper or MessageSource.SecondaryChat)
                         await RespondViaWhisper();
                     break;
                 case ResponseTarget.Chat:
@@ -42,7 +42,7 @@ namespace TPP.Core.Commands
                     await RespondViaWhisper();
                     break;
                 case ResponseTarget.WhisperIfLong:
-                    if (message.MessageSource == MessageSource.Chat)
+                    if (message.MessageSource is not MessageSource.Whisper)
                     {
                         if (result.Response.Length > _whisperIfLongThreshold)
                         {
@@ -60,7 +60,7 @@ namespace TPP.Core.Commands
                     }
                     break;
                 case ResponseTarget.NoneIfChat:
-                    if (message.MessageSource != MessageSource.Chat)
+                    if (message.MessageSource is not MessageSource.PrimaryChat)
                         await RespondViaWhisper();
                     break;
                 default:

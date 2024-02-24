@@ -1,6 +1,9 @@
 ﻿name: json-schema
 
-on: [pull_request]
+on:
+  push:
+    branches:
+      - master
 
 jobs:
   build:
@@ -22,4 +25,4 @@ jobs:
           git add config.matchmode.schema.json
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git diff-index --quiet HEAD || { echo 'The configuration schema has changed. Please update the json schema files by running `dotnet run -- regenjsonschemas` locally and committing the output.'; exit 1; }
+          (git commit -m "update json schema" && git push) || echo "no schema changes"

@@ -6,8 +6,8 @@ using TPP.Persistence;
 
 namespace TPP.Core.Moderation;
 
-public enum TimeoutResult { Ok, MustBe2WeeksOrLess, UserIsBanned, UserIsModOrOp }
-public enum BanResult { Ok, UserIsModOrOp }
+public enum TimeoutResult { Ok, MustBe2WeeksOrLess, UserIsBanned, UserIsModOrOp, NotSupportedInChannel }
+public enum BanResult { Ok, UserIsModOrOp, NotSupportedInChannel }
 public enum ModerationActionType { Ban, Unban, Timeout, Untimeout }
 public class ModerationActionPerformedEventArgs : EventArgs
 {
@@ -25,7 +25,7 @@ public class ModerationActionPerformedEventArgs : EventArgs
 public class ModerationService
 {
     private readonly IClock _clock;
-    private readonly IExecutor _executor;
+    private readonly IExecutor? _executor;
     private readonly ITimeoutLogRepo _timeoutLogRepo;
     private readonly IBanLogRepo _banLogRepo;
     private readonly IUserRepo _userRepo;
@@ -33,7 +33,7 @@ public class ModerationService
     public event EventHandler<ModerationActionPerformedEventArgs>? ModerationActionPerformed;
 
     public ModerationService(
-        IClock clock, IExecutor executor, ITimeoutLogRepo timeoutLogRepo, IBanLogRepo banLogRepo, IUserRepo userRepo)
+        IClock clock, IExecutor? executor, ITimeoutLogRepo timeoutLogRepo, IBanLogRepo banLogRepo, IUserRepo userRepo)
     {
         _clock = clock;
         _executor = executor;
@@ -49,6 +49,9 @@ public class ModerationService
 
     private async Task<BanResult> BanOrUnban(User issuerUser, User targetUser, string reason, bool isBan)
     {
+        if (_executor == null)
+            return BanResult.NotSupportedInChannel;
+
         if (targetUser.Roles.Overlaps(new[] { Role.Operator, Role.Moderator }))
             return BanResult.UserIsModOrOp;
 
@@ -81,6 +84,9 @@ public class ModerationService
     private async Task<TimeoutResult> TimeoutOrUntimeout(
         User issuerUser, User targetUser, string reason, Duration? duration)
     {
+        if (_executor == null)
+            return TimeoutResult.NotSupportedInChannel;
+
         if (targetUser.Roles.Overlaps(new[] { Role.Operator, Role.Moderator }))
             return TimeoutResult.UserIsModOrOp;
 

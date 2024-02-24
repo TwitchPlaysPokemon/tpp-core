@@ -64,23 +64,26 @@ namespace TPP.Core.Tests.Overlay
         [Test]
         public async Task read_messages_until_clean_shutdown()
         {
-            await using WebsocketBroadcastServer server = CreateServer();
-            Task _ = server.Listen();
+            CancellationTokenSource cts = new();
+            WebsocketBroadcastServer server = CreateServer();
+            Task serverTask = server.Start(cts.Token);
 
             WebsocketMessageStreamClient client = await CreateClient();
             await AwaitConnectedClients(server, 1);
             Task<List<string>> readMessagesTask = ReadAllMessages(client);
             await server.Send("beep", CancellationToken.None);
             await server.Send("boop", CancellationToken.None);
-            await server.Stop();
+            cts.Cancel();
             Assert.That(await readMessagesTask, Is.EqualTo(new List<string> { "beep", "boop" }));
+            await serverTask;
         }
 
         [Test]
         public async Task read_many_messages_from_many_clients()
         {
-            await using WebsocketBroadcastServer server = CreateServer();
-            Task _ = server.Listen();
+            CancellationTokenSource cts = new();
+            WebsocketBroadcastServer server = CreateServer();
+            Task serverTask = server.Start(cts.Token);
 
             const int numMessages = 250;
             List<string> messages = Enumerable.Range(0, numMessages)
@@ -99,19 +102,21 @@ namespace TPP.Core.Tests.Overlay
 
             // ReSharper disable once AccessToDisposedClosure
             await Task.WhenAll(messages.Select(msg => server.Send(msg, CancellationToken.None)));
-            await server.Stop();
+            cts.Cancel();
 
             foreach (var stream in messageStreams)
             {
                 Assert.That(await stream, Is.EqualTo(messages));
             }
+            await serverTask;
         }
 
         [Test]
         public async Task client_cannot_send_messages()
         {
-            await using WebsocketBroadcastServer server = CreateServer();
-            Task _ = server.Listen();
+            CancellationTokenSource cts = new();
+            WebsocketBroadcastServer server = CreateServer();
+            Task serverTask = server.Start(cts.Token);
 
             WebsocketMessageStreamClient client = await CreateClient();
 
@@ -120,20 +125,24 @@ namespace TPP.Core.Tests.Overlay
             WebSocketException ex = Assert.ThrowsAsync<WebSocketException>(()
                 => client.WriteAsync("Websocket is already dead", CancellationToken.None))!;
             Assert.That(ex.WebSocketErrorCode, Is.EqualTo(WebSocketError.InvalidState));
+            cts.Cancel();
+            await serverTask;
         }
 
         [Test]
         public async Task send_after_client_disconnected()
         {
-            await using WebsocketBroadcastServer server = CreateServer();
-            Task _ = server.Listen();
+            CancellationTokenSource cts = new();
+            WebsocketBroadcastServer server = CreateServer();
+            Task serverTask = server.Start(cts.Token);
 
             WebsocketMessageStreamClient client = await CreateClient();
             await AwaitConnectedClients(server, 1);
             await client.Disconnect(CancellationToken.None);
 
             await server.Send("plsnocrash", CancellationToken.None);
-            await server.Stop();
+            cts.Cancel();
+            await serverTask;
             // exits cleanly
         }
     }

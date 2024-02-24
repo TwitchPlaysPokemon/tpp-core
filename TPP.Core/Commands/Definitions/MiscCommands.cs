@@ -45,7 +45,7 @@ namespace TPP.Core.Commands.Definitions
 
             if (uptimeData.LastUpdatedAt < now - MaxUptimeUpdateAge)
             {
-                TwitchAPI api = await twitchChat.GetTwitchApi();
+                TwitchAPI api = await twitchChat.TwitchApiProvider.Get();
                 GetStreamsResponse apiResponse =
                     await api.Helix.Streams.GetStreamsAsync(userIds: new List<string> { twitchChat.ChannelId });
                 Stream? stream = apiResponse.Streams.FirstOrDefault(); // may be null if offline (or wrong channel id)

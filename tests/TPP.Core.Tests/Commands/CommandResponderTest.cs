@@ -25,8 +25,8 @@ namespace TPP.Core.Tests.Commands
             var messageSenderMock = Substitute.For<IMessageSender>();
             var commandResponder = new CommandResponder(messageSenderMock);
             var user = MockUser();
-            var chatMessage = new Message(user, "message text", MessageSource.Chat, string.Empty);
-            var whisperMessage = new Message(user, "message text", MessageSource.Whisper, string.Empty);
+            var chatMessage = new Message(user, "message text", new MessageSource.PrimaryChat(), string.Empty);
+            var whisperMessage = new Message(user, "message text", new MessageSource.Whisper(), string.Empty);
 
             // when
             await commandResponder.ProcessResponse(chatMessage,
@@ -46,8 +46,8 @@ namespace TPP.Core.Tests.Commands
             var messageSenderMock = Substitute.For<IMessageSender>();
             var commandResponder = new CommandResponder(messageSenderMock);
             var user = MockUser();
-            var chatMessage = new Message(user, "message text", MessageSource.Chat, string.Empty);
-            var whisperMessage = new Message(user, "message text", MessageSource.Whisper, string.Empty);
+            var chatMessage = new Message(user, "message text", new MessageSource.PrimaryChat(), string.Empty);
+            var whisperMessage = new Message(user, "message text", new MessageSource.Whisper(), string.Empty);
 
             // when
             await commandResponder.ProcessResponse(chatMessage,
@@ -73,10 +73,10 @@ namespace TPP.Core.Tests.Commands
             var messageSenderMock = Substitute.For<IMessageSender>();
             var commandResponder = new CommandResponder(messageSenderMock, whisperIfLongThreshold: 20);
             var user = MockUser();
-            var chatMessageShort = new Message(user, "short", MessageSource.Chat, string.Empty);
-            var chatMessageLong = new Message(user, "longer than 20 characters", MessageSource.Chat, string.Empty);
-            var whisperMessageShort = new Message(user, "short", MessageSource.Whisper, string.Empty);
-            var whisperMessageLong = new Message(user, "longer than 20 characters", MessageSource.Whisper, string.Empty);
+            var chatMessageShort = new Message(user, "short", new MessageSource.PrimaryChat(), string.Empty);
+            var chatMessageLong = new Message(user, "longer than 20 characters", new MessageSource.PrimaryChat(), string.Empty);
+            var whisperMessageShort = new Message(user, "short", new MessageSource.Whisper(), string.Empty);
+            var whisperMessageLong = new Message(user, "longer than 20 characters", new MessageSource.Whisper(), string.Empty);
 
             // when
             await commandResponder.ProcessResponse(chatMessageShort,
@@ -102,8 +102,8 @@ namespace TPP.Core.Tests.Commands
             var messageSenderMock = Substitute.For<IMessageSender>();
             var commandResponder = new CommandResponder(messageSenderMock);
             var user = MockUser();
-            var chatMessage = new Message(user, "message text", MessageSource.Chat, string.Empty);
-            var whisperMessage = new Message(user, "message text", MessageSource.Whisper, string.Empty);
+            var chatMessage = new Message(user, "message text", new MessageSource.PrimaryChat(), string.Empty);
+            var whisperMessage = new Message(user, "message text", new MessageSource.Whisper(), string.Empty);
 
             // when
             await commandResponder.ProcessResponse(chatMessage,
