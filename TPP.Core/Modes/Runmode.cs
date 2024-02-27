@@ -54,13 +54,42 @@ public sealed class Runmode : IWithLifecycle
             baseConfig.OverlayWebsocketHost, baseConfig.OverlayWebsocketPort);
         _modeBase = new ModeBase(
             loggerFactory, repos, baseConfig, stopToken, _muteInputsToken, _overlayConnection, ProcessMessage);
-        _modeBase.InstallAdditionalCommand(new Command("reloadrunconfig", _ =>
+        void UseNewConfig(RunmodeConfig config)
         {
-            RunmodeConfig config = configLoader();
             (_inputParser, _anarchyInputFeed) = ConfigToInputStuff(config.InputConfig);
             _runmodeConfig = config;
+        }
+        _modeBase.InstallAdditionalCommand(new Command("reloadrunconfig", _ =>
+        {
+            UseNewConfig(configLoader());
             return Task.FromResult(new CommandResult { Response = "input config reloaded" });
-        }));
+        }).WithOperatorsOnly());
+        _modeBase.InstallAdditionalCommand(new Command("enabledualmode", async _ =>
+        {
+            await Task.CompletedTask;
+            ButtonProfile profile = _runmodeConfig.InputConfig.ButtonsProfile;
+            if (profile.IsDual())
+                return new CommandResult { Response = $"input mode already dual: {profile}" };
+            ButtonProfile? dualProfile = profile.ToDual();
+            if (dualProfile == null)
+                return new CommandResult { Response = $"profile does not support dual mode: {profile}" };
+            _runmodeConfig.InputConfig.ButtonsProfile = dualProfile.Value;
+            UseNewConfig(_runmodeConfig); // reloads the button profile
+            return new CommandResult { Response = $"profile changed to dual: {dualProfile.Value}" };
+        }).WithModeratorsOnly());
+        _modeBase.InstallAdditionalCommand(new Command("disabledualmode", async _ =>
+        {
+            await Task.CompletedTask;
+            ButtonProfile profile = _runmodeConfig.InputConfig.ButtonsProfile;
+            if (!profile.IsDual())
+                return new CommandResult { Response = $"input mode already not dual: {profile}" };
+            ButtonProfile? nonDualProfile = profile.ToNonDual();
+            if (nonDualProfile == null)
+                return new CommandResult { Response = $"profile does not support non-dual mode: {profile}" };
+            _runmodeConfig.InputConfig.ButtonsProfile = nonDualProfile.Value;
+            UseNewConfig(_runmodeConfig); // reloads the button profile
+            return new CommandResult { Response = $"profile changed to non-dual: {nonDualProfile.Value}" };
+        }).WithModeratorsOnly());
 
         var dualRunCommands = new DualRunCommands(() => _runmodeConfig, repos.InputSidePicksRepo, SystemClock.Instance);
         foreach (Command command in dualRunCommands.Commands)

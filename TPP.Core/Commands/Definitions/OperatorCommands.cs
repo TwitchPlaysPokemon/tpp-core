@@ -120,15 +120,7 @@ namespace TPP.Core.Commands.Definitions
                 Aliases = new []{"clearallsidepicks"},
                 Description = "Clear every user's input side pick."
             },
-        }.Select(cmd => cmd
-            .WithCondition(
-                canExecute: ctx => IsOperator(ctx.Message.User),
-                ersatzResult: new CommandResult { Response = "Only operators can use that command" })
-            .WithChangedDescription(desc => "Operators only: " + desc)
-        );
-
-        private static bool IsOperator(User user) =>
-            user.Roles.Contains(Role.Operator);
+        }.Select(cmd => cmd.WithOperatorsOnly());
 
         private Task<CommandResult> Stop(CommandContext context)
         {

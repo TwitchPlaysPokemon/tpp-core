@@ -59,15 +59,7 @@ namespace TPP.Core.Commands.Definitions
                 Description = "Manage static response commands. " +
                               "Subcommands: add/update <command> <response>, remove <command>, list"
             },
-        }.Select(cmd => cmd
-            .WithCondition(
-                canExecute: ctx => IsModerator(ctx.Message.User),
-                ersatzResult: new CommandResult { Response = "Only moderators can use that command" })
-            .WithChangedDescription(desc => "Moderators only: " + desc)
-        );
-
-        private static bool IsModerator(User u) =>
-            u.Roles.Contains(Role.Moderator) || u.Roles.Contains(Role.Operator);
+        }.Select(cmd => cmd.WithModeratorsOnly());
 
         private async Task<CommandResult> EnableEmoteOnly(CommandContext context)
         {

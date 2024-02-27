@@ -40,15 +40,7 @@ public class ModerationCommands : ICommandCollection
         new Command("timeout", TimeoutCmd),
         new Command("untimeout", UntimeoutCmd),
         new Command("checktimeout", CheckTimeout),
-    }.Select(cmd => cmd
-        .WithCondition(
-            canExecute: ctx => IsModerator(ctx.Message.User),
-            ersatzResult: new CommandResult { Response = "Only moderators can use that command" })
-        .WithChangedDescription(desc => "Moderators only: " + desc)
-    );
-
-    private static bool IsModerator(User u) =>
-        u.Roles.Contains(Role.Moderator) || u.Roles.Contains(Role.Operator);
+    }.Select(cmd => cmd.WithModeratorsOnly());
 
     private static string ParseReasonArgs(ManyOf<string> reasonParts)
     {
