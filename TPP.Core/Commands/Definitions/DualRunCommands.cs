@@ -17,12 +17,10 @@ public class DualRunCommands(Func<RunmodeConfig> runmodeConfigProvider, IInputSi
     {
         new Command("left", ctx => PickSide(ctx, "left"))
         {
-            Aliases = ["blue"],
             Description = "Makes your inputs go to the left side team."
         },
         new Command("right", ctx => PickSide(ctx, "right"))
         {
-            Aliases = ["red"],
             Description = "Makes your inputs go to the right side team."
         },
         new Command("noside", ctx => PickSide(ctx, null))
