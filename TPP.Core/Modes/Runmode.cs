@@ -62,14 +62,9 @@ public sealed class Runmode : IWithLifecycle
             return Task.FromResult(new CommandResult { Response = "input config reloaded" });
         }));
 
-        // Only install dual run commands if we're in dual run mode
-        if (_runmodeConfig.InputConfig.ButtonsProfile.ToInputParserBuilder().IsDualRun)
-        {
-            var dualRunCommands = new DualRunCommands(
-                repos.InputSidePicksRepo, SystemClock.Instance, () => _runmodeConfig.SwitchSidesCooldown);
-            foreach (Command command in dualRunCommands.Commands)
-                _modeBase.InstallAdditionalCommand(command);
-        }
+        var dualRunCommands = new DualRunCommands(() => _runmodeConfig, repos.InputSidePicksRepo, SystemClock.Instance);
+        foreach (Command command in dualRunCommands.Commands)
+            _modeBase.InstallAdditionalCommand(command);
 
         // TODO felk: this feels a bit messy the way it is done right now,
         //            but I am unsure yet how I'd integrate the individual parts in a cleaner way.
