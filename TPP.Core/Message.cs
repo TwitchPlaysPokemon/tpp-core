@@ -12,7 +12,7 @@ namespace TPP.Core
         }
 
         public sealed record PrimaryChat : MessageSource;
-        public sealed record SecondaryChat(string ChannelName) : MessageSource;
+        public sealed record SecondaryChat(string ChannelId, string ChannelName) : MessageSource;
         public sealed record Whisper : MessageSource;
     }
 
@@ -20,7 +20,6 @@ namespace TPP.Core
 
     public sealed record MessageDetails(
         string? MessageId,
-        bool IsAction,
         bool IsStaff,
         IImmutableList<Emote> Emotes);
 
@@ -31,6 +30,6 @@ namespace TPP.Core
         string RawIrcMessage)
     {
         public MessageDetails Details { get; init; } =
-            new(MessageId: null, IsAction: false, IsStaff: false, Emotes: ImmutableList<Emote>.Empty);
+            new(MessageId: null, IsStaff: false, Emotes: ImmutableList<Emote>.Empty);
     }
 }

@@ -184,7 +184,7 @@ public sealed class Runmode : IWithLifecycle
         foreach (InputSet inputSet in input.InputSets)
             if (message.MessageSource is MessageSource.SecondaryChat secondaryChat)
             {
-                string? channelImageUrl = await _coStreamChannelsRepo.GetChannelImageUrl(secondaryChat.ChannelName);
+                string? channelImageUrl = await _coStreamChannelsRepo.GetChannelImageUrl(secondaryChat.ChannelId);
                 await _anarchyInputFeed.Enqueue(inputSet, message.User, secondaryChat.ChannelName, channelImageUrl);
             }
             else
