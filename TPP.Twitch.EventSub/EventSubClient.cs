@@ -123,8 +123,10 @@ public class EventSubClient
         {
             Task<ParseResult?> readTask = ReadMessage(webSocketBox.WebSocket, cancellationToken);
             Instant assumeDeadAt = lastMessageTimestamp + KeepaliveDuration + KeepAliveGrace;
-            Duration assumeDeadIn = assumeDeadAt - _clock.GetCurrentInstant();
-            Task timeoutTask = Task.Delay(assumeDeadIn.ToTimeSpan(), cancellationToken);
+            Instant now = _clock.GetCurrentInstant();
+            Task timeoutTask = assumeDeadAt < now
+                ? Task.CompletedTask
+                : Task.Delay((assumeDeadAt - now).ToTimeSpan(), cancellationToken);
             Task firstFinishedTask = await Task.WhenAny(changeoverTask, readTask, timeoutTask);
             if (cancellationToken.IsCancellationRequested)
                 break;
