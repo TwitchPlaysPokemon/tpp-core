@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using NodaTime.Serialization.SystemTextJson;
 using TPP.Twitch.EventSub.Messages;
 using TPP.Twitch.EventSub.Notifications;
@@ -42,7 +43,11 @@ public static class Parsing
 
     public static readonly JsonSerializerOptions SerializerOptions = new()
     {
-        Converters = { NodaConverters.InstantConverter },
+        Converters =
+        {
+            NodaConverters.InstantConverter,
+            new JsonStringEnumConverter(),
+        },
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
     };
 
@@ -95,6 +100,11 @@ public static class Parsing
         catch (JsonException ex)
         {
             return new ParseResult.InvalidMessage("Invalid json: <" + json + ">, Error: " + ex.Message);
+        }
+        catch (NotSupportedException ex)
+        {
+            return new ParseResult.InvalidMessage(
+                "Deserialization of json failed due to missing support: <" + json + ">, Error: " + ex.Message);
         }
     }
 }
