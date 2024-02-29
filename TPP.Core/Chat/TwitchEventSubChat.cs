@@ -13,6 +13,7 @@ using TPP.Persistence;
 using TPP.Twitch.EventSub;
 using TPP.Twitch.EventSub.Notifications;
 using TwitchLib.Api;
+using TwitchLib.Api.Core.Exceptions;
 using TwitchLib.Api.Helix.Models.Streams.GetStreams;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;
 using static TPP.Core.EventUtils;
@@ -98,10 +99,20 @@ public class TwitchEventSubChat : IWithLifecycle, IMessageSource
         {
             foreach (string channelId in await _coStreamChannelsRepo.GetJoinedChannels())
             {
-                var response = await session.SubscribeWithTwitchLibApi<ChannelChatMessage>(
-                    (await _twitchApiProvider.Get()).Helix.EventSub,
-                    new ChannelChatMessage.Condition(BroadcasterUserId: channelId, UserId: _userId).AsDict());
-                _coStreamEventSubSubscriptions[channelId] = response.Subscriptions[0].Id;
+                try
+                {
+                    var response = await session.SubscribeWithTwitchLibApi<ChannelChatMessage>(
+                        (await _twitchApiProvider.Get()).Helix.EventSub,
+                        new ChannelChatMessage.Condition(BroadcasterUserId: channelId, UserId: _userId).AsDict());
+                    _coStreamEventSubSubscriptions[channelId] = response.Subscriptions[0].Id;
+                }
+                catch (HttpResponseException ex)
+                {
+                    _logger.LogError(ex,
+                        "Failed to join co-stream channel ID {ChannelId}, removing channel. Maybe the channel was " +
+                        "deleted, or the database contained old data (channel names instead of IDs)", channelId);
+                    await _coStreamChannelsRepo.Remove(channelId);
+                }
             }
         }
     }
@@ -145,9 +156,17 @@ public class TwitchEventSubChat : IWithLifecycle, IMessageSource
     {
         if (!await _coStreamChannelsRepo.IsJoined(userId))
             return LeaveResult.NotJoined;
-        await (await _twitchApiProvider.Get()).Helix.Chat.SendChatMessage(userId, _userId, "Leaving channel, goodbye!");
-        await (await _twitchApiProvider.Get()).Helix.EventSub.DeleteEventSubSubscriptionAsync(
-            _coStreamEventSubSubscriptions[userId]);
+        TwitchAPI api = await _twitchApiProvider.Get();
+        try
+        {
+            await api.Helix.Chat.SendChatMessage(userId, _userId, "Leaving channel, goodbye!");
+        }
+        catch (HttpResponseException ex)
+        {
+            _logger.LogError(ex, "Failed sending goodbye message to {ChannelID} after leaving, ignoring", userId);
+        }
+        if (_coStreamEventSubSubscriptions.TryGetValue(userId, out string? subscriptionId))
+            await api.Helix.EventSub.DeleteEventSubSubscriptionAsync(subscriptionId);
         _coStreamEventSubSubscriptions.Remove(userId);
         await _coStreamChannelsRepo.Remove(userId);
         return LeaveResult.Ok;
