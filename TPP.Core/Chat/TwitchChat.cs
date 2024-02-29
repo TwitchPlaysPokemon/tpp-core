@@ -10,6 +10,7 @@ using TPP.Common;
 using TPP.Core.Configuration;
 using TPP.Core.Moderation;
 using TPP.Core.Overlay;
+using TPP.Core.Utils;
 using TPP.Persistence;
 using TwitchLib.Api;
 using TwitchLib.Api.Helix.Models.Streams.GetStreams;
@@ -188,8 +189,7 @@ namespace TPP.Core.Chat
             if (_coStreamInputsOnlyLive)
                 tasks.Add(CoStreamInputsLiveWorker(cancellationToken));
             tasks.Add(_twitchEventSubChat.Start(cancellationToken));
-            // Must wait on all concurrently running tasks simultaneously to know when one of them crashed
-            await Task.WhenAll(tasks);
+            await TaskUtils.WhenAllFastExit(tasks);
 
             await _twitchClient.DisconnectAsync();
             await _twitchChatSender.DisposeAsync();

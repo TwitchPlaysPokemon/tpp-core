@@ -10,6 +10,7 @@ using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
 using TPP.Core.Overlay;
 using TPP.Core.Overlay.Events;
+using TPP.Core.Utils;
 using TPP.Inputting;
 using TPP.Inputting.Inputs;
 using TPP.Inputting.Parsing;
@@ -208,8 +209,7 @@ public sealed class Runmode : IWithLifecycle
     public async Task Start(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Runmode starting");
-        // Must wait on all concurrently running tasks simultaneously to know when one of them crashed
-        await Task.WhenAll(
+        await TaskUtils.WhenAllFastExit(
             _broadcastServer.Start(cancellationToken),
             _inputServer.Start(cancellationToken),
             _modeBase.Start(cancellationToken)
