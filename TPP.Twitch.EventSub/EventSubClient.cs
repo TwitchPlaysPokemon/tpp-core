@@ -150,7 +150,7 @@ public class EventSubClient
             if (parseResult is not ParseResult.Ok(var message))
             {
                 if (parseResult is ParseResult.InvalidMessage(var error))
-                    _logger.LogError("A message skipped because it failed to parse: {Error}", error);
+                    _logger.LogError("A message was skipped because it failed to parse: {Error}", error);
                 else if (parseResult is ParseResult.UnknownMessageType(var messageType))
                     _logger.LogWarning("Unknown message type received and skipped: {MessageType}", messageType);
                 else if (parseResult is ParseResult.UnknownSubscriptionType(var subType))

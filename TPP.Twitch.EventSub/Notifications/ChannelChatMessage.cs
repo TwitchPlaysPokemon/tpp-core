@@ -50,7 +50,16 @@ public class ChannelChatMessage(NotificationMetadata metadata, NotificationPaylo
         string EmoteSetId,
         string OwnerId,
         IImmutableSet<EmoteFormat> Format
-    );
+    )
+    {
+        public override string ToString() =>
+            $"{nameof(Emote)} {{ " +
+            $"{nameof(Id)} = {Id}, " +
+            $"{nameof(EmoteSetId)} = {EmoteSetId}, " +
+            $"{nameof(OwnerId)} = {OwnerId}, " +
+            $"{nameof(Format)} = [ {string.Join(", ", Format)} ] " +
+            $"}}";
+    }
 
     /// <param name="UserId">The user ID of the mentioned user.</param>
     /// <param name="UserName">The user name of the mentioned user.</param>
@@ -89,8 +98,12 @@ public class ChannelChatMessage(NotificationMetadata metadata, NotificationPaylo
     /// <param name="Fragments">Ordered list of chat message fragments.</param>
     public record Message(
         string Text,
-        Fragment[] Fragments
-    );
+        ImmutableArray<Fragment> Fragments
+    )
+    {
+        public override string ToString() =>
+            $"{nameof(Message)} {{ {nameof(Text)} = {Text}, {nameof(Fragments)} = [ {string.Join(", ", Fragments)} ] }}";
+    }
 
     /// <param name="SetId">An ID that identifies this set of chat badges. For example, Bits or Subscriber.</param>
     /// <param name="Id">An ID that identifies this version of the badge. The ID can be any value. For example, for Bits, the ID is the Bits tier level, but for World of Warcraft, it could be Alliance or Horde.</param>
@@ -163,7 +176,7 @@ public class ChannelChatMessage(NotificationMetadata metadata, NotificationPaylo
         string MessageId,
         Message Message,
         MessageType MessageType,
-        Badge[] Badges,
+        ImmutableArray<Badge> Badges,
         Cheer? Cheer,
         string Color,
         Reply? Reply,
