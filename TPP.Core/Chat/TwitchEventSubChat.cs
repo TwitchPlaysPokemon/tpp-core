@@ -17,14 +17,20 @@ public class TwitchEventSubChat : IWithLifecycle
     private readonly TwitchApiProvider _twitchApiProvider;
 
     private readonly EventSubClient _client;
+    private readonly string _channelId;
+    private readonly string _userId;
 
     public TwitchEventSubChat(
         ILoggerFactory loggerFactory,
         IClock clock,
-        TwitchApiProvider twitchApiProvider)
+        TwitchApiProvider twitchApiProvider,
+        string channelId,
+        string userId)
     {
         _logger = loggerFactory.CreateLogger<TwitchEventSubChat>();
         _twitchApiProvider = twitchApiProvider;
+        _channelId = channelId;
+        _userId = userId;
 
         _client = new EventSubClient(loggerFactory, clock);
         _client.RevocationReceived += (_, revocation) =>
@@ -48,7 +54,7 @@ public class TwitchEventSubChat : IWithLifecycle
         _logger.LogDebug("Setting up EventSub subscriptions");
         await session.SubscribeWithTwitchLibApi<ChannelChatMessage>(
             (await _twitchApiProvider.Get()).Helix.EventSub,
-            new ChannelChatMessage.Condition(BroadcasterUserId: "70994672", UserId: "70994672").AsDict());
+            new ChannelChatMessage.Condition(BroadcasterUserId: _channelId, UserId: _userId).AsDict());
     }
 
     public async Task Start(CancellationToken cancellationToken)

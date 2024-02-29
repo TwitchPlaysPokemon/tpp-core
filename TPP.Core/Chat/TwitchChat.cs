@@ -117,7 +117,8 @@ namespace TPP.Core.Chat
                 chatConfig.RefreshToken,
                 chatConfig.AppClientId,
                 chatConfig.AppClientSecret);
-            _twitchEventSubChat = new TwitchEventSubChat(loggerFactory, clock, TwitchApiProvider);
+            _twitchEventSubChat = new TwitchEventSubChat(loggerFactory, clock, TwitchApiProvider,
+                chatConfig.ChannelId, chatConfig.UserId);
             _twitchClient = new TwitchClient(
                 client: new WebSocketClient(),
                 loggerFactory: loggerFactory);
@@ -266,7 +267,7 @@ namespace TPP.Core.Chat
         }
 
         private readonly Dictionary<User, Instant> _lastInputPerUser = new();
-        private TwitchEventSubChat _twitchEventSubChat;
+        private readonly TwitchEventSubChat _twitchEventSubChat;
 
         private async Task MessageReceived(object? sender, OnMessageReceivedArgs e)
         {
