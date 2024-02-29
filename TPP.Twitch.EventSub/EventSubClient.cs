@@ -121,7 +121,9 @@ public class EventSubClient
         Instant lastMessageTimestamp = _clock.GetCurrentInstant(); // treat a fresh connection as a received message
         while (!cancellationToken.IsCancellationRequested)
         {
-            Task<ParseResult?> readTask = ReadMessage(webSocketBox.WebSocket, cancellationToken);
+            // Don't pass the cancellation token here. Instead, once cancelled we perform a graceful websocket closure.
+            // Otherwise the websocket would be immediately put in an aborted state, but we're not in that of a hurry.
+            Task<ParseResult?> readTask = ReadMessage(webSocketBox.WebSocket, CancellationToken.None);
             Instant assumeDeadAt = lastMessageTimestamp + KeepaliveDuration + KeepAliveGrace;
             Instant now = _clock.GetCurrentInstant();
             Task timeoutTask = assumeDeadAt < now
@@ -215,7 +217,10 @@ public class EventSubClient
                 _logger.LogError("Known message was not handled and skipped: {Message}", message);
             }
         }
-        await webSocketBox.WebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
+        if (webSocketBox.WebSocket.State == WebSocketState.Open)
+            await webSocketBox.WebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
+        else
+            webSocketBox.WebSocket.Abort();
         throw new TaskCanceledException();
     }
 

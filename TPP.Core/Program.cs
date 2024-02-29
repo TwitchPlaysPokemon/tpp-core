@@ -195,6 +195,7 @@ Options:
                 Task modeTask = mode.Start(cts.Token);
                 void Abort(object? sender, EventArgs args)
                 {
+                    if (cts.IsCancellationRequested) return;
                     logger.LogInformation("Aborting mode...");
                     cts.Cancel();
                     cleanupDone.Task.Wait();
