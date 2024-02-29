@@ -5,6 +5,9 @@ namespace TPP.Twitch.EventSub.Notifications;
 
 using static ChannelFollow;
 
+/// <summary>
+/// The channel.follow subscription type sends a notification when a specified channel receives a follow.
+/// </summary>
 public class ChannelFollow(NotificationMetadata metadata, NotificationPayload<Condition, Event> payload)
     : Notification<Condition, Event>(metadata, payload), IHasSubscriptionType
 {
