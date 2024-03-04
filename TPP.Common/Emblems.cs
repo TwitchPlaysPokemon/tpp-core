@@ -85,7 +85,11 @@ namespace TPP.Common
             [76] = "Snakewood DX",
             [77] = "Nameless",
             [78] = "Inverse White",
-            [79] = "Inverse White 2"
+            [79] = "Inverse White 2",
+            [80] = "Super Gauntlet Red",
+            [81] = "Super Gauntlet Gold/Silver",
+            [82] = "Super Gauntlet Ruby/Sapphire",
+            [83] = "Super Gauntlet Diamond/Pearl"
         };
 
         public static string FormatEmblem(int emblemNum)
