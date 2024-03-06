@@ -7,6 +7,7 @@ using static ChannelChatMessage;
 
 /// <summary>
 /// The channel.chat.message subscription type sends a notification when any user sends a message to a specific chat room.
+/// See <a href="https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/#channelchatmessage">Subscription Types Documentation for 'Channel Chat Message'</a>
 /// </summary>
 public class ChannelChatMessage(NotificationMetadata metadata, NotificationPayload<Condition, Event> payload)
     : Notification<Condition, Event>(metadata, payload), IHasSubscriptionType

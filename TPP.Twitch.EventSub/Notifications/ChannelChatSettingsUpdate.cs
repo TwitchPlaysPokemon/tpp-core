@@ -6,6 +6,7 @@ using static ChannelChatSettingsUpdate;
 
 /// <summary>
 /// This event sends a notification when a broadcaster’s chat settings are updated.
+/// See <a href="https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/#channelchat_settingsupdate">Subscription Types Documentation for 'Channel Chat Settings Update'</a>
 /// </summary>
 public class ChannelChatSettingsUpdate(NotificationMetadata metadata, NotificationPayload<Condition, Event> payload)
     : Notification<Condition, Event>(metadata, payload), IHasSubscriptionType

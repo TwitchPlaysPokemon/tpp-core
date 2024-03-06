@@ -7,6 +7,7 @@ using static ChannelFollow;
 
 /// <summary>
 /// The channel.follow subscription type sends a notification when a specified channel receives a follow.
+/// See <a href="https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/#channelfollow">Subscription Types Documentation for 'Channel Follow'</a>
 /// </summary>
 public class ChannelFollow(NotificationMetadata metadata, NotificationPayload<Condition, Event> payload)
     : Notification<Condition, Event>(metadata, payload), IHasSubscriptionType
