@@ -233,7 +233,7 @@ namespace TPP.Core.Modes
                 }
             }
             wasProcessed |= await _processMessage(chat, message);
-            if (!wasProcessed && _forwardUnprocessedMessages && message.MessageSource is PrimaryChat)
+            if (!wasProcessed && _forwardUnprocessedMessages && message.MessageSource is PrimaryChat or Whisper)
             {
                 await _outgoingMessagequeueRepo.EnqueueMessage(message.RawIrcMessage);
             }
