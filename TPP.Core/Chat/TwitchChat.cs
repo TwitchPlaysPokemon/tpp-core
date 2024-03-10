@@ -11,7 +11,6 @@ using TPP.Core.Configuration;
 using TPP.Core.Moderation;
 using TPP.Core.Overlay;
 using TPP.Persistence;
-using TwitchLib.Api;
 using TwitchLib.Api.Helix.Models.Streams.GetStreams;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;
 using TwitchLib.Client;
@@ -38,7 +37,7 @@ namespace TPP.Core.Chat
         private readonly IUserRepo _userRepo;
         private readonly ICoStreamChannelsRepo _coStreamChannelsRepo;
         private readonly TwitchClient _twitchClient;
-        public readonly TwitchApiProvider TwitchApiProvider;
+        public readonly TwitchApi TwitchApi;
         private readonly TwitchLibSubscriptionWatcher? _subscriptionWatcher;
         private readonly TwitchChatSender _twitchChatSender;
         private readonly TwitchChatModeChanger _twitchChatModeChanger;
@@ -52,8 +51,7 @@ namespace TPP.Core.Chat
             if (!_coStreamInputsEnabled)
                 return JoinResult.NotEnabled;
 
-            TwitchAPI api = await TwitchApiProvider.Get();
-            GetUsersResponse getUsersResponse = await api.Helix.Users.GetUsersAsync(logins: [userLogin]);
+            GetUsersResponse getUsersResponse = await TwitchApi.GetUsersAsync(logins: [userLogin]);
             var user = getUsersResponse.Users.FirstOrDefault();
             if (user == null)
                 return JoinResult.UserNotFound;
@@ -64,7 +62,7 @@ namespace TPP.Core.Chat
             if (_coStreamInputsOnlyLive)
             {
                 GetStreamsResponse getStreamsResponse =
-                    await api.Helix.Streams.GetStreamsAsync(userLogins: [userLogin]);
+                    await TwitchApi.GetStreamsAsync(userLogins: [userLogin]);
                 Stream? stream = getStreamsResponse.Streams.FirstOrDefault();
                 if (stream is null)
                     return JoinResult.StreamOffline;
@@ -109,7 +107,7 @@ namespace TPP.Core.Chat
             _userRepo = userRepo;
             _coStreamChannelsRepo = coStreamChannelsRepo;
 
-            TwitchApiProvider = new TwitchApiProvider(
+            TwitchApi = new TwitchApi(
                 loggerFactory,
                 clock,
                 chatConfig.InfiniteAccessToken,
@@ -136,11 +134,11 @@ namespace TPP.Core.Chat
             _twitchClient.OnMessageReceived += MessageReceived;
             _twitchClient.OnWhisperReceived += WhisperReceived;
             _twitchClient.OnChannelStateChanged += ChannelStateChanged;
-            _twitchChatSender = new TwitchChatSender(loggerFactory, TwitchApiProvider, chatConfig, useTwitchReplies);
+            _twitchChatSender = new TwitchChatSender(loggerFactory, TwitchApi, chatConfig, useTwitchReplies);
             _twitchChatModeChanger = new TwitchChatModeChanger(
-                loggerFactory.CreateLogger<TwitchChatModeChanger>(), TwitchApiProvider, chatConfig);
+                loggerFactory.CreateLogger<TwitchChatModeChanger>(), TwitchApi, chatConfig);
             _twitchChatExecutor = new TwitchChatExecutor(loggerFactory.CreateLogger<TwitchChatExecutor>(),
-                TwitchApiProvider, chatConfig);
+                TwitchApi, chatConfig);
 
             _subscriptionWatcher = chatConfig.MonitorSubscriptions
                 ? new TwitchLibSubscriptionWatcher(loggerFactory, _userRepo, _twitchClient, clock,
@@ -241,13 +239,12 @@ namespace TPP.Core.Chat
             while (!cancellationToken.IsCancellationRequested)
             {
                 IImmutableSet<string> joinedChannels = await _coStreamChannelsRepo.GetJoinedChannels();
-                TwitchAPI api = await TwitchApiProvider.Get();
 
                 HashSet<string> liveChannels = [];
                 foreach (string[] chunk in joinedChannels.Chunk(chunkSize))
                 {
                     GetStreamsResponse getStreamsResponse =
-                        await api.Helix.Streams.GetStreamsAsync(userLogins: [..chunk], first: chunkSize);
+                        await TwitchApi.GetStreamsAsync(userLogins: [..chunk], first: chunkSize);
                     foreach (Stream s in getStreamsResponse.Streams)
                         liveChannels.Add(s.UserLogin);
                 }

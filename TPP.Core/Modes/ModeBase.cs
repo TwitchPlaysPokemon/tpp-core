@@ -151,7 +151,7 @@ namespace TPP.Core.Modes
             _chattersWorker = primaryChat == null
                 ? null
                 : new ChattersWorker(loggerFactory, clock,
-                    ((TwitchChat)_chats[primaryChat.Name]).TwitchApiProvider, repos.ChattersSnapshotsRepo, primaryChat);
+                    ((TwitchChat)_chats[primaryChat.Name]).TwitchApi, repos.ChattersSnapshotsRepo, primaryChat);
         }
 
         public void InstallAdditionalCommand(Command command)
