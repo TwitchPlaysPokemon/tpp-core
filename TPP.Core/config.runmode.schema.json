@@ -8,6 +8,7 @@
       "additionalProperties": false,
       "properties": {
         "TouchscreenAliases": {
+          "description": "Defines shorthand aliases for touchscreen coordinates, e.g. \"move1\": [1, 25]",
           "type": [
             "object",
             "null"
@@ -21,6 +22,24 @@
               "type": "integer"
             }
           }
+        },
+        "GameAliases": {
+          "description": "Includes predetermined input aliases for a known game.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            null,
+            "dppt",
+            "hgss",
+            "bw",
+            "bw2",
+            "xy",
+            "oras",
+            "sm",
+            "usum"
+          ]
         },
         "ButtonsProfile": {
           "type": "string",

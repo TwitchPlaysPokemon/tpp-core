@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Immutable;
 using System.Linq;
 using NUnit.Framework;
+using TPP.Core;
 using TPP.Inputting.Inputs;
 using TPP.Inputting.Parsing;
 
@@ -306,6 +308,24 @@ namespace TPP.Inputting.Tests.Parsing
                 Seq(new InputSet(
                     [new TouchscreenInput("MOVE1", "touchscreen", "move1", 10, 20)])),
                 Is.EqualTo(_inputParser.Parse("move1")));
+        }
+
+        [Test]
+        public void TestGameAliases()
+        {
+            var builder = InputParserBuilder.FromBare()
+                .Touchscreen(256, 192, false, true);
+
+            foreach (string game in Enum.GetNames<GameSpecificAlias>())
+            {
+                Assert.DoesNotThrow(() => builder.AddGameAliases(Enum.Parse<GameSpecificAlias>(game)), $"Game \"{game}\" aliases failed to install.");
+            }
+
+            _inputParser = builder.AddGameAliases(GameSpecificAlias.XY).Build();
+
+            Assert.That(Seq(
+                new InputSet([new TouchscreenInput("poke1", "touchscreen", "poke1", 20, 20)])
+                ), Is.EqualTo(_inputParser.Parse("poke1")));
         }
     }
 }

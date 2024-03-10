@@ -144,6 +144,14 @@ public sealed class Runmode : IWithLifecycle
             inputParserBuilder.MaxSetLength(config.MaxSetLength);
         if (config.MaxSequenceLength > 0)
             inputParserBuilder.MaxSequenceLength(config.MaxSequenceLength);
+        if (config.GameAliases != null)
+        {
+            try
+            {
+                inputParserBuilder.AddGameAliases((GameSpecificAlias)config.GameAliases);
+            }
+            catch { } // Don't throw exceptions for invalid aliases
+        }
         if (inputParserBuilder.HasTouchscreen) // Don't throw exceptions for missing touchscreen
         {
             foreach ((var key, var val) in config.TouchscreenAliases)

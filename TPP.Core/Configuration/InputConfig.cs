@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using TPP.Inputting;
 
 namespace TPP.Core.Configuration
 {
@@ -36,5 +37,8 @@ namespace TPP.Core.Configuration
 
         [Description("Defines shorthand aliases for touchscreen coordinates, e.g. \"move1\": [1, 25]")]
         public Dictionary<string, uint[]> TouchscreenAliases = [];
+
+        [Description("Includes predetermined input aliases for a known game.")]
+        public GameSpecificAlias? GameAliases = null;
     }
 }
