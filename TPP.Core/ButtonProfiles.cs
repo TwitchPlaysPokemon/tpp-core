@@ -14,6 +14,9 @@ namespace TPP.Core
         [EnumMember(Value = "nds")] NintendoDS,
         [EnumMember(Value = "3ds")] Nintendo3DS,
 
+        [EnumMember(Value = "n3dsoffset")] NintendoDSOn3DSOffset, // Nintendo DS title launched on 3DS while holding Start or Select
+        [EnumMember(Value = "n3dsscaled")] NintendoDSOn3DSScaled, // Nintendo DS title launched on 3DS without holding Start or Select
+
         [EnumMember(Value = "nes")] NES,
         [EnumMember(Value = "snes2nes")] SNEStoNES,
         [EnumMember(Value = "snes")] SNES,
@@ -31,10 +34,14 @@ namespace TPP.Core
         [EnumMember(Value = "dualsnes")] DualSNES,
         [EnumMember(Value = "dualn64")] DualN64,
         [EnumMember(Value = "dualgc")] DualGameCube,
+        [EnumMember(Value = "dual3ds")] DualNintendo3DS,
 
         [EnumMember(Value = "dualsgb")] DualSuperGameBoy,
         [EnumMember(Value = "dualgbt")] DualGameBoyTower,
         [EnumMember(Value = "dualgbp")] DualGameBoyPlayer,
+
+        [EnumMember(Value = "dualn3dsoffset")] DualNintendoDSOnDSOffset, // Nintendo DS title launched on 3DS while holding Start or Select
+        [EnumMember(Value = "dualn3dsscaled")] DualNintendoDSOnDSScaled, // Nintendo DS title launched on 3DS without holding Start or Select
     }
 
     public static class ButtonProfileExtensions
@@ -87,6 +94,11 @@ namespace TPP.Core
                     // Prevent Soft Reset in 3DS Pokemon Games (L+R+Start/Select) as well as Luma3DS and NTR menu shortcuts
                     .Conflicts(("l", "select"), ("l", "start")),
 
+                ButtonProfile.NintendoDSOn3DSOffset => ButtonProfile.SNES.ToInputParserBuilder()
+                    .Touchscreen(width: 256, height: 192, multitouch: false, allowDrag: true, xOffset: 32),
+                ButtonProfile.NintendoDSOn3DSScaled => ButtonProfile.SNES.ToInputParserBuilder()
+                    .Touchscreen(width: 256, height: 192, multitouch: false, allowDrag: true, scaleWidth: 300, scaleHeight: 240),
+
                 ButtonProfile.NES => ButtonProfile.GameBoy.ToInputParserBuilder(),
                 ButtonProfile.SNEStoNES => ButtonProfile.NES.ToInputParserBuilder()
                     .AliasedButtons(("a", "b"),
@@ -138,6 +150,13 @@ namespace TPP.Core
                 ButtonProfile.DualN64 => ButtonProfile.N64.ToInputParserBuilder()
                     .LeftRightSidesEnabled(true),
                 ButtonProfile.DualGameCube => ButtonProfile.GameCube.ToInputParserBuilder()
+                    .LeftRightSidesEnabled(true),
+                ButtonProfile.DualNintendo3DS => ButtonProfile.Nintendo3DS.ToInputParserBuilder()
+                    .LeftRightSidesEnabled(true),
+
+                ButtonProfile.DualNintendoDSOnDSOffset => ButtonProfile.NintendoDSOn3DSOffset.ToInputParserBuilder()
+                    .LeftRightSidesEnabled(true),
+                ButtonProfile.DualNintendoDSOnDSScaled => ButtonProfile.NintendoDSOn3DSScaled.ToInputParserBuilder()
                     .LeftRightSidesEnabled(true),
 
                 ButtonProfile.DualSuperGameBoy => ButtonProfile.SuperGameBoy.ToInputParserBuilder()

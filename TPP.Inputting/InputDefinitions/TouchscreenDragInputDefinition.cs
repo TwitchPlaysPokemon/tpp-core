@@ -10,17 +10,16 @@ namespace TPP.Inputting.InputDefinitions
     public readonly struct TouchscreenDragInputDefinition : IInputDefinition
     {
         private readonly string _touchscreenName;
-        private readonly uint _width;
-        private readonly uint _height;
+        private readonly TouchscreenDimensions _dimensions;
 
-        public TouchscreenDragInputDefinition(string touchscreenName, uint width, uint height)
+        public TouchscreenDragInputDefinition(TouchscreenInputDefinition touchscreen)
         {
-            _touchscreenName = touchscreenName;
-            _width = width;
-            _height = height;
+            _touchscreenName = touchscreen.Name;
+            _dimensions = touchscreen.Dimensions;
+
             static string DigitsForDimension(uint dim) => $@"(?:[0-9]{{1,{dim.ToString().Length}}})";
-            string digitsX = DigitsForDimension(_width);
-            string digitsY = DigitsForDimension(_height);
+            string digitsX = DigitsForDimension(_dimensions.Width);
+            string digitsY = DigitsForDimension(_dimensions.Height);
             InputRegex = $@"{digitsX},{digitsY}>{digitsX},{digitsY}";
         }
 
@@ -33,10 +32,24 @@ namespace TPP.Inputting.InputDefinitions
             string[] posToSplit = positions[1].Split(",", count: 2);
             (uint x1, uint y1) = (uint.Parse(posFromSplit[0]), uint.Parse(posFromSplit[1]));
             (uint x2, uint y2) = (uint.Parse(posToSplit[0]), uint.Parse(posToSplit[1]));
-            if (x1 >= _width || x2 >= _width || y1 >= _height || y2 >= _height)
+            if (x1 >= _dimensions.Width || x2 >= _dimensions.Width || y1 >= _dimensions.Height || y2 >= _dimensions.Height)
             {
                 return null;
             }
+            if (_dimensions.XScale != 1)
+            {
+                x1 = (uint)(x1 * _dimensions.XScale);
+                x2 = (uint)(x2 * _dimensions.XScale);
+            }
+            if (_dimensions.YScale != 1)
+            {
+                y1 = (uint)(y1 * _dimensions.YScale);
+                y2 = (uint)(y2 * _dimensions.YScale);
+            }
+            x1 += _dimensions.X;
+            x2 += _dimensions.X;
+            y1 += _dimensions.Y;
+            y2 += _dimensions.Y;
             return new TouchscreenDragInput(str, _touchscreenName, str, x1, y1, x2, y2);
         }
     }

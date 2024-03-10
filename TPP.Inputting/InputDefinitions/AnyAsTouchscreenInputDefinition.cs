@@ -18,13 +18,22 @@ namespace TPP.Inputting.InputDefinitions
 
         public AnyAsTouchscreenInputDefinition(
             IInputDefinition baseInputDefinition,
-            string touchscreenName, uint targetX, uint targetY, bool keepsName)
+            TouchscreenInputDefinition touchscreen, uint targetX, uint targetY, bool keepsName)
         {
             _baseInputDefinition = baseInputDefinition;
-            _touchscreenName = touchscreenName;
-            _targetX = targetX;
-            _targetY = targetY;
+            _touchscreenName = touchscreen.Name;
+            var dimensions = touchscreen.Dimensions;
+            _targetX = targetX + dimensions.X;
+            _targetY = targetY + dimensions.Y;
             _keepsName = keepsName;
+            if (dimensions.XScale != 1)
+            {
+                _targetX = (uint)(targetX * dimensions.XScale) + dimensions.X;
+            }
+            if (dimensions.YScale != 1)
+            {
+                _targetY = (uint)(targetY * dimensions.YScale) + dimensions.Y;
+            }
         }
 
         public string InputRegex => _baseInputDefinition.InputRegex;

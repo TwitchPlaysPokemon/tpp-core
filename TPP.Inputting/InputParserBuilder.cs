@@ -159,14 +159,18 @@ namespace TPP.Inputting
         /// <param name="height">screen height. Only coordinates 0 &le; y &lt; <c>height</c> will be allowed.</param>
         /// <param name="multitouch">if multiple simultaneous touchscreen inputs at the same time are allowed.</param>
         /// <param name="allowDrag">if performing drags (e.g. <c>80,120>160,50</c>) is allowed.</param>
-        public InputParserBuilder Touchscreen(uint width, uint height, bool multitouch, bool allowDrag)
+        /// <param name="xOffset">pixels to shift. Use if the reported touches must be shifted to the right.</param>
+        /// <param name="yOffset">pixels to shift. Use if the reported touches must be shifted down.</param>
+        /// <param name="scaleWidth">actual screen width. Use if the reported touches need to be scaled to a differently sized screen.</param>
+        /// <param name="scaleHeight">actual screen height. Use if the reported touches need to be scaled to a differently sized screen.</param>
+        public InputParserBuilder Touchscreen(uint width, uint height, bool multitouch, bool allowDrag, uint xOffset = 0, uint yOffset = 0, uint scaleWidth = 0, uint scaleHeight = 0)
         {
             RemoveInputs(TouchscreenName); // Overwrite any old mappings
-            _inputDefinitions.Add(new TouchscreenInputDefinition(TouchscreenName, width: width, height: height));
+            var definition = new TouchscreenInputDefinition(TouchscreenName, width, height, xOffset, yOffset, scaleWidth, scaleHeight);
+            _inputDefinitions.Add(definition);
             if (allowDrag)
             {
-                _inputDefinitions.Add(new TouchscreenDragInputDefinition(
-                    touchscreenName: TouchscreenName, width: width, height: height));
+                _inputDefinitions.Add(new TouchscreenDragInputDefinition(definition));
             }
             _multitouch = multitouch;
             return this;
@@ -178,13 +182,18 @@ namespace TPP.Inputting
         /// <param name="name">alias name</param>
         /// <param name="x">x-coordinate to map to</param>
         /// <param name="y">y-coordinate to map to</param>
-        public InputParserBuilder AliasedTouchscreenInput(string name, uint x, uint y)
+        public InputParserBuilder AliasedTouchscreenInput(string name, uint x, uint y, string touchscreenName = TouchscreenName)
         {
             RemoveInputs(name); // Overwrite any old mappings
             var buttonDefinition = new ButtonInputDefinition(name: name, mapsTo: name, keepsName: true);
+            var touchscreenDefinition = (TouchscreenInputDefinition?)_inputDefinitions.FirstOrDefault(def => (def as TouchscreenInputDefinition?)?.Name == touchscreenName);
+            if (touchscreenDefinition == null)
+            {
+                throw new System.InvalidOperationException($"Touchscreen Alias \"{name}\" could not attach to Touchscreen \"{touchscreenName}\". Make sure the touchscreen is defined before any aliases.");
+            }
             _inputDefinitions.Add(new AnyAsTouchscreenInputDefinition(
                 baseInputDefinition: buttonDefinition,
-                touchscreenName: TouchscreenName, targetX: x, targetY: y, keepsName: true));
+                touchscreen: (TouchscreenInputDefinition)touchscreenDefinition, targetX: x, targetY: y, keepsName: true));
             return this;
         }
 
