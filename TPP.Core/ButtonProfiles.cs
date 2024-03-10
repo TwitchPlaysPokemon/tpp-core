@@ -53,6 +53,9 @@ namespace TPP.Core
         public static bool IsDual(this ButtonProfile profile) =>
             profile.GetProfileName().StartsWith("dual", StringComparison.OrdinalIgnoreCase);
 
+        public static bool HasTouchscreen(this ButtonProfile profile) =>
+            profile.ToInputParserBuilder().HasTouchscreen;
+
         public static ButtonProfile? ToDual(this ButtonProfile profile)
         {
             if (profile.IsDual()) throw new ArgumentException("profile is already dual: " + profile);

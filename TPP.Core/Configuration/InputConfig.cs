@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace TPP.Core.Configuration
@@ -31,5 +33,8 @@ namespace TPP.Core.Configuration
         public int MaxSequenceLength { get; init; } = 0;
         public string? ControllerPrefix { get; set; } = null;
         public string? ControllerPrefix2 { get; set; } = null;
+
+        [Description("Defines shorthand aliases for touchscreen coordinates, e.g. \"move1\": [1, 25]")]
+        public Dictionary<string, uint[]> TouchscreenAliases = [];
     }
 }

@@ -505,5 +505,6 @@ namespace TPP.Inputting
         }
 
         public bool IsDualRun { get => _leftRightSides; }
+        public bool HasTouchscreen { get => _inputDefinitions.Any(def => def is TouchscreenInputDefinition); }
     }
 }

@@ -144,6 +144,13 @@ public sealed class Runmode : IWithLifecycle
             inputParserBuilder.MaxSetLength(config.MaxSetLength);
         if (config.MaxSequenceLength > 0)
             inputParserBuilder.MaxSequenceLength(config.MaxSequenceLength);
+        if (inputParserBuilder.HasTouchscreen) // Don't throw exceptions for missing touchscreen
+        {
+            foreach ((var key, var val) in config.TouchscreenAliases)
+            {
+                inputParserBuilder.AliasedTouchscreenInput(key, val[0], val[1]);
+            }
+        }
 
         IInputParser inputParser = inputParserBuilder.Build();
         if (inputParser is SidedInputParser sidedInputParser)

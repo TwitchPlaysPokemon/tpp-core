@@ -7,6 +7,21 @@
       ],
       "additionalProperties": false,
       "properties": {
+        "TouchscreenAliases": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
         "ButtonsProfile": {
           "type": "string",
           "enum": [
@@ -14,6 +29,8 @@
             "gba",
             "nds",
             "3ds",
+            "n3dsoffset",
+            "n3dsscaled",
             "nes",
             "snes2nes",
             "snes",
@@ -29,9 +46,12 @@
             "dualsnes",
             "dualn64",
             "dualgc",
+            "dual3ds",
             "dualsgb",
             "dualgbt",
-            "dualgbp"
+            "dualgbp",
+            "dualn3dsoffset",
+            "dualn3dsscaled"
           ]
         },
         "FramesPerSecond": {
