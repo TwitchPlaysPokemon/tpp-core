@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
-using TPP.Core.Chat;
 using TPP.Core.Configuration;
 using TPP.Core.Utils;
 using TPP.Persistence;
@@ -17,7 +16,7 @@ namespace TPP.Core;
 public sealed class ChattersWorker(
     ILoggerFactory loggerFactory,
     IClock clock,
-    TwitchApiProvider twitchApiProvider,
+    TwitchApi twitchApi,
     IChattersSnapshotsRepo chattersSnapshotsRepo,
     ConnectionConfig.Twitch chatConfig
 ) : IWithLifecycle
@@ -58,7 +57,7 @@ public sealed class ChattersWorker(
         string? nextCursor = null;
         do
         {
-            Task<GetChattersResponse> getChattersTask = (await twitchApiProvider.Get()).Helix.Chat
+            Task<GetChattersResponse> getChattersTask = twitchApi
                 .GetChattersAsync(chatConfig.ChannelId, chatConfig.UserId, first: 1000, after: nextCursor);
             if (await Task.WhenAny(getChattersTask, cancellationToken.WhenCanceled()) != getChattersTask)
                 // canceled, but GetChattersAsync doesn't take a cancellation token directly

@@ -4,7 +4,6 @@ using NodaTime;
 using TPP.Core.Configuration;
 using TPP.Core.Moderation;
 using TPP.Model;
-using TwitchLib.Api;
 using TwitchLib.Api.Helix.Models.Moderation.BanUser;
 using static TPP.Core.Configuration.ConnectionConfig.Twitch;
 
@@ -12,7 +11,7 @@ namespace TPP.Core.Chat;
 
 public sealed class TwitchChatExecutor(
     ILogger<TwitchChatExecutor> logger,
-    TwitchApiProvider twitchApiProvider,
+    TwitchApi twitchApi,
     ConnectionConfig.Twitch chatConfig)
     : IExecutor
 {
@@ -30,8 +29,7 @@ public sealed class TwitchChatExecutor(
         }
 
         logger.LogDebug($"deleting message {messageId} in #{chatConfig.Channel}");
-        TwitchAPI twitchApi = await twitchApiProvider.Get();
-        await twitchApi.Helix.Moderation.DeleteChatMessagesAsync(chatConfig.ChannelId, chatConfig.UserId, messageId);
+        await twitchApi.DeleteChatMessagesAsync(chatConfig.ChannelId, chatConfig.UserId, messageId);
     }
 
     public async Task Timeout(User user, string? message, Duration duration)
@@ -43,14 +41,13 @@ public sealed class TwitchChatExecutor(
         }
 
         logger.LogDebug($"time out {user} for {duration} in #{chatConfig.Channel}: {message}");
-        TwitchAPI twitchApi = await twitchApiProvider.Get();
         var banUserRequest = new BanUserRequest
         {
             UserId = user.Id,
             Duration = (int)duration.TotalSeconds,
             Reason = message ?? "no timeout reason was given",
         };
-        await twitchApi.Helix.Moderation.BanUserAsync(chatConfig.ChannelId, chatConfig.UserId, banUserRequest);
+        await twitchApi.BanUserAsync(chatConfig.ChannelId, chatConfig.UserId, banUserRequest);
     }
 
     public async Task Ban(User user, string? message)
@@ -62,14 +59,13 @@ public sealed class TwitchChatExecutor(
         }
 
         logger.LogDebug($"ban {user} in #{chatConfig.Channel}: {message}");
-        TwitchAPI twitchApi = await twitchApiProvider.Get();
         var banUserRequest = new BanUserRequest
         {
             UserId = user.Id,
             Duration = null,
             Reason = message ?? "no ban reason was given",
         };
-        await twitchApi.Helix.Moderation.BanUserAsync(chatConfig.ChannelId, chatConfig.UserId, banUserRequest);
+        await twitchApi.BanUserAsync(chatConfig.ChannelId, chatConfig.UserId, banUserRequest);
     }
 
     public async Task Unban(User user, string? message)
@@ -81,7 +77,6 @@ public sealed class TwitchChatExecutor(
         }
 
         logger.LogDebug($"unban {user} in #{chatConfig.Channel}: {message}");
-        TwitchAPI twitchApi = await twitchApiProvider.Get();
-        await twitchApi.Helix.Moderation.UnbanUserAsync(chatConfig.ChannelId, chatConfig.UserId, user.Id);
+        await twitchApi.UnbanUserAsync(chatConfig.ChannelId, chatConfig.UserId, user.Id);
     }
 }
