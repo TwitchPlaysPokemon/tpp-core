@@ -5,7 +5,6 @@ using NodaTime;
 using NodaTime.Extensions;
 using TPP.Common;
 using TPP.Core.Chat;
-using TwitchLib.Api;
 using TwitchLib.Api.Helix.Models.Streams.GetStreams;
 
 namespace TPP.Core.Commands.Definitions
@@ -45,9 +44,8 @@ namespace TPP.Core.Commands.Definitions
 
             if (uptimeData.LastUpdatedAt < now - MaxUptimeUpdateAge)
             {
-                TwitchAPI api = await twitchChat.TwitchApiProvider.Get();
                 GetStreamsResponse apiResponse =
-                    await api.Helix.Streams.GetStreamsAsync(userIds: new List<string> { twitchChat.ChannelId });
+                    await twitchChat.TwitchApi.GetStreamsAsync(userIds: new List<string> { twitchChat.ChannelId });
                 Stream? stream = apiResponse.Streams.FirstOrDefault(); // may be null if offline (or wrong channel id)
                 uptimeData.StartedAt = stream?.StartedAt.ToInstant();
                 uptimeData.LastUpdatedAt = now;

@@ -7,6 +7,40 @@
       ],
       "additionalProperties": false,
       "properties": {
+        "TouchscreenAliases": {
+          "description": "Defines shorthand aliases for touchscreen coordinates, e.g. \"move1\": [1, 25]",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
+        "GameAliases": {
+          "description": "Includes predetermined input aliases for a known game.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            null,
+            "dppt",
+            "hgss",
+            "bw",
+            "bw2",
+            "xy",
+            "oras",
+            "sm",
+            "usum"
+          ]
+        },
         "ButtonsProfile": {
           "type": "string",
           "enum": [
@@ -14,6 +48,8 @@
             "gba",
             "nds",
             "3ds",
+            "n3dsoffset",
+            "n3dsscaled",
             "nes",
             "snes2nes",
             "snes",
@@ -29,9 +65,13 @@
             "dualsnes",
             "dualn64",
             "dualgc",
+            "dualnds",
+            "dual3ds",
             "dualsgb",
             "dualgbt",
-            "dualgbp"
+            "dualgbp",
+            "dualn3dsoffset",
+            "dualn3dsscaled"
           ]
         },
         "FramesPerSecond": {

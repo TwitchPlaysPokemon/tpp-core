@@ -1,11 +1,14 @@
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using TPP.Inputting;
 
 namespace TPP.Core.Configuration
 {
     /// Contains all parameters that affect how inputs are performed.
     public sealed class InputConfig : ConfigBase
     {
-        public ButtonProfile ButtonsProfile { get; init; } = ButtonProfile.GameBoy;
+        public ButtonProfile ButtonsProfile { get; set; } = ButtonProfile.GameBoy;
         public int FramesPerSecond { get; init; } = 60;
 
         // input duration timings
@@ -31,6 +34,11 @@ namespace TPP.Core.Configuration
         public int MaxSequenceLength { get; init; } = 0;
         public string? ControllerPrefix { get; set; } = null;
         public string? ControllerPrefix2 { get; set; } = null;
-        
+
+        [Description("Defines shorthand aliases for touchscreen coordinates, e.g. \"move1\": [1, 25]")]
+        public Dictionary<string, uint[]> TouchscreenAliases = [];
+
+        [Description("Includes predetermined input aliases for a known game.")]
+        public GameSpecificAlias? GameAliases = null;
     }
 }

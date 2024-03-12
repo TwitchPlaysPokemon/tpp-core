@@ -55,22 +55,46 @@ public sealed class Runmode : IWithLifecycle
             baseConfig.OverlayWebsocketHost, baseConfig.OverlayWebsocketPort);
         _modeBase = new ModeBase(
             loggerFactory, repos, baseConfig, stopToken, _muteInputsToken, _overlayConnection, ProcessMessage);
-        _modeBase.InstallAdditionalCommand(new Command("reloadrunconfig", _ =>
+        void UseNewConfig(RunmodeConfig config)
         {
-            RunmodeConfig config = configLoader();
             (_inputParser, _anarchyInputFeed) = ConfigToInputStuff(config.InputConfig);
             _runmodeConfig = config;
-            return Task.FromResult(new CommandResult { Response = "input config reloaded" });
-        }));
-
-        // Only install dual run commands if we're in dual run mode
-        if (_runmodeConfig.InputConfig.ButtonsProfile.ToInputParserBuilder().IsDualRun)
-        {
-            var dualRunCommands = new DualRunCommands(
-                repos.InputSidePicksRepo, SystemClock.Instance, () => _runmodeConfig.SwitchSidesCooldown);
-            foreach (Command command in dualRunCommands.Commands)
-                _modeBase.InstallAdditionalCommand(command);
         }
+        _modeBase.InstallAdditionalCommand(new Command("reloadrunconfig", _ =>
+        {
+            UseNewConfig(configLoader());
+            return Task.FromResult(new CommandResult { Response = "input config reloaded" });
+        }).WithOperatorsOnly());
+        _modeBase.InstallAdditionalCommand(new Command("enabledualmode", async _ =>
+        {
+            await Task.CompletedTask;
+            ButtonProfile profile = _runmodeConfig.InputConfig.ButtonsProfile;
+            if (profile.IsDual())
+                return new CommandResult { Response = $"input mode already dual: {profile}" };
+            ButtonProfile? dualProfile = profile.ToDual();
+            if (dualProfile == null)
+                return new CommandResult { Response = $"profile does not support dual mode: {profile}" };
+            _runmodeConfig.InputConfig.ButtonsProfile = dualProfile.Value;
+            UseNewConfig(_runmodeConfig); // reloads the button profile
+            return new CommandResult { Response = $"profile changed to dual: {dualProfile.Value}" };
+        }).WithModeratorsOnly());
+        _modeBase.InstallAdditionalCommand(new Command("disabledualmode", async _ =>
+        {
+            await Task.CompletedTask;
+            ButtonProfile profile = _runmodeConfig.InputConfig.ButtonsProfile;
+            if (!profile.IsDual())
+                return new CommandResult { Response = $"input mode already not dual: {profile}" };
+            ButtonProfile? nonDualProfile = profile.ToNonDual();
+            if (nonDualProfile == null)
+                return new CommandResult { Response = $"profile does not support non-dual mode: {profile}" };
+            _runmodeConfig.InputConfig.ButtonsProfile = nonDualProfile.Value;
+            UseNewConfig(_runmodeConfig); // reloads the button profile
+            return new CommandResult { Response = $"profile changed to non-dual: {nonDualProfile.Value}" };
+        }).WithModeratorsOnly());
+
+        var dualRunCommands = new DualRunCommands(() => _runmodeConfig, repos.InputSidePicksRepo, SystemClock.Instance);
+        foreach (Command command in dualRunCommands.Commands)
+            _modeBase.InstallAdditionalCommand(command);
 
         // TODO felk: this feels a bit messy the way it is done right now,
         //            but I am unsure yet how I'd integrate the individual parts in a cleaner way.
@@ -121,6 +145,21 @@ public sealed class Runmode : IWithLifecycle
             inputParserBuilder.MaxSetLength(config.MaxSetLength);
         if (config.MaxSequenceLength > 0)
             inputParserBuilder.MaxSequenceLength(config.MaxSequenceLength);
+        if (config.GameAliases != null)
+        {
+            try
+            {
+                inputParserBuilder.AddGameAliases((GameSpecificAlias)config.GameAliases);
+            }
+            catch { } // Don't throw exceptions for invalid aliases
+        }
+        if (inputParserBuilder.HasTouchscreen) // Don't throw exceptions for missing touchscreen
+        {
+            foreach ((var key, var val) in config.TouchscreenAliases)
+            {
+                inputParserBuilder.AliasedTouchscreenInput(key, val[0], val[1]);
+            }
+        }
 
         IInputParser inputParser = inputParserBuilder.Build();
         if (inputParser is SidedInputParser sidedInputParser)

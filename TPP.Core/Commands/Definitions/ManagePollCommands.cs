@@ -4,15 +4,12 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TPP.ArgsParsing.Types;
-using TPP.Model;
 using TPP.Persistence;
 
 namespace TPP.Core.Commands.Definitions
 {
     class ManagePollCommands : ICommandCollection
     {
-        private static readonly Role[] AllowedRoles = { Role.Moderator, Role.Operator };
-
         public IEnumerable<Command> Commands => new[]
         {
             new Command("createpoll", StartPoll)
@@ -27,9 +24,7 @@ namespace TPP.Core.Commands.Definitions
                 Aliases = new[] { "endpoll" },
                 Description = "End a poll. Arguments: <PollCode>"
             },
-        }.Select(cmd => cmd.WithCondition(
-            canExecute: ctx => ctx.Message.User.Roles.Intersect(AllowedRoles).Any(),
-            ersatzResult: new CommandResult { Response = "Only moderators can manage polls" }));
+        }.Select(cmd => cmd.WithModeratorsOnly());
 
         private readonly IPollRepo _pollRepo;
 

@@ -1,6 +1,10 @@
+using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using NodaTime;
 using NUnit.Framework;
 using TPP.Core;
+using TPP.Core.Overlay.Events;
 using TPP.Inputting.Inputs;
 using TPP.Inputting.Parsing;
 
@@ -30,6 +34,15 @@ public class ButtonMappingTest
     {
         var mappedInputs = _inputMapper.Map(new TimedInputSet(ParseInput(rawInput), 1, 2));
         Assert.That(mappedInputs.Keys, Has.Count.EqualTo(2), message ?? "Mapped output should contain no buttons.");
+    }
+
+    [Test]
+    public void TestBuildEveryProfile()
+    {
+        foreach (string profile in Enum.GetNames<ButtonProfile>())
+        {
+            Assert.DoesNotThrow(() => Enum.Parse<ButtonProfile>(profile).ToInputParserBuilder().Build(), $"Button Profile {profile} failed to build.");
+        }
     }
 
     [Test]
@@ -219,5 +232,36 @@ public class ButtonMappingTest
         {
             _inputMapper = originalMapper;
         }
+    }
+
+    private static Model.User MockUser(
+    string name = "user",
+    int pokeyen = 0,
+    int tokens = 0,
+    string? twitchDisplayName = null,
+    int? pokeyenBetRank = null,
+    bool glowColorUnlocked = false,
+    SortedSet<int>? emblems = null
+    ) => new Model.User(
+        id: Guid.NewGuid().ToString(),
+        name: name, twitchDisplayName: twitchDisplayName ?? "☺" + name, simpleName: name.ToLower(), color: null,
+        firstActiveAt: Instant.FromUnixTimeSeconds(0),
+        lastActiveAt: Instant.FromUnixTimeSeconds(0),
+        lastMessageAt: null,
+        pokeyen: pokeyen, tokens: tokens,
+        pokeyenBetRank: pokeyenBetRank, glowColorUnlocked: glowColorUnlocked,
+        participationEmblems: emblems);
+
+    [Test]
+    public void TestOverlayTouchscreenSupport()
+    {
+        _inputParser = ButtonProfile.Nintendo3DS.ToInputParserBuilder().Build();
+
+        var buttonsOnly = new NewAnarchyInput(1, ParseInput("a"), MockUser(), null, null);
+        var touch = new NewAnarchyInput(1, ParseInput("20,40"), MockUser(), null, null);
+        var drag = new NewAnarchyInput(1, ParseInput("20,40>50,60"), MockUser(), null, null);
+        Assert.That(buttonsOnly.X == null && buttonsOnly.Y == null && buttonsOnly.X2 == null && buttonsOnly.Y2 == null, "Buttons should create no touchscreen coordinates");
+        Assert.That(touch.X == 20 && touch.Y == 40 && touch.X2 == null && touch.Y2 == null, "Touchscreen coordinates should be mapped to x,y properties");
+        Assert.That(drag.X == 20 && drag.Y == 40 && drag.X2 == 50 && drag.Y2 == 60, "Drag coordinates should be mapped to x,y,x2,y2 properties");
     }
 }

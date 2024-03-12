@@ -12,6 +12,8 @@ using TPP.Core.Moderation;
 using TPP.Core.Overlay;
 using TPP.Core.Utils;
 using TPP.Persistence;
+using TwitchLib.Api.Helix.Models.Streams.GetStreams;
+using TwitchLib.Api.Helix.Models.Users.GetUsers;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
@@ -31,7 +33,7 @@ namespace TPP.Core.Chat
         public readonly string ChannelId;
         private readonly IUserRepo _userRepo;
         private readonly TwitchClient _twitchClient;
-        public readonly TwitchApiProvider TwitchApiProvider;
+        public readonly TwitchApi TwitchApi;
         private readonly TwitchLibSubscriptionWatcher? _subscriptionWatcher;
         private readonly TwitchChatSender _twitchChatSender;
         private readonly TwitchChatModeChanger _twitchChatModeChanger;
@@ -55,7 +57,7 @@ namespace TPP.Core.Chat
             ChannelId = chatConfig.ChannelId;
             _userRepo = userRepo;
 
-            TwitchApiProvider = new TwitchApiProvider(
+            TwitchApi = new TwitchApi(
                 loggerFactory,
                 clock,
                 chatConfig.InfiniteAccessToken,
@@ -83,11 +85,11 @@ namespace TPP.Core.Chat
             _twitchClient.OnConnectionError += OnConnectionError;
             TwitchEventSubChat.IncomingMessage += MessageReceived;
             _twitchClient.OnWhisperReceived += WhisperReceived;
-            _twitchChatSender = new TwitchChatSender(loggerFactory, TwitchApiProvider, chatConfig, useTwitchReplies);
+            _twitchChatSender = new TwitchChatSender(loggerFactory, TwitchApi, chatConfig, useTwitchReplies);
             _twitchChatModeChanger = new TwitchChatModeChanger(
-                loggerFactory.CreateLogger<TwitchChatModeChanger>(), TwitchApiProvider, chatConfig);
+                loggerFactory.CreateLogger<TwitchChatModeChanger>(), TwitchApi, chatConfig);
             _twitchChatExecutor = new TwitchChatExecutor(loggerFactory.CreateLogger<TwitchChatExecutor>(),
-                TwitchApiProvider, chatConfig);
+                TwitchApi, chatConfig);
 
             _subscriptionWatcher = chatConfig.MonitorSubscriptions
                 ? new TwitchLibSubscriptionWatcher(loggerFactory, _userRepo, _twitchClient, clock,

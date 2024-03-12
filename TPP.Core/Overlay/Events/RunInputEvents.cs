@@ -19,6 +19,10 @@ namespace TPP.Core.Overlay.Events
         [DataMember(Name = "button_set_velocities")] public IImmutableList<float> ButtonSetVelocities { get; set; }
         [DataMember(Name = "user")] public User User { get; set; }
         [DataMember(Name = "id")] public int InputId { get; set; }
+        [DataMember(Name = "x", EmitDefaultValue = false)] public uint? X { get; set; }
+        [DataMember(Name = "y", EmitDefaultValue = false)] public uint? Y { get; set; }
+        [DataMember(Name = "x2", EmitDefaultValue = false)] public uint? X2 { get; set; }
+        [DataMember(Name = "y2", EmitDefaultValue = false)] public uint? Y2 { get; set; }
         [DataMember(Name = "side", EmitDefaultValue = false)] public string? Side { get; set; }
         [DataMember(Name = "direct", EmitDefaultValue = false)] public bool? Direct { get; set; }
         [DataMember(Name = "channel")] public string? Channel { get; set; }
@@ -38,6 +42,20 @@ namespace TPP.Core.Overlay.Events
             Direct = sideInput?.Direct;
             Channel = channel;
             ChannelImageUrl = channelImageUrl;
+            var touchInput = (TouchscreenInput?)InputsForOverlay().FirstOrDefault(input => input is TouchscreenInput);
+            var dragInput = (TouchscreenDragInput?)InputsForOverlay().FirstOrDefault(input => input is TouchscreenDragInput);
+            if (touchInput != null)
+            {
+                X = touchInput.X;
+                Y = touchInput.Y;
+            }
+            if (dragInput != null)
+            {
+                X = dragInput.X;
+                Y = dragInput.Y;
+                X2 = dragInput.X2;
+                Y2 = dragInput.Y2;
+            }
         }
     }
 

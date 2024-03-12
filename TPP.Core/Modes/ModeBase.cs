@@ -151,7 +151,7 @@ namespace TPP.Core.Modes
             _chattersWorker = primaryChat == null
                 ? null
                 : new ChattersWorker(loggerFactory, clock,
-                    ((TwitchChat)_chats[primaryChat.Name]).TwitchApiProvider, repos.ChattersSnapshotsRepo, primaryChat);
+                    ((TwitchChat)_chats[primaryChat.Name]).TwitchApi, repos.ChattersSnapshotsRepo, primaryChat);
         }
 
         public void InstallAdditionalCommand(Command command)
@@ -233,7 +233,7 @@ namespace TPP.Core.Modes
                 }
             }
             wasProcessed |= await _processMessage(chat, message);
-            if (!wasProcessed && _forwardUnprocessedMessages && message.MessageSource is PrimaryChat)
+            if (!wasProcessed && _forwardUnprocessedMessages && message.MessageSource is PrimaryChat or Whisper)
             {
                 await _outgoingMessagequeueRepo.EnqueueMessage(message.RawIrcMessage);
             }

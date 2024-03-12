@@ -1,4 +1,7 @@
+using System;
+using System.Linq;
 using System.Runtime.Serialization;
+using TPP.Common;
 using TPP.Inputting;
 
 namespace TPP.Core
@@ -11,6 +14,9 @@ namespace TPP.Core
         [EnumMember(Value = "nds")] NintendoDS,
         [EnumMember(Value = "3ds")] Nintendo3DS,
 
+        [EnumMember(Value = "n3dsoffset")] NintendoDSOn3DSOffset, // Nintendo DS title launched on 3DS while holding Start or Select
+        [EnumMember(Value = "n3dsscaled")] NintendoDSOn3DSScaled, // Nintendo DS title launched on 3DS without holding Start or Select
+
         [EnumMember(Value = "nes")] NES,
         [EnumMember(Value = "snes2nes")] SNEStoNES,
         [EnumMember(Value = "snes")] SNES,
@@ -20,7 +26,7 @@ namespace TPP.Core
 
         [EnumMember(Value = "sgb")] SuperGameBoy, // GameBoy on SNES
         [EnumMember(Value = "gbt")] GameBoyTower, // GameBoy on N64 (Pokemon Stadium)
-        [EnumMember(Value = "gbp")] GameBoyPlayer,// GameBoy Advance on GameCube
+        [EnumMember(Value = "gbp")] GameBoyPlayer, // GameBoy Advance on GameCube
 
         [EnumMember(Value = "dualgb")] DualGameBoy,
         [EnumMember(Value = "dualnes")] DualNES,
@@ -28,16 +34,53 @@ namespace TPP.Core
         [EnumMember(Value = "dualsnes")] DualSNES,
         [EnumMember(Value = "dualn64")] DualN64,
         [EnumMember(Value = "dualgc")] DualGameCube,
+        [EnumMember(Value = "dualnds")] DualNintendoDS,
+        [EnumMember(Value = "dual3ds")] DualNintendo3DS,
 
         [EnumMember(Value = "dualsgb")] DualSuperGameBoy,
         [EnumMember(Value = "dualgbt")] DualGameBoyTower,
         [EnumMember(Value = "dualgbp")] DualGameBoyPlayer,
+
+        [EnumMember(Value = "dualn3dsoffset")] DualNintendoDSOnDSOffset, // Nintendo DS title launched on 3DS while holding Start or Select
+        [EnumMember(Value = "dualn3dsscaled")] DualNintendoDSOnDSScaled, // Nintendo DS title launched on 3DS without holding Start or Select
     }
 
     public static class ButtonProfileExtensions
     {
-        public static InputParserBuilder ToInputParserBuilder(this ButtonProfile profile) =>
-            profile switch
+        public static string GetProfileName(this ButtonProfile profile) =>
+            profile.GetEnumMemberValue()
+            ?? throw new ArgumentException("profile is missing EnumMember for profile name: " + profile);
+
+        public static bool IsDual(this ButtonProfile profile) =>
+            profile.GetProfileName().StartsWith("dual", StringComparison.OrdinalIgnoreCase);
+
+        public static bool HasTouchscreen(this ButtonProfile profile) =>
+            profile.ToInputParserBuilder().HasTouchscreen;
+
+        public static ButtonProfile? ToDual(this ButtonProfile profile)
+        {
+            if (profile.IsDual()) throw new ArgumentException("profile is already dual: " + profile);
+            string expectedName = "dual" + profile.GetProfileName();
+            return Enum
+                .GetValues<ButtonProfile>()
+                .Where(p => p.IsDual())
+                .Where(p => p.GetProfileName().Equals(expectedName, StringComparison.OrdinalIgnoreCase))
+                .Cast<ButtonProfile?>().FirstOrDefault();
+        }
+
+        public static ButtonProfile? ToNonDual(this ButtonProfile profile)
+        {
+            if (!profile.IsDual()) throw new ArgumentException("profile is not dual: " + profile);
+            return Enum
+                .GetValues<ButtonProfile>()
+                .Where(p => !p.IsDual())
+                .Where(p => p.ToDual() == profile)
+                .Cast<ButtonProfile?>().FirstOrDefault();
+        }
+
+        public static InputParserBuilder ToInputParserBuilder(this ButtonProfile profile)
+        {
+            InputParserBuilder inputParserBuilder = profile switch
             {
                 ButtonProfile.GameBoy => InputParserBuilder.FromBare()
                     .Buttons("a", "b", "start", "select")
@@ -55,9 +98,15 @@ namespace TPP.Core
                     // Prevent Soft Reset in 3DS Pokemon Games (L+R+Start/Select) as well as Luma3DS and NTR menu shortcuts
                     .Conflicts(("l", "select"), ("l", "start")),
 
+                ButtonProfile.NintendoDSOn3DSOffset => ButtonProfile.SNES.ToInputParserBuilder()
+                    .Touchscreen(width: 256, height: 192, multitouch: false, allowDrag: true, xOffset: 32),
+                ButtonProfile.NintendoDSOn3DSScaled => ButtonProfile.SNES.ToInputParserBuilder()
+                    .Touchscreen(width: 256, height: 192, multitouch: false, allowDrag: true, scaleWidth: 300, scaleHeight: 240),
+
                 ButtonProfile.NES => ButtonProfile.GameBoy.ToInputParserBuilder(),
                 ButtonProfile.SNEStoNES => ButtonProfile.NES.ToInputParserBuilder()
-                    .AliasedButtons(("a", "b"), ("b", "y")), // SNES B and Y map to NES A and B. SNES X and A do nothing.
+                    .AliasedButtons(("a", "b"),
+                        ("b", "y")), // SNES B and Y map to NES A and B. SNES X and A do nothing.
                 ButtonProfile.SNES => ButtonProfile.GameBoyAdvance.ToInputParserBuilder()
                     .Buttons("x", "y"),
                 ButtonProfile.N64 => InputParserBuilder.FromBare()
@@ -102,9 +151,18 @@ namespace TPP.Core
                     .LeftRightSidesEnabled(true),
                 ButtonProfile.DualSNES => ButtonProfile.SNES.ToInputParserBuilder()
                     .LeftRightSidesEnabled(true),
-                ButtonProfile.DualN64 => ButtonProfile.DualN64.ToInputParserBuilder()
+                ButtonProfile.DualN64 => ButtonProfile.N64.ToInputParserBuilder()
                     .LeftRightSidesEnabled(true),
                 ButtonProfile.DualGameCube => ButtonProfile.GameCube.ToInputParserBuilder()
+                    .LeftRightSidesEnabled(true),
+                ButtonProfile.DualNintendoDS => ButtonProfile.NintendoDS.ToInputParserBuilder()
+                .LeftRightSidesEnabled(true),
+                ButtonProfile.DualNintendo3DS => ButtonProfile.Nintendo3DS.ToInputParserBuilder()
+                    .LeftRightSidesEnabled(true),
+
+                ButtonProfile.DualNintendoDSOnDSOffset => ButtonProfile.NintendoDSOn3DSOffset.ToInputParserBuilder()
+                    .LeftRightSidesEnabled(true),
+                ButtonProfile.DualNintendoDSOnDSScaled => ButtonProfile.NintendoDSOn3DSScaled.ToInputParserBuilder()
                     .LeftRightSidesEnabled(true),
 
                 ButtonProfile.DualSuperGameBoy => ButtonProfile.SuperGameBoy.ToInputParserBuilder()
@@ -114,5 +172,14 @@ namespace TPP.Core
                 ButtonProfile.DualGameBoyPlayer => ButtonProfile.GameBoyPlayer.ToInputParserBuilder()
                     .LeftRightSidesEnabled(true),
             };
+            // sanity check: we enforce the convention that all dual profile must have "dual" in their name.
+            if (inputParserBuilder.IsDualRun && !profile.IsDual())
+                throw new ArgumentException($"input parser builder resulted in dual inputs, " +
+                                            $"but profile does not have 'dual' in its name: {profile}");
+            if (!inputParserBuilder.IsDualRun && profile.IsDual())
+                throw new ArgumentException($"input parser builder resulted in non-dual inputs, " +
+                                            $"but profile has 'dual' in its name: {profile}");
+            return inputParserBuilder;
+        }
     }
 }
