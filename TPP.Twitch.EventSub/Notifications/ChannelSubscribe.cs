@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using TPP.Common;
@@ -24,34 +25,34 @@ public class ChannelSubscribe(NotificationMetadata metadata, NotificationPayload
     /// </summary>
     public record Condition(string BroadcasterUserId) : EventSub.Condition;
 
-    // Can't use default enum name serialization for Tier because enum names can't be numbers
-    private class TierConverter : JsonConverter<Tier?>
+    // Can't use the default enum name serialization for Tier because enum names can't be numbers.
+    public class TierConverter : JsonConverter<Tier>
     {
-        public override Tier? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public override Tier Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            string? tierStr = reader.GetString();
-            if (tierStr == null) return null;
+            string tierStr = reader.GetString() ?? throw new JsonException("tier must not be null");
             foreach (Tier tier in Enum.GetValues<Tier>())
                 if (tier.GetEnumMemberValue() == tierStr)
                     return tier;
             throw new JsonException("Unknown Tier: " + tierStr);
         }
-        public override void Write(Utf8JsonWriter writer, Tier? value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, Tier value, JsonSerializerOptions options)
         {
-            if (value == null) writer.WriteNullValue();
-            else writer.WriteStringValue(value.Value.GetEnumMemberValue());
+            writer.WriteStringValue(value.GetEnumMemberValue());
         }
     }
 
     /// <summary>
     /// The tier of the subscription. Valid values are 1000, 2000, and 3000.
     /// </summary>
-    [JsonConverter(typeof(TierConverter))]
+    // [JsonConverter(typeof(TierConverter))] // is instead specified in Parsing#SerializerOptions before the
+    // JsonStringEnumConverter, because otherwise the custom converter gets ignored since System.Text.Json just uses
+    // whatever enum converter it finds first. There is no consideration for anyone overwriting it for _some_ enums :(
     public enum Tier
     {
-        Tier1000,
-        Tier2000,
-        Tier3000
+        [EnumMember(Value = "1000")] Tier1000,
+        [EnumMember(Value = "2000")] Tier2000,
+        [EnumMember(Value = "3000")] Tier3000
     }
 
     /// <summary>

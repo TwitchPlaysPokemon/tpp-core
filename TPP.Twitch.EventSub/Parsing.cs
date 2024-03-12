@@ -49,6 +49,7 @@ public static class Parsing
         Converters =
         {
             NodaConverters.InstantConverter,
+            new ChannelSubscribe.TierConverter(), // see ChannelSubscribe#Tier
             new JsonStringEnumConverter(),
         },
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,

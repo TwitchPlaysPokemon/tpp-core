@@ -1,3 +1,4 @@
+using System.Linq;
 using TPP.Twitch.EventSub.Messages;
 
 namespace TPP.Twitch.EventSub.Notifications;
@@ -38,7 +39,17 @@ public class ChannelSubscriptionMessage(NotificationMetadata metadata, Notificat
     /// <param name="Emotes">An array that includes the emote ID and start and end positions for where the emote appears in the text.</param>
     public record Message(
         string Text,
-        Emote[] Emotes);
+        Emote[] Emotes)
+    {
+        // override Equals and GetHashCode to fix value semantics for collections: Emotes
+        public virtual bool Equals(Message? other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Text == other.Text && Emotes.SequenceEqual(other.Emotes);
+        }
+        public override int GetHashCode() => Text.GetHashCode();
+    }
 
     /// <summary>
     /// Channel Subscription Message Event

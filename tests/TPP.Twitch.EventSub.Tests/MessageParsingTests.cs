@@ -5,7 +5,12 @@ using TPP.Twitch.EventSub.Notifications;
 
 namespace TPP.Twitch.EventSub.Tests;
 
-public class Tests
+/// <summary>
+/// Tests that the examples from the Twitch documentation page
+/// <a href="https://dev.twitch.tv/docs/eventsub/handling-websocket-events/">"Getting Events Using WebSockets"</a>
+/// can be parsed successfully.
+/// </summary>
+public class MessageParsingTests
 {
     [Test]
     public void ParseWelcome()

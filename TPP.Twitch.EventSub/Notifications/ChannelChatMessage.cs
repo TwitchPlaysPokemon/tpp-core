@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Immutable;
+using System.Linq;
 using TPP.Twitch.EventSub.Messages;
 
 namespace TPP.Twitch.EventSub.Notifications;
@@ -104,6 +106,15 @@ public class ChannelChatMessage(NotificationMetadata metadata, NotificationPaylo
     {
         public override string ToString() =>
             $"{nameof(Message)} {{ {nameof(Text)} = {Text}, {nameof(Fragments)} = [ {string.Join(", ", Fragments)} ] }}";
+
+        // override Equals and GetHashCode to fix value semantics for collections: Fragments
+        public virtual bool Equals(Message? other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Text == other.Text && Fragments.SequenceEqual(other.Fragments);
+        }
+        public override int GetHashCode() => Text.GetHashCode();
     }
 
     /// <param name="SetId">An ID that identifies this set of chat badges. For example, Bits or Subscriber.</param>
@@ -182,5 +193,48 @@ public class ChannelChatMessage(NotificationMetadata metadata, NotificationPaylo
         string Color,
         Reply? Reply,
         string? ChannelPointsCustomRewardId
-    ) : EventSub.Event;
+    ) : EventSub.Event
+    {
+        // override Equals and GetHashCode to fix value semantics for collections: Badges
+        public virtual bool Equals(Event? other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return base.Equals(other)
+                   && BroadcasterUserId == other.BroadcasterUserId
+                   && BroadcasterUserName == other.BroadcasterUserName
+                   && BroadcasterUserLogin == other.BroadcasterUserLogin
+                   && ChatterUserId == other.ChatterUserId
+                   && ChatterUserName == other.ChatterUserName
+                   && ChatterUserLogin == other.ChatterUserLogin
+                   && MessageId == other.MessageId
+                   && Message.Equals(other.Message)
+                   && MessageType == other.MessageType
+                   && Badges.SequenceEqual(other.Badges) // <-- !!! change from default equals
+                   && Equals(Cheer, other.Cheer)
+                   && Color == other.Color
+                   && Equals(Reply, other.Reply)
+                   && ChannelPointsCustomRewardId == other.ChannelPointsCustomRewardId;
+        }
+        public override int GetHashCode()
+        {
+            var hashCode = new HashCode();
+            hashCode.Add(base.GetHashCode());
+            hashCode.Add(BroadcasterUserId);
+            hashCode.Add(BroadcasterUserName);
+            hashCode.Add(BroadcasterUserLogin);
+            hashCode.Add(ChatterUserId);
+            hashCode.Add(ChatterUserName);
+            hashCode.Add(ChatterUserLogin);
+            hashCode.Add(MessageId);
+            hashCode.Add(Message);
+            hashCode.Add((int)MessageType);
+            // hashCode.Add(Badges); // skip this one to make GetHashCode consistent with Equals
+            hashCode.Add(Cheer);
+            hashCode.Add(Color);
+            hashCode.Add(Reply);
+            hashCode.Add(ChannelPointsCustomRewardId);
+            return hashCode.ToHashCode();
+        }
+    }
 }
