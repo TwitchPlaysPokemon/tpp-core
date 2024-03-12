@@ -12,7 +12,6 @@ using TPP.Core.Utils;
 using TPP.Persistence;
 using TPP.Twitch.EventSub;
 using TPP.Twitch.EventSub.Notifications;
-using TwitchLib.Api;
 using TwitchLib.Api.Core.Exceptions;
 using TwitchLib.Api.Helix.Models.Streams.GetStreams;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;
@@ -26,7 +25,7 @@ public class TwitchEventSubChat : IWithLifecycle, IMessageSource
     public event EventHandler<MessageEventArgs>? IncomingMessage;
 
     private readonly ILogger<TwitchEventSubChat> _logger;
-    private readonly TwitchApiProvider _twitchApiProvider;
+    private readonly TwitchApi _twitchApi;
     private readonly IClock _clock;
     private readonly IUserRepo _userRepo;
 
@@ -46,7 +45,7 @@ public class TwitchEventSubChat : IWithLifecycle, IMessageSource
     public TwitchEventSubChat(
         ILoggerFactory loggerFactory,
         IClock clock,
-        TwitchApiProvider twitchApiProvider,
+        TwitchApi twitchApi,
         IUserRepo userRepo,
         string channelId,
         string userId,
@@ -55,7 +54,7 @@ public class TwitchEventSubChat : IWithLifecycle, IMessageSource
         ICoStreamChannelsRepo coStreamChannelsRepo)
     {
         _logger = loggerFactory.CreateLogger<TwitchEventSubChat>();
-        _twitchApiProvider = twitchApiProvider;
+        _twitchApi = twitchApi;
         _clock = clock;
         _userRepo = userRepo;
         _channelId = channelId;
@@ -88,11 +87,9 @@ public class TwitchEventSubChat : IWithLifecycle, IMessageSource
     {
         _session = session;
         _logger.LogDebug("Setting up EventSub subscriptions");
-        await session.SubscribeWithTwitchLibApi<ChannelChatMessage>(
-            (await _twitchApiProvider.Get()).Helix.EventSub,
+        await _twitchApi.SubscribeToEventSub<ChannelChatMessage>(session.Id,
             new ChannelChatMessage.Condition(BroadcasterUserId: _channelId, UserId: _userId).AsDict());
-        await session.SubscribeWithTwitchLibApi<ChannelChatSettingsUpdate>(
-            (await _twitchApiProvider.Get()).Helix.EventSub,
+        await _twitchApi.SubscribeToEventSub<ChannelChatSettingsUpdate>(session.Id,
             new ChannelChatSettingsUpdate.Condition(BroadcasterUserId: _channelId, UserId: _userId).AsDict());
 
         if (_coStreamInputsEnabled)
@@ -101,8 +98,7 @@ public class TwitchEventSubChat : IWithLifecycle, IMessageSource
             {
                 try
                 {
-                    var response = await session.SubscribeWithTwitchLibApi<ChannelChatMessage>(
-                        (await _twitchApiProvider.Get()).Helix.EventSub,
+                    var response = await _twitchApi.SubscribeToEventSub<ChannelChatMessage>(session.Id,
                         new ChannelChatMessage.Condition(BroadcasterUserId: channelId, UserId: _userId).AsDict());
                     _coStreamEventSubSubscriptions[channelId] = response.Subscriptions[0].Id;
                 }
@@ -123,8 +119,7 @@ public class TwitchEventSubChat : IWithLifecycle, IMessageSource
         if (!_coStreamInputsEnabled)
             return JoinResult.NotEnabled;
 
-        TwitchAPI api = await _twitchApiProvider.Get();
-        GetUsersResponse getUsersResponse = await api.Helix.Users.GetUsersAsync(ids: [userId]);
+        GetUsersResponse getUsersResponse = await _twitchApi.GetUsersAsync(ids: [userId]);
         var user = getUsersResponse.Users.FirstOrDefault();
         if (user == null)
             return JoinResult.UserNotFound;
@@ -135,18 +130,17 @@ public class TwitchEventSubChat : IWithLifecycle, IMessageSource
         if (_coStreamInputsOnlyLive)
         {
             GetStreamsResponse getStreamsResponse =
-                await api.Helix.Streams.GetStreamsAsync(userIds: [userId]);
+                await _twitchApi.GetStreamsAsync(userIds: [userId]);
             Stream? stream = getStreamsResponse.Streams.FirstOrDefault();
             if (stream is null)
                 return JoinResult.StreamOffline;
         }
 
         await _coStreamChannelsRepo.Add(userId, user.ProfileImageUrl);
-        var response = await _session!.SubscribeWithTwitchLibApi<ChannelChatMessage>(
-            (await _twitchApiProvider.Get()).Helix.EventSub,
+        var response = await _twitchApi.SubscribeToEventSub<ChannelChatMessage>(_session!.Id,
             new ChannelChatMessage.Condition(BroadcasterUserId: userId, UserId: _userId).AsDict());
         _coStreamEventSubSubscriptions[userId] = response.Subscriptions[0].Id;
-        await api.Helix.Chat.SendChatMessage(userId, _userId, "Joined channel, hello!");
+        await _twitchApi.SendChatMessage(userId, _userId, "Joined channel, hello!");
 
         return JoinResult.Ok;
     }
@@ -156,17 +150,16 @@ public class TwitchEventSubChat : IWithLifecycle, IMessageSource
     {
         if (!await _coStreamChannelsRepo.IsJoined(userId))
             return LeaveResult.NotJoined;
-        TwitchAPI api = await _twitchApiProvider.Get();
         try
         {
-            await api.Helix.Chat.SendChatMessage(userId, _userId, "Leaving channel, goodbye!");
+            await _twitchApi.SendChatMessage(userId, _userId, "Leaving channel, goodbye!");
         }
         catch (HttpResponseException ex)
         {
             _logger.LogError(ex, "Failed sending goodbye message to {ChannelID} after leaving, ignoring", userId);
         }
         if (_coStreamEventSubSubscriptions.TryGetValue(userId, out string? subscriptionId))
-            await api.Helix.EventSub.DeleteEventSubSubscriptionAsync(subscriptionId);
+            await _twitchApi.DeleteEventSubSubscriptionAsync(subscriptionId);
         _coStreamEventSubSubscriptions.Remove(userId);
         await _coStreamChannelsRepo.Remove(userId);
         return LeaveResult.Ok;
@@ -182,13 +175,12 @@ public class TwitchEventSubChat : IWithLifecycle, IMessageSource
         while (!cancellationToken.IsCancellationRequested)
         {
             IImmutableSet<string> joinedChannelIds = await _coStreamChannelsRepo.GetJoinedChannels();
-            TwitchAPI api = await _twitchApiProvider.Get();
 
             HashSet<string> liveChannelIds = [];
             foreach (string[] chunk in joinedChannelIds.Chunk(chunkSize))
             {
                 GetStreamsResponse getStreamsResponse =
-                    await api.Helix.Streams.GetStreamsAsync(userIds: [..chunk], first: chunkSize);
+                    await _twitchApi.GetStreamsAsync(userIds: [..chunk], first: chunkSize);
                 foreach (Stream s in getStreamsResponse.Streams)
                     liveChannelIds.Add(s.UserId);
             }

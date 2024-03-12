@@ -12,8 +12,6 @@ using TPP.Core.Moderation;
 using TPP.Core.Overlay;
 using TPP.Core.Utils;
 using TPP.Persistence;
-using TwitchLib.Api.Helix.Models.Streams.GetStreams;
-using TwitchLib.Api.Helix.Models.Users.GetUsers;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
@@ -64,7 +62,7 @@ namespace TPP.Core.Chat
                 chatConfig.RefreshToken,
                 chatConfig.AppClientId,
                 chatConfig.AppClientSecret);
-            TwitchEventSubChat = new TwitchEventSubChat(loggerFactory, clock, TwitchApiProvider, _userRepo,
+            TwitchEventSubChat = new TwitchEventSubChat(loggerFactory, clock, TwitchApi, _userRepo,
                 chatConfig.ChannelId, chatConfig.UserId,
                 chatConfig.CoStreamInputsEnabled, chatConfig.CoStreamInputsOnlyLive, coStreamChannelsRepo);
             _twitchClient = new TwitchClient(
