@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
 using TPP.Model;
-using TwitchLib.Api;
 using TwitchLib.Api.Core.Exceptions;
 
 namespace TPP.Core.Chat
@@ -29,7 +28,7 @@ namespace TPP.Core.Chat
 
         private readonly ILogger<TwitchChatQueue> _logger;
         private readonly string _senderUserId;
-        private readonly TwitchApiProvider _twitchApiProvider;
+        private readonly TwitchApi _twitchApi;
         /// At which queue size messages get discarded.
         private readonly int _maxQueueLength;
         /// Shouldn't be smaller than either the minimum Task.Delay timer resolution
@@ -44,13 +43,13 @@ namespace TPP.Core.Chat
         public TwitchChatQueue(
             ILogger<TwitchChatQueue> logger,
             string senderUserId,
-            TwitchApiProvider twitchApiProvider,
+            TwitchApi twitchApi,
             int maxQueueLength = 100,
             Duration? sleepDuration = null)
         {
             _logger = logger;
             _senderUserId = senderUserId;
-            _twitchApiProvider = twitchApiProvider;
+            _twitchApi = twitchApi;
             _maxQueueLength = maxQueueLength;
             _sleepDuration = sleepDuration ?? DefaultSleepDuration;
             _cancellationToken = new CancellationTokenSource();
@@ -96,23 +95,22 @@ namespace TPP.Core.Chat
 
         private async Task Send(OutgoingMessage message)
         {
-            TwitchAPI twitchApi = await _twitchApiProvider.Get();
             if (message is OutgoingMessage.Chat chat)
-                await twitchApi.Helix.Chat.SendChatMessage(chat.ChannelId, _senderUserId, chat.Message);
+                await _twitchApi.SendChatMessage(chat.ChannelId, _senderUserId, chat.Message);
             else if (message is OutgoingMessage.Reply reply)
                 // TODO https://github.com/TwitchLib/TwitchLib.Api/pull/386
-                await twitchApi.Helix.Chat.SendChatMessage(reply.ChannelId, _senderUserId, reply.Message /*, replyParentMessageId: reply.ReplyToId*/);
+                await _twitchApi.SendChatMessage(reply.ChannelId, _senderUserId, reply.Message /*, replyParentMessageId: reply.ReplyToId*/);
             else if (message is OutgoingMessage.Whisper whisper)
-                await SendWhisperCatchingSomeErrors(twitchApi, whisper);
+                await SendWhisperCatchingSomeErrors(whisper);
             else
                 throw new ArgumentException("Unknown outgoing message type: " + message);
         }
 
-        private async Task SendWhisperCatchingSomeErrors(TwitchAPI twitchApi, OutgoingMessage.Whisper whisper)
+        private async Task SendWhisperCatchingSomeErrors(OutgoingMessage.Whisper whisper)
         {
             try
             {
-                await twitchApi.Helix.Whispers.SendWhisperAsync(
+                await _twitchApi.SendWhisperAsync(
                     _senderUserId,
                     whisper.Receiver,
                     whisper.Message,

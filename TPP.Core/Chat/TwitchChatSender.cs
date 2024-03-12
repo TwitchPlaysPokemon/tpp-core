@@ -45,7 +45,7 @@ public sealed class TwitchChatSender : IMessageSender, IAsyncDisposable
 
     public TwitchChatSender(
         ILoggerFactory loggerFactory,
-        TwitchApiProvider twitchApiProvider,
+        TwitchApi twitchApi,
         ConnectionConfig.Twitch chatConfig,
         bool useTwitchReplies = true)
     {
@@ -60,7 +60,7 @@ public sealed class TwitchChatSender : IMessageSender, IAsyncDisposable
         _queue = new TwitchChatQueue(
             loggerFactory.CreateLogger<TwitchChatQueue>(),
             chatConfig.UserId,
-            twitchApiProvider);
+            twitchApi);
     }
 
     public async Task SendMessage(string message, Message? responseTo = null)
