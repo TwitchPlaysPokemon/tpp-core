@@ -1,6 +1,5 @@
 using NodaTime;
 using NUnit.Framework;
-using TPP.Common;
 using TPP.Twitch.EventSub.Notifications;
 
 namespace TPP.Twitch.EventSub.Tests;
@@ -215,7 +214,7 @@ public class EventParsingTests
             "1337",
             "cooler_user",
             "Cooler_User",
-            ChannelSubscribe.Tier.Tier1000.GetEnumMemberValue()!,
+            ChannelSubscribe.Tier.Tier1000,
             new ChannelSubscriptionMessage.Message(
                 "Love the stream! FevziGG",
                 [new ChannelSubscriptionMessage.Emote(23, 30, "302976485")]
@@ -223,6 +222,40 @@ public class EventParsingTests
             15,
             1,
             6
+        )));
+    }
+
+    [Test]
+    public void ParseChannelSubscriptionGift()
+    {
+        const string json =
+            """
+            {
+                "user_id": "1234",
+                "user_login": "cool_user",
+                "user_name": "Cool_User",
+                "broadcaster_user_id": "1337",
+                "broadcaster_user_login": "cooler_user",
+                "broadcaster_user_name": "Cooler_User",
+                "total": 2,
+                "tier": "1000",
+                "cumulative_total": 284,
+                "is_anonymous": false
+            }
+            """;
+
+        ChannelSubscriptionGift.Event evt = ParseNotificationEvent<ChannelSubscriptionGift>(json).Payload.Event;
+        Assert.That(evt, Is.EqualTo(new ChannelSubscriptionGift.Event(
+            "1234",
+            "cool_user",
+            "Cool_User",
+            "1337",
+            "cooler_user",
+            "Cooler_User",
+            2,
+            ChannelSubscribe.Tier.Tier1000,
+            284,
+            false
         )));
     }
 

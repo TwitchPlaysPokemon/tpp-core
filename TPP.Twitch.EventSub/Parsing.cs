@@ -39,6 +39,7 @@ public static class Parsing
         RegisterSubscriptionType<ChannelChatSettingsUpdate>();
         RegisterSubscriptionType<ChannelSubscribe>();
         RegisterSubscriptionType<ChannelSubscriptionMessage>();
+        RegisterSubscriptionType<ChannelSubscriptionGift>();
     }
 
     private static readonly Dictionary<string, Type> MessageTypes = new();

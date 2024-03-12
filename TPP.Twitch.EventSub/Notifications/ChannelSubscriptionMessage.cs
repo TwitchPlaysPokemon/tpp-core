@@ -72,7 +72,7 @@ public class ChannelSubscriptionMessage(NotificationMetadata metadata, Notificat
         string BroadcasterUserId,
         string BroadcasterUserLogin,
         string BroadcasterUserName,
-        string Tier,
+        ChannelSubscribe.Tier Tier,
         Message Message,
         int CumulativeMonths,
         int? StreakMonths,
