@@ -20,6 +20,7 @@ namespace TPP.Core
 
     public sealed record MessageDetails(
         string? MessageId,
+        bool IsAction,
         bool IsStaff,
         IImmutableList<Emote> Emotes);
 
@@ -30,6 +31,6 @@ namespace TPP.Core
         string RawIrcMessage)
     {
         public MessageDetails Details { get; init; } =
-            new(MessageId: null, IsStaff: false, Emotes: ImmutableList<Emote>.Empty);
+            new(MessageId: null, IsAction: false, IsStaff: false, Emotes: ImmutableList<Emote>.Empty);
     }
 }

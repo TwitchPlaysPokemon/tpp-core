@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -20,7 +21,7 @@ using User = TPP.Model.User;
 
 namespace TPP.Core.Chat;
 
-public class TwitchEventSubChat : IWithLifecycle, IMessageSource
+public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
 {
     public event EventHandler<MessageEventArgs>? IncomingMessage;
 
@@ -270,11 +271,21 @@ public class TwitchEventSubChat : IWithLifecycle, IMessageSource
                $" PRIVMSG #{evt.BroadcasterUserLogin} :{evt.Message.Text}";
     }
 
+    // "/me"-messages are enveloped IRC-style using Start-of-Heading (SOH=\u0001) characters and "ACTION" prefix
+    [GeneratedRegex(@"^\u0001ACTION (.*)\u0001$", RegexOptions.Compiled)]
+    private static partial Regex MeMessageRegex();
     private async Task MessageReceived(ChannelChatMessage channelChatMessage)
     {
         ChannelChatMessage.Event evt = channelChatMessage.Payload.Event;
+        string cleanMessageText = evt.Message.Text;
+        bool isAction = false;
+        if (MeMessageRegex().Match(cleanMessageText) is { Groups: [_, var envelopeContent] })
+        {
+            cleanMessageText = envelopeContent.Value;
+            isAction = true;
+        }
         _logger.LogDebug("<#{Channel} {Username}: {Message}",
-            evt.BroadcasterUserLogin, evt.ChatterUserLogin, evt.Message.Text);
+            evt.BroadcasterUserLogin, evt.ChatterUserLogin, cleanMessageText);
         if (evt.ChatterUserId == _userId)
             // new core sees messages posted by old core, but we don't want to process our own messages
             return;
@@ -298,7 +309,7 @@ public class TwitchEventSubChat : IWithLifecycle, IMessageSource
                 // Emote-Only mode is often used by mods to disable inputs. We don't want this to be bypass-able.
                 _logger.LogDebug(
                     "dropping input from co-stream channel {Channel} because we're in emote-only mode: {Input}",
-                    secondaryChat.ChannelName, evt.Message.Text);
+                    secondaryChat.ChannelName, cleanMessageText);
                 return;
             }
             if (_channelState?.SlowMode != null)
@@ -310,7 +321,7 @@ public class TwitchEventSubChat : IWithLifecycle, IMessageSource
                 if (_lastInputPerUser.TryGetValue(user, out Instant lastInput) && lastInput > cutoff)
                 {
                     _logger.LogDebug("dropping too-fast input from co-stream channel {Channel}: {Input}",
-                        secondaryChat.ChannelName, evt.Message.Text);
+                        secondaryChat.ChannelName, cleanMessageText);
                     return;
                 }
                 _lastInputPerUser[user] = now;
@@ -319,10 +330,11 @@ public class TwitchEventSubChat : IWithLifecycle, IMessageSource
 
         ImmutableList<Emote> emotes = GetEmotesFromFragments(evt.Message.Fragments);
         string irc = ConstructIrcString(channelChatMessage, emotes); // backwards compatibility, old-core needs this
-        var message = new Message(user, evt.Message.Text, source, irc)
+        var message = new Message(user, cleanMessageText, source, irc)
         {
             Details = new MessageDetails(
                 MessageId: evt.MessageId,
+                IsAction: isAction,
                 IsStaff: evt.Badges.Any(b => b.SetId is "moderator" or "broadcaster"),
                 Emotes: emotes
             )

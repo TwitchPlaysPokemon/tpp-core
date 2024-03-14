@@ -181,6 +181,7 @@ namespace TPP.Core.Chat
             {
                 Details = new MessageDetails(
                     MessageId: null,
+                    IsAction: false,
                     IsStaff: false,
                     Emotes: e.WhisperMessage.EmoteSet.Emotes
                         .Select(em => new Emote(em.Id, em.Name, em.StartIndex, em.EndIndex)).ToImmutableList()
