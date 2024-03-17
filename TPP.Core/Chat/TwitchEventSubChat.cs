@@ -89,10 +89,12 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
     {
         _session = session;
         _logger.LogDebug("Setting up EventSub subscriptions");
-        await _twitchApi.SubscribeToEventSub<ChannelChatMessage>(session.Id,
-            new ChannelChatMessage.Condition(BroadcasterUserId: _channelId, UserId: _userId).AsDict());
-        await _twitchApi.SubscribeToEventSub<ChannelChatSettingsUpdate>(session.Id,
-            new ChannelChatSettingsUpdate.Condition(BroadcasterUserId: _channelId, UserId: _userId).AsDict());
+        await Task.WhenAll(
+            _twitchApi.SubscribeToEventSub<ChannelChatMessage>(session.Id,
+                new ChannelChatMessage.Condition(BroadcasterUserId: _channelId, UserId: _userId).AsDict()),
+            _twitchApi.SubscribeToEventSub<ChannelChatSettingsUpdate>(session.Id,
+                new ChannelChatSettingsUpdate.Condition(BroadcasterUserId: _channelId, UserId: _userId).AsDict())
+        );
 
         if (_coStreamInputsEnabled)
         {
