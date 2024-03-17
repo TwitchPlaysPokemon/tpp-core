@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
 using TPP.Common;
+using TPP.Common.Utils;
 using TPP.Core.Utils;
 using TPP.Persistence;
 using TPP.Twitch.EventSub;
@@ -197,10 +198,24 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
         }
     }
 
+    private readonly Duration _minThrottle = Duration.FromSeconds(1);
+    private readonly Duration _maxThrottle = Duration.FromSeconds(30);
+    private readonly TtlCount _recentConnectAttempts = new(Duration.FromMinutes(10), SystemClock.Instance);
     private async Task RunAndReconnectForever(CancellationToken cancellationToken)
     {
-        while (true)
+        while (!cancellationToken.IsCancellationRequested)
         {
+            int throttleSteps = _recentConnectAttempts.Count - 1; // -1 so first reconnect is not throttled
+            Duration throttle = throttleSteps > 0
+                ? _minThrottle * Math.Pow(2, throttleSteps - 1)
+                : Duration.Zero;
+            if (throttle > _maxThrottle) throttle = _maxThrottle;
+            if (throttle > Duration.Zero)
+            {
+                _logger.LogWarning("Connecting to EventSub throttled, waiting {Duration}s...", throttle.TotalSeconds);
+                await Task.Delay(throttle.ToTimeSpan(), cancellationToken);
+            }
+            _recentConnectAttempts.Increment();
             try
             {
                 _logger.LogDebug("EventSub websocket client connecting...");
@@ -216,6 +231,10 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
             {
                 _logger.LogDebug("EventSub websocket client was cancelled");
                 break;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error occurred in EventSub client, reconnecting...");
             }
         }
     }
