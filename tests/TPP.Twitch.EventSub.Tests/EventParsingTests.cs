@@ -259,6 +259,37 @@ public class EventParsingTests
         )));
     }
 
+    [Test]
+    public void ParseUserWhisperMessage()
+    {
+        const string json =
+            """
+            {
+              "from_user_id": "423374343",
+              "from_user_login": "glowillig",
+              "from_user_name": "glowillig",
+              "to_user_id": "424596340",
+              "to_user_login": "quotrok",
+              "to_user_name": "quotrok",
+              "whisper_id": "some-whisper-id",
+              "whisper": {
+                "text": "a secret"
+              }
+            }
+            """;
+
+        UserWhisperMessage.Event evt = ParseNotificationEvent<UserWhisperMessage>(json).Payload.Event;
+        Assert.That(evt, Is.EqualTo(new UserWhisperMessage.Event(
+            "423374343",
+            "glowillig",
+            "glowillig",
+            "424596340",
+            "quotrok",
+            "quotrok",
+            "some-whisper-id",
+            new UserWhisperMessage.Whisper("a secret"))));
+    }
+
     /// Parses only the notification-part of a message, enhancing it with a dummy message-envelope.
     private static T ParseNotification<T>(string payload) where T : INotification, IHasSubscriptionType
     {

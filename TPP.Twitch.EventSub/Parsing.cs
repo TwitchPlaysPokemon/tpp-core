@@ -40,6 +40,7 @@ public static class Parsing
         RegisterSubscriptionType<ChannelSubscribe>();
         RegisterSubscriptionType<ChannelSubscriptionMessage>();
         RegisterSubscriptionType<ChannelSubscriptionGift>();
+        RegisterSubscriptionType<UserWhisperMessage>();
     }
 
     private static readonly Dictionary<string, Type> MessageTypes = new();
