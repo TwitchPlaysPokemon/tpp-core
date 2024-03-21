@@ -75,6 +75,8 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
             {
                 if (notification is ChannelChatMessage chatMessage)
                     await MessageReceived(chatMessage);
+                else if (notification is UserWhisperMessage whisperMessage)
+                    await WhisperReceived(whisperMessage);
                 else if (notification is ChannelChatSettingsUpdate settingsUpdate)
                     _channelState = settingsUpdate.Payload.Event;
                 else
@@ -92,6 +94,8 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
         await Task.WhenAll(
             _twitchApi.SubscribeToEventSub<ChannelChatMessage>(session.Id,
                 new ChannelChatMessage.Condition(BroadcasterUserId: _channelId, UserId: _userId).AsDict()),
+            _twitchApi.SubscribeToEventSub<UserWhisperMessage>(session.Id,
+                new UserWhisperMessage.Condition(UserId: _userId).AsDict()),
             _twitchApi.SubscribeToEventSub<ChannelChatSettingsUpdate>(session.Id,
                 new ChannelChatSettingsUpdate.Condition(BroadcasterUserId: _channelId, UserId: _userId).AsDict())
         );
@@ -266,7 +270,7 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
         return emotes.ToImmutableList();
     }
 
-    private static string ConstructIrcString(ChannelChatMessage channelChatMessage, IImmutableList<Emote> emotes)
+    private static string ConstructPrivmsgIrcString(ChannelChatMessage channelChatMessage, IImmutableList<Emote> emotes)
     {
         ChannelChatMessage.Event evt = channelChatMessage.Payload.Event;
         var ircTags = new Dictionary<string, string>
@@ -350,13 +354,53 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
         }
 
         ImmutableList<Emote> emotes = GetEmotesFromFragments(evt.Message.Fragments);
-        string irc = ConstructIrcString(channelChatMessage, emotes); // backwards compatibility, old-core needs this
+        string irc = ConstructPrivmsgIrcString(channelChatMessage, emotes); // backwards compatibility, old-core needs this
         var message = new Message(user, cleanMessageText, source, irc)
         {
             Details = new MessageDetails(
                 MessageId: evt.MessageId,
                 IsAction: isAction,
                 IsStaff: evt.Badges.Any(b => b.SetId is "moderator" or "broadcaster"),
+                Emotes: emotes
+            )
+        };
+        IncomingMessage?.Invoke(this, new MessageEventArgs(message));
+    }
+
+    private static string ConstructWhisperIrcString(UserWhisperMessage whisperMessage, IImmutableList<Emote> emotes)
+    {
+        UserWhisperMessage.Event evt = whisperMessage.Payload.Event;
+        var ircTags = new Dictionary<string, string>
+        {
+            ["display-name"] = evt.FromUserName,
+            ["user-id"] = evt.FromUserId,
+            ["message-id"] = evt.WhisperId,
+        };
+        string tags = string.Join(';', ircTags.Select(kvp => kvp.Key + "=" + kvp.Value));
+        return $"@{tags} :{evt.FromUserLogin}!{evt.FromUserLogin}@{evt.FromUserLogin}.tmi.twitch.tv" +
+               $" WHISPER {evt.ToUserLogin} :{evt.Whisper.Text}";
+    }
+
+    private async Task WhisperReceived(UserWhisperMessage whisperMessage)
+    {
+        UserWhisperMessage.Event whisperEvent = whisperMessage.Payload.Event;
+        _logger.LogDebug("<@{Username}: {Message}", whisperEvent.FromUserLogin, whisperEvent.Whisper.Text);
+        User user = await _userRepo.RecordUser(new UserInfo(
+            Id: whisperEvent.FromUserId,
+            TwitchDisplayName: whisperEvent.FromUserName,
+            SimpleName: whisperEvent.FromUserLogin,
+            FromMessage: true,
+            FromWhisper: true,
+            UpdatedAt: whisperMessage.Metadata.MessageTimestamp
+        ));
+        IImmutableList<Emote> emotes = []; // TODO EventSub whisper event does not supply emote data (yet)
+        var message = new Message(user, whisperEvent.Whisper.Text, new MessageSource.Whisper(),
+            ConstructWhisperIrcString(whisperMessage, emotes))
+        {
+            Details = new MessageDetails(
+                MessageId: null,
+                IsAction: false,
+                IsStaff: false,
                 Emotes: emotes
             )
         };

@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
-using TPP.Common;
 using TPP.Core.Configuration;
 using TPP.Core.Moderation;
 using TPP.Core.Overlay;
@@ -82,7 +80,6 @@ namespace TPP.Core.Chat
             _twitchClient.OnError += OnError;
             _twitchClient.OnConnectionError += OnConnectionError;
             TwitchEventSubChat.IncomingMessage += MessageReceived;
-            _twitchClient.OnWhisperReceived += WhisperReceived;
             _twitchChatSender = new TwitchChatSender(loggerFactory, TwitchApi, chatConfig, useTwitchReplies);
             _twitchChatModeChanger = new TwitchChatModeChanger(
                 loggerFactory.CreateLogger<TwitchChatModeChanger>(), TwitchApi, chatConfig);
@@ -135,7 +132,6 @@ namespace TPP.Core.Chat
             await _twitchChatSender.DisposeAsync();
             _subscriptionWatcher?.Dispose();
             TwitchEventSubChat.IncomingMessage -= MessageReceived;
-            _twitchClient.OnWhisperReceived -= WhisperReceived;
             _logger.LogDebug("twitch chat is now fully shut down");
         }
 
@@ -169,39 +165,6 @@ namespace TPP.Core.Chat
                 try { await Task.Delay(delay, cancellationToken); }
                 catch (OperationCanceledException) { break; }
             }
-        }
-
-        private async Task WhisperReceived(object? sender, OnWhisperReceivedArgs e)
-        {
-            _logger.LogTrace("<@{Username}: {Message}", e.WhisperMessage.Username, e.WhisperMessage.Message);
-            User user = await _userRepo.RecordUser(
-                GetUserInfoFromTwitchMessage(e.WhisperMessage, fromWhisper: true));
-            var message = new Message(user, e.WhisperMessage.Message, new MessageSource.Whisper(),
-                e.WhisperMessage.RawIrcMessage)
-            {
-                Details = new MessageDetails(
-                    MessageId: null,
-                    IsAction: false,
-                    IsStaff: false,
-                    Emotes: e.WhisperMessage.EmoteSet.Emotes
-                        .Select(em => new Emote(em.Id, em.Name, em.StartIndex, em.EndIndex)).ToImmutableList()
-                )
-            };
-            IncomingMessage?.Invoke(this, new MessageEventArgs(message));
-        }
-
-        private UserInfo GetUserInfoFromTwitchMessage(TwitchLibMessage message, bool fromWhisper)
-        {
-            string colorHex = message.HexColor;
-            return new UserInfo(
-                Id: message.UserId,
-                TwitchDisplayName: message.DisplayName,
-                SimpleName: message.Username,
-                Color: string.IsNullOrEmpty(colorHex) ? null : HexColor.FromWithHash(colorHex),
-                FromMessage: true,
-                FromWhisper: fromWhisper,
-                UpdatedAt: _clock.GetCurrentInstant()
-            );
         }
 
         public Task EnableEmoteOnly() => _twitchChatModeChanger.EnableEmoteOnly();
