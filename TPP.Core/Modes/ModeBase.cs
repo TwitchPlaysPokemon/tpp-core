@@ -249,8 +249,7 @@ namespace TPP.Core.Modes
                 tasks.Add(_sendOutQueuedMessagesWorker.Start(cancellationToken));
             if (_chattersWorker != null)
                 tasks.Add(_chattersWorker.Start(cancellationToken));
-            // Must wait on all concurrently running tasks simultaneously to know when one of them crashed
-            await Task.WhenAll(tasks);
+            await TaskUtils.WhenAllFastExit(tasks);
 
             foreach (IChat chat in _chats.Values)
                 chat.IncomingMessage -= MessageReceived;

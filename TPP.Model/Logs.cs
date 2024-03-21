@@ -75,7 +75,7 @@ namespace TPP.Model
         string Id,
         string UserId,
         Instant Timestamp,
-        int MonthsStreak,
+        int? MonthsStreak,
         int MonthsNumPrev,
         int MonthsNumNew,
         int MonthsDifference,

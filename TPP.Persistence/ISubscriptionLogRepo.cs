@@ -10,7 +10,7 @@ namespace TPP.Persistence
         Task<SubscriptionLog> LogSubscription(
             string userId,
             Instant timestamp,
-            int monthsStreak,
+            int? monthsStreak,
             int monthsNumPrev,
             int monthsNumNew,
             int monthsDifference,

@@ -22,12 +22,12 @@ public class CoStreamChannelsRepo : ICoStreamChannelsRepo
         LogCollection = database.GetCollection<BsonDocument>(LogCollectionName);
     }
 
-    public Task<bool> IsJoined(string channelName) =>
-        Collection.Find(doc => doc["_id"] == channelName.ToLower()).AnyAsync();
+    public Task<bool> IsJoined(string channelId) =>
+        Collection.Find(doc => doc["_id"] == channelId).AnyAsync();
 
-    public async Task<string?> GetChannelImageUrl(string channelName)
+    public async Task<string?> GetChannelImageUrl(string channelId)
     {
-        BsonDocument? doc = await Collection.Find(doc => doc["_id"] == channelName.ToLower()).FirstOrDefaultAsync();
+        BsonDocument? doc = await Collection.Find(doc => doc["_id"] == channelId).FirstOrDefaultAsync();
         return doc?["profile_image_url"].AsString;
     }
 
@@ -35,37 +35,37 @@ public class CoStreamChannelsRepo : ICoStreamChannelsRepo
         (await Collection.Find(FilterDefinition<BsonDocument>.Empty).ToListAsync())
         .Select(doc => doc["_id"].AsString).ToImmutableHashSet();
 
-    public async Task Add(string channelName, string? profileImageUrl)
+    public async Task Add(string channelId, string? profileImageUrl)
     {
         await Collection.InsertOneAsync(new BsonDocument
         {
-            ["_id"] = channelName.ToLower(),
+            ["_id"] = channelId,
             ["profile_image_url"] = profileImageUrl
         });
-        await LogJoin(channelName.ToLower(), profileImageUrl);
+        await LogJoin(channelId, profileImageUrl);
     }
 
-    public async Task Remove(string channelName)
+    public async Task Remove(string channelId)
     {
-        await Collection.DeleteOneAsync(doc => doc["_id"] == channelName.ToLower());
-        await LogLeave(channelName.ToLower());
+        await Collection.DeleteOneAsync(doc => doc["_id"] == channelId);
+        await LogLeave(channelId);
     }
 
-    private Task LogJoin(string channelName, string? profileImageUrl) =>
+    private Task LogJoin(string channelId, string? profileImageUrl) =>
         LogCollection.InsertOneAsync(new BsonDocument
         {
             ["_id"] = new ObjectId(),
-            ["channel"] = channelName,
+            ["channel"] = channelId,
             ["profile_image_url"] = profileImageUrl,
             ["type"] = "join",
             ["timestamp"] = SystemClock.Instance.GetCurrentInstant().ToDateTimeUtc()
         });
 
-    private Task LogLeave(string channelName) =>
+    private Task LogLeave(string channelId) =>
         LogCollection.InsertOneAsync(new BsonDocument
         {
             ["_id"] = new ObjectId(),
-            ["channel"] = channelName,
+            ["channel"] = channelId,
             ["type"] = "leave",
             ["timestamp"] = SystemClock.Instance.GetCurrentInstant().ToDateTimeUtc()
         });

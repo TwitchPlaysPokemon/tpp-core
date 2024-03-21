@@ -6,6 +6,7 @@ using NodaTime;
 using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
 using TPP.Core.Overlay;
+using TPP.Core.Utils;
 
 namespace TPP.Core.Modes;
 
@@ -33,8 +34,7 @@ public sealed class DualcoreMode : IWithLifecycle
     {
         await using IAsyncDisposable dbLock = await _databaseLock.Acquire();
         _logger.LogInformation("Dualcore mode starting");
-        // Must wait on all concurrently running tasks simultaneously to know when one of them crashed
-        await Task.WhenAll(
+        await TaskUtils.WhenAllFastExit(
             _modeBase.Start(cancellationToken),
             _broadcastServer.Start(cancellationToken)
         );

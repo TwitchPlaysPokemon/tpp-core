@@ -190,11 +190,13 @@ Options:
                 _ => throw new NotSupportedException($"Invalid mode '{modeName}'")
             };
             TaskCompletionSource<bool> cleanupDone = new();
+            var criticalFailure = false;
             try
             {
                 Task modeTask = mode.Start(cts.Token);
                 void Abort(object? sender, EventArgs args)
                 {
+                    if (cts.IsCancellationRequested) return;
                     logger.LogInformation("Aborting mode...");
                     cts.Cancel();
                     cleanupDone.Task.Wait();
@@ -206,9 +208,13 @@ Options:
             catch (Exception ex)
             {
                 logger.LogCritical(ex, "uncaught exception! TPP is crashing now, goodbye");
+                criticalFailure = true;
             }
             loggerFactory.Dispose();
             cleanupDone.SetResult(true);
+
+            if (criticalFailure)
+                Environment.Exit(1);
         }
 
         private static string MissingConfigErrorMessage(string? mode, string configFilename) =>

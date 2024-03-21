@@ -10,6 +10,7 @@ using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
 using TPP.Core.Overlay;
 using TPP.Core.Overlay.Events;
+using TPP.Core.Utils;
 using TPP.Match;
 using TPP.Model;
 using TPP.Persistence;
@@ -66,8 +67,7 @@ public sealed class Matchmode : IWithLifecycle
                 // We reached here through the stop token. Need to shut down the rest using the regular stop token now.
                 _cancellationTokenSource.Cancel();
         });
-        // Must wait on all concurrently running tasks simultaneously to know when one of them crashed
-        await Task.WhenAll(modeBaseTask, overlayWebsocketTask, handleStopTask);
+        await TaskUtils.WhenAllFastExit(modeBaseTask, overlayWebsocketTask, handleStopTask);
         _logger.LogInformation("Matchmode ended");
     }
 

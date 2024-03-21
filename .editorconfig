@@ -44,7 +44,8 @@ blank_lines_around_invocable = 0
 blank_lines_around_local_method = 0
 blank_lines_around_property = 0
 blank_lines_around_auto_property = 0
-blank_lines_around_type = 0
+blank_lines_around_type = 1
+blank_lines_around_single_line_type = 0
 blank_lines_after_block_statements = 0
 
 # use own judgment for what would benefit from manual alignment

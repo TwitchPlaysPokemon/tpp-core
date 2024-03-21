@@ -25,6 +25,7 @@
 		<ProjectReference Include="..\TPP.Inputting\TPP.Inputting.csproj" />
 		<ProjectReference Include="..\TPP.Match\TPP.Match.csproj" />
 		<ProjectReference Include="..\TPP.Persistence.MongoDB\TPP.Persistence.MongoDB.csproj" />
+		<ProjectReference Include="..\TPP.Twitch.EventSub\TPP.Twitch.EventSub.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

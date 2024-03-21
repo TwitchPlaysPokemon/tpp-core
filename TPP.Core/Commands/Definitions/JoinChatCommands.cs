@@ -16,14 +16,14 @@ public class JoinChatCommands : ICommandCollection
     {
         if (context.Source is not TwitchChat twitchChat)
             return new CommandResult { Response = "Having the bot join your channel is not supported from this chat" };
-        TwitchChat.JoinResult result = await twitchChat.Join(context.Message.User.Name);
+        TwitchEventSubChat.JoinResult result = await twitchChat.TwitchEventSubChat.Join(context.Message.User.Id);
         string response = result switch
         {
-            TwitchChat.JoinResult.Ok => "Successfully joined channel",
-            TwitchChat.JoinResult.NotEnabled => "Channel joining is currently not enabled",
-            TwitchChat.JoinResult.AlreadyJoined => "Already joined",
-            TwitchChat.JoinResult.UserNotFound => "You don't exist according to Twitch",
-            TwitchChat.JoinResult.StreamOffline => "You are not live",
+            TwitchEventSubChat.JoinResult.Ok => "Successfully joined channel",
+            TwitchEventSubChat.JoinResult.NotEnabled => "Channel joining is currently not enabled",
+            TwitchEventSubChat.JoinResult.AlreadyJoined => "Already joined",
+            TwitchEventSubChat.JoinResult.UserNotFound => "You don't exist according to Twitch",
+            TwitchEventSubChat.JoinResult.StreamOffline => "You are not live",
         };
         return new CommandResult { Response = response };
     }
@@ -32,11 +32,11 @@ public class JoinChatCommands : ICommandCollection
     {
         if (context.Source is not TwitchChat twitchChat)
             return new CommandResult { Response = "Having the bot leave your channel is not supported from this chat" };
-        TwitchChat.LeaveResult result = await twitchChat.Leave(context.Message.User.Name);
+        TwitchEventSubChat.LeaveResult result = await twitchChat.TwitchEventSubChat.Leave(context.Message.User.Id);
         string response = result switch
         {
-            TwitchChat.LeaveResult.Ok => "Successfully left channel",
-            TwitchChat.LeaveResult.NotJoined => "Not joined",
+            TwitchEventSubChat.LeaveResult.Ok => "Successfully left channel",
+            TwitchEventSubChat.LeaveResult.NotJoined => "Not joined",
         };
         return new CommandResult { Response = response };
     }

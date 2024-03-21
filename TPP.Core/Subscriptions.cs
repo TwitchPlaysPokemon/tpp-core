@@ -21,7 +21,7 @@ namespace TPP.Core
     public record SubscriptionInfo(
         User Subscriber,
         int NumMonths,
-        int StreakMonths,
+        int? StreakMonths,
         SubscriptionTier Tier,
         string PlanName,
         Instant SubscriptionAt,

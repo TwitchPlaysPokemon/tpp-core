@@ -12,7 +12,7 @@ namespace TPP.Core
         }
 
         public sealed record PrimaryChat : MessageSource;
-        public sealed record SecondaryChat(string ChannelName) : MessageSource;
+        public sealed record SecondaryChat(string ChannelId, string ChannelName) : MessageSource;
         public sealed record Whisper : MessageSource;
     }
 
