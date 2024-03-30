@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using NodaTime;
 using TPP.Core.Overlay;
 using TPP.Core.Overlay.Events;
 using TPP.Inputting;
@@ -11,7 +12,7 @@ using InputMap = System.Collections.Generic.IDictionary<string, object>;
 
 namespace TPP.Core
 {
-    public record QueuedInput(int InputId, InputSet InputSet);
+    public record QueuedInput(long InputId, InputSet InputSet);
 
     /// <summary>
     /// TODO: I am unsure if this structure will work for all the stuff not implemented yet (e.g. democracy, demohouses)
@@ -31,7 +32,7 @@ namespace TPP.Core
         private readonly InputBufferQueue<QueuedInput> _inputBufferQueue;
         private readonly float _fps;
 
-        private static int _inputIdSeq = 1;
+        private static long _prevInputId = 0;
         private InputMap? _activeInput = null;
 
         public AnarchyInputFeed(
@@ -50,7 +51,10 @@ namespace TPP.Core
 
         public async Task Enqueue(InputSet inputSet, User user, string? channel, string? channelImageUrl)
         {
-            QueuedInput queuedInput = new(_inputIdSeq++, inputSet);
+            long inputId = SystemClock.Instance.GetCurrentInstant().ToUnixTimeMilliseconds();
+            if (inputId <= _prevInputId) inputId = _prevInputId + 1;
+            _prevInputId = inputId;
+            QueuedInput queuedInput = new(inputId, inputSet);
             bool enqueued = _inputBufferQueue.Enqueue(queuedInput);
             if (enqueued)
                 await _overlayConnection.Send(new NewAnarchyInput(queuedInput.InputId, queuedInput.InputSet, user, channel, channelImageUrl),

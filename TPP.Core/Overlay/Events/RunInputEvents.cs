@@ -18,7 +18,7 @@ namespace TPP.Core.Overlay.Events
         [DataMember(Name = "button_set_labels")] public IImmutableList<string> ButtonSetLabels { get; set; }
         [DataMember(Name = "button_set_velocities")] public IImmutableList<float> ButtonSetVelocities { get; set; }
         [DataMember(Name = "user")] public User User { get; set; }
-        [DataMember(Name = "id")] public int InputId { get; set; }
+        [DataMember(Name = "id")] public long InputId { get; set; }
         [DataMember(Name = "x", EmitDefaultValue = false)] public uint? X { get; set; }
         [DataMember(Name = "y", EmitDefaultValue = false)] public uint? Y { get; set; }
         [DataMember(Name = "x2", EmitDefaultValue = false)] public uint? X2 { get; set; }
@@ -28,7 +28,7 @@ namespace TPP.Core.Overlay.Events
         [DataMember(Name = "channel")] public string? Channel { get; set; }
         [DataMember(Name = "channel_image_url")] public string? ChannelImageUrl { get; set; }
 
-        public NewAnarchyInput(int inputId, InputSet inputSet, User user, string? channel, string? channelImageUrl)
+        public NewAnarchyInput(long inputId, InputSet inputSet, User user, string? channel, string? channelImageUrl)
         {
             IEnumerable<Input> InputsForOverlay() => inputSet.Inputs.Where(i => i is not SideInput);
             ButtonSet = InputsForOverlay().Select(i => i.ButtonName).ToImmutableList();
@@ -65,11 +65,11 @@ namespace TPP.Core.Overlay.Events
         public string OverlayEventType => "anarchy_input_start";
 
         [DataMember(Name = "button_set")] public IImmutableList<string> ButtonSet { get; set; }
-        [DataMember(Name = "id")] public int InputId { get; set; }
+        [DataMember(Name = "id")] public long InputId { get; set; }
         [DataMember(Name = "frames")] public int HeldFrames { get; set; }
         [DataMember(Name = "sleep_frames")] public int SleepFrames { get; set; }
 
-        public AnarchyInputStart(int inputId, TimedInputSet timedInputSet, float fps)
+        public AnarchyInputStart(long inputId, TimedInputSet timedInputSet, float fps)
         {
             ButtonSet = timedInputSet.InputSet.Inputs.Select(i => i.ButtonName).ToImmutableList();
             InputId = inputId;
@@ -83,8 +83,8 @@ namespace TPP.Core.Overlay.Events
     {
         public string OverlayEventType => "anarchy_input_stop";
 
-        [DataMember(Name = "id")] public int InputId { get; set; }
-        public AnarchyInputStop(int inputId) => InputId = inputId;
+        [DataMember(Name = "id")] public long InputId { get; set; }
+        public AnarchyInputStop(long inputId) => InputId = inputId;
     }
 
     [DataContract]
