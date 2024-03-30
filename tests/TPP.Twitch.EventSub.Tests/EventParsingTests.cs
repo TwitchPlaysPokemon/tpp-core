@@ -113,6 +113,72 @@ public class EventParsingTests
         )));
     }
 
+    /// An actual message that used to fail to parse because the message type was "channel_points_highlighted",
+    /// and we forgot to set the enum parsing naming policy to snake case.
+    [Test]
+    public void ParseChannelChatMessage_EnumSnakeCase()
+    {
+        const string json =
+            """
+            {
+              "broadcaster_user_id": "56648155",
+              "broadcaster_user_login": "twitchplayspokemon",
+              "broadcaster_user_name": "TwitchPlaysPokemon",
+              "chatter_user_id": "29863368",
+              "chatter_user_login": "kattheswift",
+              "chatter_user_name": "kattheswift",
+              "message_id": "f4f3eedc-b5e5-42a5-b085-5cb6a5384e44",
+              "message": {
+                "text": "anyway TEH URN",
+                "fragments": [
+                  {
+                    "type": "text",
+                    "text": "anyway TEH URN",
+                    "cheermote": null,
+                    "emote": null,
+                    "mention": null
+                  }
+                ]
+              },
+              "color": "#8A2BE2",
+              "badges": [
+                {
+                  "set_id": "subscriber",
+                  "id": "102",
+                  "info": "106"
+                }
+              ],
+              "message_type": "channel_points_highlighted",
+              "cheer": null,
+              "reply": null,
+              "channel_points_custom_reward_id": null
+            }
+            """;
+
+        ChannelChatMessage.Event evt = ParseNotificationEvent<ChannelChatMessage>(json).Payload.Event;
+        Assert.That(evt, Is.EqualTo(new ChannelChatMessage.Event(
+            "56648155",
+            "TwitchPlaysPokemon",
+            "twitchplayspokemon",
+            "29863368",
+            "kattheswift",
+            "kattheswift",
+            "f4f3eedc-b5e5-42a5-b085-5cb6a5384e44",
+            new ChannelChatMessage.Message(
+                "anyway TEH URN",
+                [new ChannelChatMessage.Fragment(ChannelChatMessage.FragmentType.Text, "anyway TEH URN", null, null, null)]
+            ),
+            ChannelChatMessage.MessageType.ChannelPointsHighlighted,
+            [
+                new ChannelChatMessage.Badge("subscriber", "102", "106")
+            ],
+            null,
+            "#8A2BE2",
+            null,
+            null
+        )));
+    }
+
     [Test]
     public void ParseChannelChatSettingsUpdate()
     {

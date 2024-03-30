@@ -147,11 +147,10 @@ public class ChannelChatMessage(NotificationMetadata metadata, NotificationPaylo
     );
 
     /// <summary>
-    /// The type of message fragment. Possible values:
+    /// The type of message. Possible values:
     /// - text
-    /// - cheermote
-    /// - emote
-    /// - mention
+    /// - channel_points_highlighted
+    /// - channel_points_sub_only
     /// </summary>
     public enum MessageType
     {
