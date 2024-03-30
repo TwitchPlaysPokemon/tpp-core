@@ -61,7 +61,16 @@ public class EventSubClient
         await using var ms = new MemoryStream();
         while (!cancellationToken.IsCancellationRequested)
         {
-            WebSocketReceiveResult result = await webSocket.ReceiveAsync(bufferSegment, cancellationToken);
+            WebSocketReceiveResult result;
+            try
+            {
+                result = await webSocket.ReceiveAsync(bufferSegment, cancellationToken);
+            }
+            catch (WebSocketException e) when (e.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
+            {
+                // This isn't a nice way to close the connection, but let's treat it as a normal closure for simplicity.
+                return null;
+            }
             if (result.CloseStatus != null)
             {
                 await webSocket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, string.Empty, cancellationToken);
