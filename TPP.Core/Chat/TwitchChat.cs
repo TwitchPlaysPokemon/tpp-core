@@ -1,24 +1,20 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
-using TPP.Common;
 using TPP.Core.Configuration;
 using TPP.Core.Moderation;
 using TPP.Core.Overlay;
+using TPP.Core.Utils;
 using TPP.Persistence;
-using TwitchLib.Api.Helix.Models.Streams.GetStreams;
-using TwitchLib.Api.Helix.Models.Users.GetUsers;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
 using TwitchLib.Communication.Clients;
 using TwitchLib.Communication.Events;
-using OnConnectedEventArgs = TwitchLib.Client.Events.OnConnectedEventArgs;
 using User = TPP.Model.User;
 
 namespace TPP.Core.Chat
@@ -30,61 +26,15 @@ namespace TPP.Core.Chat
 
         private readonly ILogger<TwitchChat> _logger;
         private readonly IClock _clock;
-        private readonly string _channel;
         public readonly string ChannelId;
-        private readonly bool _coStreamInputsEnabled;
-        private readonly bool _coStreamInputsOnlyLive;
         private readonly IUserRepo _userRepo;
-        private readonly ICoStreamChannelsRepo _coStreamChannelsRepo;
         private readonly TwitchClient _twitchClient;
         public readonly TwitchApi TwitchApi;
         private readonly TwitchLibSubscriptionWatcher? _subscriptionWatcher;
         private readonly TwitchChatSender _twitchChatSender;
         private readonly TwitchChatModeChanger _twitchChatModeChanger;
         private readonly TwitchChatExecutor _twitchChatExecutor;
-
-        private ChannelState? _channelState;
-
-        public enum JoinResult { Ok, NotEnabled, AlreadyJoined, UserNotFound, StreamOffline }
-        public async Task<JoinResult> Join(string userLogin)
-        {
-            if (!_coStreamInputsEnabled)
-                return JoinResult.NotEnabled;
-
-            GetUsersResponse getUsersResponse = await TwitchApi.GetUsersAsync(logins: [userLogin]);
-            var user = getUsersResponse.Users.FirstOrDefault();
-            if (user == null)
-                return JoinResult.UserNotFound;
-
-            if (await _coStreamChannelsRepo.IsJoined(userLogin))
-                return JoinResult.AlreadyJoined;
-
-            if (_coStreamInputsOnlyLive)
-            {
-                GetStreamsResponse getStreamsResponse =
-                    await TwitchApi.GetStreamsAsync(userLogins: [userLogin]);
-                Stream? stream = getStreamsResponse.Streams.FirstOrDefault();
-                if (stream is null)
-                    return JoinResult.StreamOffline;
-            }
-
-            await _coStreamChannelsRepo.Add(userLogin, user.ProfileImageUrl);
-            await _twitchClient.JoinChannelAsync(userLogin);
-            await _twitchClient.SendMessageAsync(userLogin, "Joined channel, hello!");
-
-            return JoinResult.Ok;
-        }
-
-        public enum LeaveResult { Ok, NotJoined }
-        public async Task<LeaveResult> Leave(string userLogin)
-        {
-            if (!await _coStreamChannelsRepo.IsJoined(userLogin))
-                return LeaveResult.NotJoined;
-            await _twitchClient.SendMessageAsync(userLogin, "Leaving channel, goodbye!");
-            await _twitchClient.LeaveChannelAsync(userLogin);
-            await _coStreamChannelsRepo.Remove(userLogin);
-            return LeaveResult.Ok;
-        }
+        public TwitchEventSubChat TwitchEventSubChat { get; }
 
         public TwitchChat(
             string name,
@@ -100,12 +50,8 @@ namespace TPP.Core.Chat
             Name = name;
             _logger = loggerFactory.CreateLogger<TwitchChat>();
             _clock = clock;
-            _channel = chatConfig.Channel;
             ChannelId = chatConfig.ChannelId;
-            _coStreamInputsEnabled = chatConfig.CoStreamInputsEnabled;
-            _coStreamInputsOnlyLive = chatConfig.CoStreamInputsOnlyLive;
             _userRepo = userRepo;
-            _coStreamChannelsRepo = coStreamChannelsRepo;
 
             TwitchApi = new TwitchApi(
                 loggerFactory,
@@ -114,6 +60,9 @@ namespace TPP.Core.Chat
                 chatConfig.RefreshToken,
                 chatConfig.AppClientId,
                 chatConfig.AppClientSecret);
+            TwitchEventSubChat = new TwitchEventSubChat(loggerFactory, clock, TwitchApi, _userRepo,
+                chatConfig.ChannelId, chatConfig.UserId,
+                chatConfig.CoStreamInputsEnabled, chatConfig.CoStreamInputsOnlyLive, coStreamChannelsRepo);
             _twitchClient = new TwitchClient(
                 client: new WebSocketClient(),
                 loggerFactory: loggerFactory);
@@ -128,12 +77,9 @@ namespace TPP.Core.Chat
                 credentials: credentials,
                 channel: chatConfig.Channel);
 
-            _twitchClient.OnConnected += Connected;
             _twitchClient.OnError += OnError;
             _twitchClient.OnConnectionError += OnConnectionError;
-            _twitchClient.OnMessageReceived += MessageReceived;
-            _twitchClient.OnWhisperReceived += WhisperReceived;
-            _twitchClient.OnChannelStateChanged += ChannelStateChanged;
+            TwitchEventSubChat.IncomingMessage += MessageReceived;
             _twitchChatSender = new TwitchChatSender(loggerFactory, TwitchApi, chatConfig, useTwitchReplies);
             _twitchChatModeChanger = new TwitchChatModeChanger(
                 loggerFactory.CreateLogger<TwitchChatModeChanger>(), TwitchApi, chatConfig);
@@ -146,12 +92,9 @@ namespace TPP.Core.Chat
                 : null;
         }
 
-        private async Task Connected(object? sender, OnConnectedEventArgs e)
+        private void MessageReceived(object? sender, MessageEventArgs args)
         {
-            await _twitchClient.JoinChannelAsync(_channel);
-            if (_coStreamInputsEnabled)
-                foreach (string channel in await _coStreamChannelsRepo.GetJoinedChannels())
-                    await _twitchClient.JoinChannelAsync(channel);
+            IncomingMessage?.Invoke(this, args);
         }
 
         // Subscribe to TwitchClient errors to hopefully prevent the very rare incidents where the bot effectively
@@ -182,18 +125,13 @@ namespace TPP.Core.Chat
 
             List<Task> tasks = [];
             tasks.Add(CheckConnectivityWorker(cancellationToken));
-            if (_coStreamInputsOnlyLive)
-                tasks.Add(CoStreamInputsLiveWorker(cancellationToken));
-            // Must wait on all concurrently running tasks simultaneously to know when one of them crashed
-            await Task.WhenAll(tasks);
+            tasks.Add(TwitchEventSubChat.Start(cancellationToken));
+            await TaskUtils.WhenAllFastExit(tasks);
 
             await _twitchClient.DisconnectAsync();
             await _twitchChatSender.DisposeAsync();
-            _twitchClient.OnConnected -= Connected;
             _subscriptionWatcher?.Dispose();
-            _twitchClient.OnMessageReceived -= MessageReceived;
-            _twitchClient.OnWhisperReceived -= WhisperReceived;
-            _twitchClient.OnChannelStateChanged -= ChannelStateChanged;
+            TwitchEventSubChat.IncomingMessage -= MessageReceived;
             _logger.LogDebug("twitch chat is now fully shut down");
         }
 
@@ -227,129 +165,6 @@ namespace TPP.Core.Chat
                 try { await Task.Delay(delay, cancellationToken); }
                 catch (OperationCanceledException) { break; }
             }
-        }
-
-        /// Check channels that have co-stream inputs enabled whether they are still live,
-        /// and if they aren't, make them leave.
-        private async Task CoStreamInputsLiveWorker(CancellationToken cancellationToken)
-        {
-            TimeSpan delay = TimeSpan.FromMinutes(1);
-            const int chunkSize = 100;
-
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                IImmutableSet<string> joinedChannels = await _coStreamChannelsRepo.GetJoinedChannels();
-
-                HashSet<string> liveChannels = [];
-                foreach (string[] chunk in joinedChannels.Chunk(chunkSize))
-                {
-                    GetStreamsResponse getStreamsResponse =
-                        await TwitchApi.GetStreamsAsync(userLogins: [..chunk], first: chunkSize);
-                    foreach (Stream s in getStreamsResponse.Streams)
-                        liveChannels.Add(s.UserLogin);
-                }
-                IImmutableSet<string> offlineChannels = joinedChannels.Except(liveChannels);
-                foreach (string channel in offlineChannels)
-                {
-                    _logger.LogDebug("auto-leaving co-stream-inputs channel {Channel} because it's not live", channel);
-                    await Leave(channel);
-                }
-
-                try { await Task.Delay(delay, cancellationToken); }
-                catch (OperationCanceledException) { break; }
-            }
-        }
-
-        private readonly Dictionary<User, Instant> _lastInputPerUser = new();
-
-        private async Task MessageReceived(object? sender, OnMessageReceivedArgs e)
-        {
-            _logger.LogDebug("<#{Channel} {Username}: {Message}",
-                _channel, e.ChatMessage.Username, e.ChatMessage.Message);
-            if (e.ChatMessage.Username == _twitchClient.TwitchUsername)
-                // new core sees messages posted by old core, but we don't want to process our own messages
-                return;
-            bool isPrimaryChat = e.ChatMessage.Channel.Equals(_channel, StringComparison.InvariantCultureIgnoreCase);
-            MessageSource source = isPrimaryChat
-                ? new MessageSource.PrimaryChat()
-                : new MessageSource.SecondaryChat(e.ChatMessage.Channel);
-            User user = await _userRepo.RecordUser(GetUserInfoFromTwitchMessage(e.ChatMessage, fromWhisper: false));
-            if (source is MessageSource.SecondaryChat secondaryChat)
-            {
-                if (_channelState?.EmoteOnly == true)
-                {
-                    // Emote-Only mode is often used by mods to disable inputs. We don't want this to be bypass-able.
-                    _logger.LogDebug(
-                        "dropping input from co-stream channel {Channel} because we're in emote-only mode: {Input}",
-                        secondaryChat.ChannelName, e.ChatMessage.Message);
-                    return;
-                }
-                if (_channelState?.SlowMode != null)
-                {
-                    // If the main channel is in slow-mode, we don't want to accept faster inputs from other channels.
-                    // Emulate slow-mode by dropping too fast inputs on a per-user basis.
-                    Instant now = _clock.GetCurrentInstant();
-                    Instant cutoff = now - Duration.FromSeconds(_channelState.SlowMode.Value);
-                    if (_lastInputPerUser.TryGetValue(user, out Instant lastInput) && lastInput > cutoff)
-                    {
-                        _logger.LogDebug("dropping too-fast input from co-stream channel {Channel}: {Input}",
-                            secondaryChat.ChannelName, e.ChatMessage.Message);
-                        return;
-                    }
-                    _lastInputPerUser[user] = now;
-                }
-            }
-            var message = new Message(user, e.ChatMessage.Message, source, e.ChatMessage.RawIrcMessage)
-            {
-                Details = new MessageDetails(
-                    MessageId: e.ChatMessage.Id,
-                    IsAction: e.ChatMessage.IsMe,
-                    IsStaff: e.ChatMessage.IsBroadcaster || e.ChatMessage.IsModerator,
-                    Emotes: e.ChatMessage.EmoteSet.Emotes
-                        .Select(em => new Emote(em.Id, em.Name, em.StartIndex, em.EndIndex)).ToImmutableList()
-                )
-            };
-            IncomingMessage?.Invoke(this, new MessageEventArgs(message));
-        }
-
-        private async Task ChannelStateChanged(object? sender, OnChannelStateChangedArgs e)
-        {
-            if (!e.Channel.Equals(_channel, StringComparison.InvariantCultureIgnoreCase)) return;
-            _channelState = e.ChannelState;
-            await Task.CompletedTask;
-        }
-
-        private async Task WhisperReceived(object? sender, OnWhisperReceivedArgs e)
-        {
-            _logger.LogDebug("<@{Username}: {Message}", e.WhisperMessage.Username, e.WhisperMessage.Message);
-            User user = await _userRepo.RecordUser(
-                GetUserInfoFromTwitchMessage(e.WhisperMessage, fromWhisper: true));
-            var message = new Message(user, e.WhisperMessage.Message, new MessageSource.Whisper(),
-                e.WhisperMessage.RawIrcMessage)
-            {
-                Details = new MessageDetails(
-                    MessageId: null,
-                    IsAction: false,
-                    IsStaff: false,
-                    Emotes: e.WhisperMessage.EmoteSet.Emotes
-                        .Select(em => new Emote(em.Id, em.Name, em.StartIndex, em.EndIndex)).ToImmutableList()
-                )
-            };
-            IncomingMessage?.Invoke(this, new MessageEventArgs(message));
-        }
-
-        private UserInfo GetUserInfoFromTwitchMessage(TwitchLibMessage message, bool fromWhisper)
-        {
-            string colorHex = message.HexColor;
-            return new UserInfo(
-                Id: message.UserId,
-                TwitchDisplayName: message.DisplayName,
-                SimpleName: message.Username,
-                Color: string.IsNullOrEmpty(colorHex) ? null : HexColor.FromWithHash(colorHex),
-                FromMessage: true,
-                FromWhisper: fromWhisper,
-                UpdatedAt: _clock.GetCurrentInstant()
-            );
         }
 
         public Task EnableEmoteOnly() => _twitchChatModeChanger.EnableEmoteOnly();

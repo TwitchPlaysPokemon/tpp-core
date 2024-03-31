@@ -10,6 +10,7 @@ using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
 using TPP.Core.Overlay;
 using TPP.Core.Overlay.Events;
+using TPP.Core.Utils;
 using TPP.Inputting;
 using TPP.Inputting.Inputs;
 using TPP.Inputting.Parsing;
@@ -222,7 +223,7 @@ public sealed class Runmode : IWithLifecycle
         foreach (InputSet inputSet in input.InputSets)
             if (message.MessageSource is MessageSource.SecondaryChat secondaryChat)
             {
-                string? channelImageUrl = await _coStreamChannelsRepo.GetChannelImageUrl(secondaryChat.ChannelName);
+                string? channelImageUrl = await _coStreamChannelsRepo.GetChannelImageUrl(secondaryChat.ChannelId);
                 await _anarchyInputFeed.Enqueue(inputSet, message.User, secondaryChat.ChannelName, channelImageUrl);
             }
             else
@@ -247,8 +248,7 @@ public sealed class Runmode : IWithLifecycle
     public async Task Start(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Runmode starting");
-        // Must wait on all concurrently running tasks simultaneously to know when one of them crashed
-        await Task.WhenAll(
+        await TaskUtils.WhenAllFastExit(
             _broadcastServer.Start(cancellationToken),
             _inputServer.Start(cancellationToken),
             _modeBase.Start(cancellationToken)

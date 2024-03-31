@@ -28,6 +28,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPP.Match.Tests", "tests\TP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPP.Model", "TPP.Model\TPP.Model.csproj", "{2BC73B80-BA53-4744-9BC5-853D53B71E45}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPP.Twitch.EventSub", "TPP.Twitch.EventSub\TPP.Twitch.EventSub.csproj", "{8CD23341-8D1D-47CD-B21F-0DA6B233F1DC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPP.Twitch.EventSub.Tests", "tests\TPP.Twitch.EventSub.Tests\TPP.Twitch.EventSub.Tests.csproj", "{5CB175CD-FF22-4117-AC62-F103C4AC8712}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -90,5 +94,13 @@ Global
 		{2BC73B80-BA53-4744-9BC5-853D53B71E45}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2BC73B80-BA53-4744-9BC5-853D53B71E45}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2BC73B80-BA53-4744-9BC5-853D53B71E45}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8CD23341-8D1D-47CD-B21F-0DA6B233F1DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8CD23341-8D1D-47CD-B21F-0DA6B233F1DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8CD23341-8D1D-47CD-B21F-0DA6B233F1DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8CD23341-8D1D-47CD-B21F-0DA6B233F1DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5CB175CD-FF22-4117-AC62-F103C4AC8712}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5CB175CD-FF22-4117-AC62-F103C4AC8712}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5CB175CD-FF22-4117-AC62-F103C4AC8712}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5CB175CD-FF22-4117-AC62-F103C4AC8712}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
