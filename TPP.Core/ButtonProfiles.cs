@@ -101,7 +101,7 @@ namespace TPP.Core
                 ButtonProfile.NintendoDSOn3DSOffset => ButtonProfile.SNES.ToInputParserBuilder()
                     .Touchscreen(width: 256, height: 192, multitouch: false, allowDrag: true, xOffset: 32),
                 ButtonProfile.NintendoDSOn3DSScaled => ButtonProfile.SNES.ToInputParserBuilder()
-                    .Touchscreen(width: 256, height: 192, multitouch: false, allowDrag: true, scaleWidth: 300, scaleHeight: 240),
+                    .Touchscreen(width: 256, height: 192, multitouch: false, allowDrag: true, scaleWidth: 320, scaleHeight: 240),
 
                 ButtonProfile.NES => ButtonProfile.GameBoy.ToInputParserBuilder(),
                 ButtonProfile.SNEStoNES => ButtonProfile.NES.ToInputParserBuilder()
