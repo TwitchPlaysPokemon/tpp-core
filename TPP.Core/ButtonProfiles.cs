@@ -94,6 +94,7 @@ namespace TPP.Core
                 ButtonProfile.Nintendo3DS => ButtonProfile.SNES.ToInputParserBuilder()
                     .SimpleAliasedDPad("d", "")
                     .AnalogStick("c", true)
+                    .SimpleAliasedAnalogStick("", "c", true)
                     .Touchscreen(width: 320, height: 240, multitouch: false, allowDrag: true)
                     // Prevent Soft Reset in 3DS Pokemon Games (L+R+Start/Select) as well as Luma3DS and NTR menu shortcuts
                     .Conflicts(("l", "select"), ("l", "start")),

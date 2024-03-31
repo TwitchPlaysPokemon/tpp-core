@@ -103,9 +103,9 @@ public class ButtonMappingTest
         AssertMapped("a+b", "A", "B");
         AssertMapped("l+r", "L", "R");
         AssertMapped("x+y", "X", "Y");
-        AssertMapped("n", "Up");
+        AssertMapped("n", "Cup");
         AssertMapped("dn", "Up");
-        AssertMapped("south", "Down");
+        AssertMapped("south", "Cdown");
         AssertMapped("cn", "Cup");
         AssertMapped("cspinl", "Cspinl");
         AssertMapped("10,100>80,120", "Touch_Screen_X", "Touch_Screen_Y", "Touch_Screen_X2", "Touch_Screen_Y2");
