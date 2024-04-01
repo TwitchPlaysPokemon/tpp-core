@@ -44,6 +44,8 @@ namespace TPP.Core
 
         [EnumMember(Value = "dualn3dsoffset")] DualNintendoDSOnDSOffset, // Nintendo DS title launched on 3DS while holding Start or Select
         [EnumMember(Value = "dualn3dsscaled")] DualNintendoDSOnDSScaled, // Nintendo DS title launched on 3DS without holding Start or Select
+
+        [EnumMember(Value = "dualswitchgb")] DualSwitchButAlsoIsGB, // Needed for 2024/04/01 until we can have different sides running different button profiles
     }
 
     public static class ButtonProfileExtensions
@@ -175,6 +177,10 @@ namespace TPP.Core
                     .LeftRightSidesEnabled(true),
                 ButtonProfile.DualGameBoyPlayer => ButtonProfile.GameBoyPlayer.ToInputParserBuilder()
                     .LeftRightSidesEnabled(true),
+
+                ButtonProfile.DualSwitchButAlsoIsGB => ButtonProfile.DualSwitch.ToInputParserBuilder()
+                    .Buttons("start","select")
+                    .LengthRestrictions(maxSetLength: 3, maxSequenceLength: 1)
             };
             // sanity check: we enforce the convention that all dual profile must have "dual" in their name.
             if (inputParserBuilder.IsDualRun && !profile.IsDual())
