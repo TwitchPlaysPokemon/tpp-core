@@ -72,7 +72,8 @@
             "dualgbt",
             "dualgbp",
             "dualn3dsoffset",
-            "dualn3dsscaled"
+            "dualn3dsscaled",
+            "dualswitchgb"
           ]
         },
         "FramesPerSecond": {
