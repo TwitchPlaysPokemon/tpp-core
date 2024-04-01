@@ -36,6 +36,7 @@ namespace TPP.Core
         [EnumMember(Value = "dualgc")] DualGameCube,
         [EnumMember(Value = "dualnds")] DualNintendoDS,
         [EnumMember(Value = "dual3ds")] DualNintendo3DS,
+        [EnumMember(Value = "dualswitch")] DualSwitch,
 
         [EnumMember(Value = "dualsgb")] DualSuperGameBoy,
         [EnumMember(Value = "dualgbt")] DualGameBoyTower,
@@ -159,6 +160,8 @@ namespace TPP.Core
                 ButtonProfile.DualNintendoDS => ButtonProfile.NintendoDS.ToInputParserBuilder()
                 .LeftRightSidesEnabled(true),
                 ButtonProfile.DualNintendo3DS => ButtonProfile.Nintendo3DS.ToInputParserBuilder()
+                    .LeftRightSidesEnabled(true),
+                ButtonProfile.DualSwitch => ButtonProfile.Switch.ToInputParserBuilder()
                     .LeftRightSidesEnabled(true),
 
                 ButtonProfile.DualNintendoDSOnDSOffset => ButtonProfile.NintendoDSOn3DSOffset.ToInputParserBuilder()
