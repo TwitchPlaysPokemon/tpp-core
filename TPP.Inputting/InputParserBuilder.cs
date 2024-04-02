@@ -484,8 +484,8 @@ namespace TPP.Inputting
         /// <param name="prefix">prefix for the aliased D-pad,
         /// <param name="mapsToPrefix">prefix that the aliased D-pad maps to</param>
         public InputParserBuilder CardinalDPadAliases(string prefix, string mapsToPrefix) =>
-            AliasedDPad(up: prefix + "n", down: prefix + "s", left: prefix + "w", right: prefix + "e", mapsToPrefix)
-            .AliasedDPad(up: prefix + "north", down: prefix + "south", left: prefix + "west", right: prefix + "east", mapsToPrefix);
+            RemappedDPad(up: prefix + "n", down: prefix + "s", left: prefix + "w", right: prefix + "e", mapsToPrefix)
+            .RemappedDPad(up: prefix + "north", down: prefix + "south", left: prefix + "west", right: prefix + "east", mapsToPrefix);
 
 
         /// <summary>
@@ -494,8 +494,8 @@ namespace TPP.Inputting
         /// <param name="prefix">prefix for the aliased stick,
         /// <param name="mapsToPrefix">prefix that the aliased stick maps to</param>
         public InputParserBuilder CardinalAnalogStickAliases(string prefix, string mapsToPrefix) =>
-            AliasedAnalogStick(up: prefix + "n", down: prefix + "s", left: prefix + "w", right: prefix + "e", spinl: null, spinr: null, mapsToPrefix)
-            .AliasedAnalogStick(up: prefix + "north", down: prefix + "south", left: prefix + "west", right: prefix + "east", spinl: null, spinr: null, mapsToPrefix);
+            RemappedAnalogStick(up: prefix + "n", down: prefix + "s", left: prefix + "w", right: prefix + "e", spinl: null, spinr: null, mapsToPrefix)
+            .RemappedAnalogStick(up: prefix + "north", down: prefix + "south", left: prefix + "west", right: prefix + "east", spinl: null, spinr: null, mapsToPrefix);
 
 
         public InputParserBuilder LeftRightSidesEnabled(bool enabled)

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using NodaTime;
 using NUnit.Framework;
 using TPP.Core;
@@ -263,5 +264,33 @@ public class ButtonMappingTest
         Assert.That(buttonsOnly.X == null && buttonsOnly.Y == null && buttonsOnly.X2 == null && buttonsOnly.Y2 == null, "Buttons should create no touchscreen coordinates");
         Assert.That(touch.X == 20 && touch.Y == 40 && touch.X2 == null && touch.Y2 == null, "Touchscreen coordinates should be mapped to x,y properties");
         Assert.That(drag.X == 20 && drag.Y == 40 && drag.X2 == 50 && drag.Y2 == 60, "Drag coordinates should be mapped to x,y,x2,y2 properties");
+    }
+    [Test]
+    public void TestCardinalInputDisplayMapping()
+    {
+        string[] prefixes = ["", "l", "r", "c", "a", "d"];
+        Assert.Multiple(() =>
+        {
+            foreach (string profile in Enum.GetNames<ButtonProfile>())
+            {
+                _inputParser = Enum.Parse<ButtonProfile>(profile).ToInputParserBuilder().Build();
+                if (_inputParser != null)
+                {
+                    foreach (string prefix in prefixes)
+                    {
+                        var northEast = new NewAnarchyInput(1, ParseInput($"{prefix}north+{prefix}e"), MockUser(), null, null);
+                        var southWest = new NewAnarchyInput(1, ParseInput($"{prefix}s+{prefix}west"), MockUser(), null, null);
+                        if (northEast.ButtonSet.Any() && southWest.ButtonSet.Any())
+                        {
+                            Assert.That(northEast.ButtonSetLabels.Any(b => b.ToLower().EndsWith("up"))
+                                && northEast.ButtonSetLabels.Any(b => b.ToLower().EndsWith("right"))
+                                && southWest.ButtonSetLabels.Any(b => b.ToLower().EndsWith("down"))
+                                && southWest.ButtonSetLabels.Any(b => b.ToLower().EndsWith("left")),
+                                $"NSEW labels with '{prefix}' prefix aren't converted to Up Down Right Left for {profile} profile");
+                        }
+                    }
+                }
+            }
+        });
     }
 }
