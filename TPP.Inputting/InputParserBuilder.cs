@@ -102,8 +102,7 @@ namespace TPP.Inputting
         {
             foreach (string name in names)
             {
-                var simpleDef = new ButtonInputDefinition(name);
-                _inputDefinitions.RemoveAll(d => d.InputRegex == simpleDef.InputRegex);
+                _inputDefinitions.RemoveAll(d => d.Name.Equals(name, System.StringComparison.CurrentCultureIgnoreCase));
             }
             return this;
         }
@@ -181,6 +180,7 @@ namespace TPP.Inputting
         public InputParserBuilder Touchscreen(uint width, uint height, bool multitouch, bool allowDrag, uint xOffset = 0, uint yOffset = 0, uint scaleWidth = 0, uint scaleHeight = 0)
         {
             RemoveInputs(TouchscreenName); // Overwrite any old mappings
+            RemoveInputs(TouchscreenName+"Drag"); // Overwrite any old drag mappings
             var definition = new TouchscreenInputDefinition(TouchscreenName, width, height, xOffset, yOffset, scaleWidth, scaleHeight);
             _inputDefinitions.Add(definition);
             if (allowDrag)

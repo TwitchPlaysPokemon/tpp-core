@@ -36,7 +36,7 @@ namespace TPP.Inputting.InputDefinitions
             }
         }
 
-        public string Name => _touchscreenName;
+        public string Name => _baseInputDefinition.Name;
 
         public string InputRegex => _baseInputDefinition.InputRegex;
 

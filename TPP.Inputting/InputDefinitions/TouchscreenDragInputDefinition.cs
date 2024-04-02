@@ -23,7 +23,7 @@ namespace TPP.Inputting.InputDefinitions
             InputRegex = $@"{digitsX},{digitsY}>{digitsX},{digitsY}";
         }
 
-        public string Name => _touchscreenName;
+        public string Name => _touchscreenName + "Drag";
 
         public string InputRegex { get; }
 
