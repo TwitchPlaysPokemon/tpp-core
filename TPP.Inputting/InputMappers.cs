@@ -90,7 +90,7 @@ namespace TPP.Inputting
                     inputMap["Touch_Screen_X"] = touch.X;
                     inputMap["Touch_Screen_Y"] = touch.Y;
                 }
-                else if (input is SideInput side)
+                else if (input is SideInput side && side.Side != null)
                 {
                     buttonPrefix = side.Side switch
                     {

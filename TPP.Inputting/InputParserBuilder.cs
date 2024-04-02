@@ -571,5 +571,15 @@ namespace TPP.Inputting
 
         public bool IsDualRun { get => _leftRightSides; }
         public bool HasTouchscreen { get => _inputDefinitions.Any(def => def is TouchscreenInputDefinition); }
+        public string[] PadStickPrefixes
+        {
+            get =>
+                _inputDefinitions.Where(def => def.Name.EndsWith("up", comparisonType: System.StringComparison.InvariantCultureIgnoreCase)
+                    || def.Name.EndsWith("down", comparisonType: System.StringComparison.InvariantCultureIgnoreCase)
+                    || def.Name.EndsWith("left", comparisonType: System.StringComparison.InvariantCultureIgnoreCase)
+                    || def.Name.EndsWith("right", comparisonType: System.StringComparison.InvariantCultureIgnoreCase)
+                ).Select(def => def.Name.ToLower().Replace("up", "").Replace("down", "").Replace("left", "").Replace("right", ""))
+                .Distinct().ToArray();
+        }
     }
 }

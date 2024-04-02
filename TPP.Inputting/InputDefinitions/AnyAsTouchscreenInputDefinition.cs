@@ -36,6 +36,8 @@ namespace TPP.Inputting.InputDefinitions
             }
         }
 
+        public string Name => _touchscreenName;
+
         public string InputRegex => _baseInputDefinition.InputRegex;
 
         public Input? Parse(string str)

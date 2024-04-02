@@ -26,6 +26,7 @@ namespace TPP.Inputting.InputDefinitions
         public ButtonInputDefinition(string name) : this(name, name, true)
         { }
 
+        public string Name => _name;
         public string InputRegex => Regex.Escape(_name);
         public Input? Parse(string str) => new Input(_label, _mapsTo, str);
     }

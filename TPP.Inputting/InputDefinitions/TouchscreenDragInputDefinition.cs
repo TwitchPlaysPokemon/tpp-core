@@ -23,6 +23,8 @@ namespace TPP.Inputting.InputDefinitions
             InputRegex = $@"{digitsX},{digitsY}>{digitsX},{digitsY}";
         }
 
+        public string Name => _touchscreenName;
+
         public string InputRegex { get; }
 
         public Input? Parse(string str)

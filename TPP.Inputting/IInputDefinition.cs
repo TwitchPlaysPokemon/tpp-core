@@ -9,6 +9,11 @@ namespace TPP.Inputting
     public interface IInputDefinition
     {
         /// <summary>
+        /// The canonical name of the input. This will usually match InputRegex, but not always.
+        /// </summary>
+        string Name { get; }
+
+        /// <summary>
         /// A regular expression matching only inputs described by this input definition.
         /// It may match strings that are contextually invalid (e.g. out-of-bounds touchscreen coordinates),
         /// but to avoid ambiguity it should not match anything that could also be another input definition.

@@ -37,6 +37,12 @@ public class ButtonMappingTest
         Assert.That(mappedInputs.Keys, Has.Count.EqualTo(2), message ?? "Mapped output should contain no buttons.");
     }
 
+    private void AssertNotEmptyMap(string rawInput, string? message = null)
+    {
+        var mappedInputs = _inputMapper.Map(new TimedInputSet(ParseInput(rawInput), 1, 2));
+        Assert.That(mappedInputs.Keys, Has.Count.GreaterThan(2), message ?? "Mapped output should contain buttons.");
+    }
+
     [Test]
     public void TestBuildEveryProfile()
     {
@@ -235,6 +241,33 @@ public class ButtonMappingTest
         }
     }
 
+    [Test]
+    public void TestCardinalInputs()
+    {
+        Assert.Multiple(() =>
+        {
+            foreach (string profile in Enum.GetNames<ButtonProfile>())
+            {
+                var parserBuilder = Enum.Parse<ButtonProfile>(profile).ToInputParserBuilder();
+                _inputParser = parserBuilder.Build();
+                if (_inputParser != null)
+                {
+                    foreach (string prefix in parserBuilder.PadStickPrefixes)
+                    {
+                        AssertNotEmptyMap($"{prefix}n", $"{profile} profile has {prefix}up but not {prefix}n");
+                        AssertNotEmptyMap($"{prefix}e", $"{profile} profile has {prefix}right but not {prefix}e");
+                        AssertNotEmptyMap($"{prefix}w", $"{profile} profile has {prefix}left but not {prefix}w");
+                        AssertNotEmptyMap($"{prefix}s", $"{profile} profile has {prefix}down but not {prefix}s");
+                        AssertNotEmptyMap($"{prefix}north", $"{profile} profile has {prefix}up but not {prefix}north");
+                        AssertNotEmptyMap($"{prefix}east", $"{profile} profile has {prefix}right but not {prefix}east");
+                        AssertNotEmptyMap($"{prefix}west", $"{profile} profile has {prefix}left but not {prefix}west");
+                        AssertNotEmptyMap($"{prefix}south", $"{profile} profile has {prefix}down but not {prefix}south");
+                    }
+                }
+            }
+        });
+    }
+
     private static Model.User MockUser(
     string name = "user",
     int pokeyen = 0,
@@ -265,18 +298,19 @@ public class ButtonMappingTest
         Assert.That(touch.X == 20 && touch.Y == 40 && touch.X2 == null && touch.Y2 == null, "Touchscreen coordinates should be mapped to x,y properties");
         Assert.That(drag.X == 20 && drag.Y == 40 && drag.X2 == 50 && drag.Y2 == 60, "Drag coordinates should be mapped to x,y,x2,y2 properties");
     }
+
     [Test]
     public void TestCardinalInputDisplayMapping()
     {
-        string[] prefixes = ["", "l", "r", "c", "a", "d"];
         Assert.Multiple(() =>
         {
             foreach (string profile in Enum.GetNames<ButtonProfile>())
             {
-                _inputParser = Enum.Parse<ButtonProfile>(profile).ToInputParserBuilder().Build();
+                var parserBuilder = Enum.Parse<ButtonProfile>(profile).ToInputParserBuilder();
+                _inputParser = parserBuilder.Build();
                 if (_inputParser != null)
                 {
-                    foreach (string prefix in prefixes)
+                    foreach (string prefix in parserBuilder.PadStickPrefixes)
                     {
                         var northEast = new NewAnarchyInput(1, ParseInput($"{prefix}north+{prefix}e"), MockUser(), null, null);
                         var southWest = new NewAnarchyInput(1, ParseInput($"{prefix}s+{prefix}west"), MockUser(), null, null);

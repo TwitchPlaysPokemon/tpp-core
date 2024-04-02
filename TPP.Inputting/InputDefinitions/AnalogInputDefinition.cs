@@ -24,6 +24,8 @@ namespace TPP.Inputting.InputDefinitions
                 _label = name;
         }
 
+        public string Name => _name;
+
         public string InputRegex => $@"{Regex.Escape(_name)}(\.[1-9])?";
 
         public Input? Parse(string str)
