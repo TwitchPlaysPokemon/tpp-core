@@ -138,6 +138,21 @@ namespace TPP.Inputting
         }
 
         /// <summary>
+        /// Add some aliased labeled buttons, for example <c>("dn", "dup", "up")</c>.
+        /// Aliased labeled buttons get recognized by their name, displayed as their label, and executed as the button they map to.
+        /// </summary>
+        /// <param name="aliases">varargs of alias tuples <c>(name, label, mapsTo)</c> to be added.</param>
+        public InputParserBuilder AliasedLabeledButtons(params (string name, string label, string mapsTo)[] aliases)
+        {
+            RemoveInputs(aliases.Select(a => a.name).ToArray()); // Overwrite any old mappings
+            foreach ((string name, string label, string mapsTo) in aliases)
+            {
+                _inputDefinitions.Add(new ButtonInputDefinition(name: name, mapsTo: mapsTo, label: label));
+            }
+            return this;
+        }
+
+        /// <summary>
         /// Add some remapped buttons, for example <c>("select", "back")</c>.
         /// Remapped buttons get recognized by their name, but displayed and executed as the button they map to.
         /// </summary>
@@ -248,7 +263,7 @@ namespace TPP.Inputting
         }
 
         /// <summary>
-        /// Adds some aliased analog inputs, e.g. <c>("break", "R")</c>.
+        /// Adds some aliased analog inputs, e.g. <c>("brake", "R")</c>.
         /// </summary>
         /// <param name="aliases">varargs of alias tuples <c>(name, mapsTo)</c> to be added</param>
         public InputParserBuilder AliasedAnalogInputs(params (string name, string mapsTo)[] aliases)
@@ -262,7 +277,21 @@ namespace TPP.Inputting
         }
 
         /// <summary>
-        /// Adds some remapped analog inputs, e.g. <c>("break", "R")</c>.
+        /// Adds some aliased analog inputs with different labels, e.g. <c>("cn", "cup", "rup")</c>.
+        /// </summary>
+        /// <param name="aliases">varargs of alias tuples <c>(name, label, mapsTo)</c> to be added</param>
+        public InputParserBuilder AliasedLabeledAnalogInputs(params (string name, string label, string mapsTo)[] aliases)
+        {
+            RemoveInputs(aliases.Select(a => a.name).ToArray()); // Overwrite any old mappings
+            foreach ((string name, string label, string mapsTo) in aliases)
+            {
+                _inputDefinitions.Add(new AnalogInputDefinition(name: name, mapsTo: mapsTo, label: label));
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// Adds some remapped analog inputs, e.g. <c>("brake", "R")</c>.
         /// </summary>
         /// <param name="remappings">varargs of remapping tuples <c>(name, mapsTo)</c> to be added</param>
         public InputParserBuilder RemappedAnalogInputs(params (string name, string mapsTo)[] remappings)
@@ -331,22 +360,47 @@ namespace TPP.Inputting
         /// which will get prepended to "up"/"down"/"left"/"right"</param>
         public InputParserBuilder AliasedAnalogStick(
             string up, string down, string left, string right,
-            string? spinl, string? spinr, string mapsToPrefix)
+            string? spinl, string? spinr, string mapsToPrefix, string? labelPrefix = null)
         {
             string targetUp = mapsToPrefix + "up";
             string targetDown = mapsToPrefix + "down";
             string targetLeft = mapsToPrefix + "left";
             string targetRight = mapsToPrefix + "right";
-            AliasedAnalogInputs((up, targetUp), (down, targetDown), (left, targetLeft), (right, targetRight));
+            if (labelPrefix != null)
+            {
+                string labelUp = labelPrefix + "up";
+                string labelDown = labelPrefix + "down";
+                string labelLeft = labelPrefix + "left";
+                string labelRight = labelPrefix + "right";
+                AliasedLabeledAnalogInputs((up, labelUp, targetUp), (down, labelDown, targetDown), (left, labelLeft, targetLeft), (right, labelRight, targetRight));
+            }
+            else
+            {
+                AliasedAnalogInputs((up, targetUp), (down, targetDown), (left, targetLeft), (right, targetRight));
+            }
             Conflicts((up, down), (left, right));
             if (spinl != null)
             {
-                AliasedButtons((spinl, mapsToPrefix + "spinl"));
+                if (labelPrefix != null)
+                {
+                    AliasedLabeledButtons((spinl, labelPrefix + "spinl", mapsToPrefix + "spinl"));
+                }
+                else
+                {
+                    AliasedButtons((spinl, mapsToPrefix + "spinl"));
+                }
                 Conflicts((spinl, up), (spinl, down), (spinl, left), (spinl, right));
             }
             if (spinr != null)
             {
-                AliasedButtons((spinr, mapsToPrefix + "spinr"));
+                if (labelPrefix != null)
+                {
+                    AliasedLabeledButtons((spinr, labelPrefix + "spinr", mapsToPrefix + "spinr"));
+                }
+                else
+                {
+                    AliasedButtons((spinr, mapsToPrefix + "spinr"));
+                }
                 Conflicts((spinr, up), (spinr, down), (spinr, left), (spinr, right));
             }
             return this;
@@ -428,13 +482,24 @@ namespace TPP.Inputting
         /// <param name="right">button that maps to "right"</param>
         /// <param name="mapsToPrefix">prefix for the D-pad that the alias names map to,
         /// which will get prepended to "up"/"down"/"left"/"right"</param>
-        public InputParserBuilder AliasedDPad(string up, string down, string left, string right, string mapsToPrefix)
+        public InputParserBuilder AliasedDPad(string up, string down, string left, string right, string mapsToPrefix, string? labelPrefix = null)
         {
             string targetUp = mapsToPrefix + "up";
             string targetDown = mapsToPrefix + "down";
             string targetLeft = mapsToPrefix + "left";
             string targetRight = mapsToPrefix + "right";
-            AliasedButtons((up, targetUp), (down, targetDown), (left, targetLeft), (right, targetRight));
+            if (labelPrefix != null)
+            {
+                string labelUp = labelPrefix + "up";
+                string labelDown = labelPrefix + "down";
+                string labelLeft = labelPrefix + "left";
+                string labelRight = labelPrefix + "right";
+                AliasedLabeledButtons((up, labelUp, targetUp), (down, labelDown, targetDown), (left, labelLeft, targetLeft), (right, labelRight, targetRight));
+            }
+            else
+            {
+                AliasedButtons((up, targetUp), (down, targetDown), (left, targetLeft), (right, targetRight));
+            }
             Conflicts((targetUp, targetDown), (targetLeft, targetRight));
             return this;
         }
@@ -484,8 +549,8 @@ namespace TPP.Inputting
         /// <param name="prefix">prefix for the aliased D-pad,
         /// <param name="mapsToPrefix">prefix that the aliased D-pad maps to</param>
         public InputParserBuilder CardinalDPadAliases(string prefix, string mapsToPrefix) =>
-            RemappedDPad(up: prefix + "n", down: prefix + "s", left: prefix + "w", right: prefix + "e", mapsToPrefix)
-            .RemappedDPad(up: prefix + "north", down: prefix + "south", left: prefix + "west", right: prefix + "east", mapsToPrefix);
+            AliasedDPad(up: prefix + "n", down: prefix + "s", left: prefix + "w", right: prefix + "e", mapsToPrefix, prefix)
+            .AliasedDPad(up: prefix + "north", down: prefix + "south", left: prefix + "west", right: prefix + "east", mapsToPrefix, prefix);
 
 
         /// <summary>
@@ -494,8 +559,8 @@ namespace TPP.Inputting
         /// <param name="prefix">prefix for the aliased stick,
         /// <param name="mapsToPrefix">prefix that the aliased stick maps to</param>
         public InputParserBuilder CardinalAnalogStickAliases(string prefix, string mapsToPrefix) =>
-            RemappedAnalogStick(up: prefix + "n", down: prefix + "s", left: prefix + "w", right: prefix + "e", spinl: null, spinr: null, mapsToPrefix)
-            .RemappedAnalogStick(up: prefix + "north", down: prefix + "south", left: prefix + "west", right: prefix + "east", spinl: null, spinr: null, mapsToPrefix);
+            AliasedAnalogStick(up: prefix + "n", down: prefix + "s", left: prefix + "w", right: prefix + "e", spinl: null, spinr: null, mapsToPrefix, prefix)
+            .AliasedAnalogStick(up: prefix + "north", down: prefix + "south", left: prefix + "west", right: prefix + "east", spinl: null, spinr: null, mapsToPrefix, prefix);
 
 
         public InputParserBuilder LeftRightSidesEnabled(bool enabled)

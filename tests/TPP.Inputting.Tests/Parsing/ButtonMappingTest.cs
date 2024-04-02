@@ -282,11 +282,11 @@ public class ButtonMappingTest
                         var southWest = new NewAnarchyInput(1, ParseInput($"{prefix}s+{prefix}west"), MockUser(), null, null);
                         if (northEast.ButtonSet.Any() && southWest.ButtonSet.Any())
                         {
-                            Assert.That(northEast.ButtonSetLabels.Any(b => b.ToLower().EndsWith("up"))
-                                && northEast.ButtonSetLabels.Any(b => b.ToLower().EndsWith("right"))
-                                && southWest.ButtonSetLabels.Any(b => b.ToLower().EndsWith("down"))
-                                && southWest.ButtonSetLabels.Any(b => b.ToLower().EndsWith("left")),
-                                $"NSEW labels with '{prefix}' prefix aren't converted to Up Down Right Left for {profile} profile");
+                            Assert.That(northEast.ButtonSetLabels.Any(b => b.ToLower() == $"{prefix}up")
+                                && northEast.ButtonSetLabels.Any(b => b.ToLower() == $"{prefix}right")
+                                && southWest.ButtonSetLabels.Any(b => b.ToLower() == $"{prefix}down")
+                                && southWest.ButtonSetLabels.Any(b => b.ToLower() == $"{prefix}left"),
+                                $"NSEW labels with '{prefix}' prefix aren't converted to {prefix}up {prefix}down {prefix}right {prefix}left for {profile} profile");
                         }
                     }
                 }

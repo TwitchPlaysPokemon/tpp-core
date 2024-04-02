@@ -10,18 +10,23 @@ namespace TPP.Inputting.InputDefinitions
     {
         private readonly string _name;
         private readonly string _mapsTo;
-        private readonly bool _keepsName;
+        private readonly string _label;
 
-        public ButtonInputDefinition(string name, string mapsTo, bool keepsName)
+        public ButtonInputDefinition(string name, string mapsTo, string label)
         {
             _name = name;
             _mapsTo = mapsTo;
-            _keepsName = keepsName;
+            _label = label;
+        }
+        public ButtonInputDefinition(string name, string mapsTo, bool keepsName): this(name, mapsTo, mapsTo)
+        {
+            if (keepsName)
+                _label = name;
         }
         public ButtonInputDefinition(string name) : this(name, name, true)
         { }
 
         public string InputRegex => Regex.Escape(_name);
-        public Input? Parse(string str) => new Input(_keepsName ? _name : _mapsTo, _mapsTo, str);
+        public Input? Parse(string str) => new Input(_label, _mapsTo, str);
     }
 }

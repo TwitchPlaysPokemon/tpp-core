@@ -10,13 +10,18 @@ namespace TPP.Inputting.InputDefinitions
     {
         private readonly string _name;
         private readonly string _mapsTo;
-        private readonly bool _keepsName;
+        private readonly string _label;
 
-        public AnalogInputDefinition(string name, string mapsTo, bool keepsName)
+        public AnalogInputDefinition(string name, string mapsTo, string label)
         {
             _name = name;
             _mapsTo = mapsTo;
-            _keepsName = keepsName;
+            _label = label;
+        }
+        public AnalogInputDefinition(string name, string mapsTo, bool keepsName) : this(name, mapsTo, mapsTo)
+        {
+            if (keepsName)
+                _label = name;
         }
 
         public string InputRegex => $@"{Regex.Escape(_name)}(\.[1-9])?";
@@ -26,12 +31,12 @@ namespace TPP.Inputting.InputDefinitions
             string[] strings = str.Split(".", count: 2);
             if (strings.Length == 1)
             {
-                return new AnalogInput(_keepsName ? _name : _mapsTo, _mapsTo, str, 1.0f);
+                return new AnalogInput(_label, _mapsTo, str, 1.0f);
             }
             else
             {
                 float value = int.Parse(strings[1]) / 10f;
-                return new AnalogInput(_keepsName ? _name : _mapsTo, _mapsTo, str, value);
+                return new AnalogInput(_label, _mapsTo, str, value);
             }
         }
     }
