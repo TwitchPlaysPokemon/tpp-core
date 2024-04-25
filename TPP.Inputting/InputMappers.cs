@@ -98,6 +98,10 @@ namespace TPP.Inputting
                         InputSide.Right => controllerPrefixes.ElementAtOrDefault(1) ?? "P2 ",
                     };
                 }
+                else if (input is AnalogInput analog)
+                {
+                    inputMap[ToLowerFirstUpper(input.ButtonName)] = analog.Strength;
+                }
                 else
                 {
                     inputMap[ToLowerFirstUpper(input.ButtonName)] = true;

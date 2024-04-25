@@ -300,6 +300,20 @@ public class ButtonMappingTest
     }
 
     [Test]
+    public void TestOverlayAnalogInputs()
+    {
+        _inputParser = ButtonProfile.Switch.ToInputParserBuilder().Build();
+
+        var fullThrow = new NewAnarchyInput(1, ParseInput("ln"), MockUser(), null, null);
+        var halfThrow = new NewAnarchyInput(1, ParseInput("ln.5"), MockUser(), null, null);
+        var buttonPress = new NewAnarchyInput(1, ParseInput("a"), MockUser(), null, null);
+        Assert.That(fullThrow.ButtonSetLabels.SequenceEqual(["lup"]) && fullThrow.ButtonSetVelocities.SequenceEqual([1f]), "Full throw should have a velocity of 1");
+        Assert.That(halfThrow.ButtonSetLabels.SequenceEqual(["lup"]) && halfThrow.ButtonSetVelocities.SequenceEqual([0.5f]), "Half throw should have a velocity of 0.5");
+        Assert.That(buttonPress.ButtonSetLabels.SequenceEqual(["a"]) && buttonPress.ButtonSetVelocities.SequenceEqual([1f]), "Non-analog should have a velocity of 1");
+
+    }
+
+    [Test]
     public void TestCardinalInputDisplayMapping()
     {
         Assert.Multiple(() =>

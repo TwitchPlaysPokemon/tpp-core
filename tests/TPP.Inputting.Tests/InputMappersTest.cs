@@ -8,6 +8,7 @@ namespace TPP.Inputting.Tests
     {
         private static readonly IInputParser InputParser = InputParserBuilder.FromBare()
             .Buttons("A", "B", "X", "Y", "start", "select")
+            .AnalogStick("l", true)
             .HoldEnabled(true)
             .LengthRestrictions(maxSetLength: 4, maxSequenceLength: 1)
             .Touchscreen(800, 600, multitouch: true, allowDrag: true)
@@ -22,7 +23,7 @@ namespace TPP.Inputting.Tests
         }
 
         [Test]
-        public void proper_representation()
+        public void ProperRepresentation()
         {
             IInputMapper inputMapper = new DefaultTppInputMapper();
             var expectedInputMap = new Dictionary<string, object>
@@ -39,6 +40,21 @@ namespace TPP.Inputting.Tests
             };
             IDictionary<string, object> producedInputMap = inputMapper.Map(
                 new TimedInputSet(ParseInput("10,20>30,40+A+b+start"), 1, 2));
+            Assert.That(expectedInputMap, Is.EqualTo(producedInputMap));
+        }
+
+        [Test]
+        public void AnalogInputs()
+        {
+            IInputMapper inputMapper = new DefaultTppInputMapper();
+            var expectedInputMap = new Dictionary<string, object>
+            {
+                ["Lup"] = 0.5f,
+                ["Held_Frames"] = 60,
+                ["Sleep_Frames"] = 120,
+            };
+            IDictionary<string, object> producedInputMap = inputMapper.Map(
+                new TimedInputSet(ParseInput("ln.5"), 1, 2));
             Assert.That(expectedInputMap, Is.EqualTo(producedInputMap));
         }
     }

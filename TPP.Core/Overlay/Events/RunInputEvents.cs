@@ -33,8 +33,7 @@ namespace TPP.Core.Overlay.Events
             IEnumerable<Input> InputsForOverlay() => inputSet.Inputs.Where(i => i is not SideInput);
             ButtonSet = InputsForOverlay().Select(i => i.ButtonName).ToImmutableList();
             ButtonSetLabels = InputsForOverlay().Select(i => i.DisplayedText).ToImmutableList();
-            // velocities: was used for analog, but probably needs a rework anyway. Just use dummy values for now.
-            ButtonSetVelocities = ButtonSet.Select(_ => 1.0f).ToImmutableList();
+            ButtonSetVelocities = InputsForOverlay().Select(i => i is AnalogInput analog ? analog.Strength : 1.0f).ToImmutableList();
             User = user;
             InputId = inputId;
             SideInput? sideInput = inputSet.Inputs.Where(i => i is SideInput).Cast<SideInput>().FirstOrDefault();
