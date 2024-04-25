@@ -1,10 +1,15 @@
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using NUnit.Framework;
 using TPP.Inputting.Inputs;
 
 namespace TPP.Inputting.Tests
 {
+    [SuppressMessage(
+        category: "Assertion",
+        checkId: "NUnit2009:The same value has been provided as both the actual and the expected argument",
+        Justification = "This class tests equal methods, which the analysis assumes to be correctly implemented")]
     public class InputEqualityTest
     {
         private static InputSet Set(params string[] inputs) =>
@@ -41,7 +46,7 @@ namespace TPP.Inputting.Tests
             var inputOtherCoordinateX = new TouchscreenInput("foo", "a", "bar", 999, 12);
             var inputOtherCoordinateY = new TouchscreenInput("foo", "a", "bar", 11, 999);
 
-            Assert.That(inputBase, Is.EqualTo(inputBase));
+            Assert.That(inputBase, Is.EqualTo(inputBase as object));
             Assert.That(inputBase, Is.Not.EqualTo(inputOtherDisplayText));
             Assert.That(inputBase, Is.Not.EqualTo(inputOtherOriginalText));
             Assert.That(inputBase, Is.Not.EqualTo(inputOtherEffectiveText));
@@ -68,7 +73,7 @@ namespace TPP.Inputting.Tests
             var inputOtherCoordinateX2 = new TouchscreenDragInput("foo", "a", "bar", 11, 12, 999, 14);
             var inputOtherCoordinateY2 = new TouchscreenDragInput("foo", "a", "bar", 11, 12, 13, 999);
 
-            Assert.That(inputBase, Is.EqualTo(inputBase));
+            Assert.That(inputBase, Is.EqualTo(inputBase as object));
             Assert.That(inputBase, Is.Not.EqualTo(inputOtherDisplayText));
             Assert.That(inputBase, Is.Not.EqualTo(inputOtherOriginalText));
             Assert.That(inputBase, Is.Not.EqualTo(inputOtherEffectiveText));
@@ -96,7 +101,7 @@ namespace TPP.Inputting.Tests
             var inputOtherEffectiveText = new AnalogInput("foo", "X", "bar", 0.1f);
             var inputOtherStrength = new AnalogInput("foo", "a", "bar", 0.999f);
 
-            Assert.That(inputBase, Is.EqualTo(inputBase));
+            Assert.That(inputBase, Is.EqualTo(inputBase as object));
             Assert.That(inputBase, Is.Not.EqualTo(inputOtherDisplayText));
             Assert.That(inputBase, Is.Not.EqualTo(inputOtherOriginalText));
             Assert.That(inputBase, Is.Not.EqualTo(inputOtherEffectiveText));
@@ -112,13 +117,13 @@ namespace TPP.Inputting.Tests
         [Test]
         public void TestSameOutcomeAnyOrder()
         {
-            Assert.That(Set("a", "b"), Is.EqualTo(Set("a", "b")));
+            Assert.That(Set("a", "b"), Is.EqualTo(Set("a", "b") as object));
             Assert.That(Set("a", "b").HasSameOutcomeAs(Set("b", "a")), Is.True);
 
             Assert.That(Set("a", "b"), Is.Not.EqualTo(Set("b", "a")));
             Assert.That(Set("a", "b").HasSameOutcomeAs(Set("a", "x")), Is.False);
 
-            Assert.That(Seq(Set("a", "b"), Set("c", "d")), Is.EqualTo(Seq(Set("a", "b"), Set("c", "d"))));
+            Assert.That(Seq(Set("a", "b"), Set("c", "d")), Is.EqualTo(Seq(Set("a", "b"), Set("c", "d")) as object));
             Assert.That(Seq(Set("a", "b"), Set("c", "d")).HasSameOutcomeAs(Seq(Set("b", "a"), Set("d", "c"))), Is.True);
 
             Assert.That(Seq(Set("a", "b"), Set("c", "d")), Is.Not.EqualTo(Seq(Set("b", "a"), Set("d", "c"))));

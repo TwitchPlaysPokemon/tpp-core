@@ -18,7 +18,7 @@ namespace TPP.Inputting.Tests
         {
             InputSequence? inputSequence = InputParser.Parse(inputStr);
             Assert.That(inputSequence, Is.Not.Null);
-            Assert.That(1, Is.EqualTo(inputSequence!.InputSets.Count));
+            Assert.That(inputSequence!.InputSets, Has.Count.EqualTo(1));
             return inputSequence.InputSets[0];
         }
 

@@ -23,9 +23,9 @@ namespace TPP.Common.Tests
             PkmnSpecies.RegisterName("1", "Bulbasaur");
             PkmnSpecies.RegisterName("16", "Pidgey");
 
-            Assert.That("Bulbasaur", Is.EqualTo(PkmnSpecies.OfId("1").Name));
-            Assert.That("Pidgey", Is.EqualTo(PkmnSpecies.OfId("16").Name));
-            Assert.That("???", Is.EqualTo(PkmnSpecies.OfId("123").Name));
+            Assert.That(PkmnSpecies.OfId("1").Name, Is.EqualTo("Bulbasaur"));
+            Assert.That(PkmnSpecies.OfId("16").Name, Is.EqualTo("Pidgey"));
+            Assert.That(PkmnSpecies.OfId("123").Name, Is.EqualTo("???"));
             Assert.That(PkmnSpecies.OfIdWithKnownName("1"), Is.Not.Null);
             Assert.That(PkmnSpecies.OfIdWithKnownName("16"), Is.Not.Null);
             Assert.That(PkmnSpecies.OfIdWithKnownName("123"), Is.Null);

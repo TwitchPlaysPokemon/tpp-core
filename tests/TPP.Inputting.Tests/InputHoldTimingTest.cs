@@ -19,8 +19,8 @@ namespace TPP.Inputting.Tests
         {
             IInputHoldTiming inputHoldTiming = new DefaultInputHoldTiming(maxPressDuration: 10 / 60f);
             (_, float holdDuration, float sleepDuration) = inputHoldTiming.TimeInput(DummyInput, 30 / 60f);
-            Assert.That(10 / 60f, Is.EqualTo(holdDuration).Within(Delta));
-            Assert.That(20 / 60f, Is.EqualTo(sleepDuration).Within(Delta));
+            Assert.That(holdDuration, Is.EqualTo(10 / 60f).Within(Delta));
+            Assert.That(sleepDuration, Is.EqualTo(20 / 60f).Within(Delta));
         }
 
         [Test]
@@ -28,8 +28,8 @@ namespace TPP.Inputting.Tests
         {
             IInputHoldTiming inputHoldTiming = new DefaultInputHoldTiming(maxPressDuration: 10 / 60f, minSleepDuration: 1 / 60f);
             (_, float holdDuration, float sleepDuration) = inputHoldTiming.TimeInput(DummyInput, 10 / 60f);
-            Assert.That(9 / 60f, Is.EqualTo(holdDuration).Within(Delta));
-            Assert.That(1 / 60f, Is.EqualTo(sleepDuration).Within(Delta));
+            Assert.That(holdDuration, Is.EqualTo(9 / 60f).Within(Delta));
+            Assert.That(sleepDuration, Is.EqualTo(1 / 60f).Within(Delta));
         }
 
         [Test]
@@ -37,8 +37,8 @@ namespace TPP.Inputting.Tests
         {
             IInputHoldTiming inputHoldTiming = new DefaultInputHoldTiming(maxPressDuration: 20 / 60f);
             (_, float holdDuration, float sleepDuration) = inputHoldTiming.TimeInput(DummyInput, 30 / 60f);
-            Assert.That(20 / 60f, Is.EqualTo(holdDuration).Within(Delta));
-            Assert.That(10 / 60f, Is.EqualTo(sleepDuration).Within(Delta));
+            Assert.That(holdDuration, Is.EqualTo(20 / 60f).Within(Delta));
+            Assert.That(sleepDuration, Is.EqualTo(10 / 60f).Within(Delta));
         }
 
         [Test]
@@ -46,8 +46,8 @@ namespace TPP.Inputting.Tests
         {
             IInputHoldTiming inputHoldTiming = new DefaultInputHoldTiming(maxHoldDuration: 100 / 60f);
             (_, float holdDuration, float sleepDuration) = inputHoldTiming.TimeInput(DummyInputHeld, 30 / 60f);
-            Assert.That(30 / 60f, Is.EqualTo(holdDuration).Within(Delta));
-            Assert.That(0, Is.EqualTo(sleepDuration).Within(Delta));
+            Assert.That(holdDuration, Is.EqualTo(30 / 60f).Within(Delta));
+            Assert.That(sleepDuration, Is.EqualTo(0).Within(Delta));
         }
 
         [Test]
@@ -55,8 +55,8 @@ namespace TPP.Inputting.Tests
         {
             IInputHoldTiming inputHoldTiming = new DefaultInputHoldTiming(maxHoldDuration: 20 / 60f);
             (_, float holdDuration, float sleepDuration) = inputHoldTiming.TimeInput(DummyInputHeld, 30 / 60f);
-            Assert.That(20 / 60f, Is.EqualTo(holdDuration).Within(Delta));
-            Assert.That(10 / 60f, Is.EqualTo(sleepDuration).Within(Delta));
+            Assert.That(holdDuration, Is.EqualTo(20 / 60f).Within(Delta));
+            Assert.That(sleepDuration, Is.EqualTo(10 / 60f).Within(Delta));
         }
 
         [Test]
@@ -64,8 +64,8 @@ namespace TPP.Inputting.Tests
         {
             IInputHoldTiming inputHoldTiming = new DefaultInputHoldTiming(minPressDuration: 1 / 60f, minSleepDuration: 1 / 60f);
             (_, float holdDuration, float sleepDuration) = inputHoldTiming.TimeInput(DummyInputHeld, 1 / 60f);
-            Assert.That(1 / 60f, Is.EqualTo(holdDuration).Within(Delta));
-            Assert.That(0, Is.EqualTo(sleepDuration).Within(Delta));
+            Assert.That(holdDuration, Is.EqualTo(1 / 60f).Within(Delta));
+            Assert.That(sleepDuration, Is.EqualTo(0).Within(Delta));
         }
     }
 }

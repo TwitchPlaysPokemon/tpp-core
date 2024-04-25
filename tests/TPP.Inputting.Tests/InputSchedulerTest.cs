@@ -6,7 +6,7 @@ namespace TPP.Inputting.Tests
     {
         /// <summary>
         /// Tests that with smoothing disabled, the durations should just stay constant
-        /// if enqueuing and and dequeuing happens at an equal pace.
+        /// if enqueuing and dequeuing happens at an equal pace.
         /// </summary>
         [Test]
         public void TestConstantSpeed()
@@ -30,9 +30,9 @@ namespace TPP.Inputting.Tests
 
             // then: all durations should be equal
             Assert.That((1, 2, 3), Is.EqualTo((v1, v2, v3)));
-            Assert.That(targetDurationSeconds, Is.EqualTo(t1));
-            Assert.That(targetDurationSeconds, Is.EqualTo(t2));
-            Assert.That(targetDurationSeconds, Is.EqualTo(t3));
+            Assert.That(t1, Is.EqualTo(targetDurationSeconds));
+            Assert.That(t2, Is.EqualTo(targetDurationSeconds));
+            Assert.That(t3, Is.EqualTo(targetDurationSeconds));
         }
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace TPP.Inputting.Tests
             (int _, float t1) = inputScheduler.Dequeue();
 
             // then: duration should be 1 over inputs per second
-            Assert.That(1f / inputsPerSecond, Is.EqualTo(t1).Within(0.00001f));
+            Assert.That(t1, Is.EqualTo(1f / inputsPerSecond).Within(0.00001f));
         }
 
         /// <summary>
@@ -92,9 +92,9 @@ namespace TPP.Inputting.Tests
 
             // then: durations should get smaller
             Assert.That((1, 2, 3), Is.EqualTo((v1, v2, v3)));
-            Assert.That(targetDurationSeconds / 2f, Is.EqualTo(t1));
-            Assert.That(targetDurationSeconds / 3f, Is.EqualTo(t2));
-            Assert.That(targetDurationSeconds / 4f, Is.EqualTo(t3));
+            Assert.That(t1, Is.EqualTo(targetDurationSeconds / 2f));
+            Assert.That(t2, Is.EqualTo(targetDurationSeconds / 3f));
+            Assert.That(t3, Is.EqualTo(targetDurationSeconds / 4f));
         }
 
         /// <summary>
@@ -125,10 +125,10 @@ namespace TPP.Inputting.Tests
 
             // then: durations should get longer
             Assert.That((1, 2, 3, 4), Is.EqualTo((v1, v2, v3, v4)));
-            Assert.That(targetDurationSeconds / 4f, Is.EqualTo(t1));
-            Assert.That(targetDurationSeconds / 3f, Is.EqualTo(t2));
-            Assert.That(targetDurationSeconds / 3f, Is.EqualTo(t3));
-            Assert.That(targetDurationSeconds / 2f, Is.EqualTo(t4));
+            Assert.That(t1, Is.EqualTo(targetDurationSeconds / 4f));
+            Assert.That(t2, Is.EqualTo(targetDurationSeconds / 3f));
+            Assert.That(t3, Is.EqualTo(targetDurationSeconds / 3f));
+            Assert.That(t4, Is.EqualTo(targetDurationSeconds / 2f));
         }
 
         /// <summary>
@@ -164,12 +164,12 @@ namespace TPP.Inputting.Tests
 
             // then: durations should get smaller, but smoothly
             Assert.That((1, 2, 3, 4, 5, 6), Is.EqualTo((v1, v2, v3, v4, v5, v6)));
-            Assert.That(targetDurationSeconds, Is.EqualTo(t1));
-            Assert.That(targetDurationSeconds, Is.EqualTo(t2));
-            Assert.That(targetDurationSeconds * (0.5f + 0.5f / 2), Is.EqualTo(t3));
-            Assert.That(targetDurationSeconds * (0.5f + 0.5f / 4), Is.EqualTo(t4));
-            Assert.That(targetDurationSeconds * (0.5f + 0.5f / 8), Is.EqualTo(t5));
-            Assert.That(targetDurationSeconds * (0.5f + 0.5f / 16), Is.EqualTo(t6));
+            Assert.That(t1, Is.EqualTo(targetDurationSeconds));
+            Assert.That(t2, Is.EqualTo(targetDurationSeconds));
+            Assert.That(t3, Is.EqualTo(targetDurationSeconds * (0.5f + 0.5f / 2)));
+            Assert.That(t4, Is.EqualTo(targetDurationSeconds * (0.5f + 0.5f / 4)));
+            Assert.That(t5, Is.EqualTo(targetDurationSeconds * (0.5f + 0.5f / 8)));
+            Assert.That(t6, Is.EqualTo(targetDurationSeconds * (0.5f + 0.5f / 16)));
         }
 
         [Test]
@@ -180,8 +180,8 @@ namespace TPP.Inputting.Tests
             Assert.That(inputScheduler.Enqueue(2), Is.True);
             Assert.That(inputScheduler.Enqueue(3), Is.False);
 
-            Assert.That(1, Is.EqualTo(inputScheduler.Dequeue().Item1));
-            Assert.That(2, Is.EqualTo(inputScheduler.Dequeue().Item1));
+            Assert.That(inputScheduler.Dequeue().Item1, Is.EqualTo(1));
+            Assert.That(inputScheduler.Dequeue().Item1, Is.EqualTo(2));
             Assert.That(inputScheduler.IsEmpty, Is.True);
         }
     }
