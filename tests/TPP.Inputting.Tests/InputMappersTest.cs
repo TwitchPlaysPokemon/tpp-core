@@ -56,6 +56,17 @@ namespace TPP.Inputting.Tests
             IDictionary<string, object> producedInputMap = inputMapper.Map(
                 new TimedInputSet(ParseInput("ln.5"), 1, 2));
             Assert.That(expectedInputMap, Is.EqualTo(producedInputMap));
+
+            expectedInputMap = new Dictionary<string, object>
+            {
+                ["Lup"] = true,
+                ["Held_Frames"] = 60,
+                ["Sleep_Frames"] = 120,
+            };
+            producedInputMap = inputMapper.Map(
+                new TimedInputSet(ParseInput("ln"), 1, 2));
+            Assert.That(expectedInputMap, Is.EqualTo(producedInputMap));
         }
+
     }
 }
