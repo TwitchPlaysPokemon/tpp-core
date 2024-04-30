@@ -31,6 +31,16 @@ public class ButtonMappingTest
         }
     }
 
+    private void AssertAnalogMapped(string rawInput, params (string name, float velocity)[] buttons)
+    {
+        var mappedInputs = _inputMapper.Map(new TimedInputSet(ParseInput(rawInput), 1, 2));
+        foreach (var button in buttons)
+        {
+            Assert.That(mappedInputs.ContainsKey(button.name), Is.True, $"Output should contain {button.name}.");
+            Assert.That(mappedInputs[button.name]?.Equals(button.velocity), Is.True, $"{button.name} should have velocity {button.velocity}.");
+        }
+    }
+
     private void AssertEmptyMap(string rawInput, string? message = null)
     {
         var mappedInputs = _inputMapper.Map(new TimedInputSet(ParseInput(rawInput), 1, 2));
@@ -153,7 +163,8 @@ public class ButtonMappingTest
         AssertMapped("l+r", "L", "R");
         AssertMapped("x+y", "X", "Y");
         AssertMapped("n", "Up");
-        AssertMapped("ln.5", "Lup");
+        AssertAnalogMapped("ln.5", ("Lup", 0.5f));
+        AssertAnalogMapped("r.2", ("R", 0.2f));
         AssertMapped("ln+cs+rright", "Lup", "Rdown", "Rright");
         AssertMapped("south", "Down");
 

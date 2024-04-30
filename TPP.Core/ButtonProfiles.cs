@@ -122,7 +122,8 @@ namespace TPP.Core
                     .SimpleAliasedAnalogStick("l", "a", true)
                     .LengthRestrictions(maxSetLength: 4, maxSequenceLength: 1),
                 ButtonProfile.GameCube => InputParserBuilder.FromBare()
-                    .Buttons("a", "b", "x", "y", "l", "r", "z", "start")
+                    .Buttons("a", "b", "x", "y", "z", "start")
+                    .AnalogInputs("l", "r")
                     .AliasedButtons(("pause", "start"))
                     .DPad()
                     .SimpleAliasedDPad("d", "")
