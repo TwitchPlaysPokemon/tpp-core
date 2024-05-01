@@ -12,7 +12,7 @@ public class UserWhisperMessage(NotificationMetadata metadata, NotificationPaylo
     : Notification<Condition, Event>(metadata, payload), IHasSubscriptionType
 {
     public static string SubscriptionType => "user.whisper.message";
-    public static string SubscriptionVersion => "beta";
+    public static string SubscriptionVersion => "1";
 
     /// <summary>
     /// Whisper Received Condition
