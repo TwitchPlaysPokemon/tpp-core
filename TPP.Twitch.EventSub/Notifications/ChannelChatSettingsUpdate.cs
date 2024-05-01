@@ -12,7 +12,7 @@ public class ChannelChatSettingsUpdate(NotificationMetadata metadata, Notificati
     : Notification<Condition, Event>(metadata, payload), IHasSubscriptionType
 {
     public static string SubscriptionType => "channel.chat_settings.update";
-    public static string SubscriptionVersion => "beta";
+    public static string SubscriptionVersion => "1";
 
     /// <summary>
     /// Channel Chat Settings Update Condition
