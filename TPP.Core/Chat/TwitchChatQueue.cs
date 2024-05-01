@@ -98,8 +98,7 @@ namespace TPP.Core.Chat
             if (message is OutgoingMessage.Chat chat)
                 await _twitchApi.SendChatMessage(chat.ChannelId, _senderUserId, chat.Message);
             else if (message is OutgoingMessage.Reply reply)
-                // TODO https://github.com/TwitchLib/TwitchLib.Api/pull/386
-                await _twitchApi.SendChatMessage(reply.ChannelId, _senderUserId, reply.Message /*, replyParentMessageId: reply.ReplyToId*/);
+                await _twitchApi.SendChatMessage(reply.ChannelId, _senderUserId, reply.Message, replyParentMessageId: reply.ReplyToId);
             else if (message is OutgoingMessage.Whisper whisper)
                 await SendWhisperCatchingSomeErrors(whisper);
             else

@@ -61,8 +61,8 @@ public class TwitchApi(
         Retrying(api => api.Helix.Chat.GetChatSettingsAsync(broadcasterId, moderatorId));
     public Task UpdateChatSettingsAsync(string broadcasterId, string moderatorId, ChatSettings settings) =>
         Retrying(api => api.Helix.Chat.UpdateChatSettingsAsync(broadcasterId, moderatorId, settings));
-    public Task SendChatMessage(string broadcasterId, string senderUserId, string message) =>
-        Retrying(api => api.Helix.Chat.SendChatMessage(broadcasterId, senderUserId, message));
+    public Task SendChatMessage(string broadcasterId, string senderUserId, string message, string? replyParentMessageId = null) =>
+        Retrying(api => api.Helix.Chat.SendChatMessage(broadcasterId, senderUserId, message, replyParentMessageId: replyParentMessageId));
     public Task SendWhisperAsync(string fromUserId, string toUserId, string message, bool newRecipient) =>
         Retrying(api => api.Helix.Whispers.SendWhisperAsync(fromUserId, toUserId, message, newRecipient));
 
