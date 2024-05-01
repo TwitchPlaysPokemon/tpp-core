@@ -27,7 +27,7 @@ public class ChatFactory(
                 new SubscriptionProcessor(
                     loggerFactory.CreateLogger<SubscriptionProcessor>(),
                     tokenBank, userRepo, subscriptionLogRepo, linkedAccountRepo),
-                overlayConnection, useTwitchReplies: false),
+                overlayConnection),
             ConnectionConfig.Simulation cfg => new SimulationChat(config.Name, loggerFactory, cfg, userRepo),
             _ => throw new ArgumentOutOfRangeException(nameof(config), "unknown chat connector type")
         };
