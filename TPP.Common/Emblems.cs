@@ -95,6 +95,7 @@ namespace TPP.Common
             [86] = "Super Gauntlet Sun/Ultra Moon",
             [87] = "Super Gauntlet Colosseum",
             [88] = "Super Gauntlet XD",
+            [89] = "Super Gauntlet Black 2/White 2",
         };
 
         public static string FormatEmblem(int emblemNum)
