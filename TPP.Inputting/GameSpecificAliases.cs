@@ -81,7 +81,7 @@ namespace TPP.Inputting
         private static InputParserBuilder AddBW2Aliases(this InputParserBuilder builder) =>
             builder.AliasedTouchscreenInputs(
                 ("move1", 2, 72),
-                ("move2", 252, 32),
+                ("move2", 252, 42),
                 ("move3", 2, 124),
                 ("move4", 248, 90),
                 ("reuse", 79, 190),
