@@ -27,7 +27,7 @@ namespace TPP.Inputting
                 GameSpecificAlias.Platinum => builder.AddPlatinumAliases(),
                 GameSpecificAlias.HeartGold => builder.AddPlatinumAliases(), // Same as Platinum, but may need fine tuning
                 GameSpecificAlias.BlackWhite => builder.AddBWAliases(),
-                GameSpecificAlias.BlackWhite2 => builder.AddBWAliases(), // Same as Black/White, but may need fine tuning
+                GameSpecificAlias.BlackWhite2 => builder.AddBW2Aliases(),
                 GameSpecificAlias.XY => builder.AddXYAliases(),
                 GameSpecificAlias.OmegaRuby => builder.AddORASAliases(),
                 GameSpecificAlias.SunMoon => builder.AddUSUMAliases(), // Same as Ultra Sun/Ultra Moon, but may need fine tuning
@@ -78,6 +78,28 @@ namespace TPP.Inputting
                 ("poke6", 130, 150)
             );
 
+        private static InputParserBuilder AddBW2Aliases(this InputParserBuilder builder) =>
+            builder.AliasedTouchscreenInputs(
+                ("move1", 2, 72),
+                ("move2", 252, 32),
+                ("move3", 2, 124),
+                ("move4", 248, 90),
+                ("reuse", 79, 190),
+                ("heal", 41, 20),
+                ("throw", 225, 20),
+                ("status", 120, 132),
+                ("items", 254, 90),
+                ("bag", 3, 170),
+                ("run", 127, 161),
+                ("switch", 210, 190),
+                ("poke1", 10, 5),
+                ("poke2", 149, 10),
+                ("poke3", 6, 75),
+                ("poke4", 250, 75),
+                ("poke5", 5, 98),
+                ("poke6", 130, 150)
+            );
+        
         private static InputParserBuilder AddXYAliases(this InputParserBuilder builder) =>
             builder.AliasedTouchscreenInputs(
                 ("move1", 40, 70),
