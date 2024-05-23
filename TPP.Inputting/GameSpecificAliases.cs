@@ -82,7 +82,7 @@ namespace TPP.Inputting
             builder.AliasedTouchscreenInputs(
                 ("move1", 2, 72),
                 ("move2", 252, 42),
-                ("move3", 2, 124),
+                ("move3", 2, 120), // was 2, 124 but moved up to mitigate physical touchscreen calibration slip
                 ("move4", 248, 90),
                 ("reuse", 79, 190),
                 ("heal", 41, 20),
