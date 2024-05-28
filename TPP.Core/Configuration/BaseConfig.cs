@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.ComponentModel;
 using NodaTime;
+using Serilog.Events;
 
 namespace TPP.Core.Configuration;
 
@@ -49,4 +50,32 @@ public sealed class BaseConfig : ConfigBase, IRootConfig
     public Duration AdvertisePollsInterval { get; init; } = Duration.FromHours(1);
 
     public ImmutableHashSet<TppFeatures> DisabledFeatures { get; init; } = ImmutableHashSet<TppFeatures>.Empty;
+}
+
+/// <summary>
+/// Configurations related to chat communication.
+/// </summary>
+public sealed class ChatConfig : ConfigBase
+{
+    public IImmutableList<string> DefaultOperatorNames { get; init; } = ImmutableList.Create("admin");
+
+    public IImmutableList<ConnectionConfig> Connections { get; init; } =
+        ImmutableList.Create<ConnectionConfig>(
+            new ConnectionConfig.Console(),
+            new ConnectionConfig.Twitch(),
+            new ConnectionConfig.Simulation()
+        );
+
+    /* whether to forward unprocessed messages to the old core by saving them to the "messagequeue" collection */
+    public bool ForwardUnprocessedMessages { get; init; } = true;
+
+    /* whether to send out messages forwarded from the old core through the "messagequeue_in" collection */
+    public bool SendOutForwardedMessages { get; init; } = true;
+}
+
+public sealed class DiscordLoggingConfig : ConfigBase
+{
+    public ulong WebhookId { get; init; } = 0L;
+    public string WebhookToken { get; init; } = "";
+    public LogEventLevel MinLogLevel { get; init; } = LogEventLevel.Warning;
 }
