@@ -5,7 +5,6 @@
         "object",
         "null"
       ],
-      "additionalProperties": false,
       "properties": {
         "DefaultOperatorNames": {
           "type": [
@@ -62,7 +61,6 @@
         "object",
         "null"
       ],
-      "additionalProperties": false,
       "properties": {
         "WebhookId": {
           "type": "integer"
@@ -88,7 +86,6 @@
     }
   },
   "type": "object",
-  "additionalProperties": false,
   "properties": {
     "$schema": {
       "type": [

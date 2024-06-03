@@ -5,7 +5,6 @@
         "object",
         "null"
       ],
-      "additionalProperties": false,
       "properties": {
         "TouchscreenAliases": {
           "description": "Defines shorthand aliases for touchscreen coordinates, e.g. \"move1\": [1, 25]",
