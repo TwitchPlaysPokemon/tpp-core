@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using NodaTime;
 using TPP.Core.Overlay;
 using TPP.Core.Overlay.Events;
 using TPP.Inputting;
+using TPP.Inputting.Inputs;
 using TPP.Model;
 using InputMap = System.Collections.Generic.IDictionary<string, object>;
 
@@ -77,6 +79,9 @@ namespace TPP.Core
                 .ToDictionary(kvp => CasefoldKeyForDesmume(kvp.Key), kvp => kvp.Value),
         };
 
+        private static readonly InputSet EmptyInputSet = new(ImmutableList<Input>.Empty);
+        private const float EmptyInputDuration = 6 / 60f;
+
         public async Task<InputMap?> HandleRequest(string? path)
         {
             if (path == "/gbmode_input_complete")
@@ -87,26 +92,25 @@ namespace TPP.Core
             if (!Endpoints.TryGetValue(path ?? "", out Func<InputMap, InputMap>? getResultForEndpoint))
                 throw new ArgumentException($"unrecognized input polling endpoint '{path}'. " +
                                             $"Available endpoints: {string.Join(", ", Endpoints.Keys)}");
-
-            bool queueEmpty = false;
-            InputMap inputMap;
             if (_activeInput != null)
+                return getResultForEndpoint(_activeInput);
+
+            bool queueEmpty;
+            InputMap inputMap;
+            if (_inputBufferQueue.IsEmpty)
             {
-                inputMap = _activeInput;
-            }
-            else if (_inputBufferQueue.IsEmpty)
-            {
-                inputMap = new Dictionary<string, object>();
                 queueEmpty = true;
+                TimedInputSet timedInputSet = _inputHoldTiming.TimeInput(EmptyInputSet, EmptyInputDuration);
+                inputMap = _inputMapper.Map(timedInputSet);
             }
             else
             {
+                queueEmpty = false;
                 (QueuedInput queuedInput, float duration) = _inputBufferQueue.Dequeue();
                 duration = (float)(Math.Round(duration * 60f) / 60f);
                 TimedInputSet timedInputSet = _inputHoldTiming.TimeInput(queuedInput.InputSet, duration);
                 inputMap = _inputMapper.Map(timedInputSet);
                 inputMap["Input_Id"] = queuedInput.InputId; // So client can reject duplicate inputs
-                _activeInput = new Dictionary<string, object>(inputMap); // copy so we can modify the local input map
 
                 await _overlayConnection.Send(new AnarchyInputStart(queuedInput.InputId, timedInputSet, _fps),
                     CancellationToken.None);
@@ -119,6 +123,8 @@ namespace TPP.Core
             if (_wasQueueEmptyLastPoll && !queueEmpty && _queueTransitionInputs.QueueNoLongerEmpty != null)
                 inputMap[_queueTransitionInputs.QueueNoLongerEmpty] = true;
             _wasQueueEmptyLastPoll = queueEmpty;
+
+            _activeInput = inputMap;
 
             return getResultForEndpoint(inputMap);
         }
