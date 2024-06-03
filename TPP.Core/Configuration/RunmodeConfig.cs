@@ -69,4 +69,9 @@ public sealed class InputConfig : ConfigBase
 
     [Description("Includes predetermined input aliases for a known game.")]
     public GameSpecificAlias? GameAliases = null;
+
+    [Description("If the input queue just got empty, the next input map includes this key set to 'true'")]
+    public string? QueueEmptyInputMapKey { get; init; } = null;
+    [Description("If the input queue was empty but now isn't, the next input map includes this key set to 'true'")]
+    public string? QueueNoLongerEmptyInputMapKey { get; init; } = null;
 }

@@ -133,6 +133,20 @@
             "string",
             "null"
           ]
+        },
+        "QueueEmptyInputMapKey": {
+          "description": "If the input queue just got empty, the next input map includes this key set to 'true'",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "QueueNoLongerEmptyInputMapKey": {
+          "description": "If the input queue was empty but now isn't, the next input map includes this key set to 'true'",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     }

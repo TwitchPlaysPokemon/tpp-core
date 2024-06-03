@@ -115,7 +115,8 @@ public sealed class Runmode : IWithLifecycle
             inputHoldTiming,
             inputMapper,
             inputBufferQueue,
-            config.FramesPerSecond);
+            config.FramesPerSecond,
+            new QueueTransitionInputs(config.QueueEmptyInputMapKey, config.QueueNoLongerEmptyInputMapKey));
     }
 
     private IInputMapper CreateInputMapperFromConfig(InputConfig config) =>

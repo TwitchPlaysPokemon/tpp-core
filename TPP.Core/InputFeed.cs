@@ -23,6 +23,8 @@ namespace TPP.Core
         public Task<InputMap?> HandleRequest(string? path);
     }
 
+    public record QueueTransitionInputs(string? QueueEmpty, string? QueueNoLongerEmpty);
+
     public sealed class AnarchyInputFeed : IInputFeed
     {
         // TODO: is it okay this triggers overlay events by itself? Maybe use events and hook up from the outside.
@@ -34,19 +36,23 @@ namespace TPP.Core
 
         private static long _prevInputId = 0;
         private InputMap? _activeInput = null;
+        private bool _wasQueueEmptyLastPoll = true; // treat a fresh start as "paused"
+        private readonly QueueTransitionInputs _queueTransitionInputs;
 
         public AnarchyInputFeed(
             OverlayConnection overlayConnection,
             IInputHoldTiming inputHoldTiming,
             IInputMapper inputMapper,
             InputBufferQueue<QueuedInput> inputBufferQueue,
-            float fps)
+            float fps,
+            QueueTransitionInputs queueTransitionInputs)
         {
             _overlayConnection = overlayConnection;
             _inputHoldTiming = inputHoldTiming;
             _inputMapper = inputMapper;
             _inputBufferQueue = inputBufferQueue;
             _fps = fps;
+            _queueTransitionInputs = queueTransitionInputs;
         }
 
         public async Task Enqueue(InputSet inputSet, User user, string? channel, string? channelImageUrl)
@@ -61,6 +67,16 @@ namespace TPP.Core
                     CancellationToken.None);
         }
 
+        private static string CasefoldKeyForDesmume(string key) =>
+            key.Length == 1 ? key : key.ToLower();
+
+        private static readonly Dictionary<string, Func<InputMap, InputMap>> Endpoints = new()
+        {
+            ["/gbmode_input_request_bizhawk"] = inputMap => inputMap,
+            ["/gbmode_input_request_desmume"] = inputMap => inputMap
+                .ToDictionary(kvp => CasefoldKeyForDesmume(kvp.Key), kvp => kvp.Value),
+        };
+
         public async Task<InputMap?> HandleRequest(string? path)
         {
             if (path == "/gbmode_input_complete")
@@ -68,9 +84,11 @@ namespace TPP.Core
                 _activeInput = null;
                 return null;
             }
+            if (!Endpoints.TryGetValue(path ?? "", out Func<InputMap, InputMap>? getResultForEndpoint))
+                throw new ArgumentException($"unrecognized input polling endpoint '{path}'. " +
+                                            $"Available endpoints: {string.Join(", ", Endpoints.Keys)}");
 
-            static string CasefoldKeyForDesmume(string key) => key.Length == 1 ? key : key.ToLower();
-
+            bool queueEmpty = false;
             InputMap inputMap;
             if (_activeInput != null)
             {
@@ -79,6 +97,7 @@ namespace TPP.Core
             else if (_inputBufferQueue.IsEmpty)
             {
                 inputMap = new Dictionary<string, object>();
+                queueEmpty = true;
             }
             else
             {
@@ -87,7 +106,7 @@ namespace TPP.Core
                 TimedInputSet timedInputSet = _inputHoldTiming.TimeInput(queuedInput.InputSet, duration);
                 inputMap = _inputMapper.Map(timedInputSet);
                 inputMap["Input_Id"] = queuedInput.InputId; // So client can reject duplicate inputs
-                _activeInput = inputMap;
+                _activeInput = new Dictionary<string, object>(inputMap); // copy so we can modify the local input map
 
                 await _overlayConnection.Send(new AnarchyInputStart(queuedInput.InputId, timedInputSet, _fps),
                     CancellationToken.None);
@@ -95,18 +114,13 @@ namespace TPP.Core
                     .ContinueWith(async _ => await _overlayConnection.Send(
                         new AnarchyInputStop(queuedInput.InputId), CancellationToken.None));
             }
+            if (!_wasQueueEmptyLastPoll && queueEmpty && _queueTransitionInputs.QueueEmpty != null)
+                inputMap[_queueTransitionInputs.QueueEmpty] = true;
+            if (_wasQueueEmptyLastPoll && !queueEmpty && _queueTransitionInputs.QueueNoLongerEmpty != null)
+                inputMap[_queueTransitionInputs.QueueNoLongerEmpty] = true;
+            _wasQueueEmptyLastPoll = queueEmpty;
 
-            var endpoints = new Dictionary<string, Func<InputMap>>
-            {
-                ["/gbmode_input_request_bizhawk"] = () => inputMap,
-                ["/gbmode_input_request_desmume"] = () => inputMap
-                    .ToDictionary(kvp => CasefoldKeyForDesmume(kvp.Key), kvp => kvp.Value),
-            };
-            if (endpoints.TryGetValue(path ?? "", out Func<InputMap>? getResultForEndpoint))
-                return getResultForEndpoint();
-            else
-                throw new ArgumentException($"unrecognized input polling endpoint '{path}'. " +
-                                            $"Available endpoints: {string.Join(", ", endpoints.Keys)}");
+            return getResultForEndpoint(inputMap);
         }
     }
 }
