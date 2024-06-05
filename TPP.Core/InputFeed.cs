@@ -81,8 +81,8 @@ public sealed class AnarchyInputFeed : IInputFeed
     };
 
     private static readonly InputSet EmptyInputSet = new(ImmutableList<Input>.Empty);
-    private const float PauseInputDuration = 6 / 60f;
-    private const float UnpauseInputDuration = 6 / 60f;
+    private const float PauseInputDuration = 2 / 60f;
+    private const float UnpauseInputDuration = 2 / 60f;
 
     public async Task<InputMap?> HandleRequest(string? path)
     {
