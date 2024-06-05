@@ -81,7 +81,7 @@ public sealed class AnarchyInputFeed : IInputFeed
     };
 
     private static readonly InputSet EmptyInputSet = new(ImmutableList<Input>.Empty);
-    private const float EmptyInputDuration = 6 / 60f;
+    private const float PauseInputDuration = 6 / 60f;
 
     public async Task<InputMap?> HandleRequest(string? path)
     {
@@ -101,8 +101,15 @@ public sealed class AnarchyInputFeed : IInputFeed
         if (_inputBufferQueue.IsEmpty)
         {
             queueEmpty = true;
-            TimedInputSet timedInputSet = _inputHoldTiming.TimeInput(EmptyInputSet, EmptyInputDuration);
-            inputMap = _inputMapper.Map(timedInputSet);
+            if (!_wasQueueEmptyLastPoll && _queueTransitionInputs.QueueEmpty != null)
+            {
+                inputMap = _inputMapper.Map(_inputHoldTiming.TimeInput(EmptyInputSet, PauseInputDuration));
+                inputMap[_queueTransitionInputs.QueueEmpty] = true;
+            }
+            else
+            {
+                inputMap = new Dictionary<string, object>();
+            }
         }
         else
         {
@@ -112,6 +119,8 @@ public sealed class AnarchyInputFeed : IInputFeed
             TimedInputSet timedInputSet = _inputHoldTiming.TimeInput(queuedInput.InputSet, duration);
             inputMap = _inputMapper.Map(timedInputSet);
             inputMap["Input_Id"] = queuedInput.InputId; // So client can reject duplicate inputs
+            if (_wasQueueEmptyLastPoll && _queueTransitionInputs.QueueNoLongerEmpty != null)
+                inputMap[_queueTransitionInputs.QueueNoLongerEmpty] = true;
 
             await _overlayConnection.Send(new AnarchyInputStart(queuedInput.InputId, timedInputSet, _fps),
                 CancellationToken.None);
@@ -119,12 +128,7 @@ public sealed class AnarchyInputFeed : IInputFeed
                 .ContinueWith(async _ => await _overlayConnection.Send(
                     new AnarchyInputStop(queuedInput.InputId), CancellationToken.None));
         }
-        if (!_wasQueueEmptyLastPoll && queueEmpty && _queueTransitionInputs.QueueEmpty != null)
-            inputMap[_queueTransitionInputs.QueueEmpty] = true;
-        if (_wasQueueEmptyLastPoll && !queueEmpty && _queueTransitionInputs.QueueNoLongerEmpty != null)
-            inputMap[_queueTransitionInputs.QueueNoLongerEmpty] = true;
         _wasQueueEmptyLastPoll = queueEmpty;
-
         _activeInput = inputMap;
 
         return getResultForEndpoint(inputMap);
