@@ -96,15 +96,15 @@ public sealed class AnarchyInputFeed : IInputFeed
         if (_activeInput != null)
             return getResultForEndpoint(_activeInput);
 
-        bool queueEmpty;
         InputMap inputMap;
-        if (_inputBufferQueue.IsEmpty)
+        bool queueEmpty = _inputBufferQueue.IsEmpty;
+        if (queueEmpty)
         {
-            queueEmpty = true;
             if (!_wasQueueEmptyLastPoll && _queueTransitionInputs.QueueEmpty != null)
             {
                 inputMap = _inputMapper.Map(_inputHoldTiming.TimeInput(EmptyInputSet, PauseInputDuration));
                 inputMap[_queueTransitionInputs.QueueEmpty] = true;
+                _activeInput = inputMap;
             }
             else
             {
@@ -113,7 +113,6 @@ public sealed class AnarchyInputFeed : IInputFeed
         }
         else
         {
-            queueEmpty = false;
             (QueuedInput queuedInput, float duration) = _inputBufferQueue.Dequeue();
             duration = (float)(Math.Round(duration * 60f) / 60f);
             TimedInputSet timedInputSet = _inputHoldTiming.TimeInput(queuedInput.InputSet, duration);
@@ -127,9 +126,9 @@ public sealed class AnarchyInputFeed : IInputFeed
             Task _ = Task.Delay(TimeSpan.FromSeconds(timedInputSet.HoldDuration))
                 .ContinueWith(async _ => await _overlayConnection.Send(
                     new AnarchyInputStop(queuedInput.InputId), CancellationToken.None));
+            _activeInput = inputMap;
         }
         _wasQueueEmptyLastPoll = queueEmpty;
-        _activeInput = inputMap;
 
         return getResultForEndpoint(inputMap);
     }
