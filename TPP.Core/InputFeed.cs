@@ -82,6 +82,7 @@ public sealed class AnarchyInputFeed : IInputFeed
 
     private static readonly InputSet EmptyInputSet = new(ImmutableList<Input>.Empty);
     private const float PauseInputDuration = 6 / 60f;
+    private const float UnpauseInputDuration = 6 / 60f;
 
     public async Task<InputMap?> HandleRequest(string? path)
     {
@@ -109,24 +110,32 @@ public sealed class AnarchyInputFeed : IInputFeed
             else
             {
                 inputMap = new Dictionary<string, object>();
+                // empty input map doesn't need to be stored as the active input
             }
         }
         else
         {
-            (QueuedInput queuedInput, float duration) = _inputBufferQueue.Dequeue();
-            duration = (float)(Math.Round(duration * 60f) / 60f);
-            TimedInputSet timedInputSet = _inputHoldTiming.TimeInput(queuedInput.InputSet, duration);
-            inputMap = _inputMapper.Map(timedInputSet);
-            inputMap["Input_Id"] = queuedInput.InputId; // So client can reject duplicate inputs
             if (_wasQueueEmptyLastPoll && _queueTransitionInputs.QueueNoLongerEmpty != null)
+            {
+                inputMap = _inputMapper.Map(_inputHoldTiming.TimeInput(EmptyInputSet, UnpauseInputDuration));
                 inputMap[_queueTransitionInputs.QueueNoLongerEmpty] = true;
+                _activeInput = inputMap;
+            }
+            else
+            {
+                (QueuedInput queuedInput, float duration) = _inputBufferQueue.Dequeue();
+                duration = (float)(Math.Round(duration * 60f) / 60f);
+                TimedInputSet timedInputSet = _inputHoldTiming.TimeInput(queuedInput.InputSet, duration);
+                inputMap = _inputMapper.Map(timedInputSet);
+                inputMap["Input_Id"] = queuedInput.InputId; // So client can reject duplicate inputs
 
-            await _overlayConnection.Send(new AnarchyInputStart(queuedInput.InputId, timedInputSet, _fps),
-                CancellationToken.None);
-            Task _ = Task.Delay(TimeSpan.FromSeconds(timedInputSet.HoldDuration))
-                .ContinueWith(async _ => await _overlayConnection.Send(
-                    new AnarchyInputStop(queuedInput.InputId), CancellationToken.None));
-            _activeInput = inputMap;
+                await _overlayConnection.Send(new AnarchyInputStart(queuedInput.InputId, timedInputSet, _fps),
+                    CancellationToken.None);
+                Task _ = Task.Delay(TimeSpan.FromSeconds(timedInputSet.HoldDuration))
+                    .ContinueWith(async _ => await _overlayConnection.Send(
+                        new AnarchyInputStop(queuedInput.InputId), CancellationToken.None));
+                _activeInput = inputMap;
+            }
         }
         _wasQueueEmptyLastPoll = queueEmpty;
 
