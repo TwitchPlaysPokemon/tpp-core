@@ -82,6 +82,7 @@ public sealed class AnarchyInputFeed : IInputFeed
 
     private static readonly InputSet EmptyInputSet = new(ImmutableList<Input>.Empty);
     private const float PauseInputDuration = 6 / 60f;
+    private int _pauseInputDummyId = -1;
 
     public async Task<InputMap?> HandleRequest(string? path)
     {
@@ -103,6 +104,7 @@ public sealed class AnarchyInputFeed : IInputFeed
             if (!_wasQueueEmptyLastPoll && _queueTransitionInputs.QueueEmpty != null)
             {
                 inputMap = _inputMapper.Map(_inputHoldTiming.TimeInput(EmptyInputSet, PauseInputDuration));
+                inputMap["Input_Id"] = _pauseInputDummyId--; // not strictly neccessary, just to be sure
                 inputMap[_queueTransitionInputs.QueueEmpty] = true;
                 _activeInput = inputMap;
             }
