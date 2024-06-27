@@ -46,6 +46,8 @@ namespace TPP.Core
         [EnumMember(Value = "dualn3dsscaled")] DualNintendoDSOnDSScaled, // Nintendo DS title launched on 3DS without holding Start or Select
 
         [EnumMember(Value = "dualswitchgb")] DualSwitchButAlsoIsGB, // Needed for 2024/04/01 until we can have different sides running different button profiles
+
+        [EnumMember(Value = "nestris")] NEStris, // (S)NES without Start
     }
 
     public static class ButtonProfileExtensions
@@ -181,7 +183,10 @@ namespace TPP.Core
 
                 ButtonProfile.DualSwitchButAlsoIsGB => ButtonProfile.DualSwitch.ToInputParserBuilder()
                     .Buttons("start","select")
-                    .LengthRestrictions(maxSetLength: 3, maxSequenceLength: 1)
+                    .LengthRestrictions(maxSetLength: 3, maxSequenceLength: 1),
+
+                ButtonProfile.NEStris => ButtonProfile.SNEStoNES.ToInputParserBuilder()
+                    .RemoveInputs("start")
             };
             // sanity check: we enforce the convention that all dual profile must have "dual" in their name.
             if (inputParserBuilder.IsDualRun && !profile.IsDual())

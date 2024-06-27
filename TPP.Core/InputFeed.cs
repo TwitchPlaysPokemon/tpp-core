@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,78 +8,118 @@ using NodaTime;
 using TPP.Core.Overlay;
 using TPP.Core.Overlay.Events;
 using TPP.Inputting;
+using TPP.Inputting.Inputs;
 using TPP.Model;
 using InputMap = System.Collections.Generic.IDictionary<string, object>;
 
-namespace TPP.Core
-{
-    public record QueuedInput(long InputId, InputSet InputSet);
+namespace TPP.Core;
 
-    /// <summary>
-    /// TODO: I am unsure if this structure will work for all the stuff not implemented yet (e.g. democracy, demohouses)
-    ///       or if another structure will be better.
-    /// </summary>
-    public interface IInputFeed
+public record QueuedInput(long InputId, InputSet InputSet);
+
+/// <summary>
+/// TODO: I am unsure if this structure will work for all the stuff not implemented yet (e.g. democracy, demohouses)
+///       or if another structure will be better.
+/// </summary>
+public interface IInputFeed
+{
+    public Task<InputMap?> HandleRequest(string? path);
+}
+
+public record QueueTransitionInputs(string? QueueEmpty, string? QueueNoLongerEmpty);
+
+public sealed class AnarchyInputFeed : IInputFeed
+{
+    // TODO: is it okay this triggers overlay events by itself? Maybe use events and hook up from the outside.
+    private readonly OverlayConnection _overlayConnection;
+    private readonly IInputHoldTiming _inputHoldTiming;
+    private readonly IInputMapper _inputMapper;
+    private readonly InputBufferQueue<QueuedInput> _inputBufferQueue;
+    private readonly float _fps;
+
+    private static long _prevInputId = 0;
+    private InputMap? _activeInput = null;
+    private bool _wasQueueEmptyLastPoll = true; // treat a fresh start as "paused"
+    private readonly QueueTransitionInputs _queueTransitionInputs;
+
+    public AnarchyInputFeed(
+        OverlayConnection overlayConnection,
+        IInputHoldTiming inputHoldTiming,
+        IInputMapper inputMapper,
+        InputBufferQueue<QueuedInput> inputBufferQueue,
+        float fps,
+        QueueTransitionInputs queueTransitionInputs)
     {
-        public Task<InputMap?> HandleRequest(string? path);
+        _overlayConnection = overlayConnection;
+        _inputHoldTiming = inputHoldTiming;
+        _inputMapper = inputMapper;
+        _inputBufferQueue = inputBufferQueue;
+        _fps = fps;
+        _queueTransitionInputs = queueTransitionInputs;
     }
 
-    public sealed class AnarchyInputFeed : IInputFeed
+    public async Task Enqueue(InputSet inputSet, User user, string? channel, string? channelImageUrl)
     {
-        // TODO: is it okay this triggers overlay events by itself? Maybe use events and hook up from the outside.
-        private readonly OverlayConnection _overlayConnection;
-        private readonly IInputHoldTiming _inputHoldTiming;
-        private readonly IInputMapper _inputMapper;
-        private readonly InputBufferQueue<QueuedInput> _inputBufferQueue;
-        private readonly float _fps;
+        long inputId = SystemClock.Instance.GetCurrentInstant().ToUnixTimeMilliseconds();
+        if (inputId <= _prevInputId) inputId = _prevInputId + 1;
+        _prevInputId = inputId;
+        QueuedInput queuedInput = new(inputId, inputSet);
+        bool enqueued = _inputBufferQueue.Enqueue(queuedInput);
+        if (enqueued)
+            await _overlayConnection.Send(
+                new NewAnarchyInput(queuedInput.InputId, queuedInput.InputSet, user, channel, channelImageUrl),
+                CancellationToken.None);
+    }
 
-        private static long _prevInputId = 0;
-        private InputMap? _activeInput = null;
+    private static string CasefoldKeyForDesmume(string key) =>
+        key.Length == 1 ? key : key.ToLower();
 
-        public AnarchyInputFeed(
-            OverlayConnection overlayConnection,
-            IInputHoldTiming inputHoldTiming,
-            IInputMapper inputMapper,
-            InputBufferQueue<QueuedInput> inputBufferQueue,
-            float fps)
+    private static readonly Dictionary<string, Func<InputMap, InputMap>> Endpoints = new()
+    {
+        ["/gbmode_input_request_bizhawk"] = inputMap => inputMap,
+        ["/gbmode_input_request_desmume"] = inputMap => inputMap
+            .ToDictionary(kvp => CasefoldKeyForDesmume(kvp.Key), kvp => kvp.Value),
+    };
+
+    private static readonly InputSet EmptyInputSet = new(ImmutableList<Input>.Empty);
+    private const float PauseInputDuration = 2 / 60f;
+    private const float UnpauseInputDuration = 2 / 60f;
+
+    public async Task<InputMap?> HandleRequest(string? path)
+    {
+        if (path == "/gbmode_input_complete")
         {
-            _overlayConnection = overlayConnection;
-            _inputHoldTiming = inputHoldTiming;
-            _inputMapper = inputMapper;
-            _inputBufferQueue = inputBufferQueue;
-            _fps = fps;
+            _activeInput = null;
+            return null;
         }
+        if (!Endpoints.TryGetValue(path ?? "", out Func<InputMap, InputMap>? getResultForEndpoint))
+            throw new ArgumentException($"unrecognized input polling endpoint '{path}'. " +
+                                        $"Available endpoints: {string.Join(", ", Endpoints.Keys)}");
+        if (_activeInput != null)
+            return getResultForEndpoint(_activeInput);
 
-        public async Task Enqueue(InputSet inputSet, User user, string? channel, string? channelImageUrl)
+        InputMap inputMap;
+        bool queueEmpty = _inputBufferQueue.IsEmpty;
+        if (queueEmpty)
         {
-            long inputId = SystemClock.Instance.GetCurrentInstant().ToUnixTimeMilliseconds();
-            if (inputId <= _prevInputId) inputId = _prevInputId + 1;
-            _prevInputId = inputId;
-            QueuedInput queuedInput = new(inputId, inputSet);
-            bool enqueued = _inputBufferQueue.Enqueue(queuedInput);
-            if (enqueued)
-                await _overlayConnection.Send(new NewAnarchyInput(queuedInput.InputId, queuedInput.InputSet, user, channel, channelImageUrl),
-                    CancellationToken.None);
-        }
-
-        public async Task<InputMap?> HandleRequest(string? path)
-        {
-            if (path == "/gbmode_input_complete")
+            if (!_wasQueueEmptyLastPoll && _queueTransitionInputs.QueueEmpty != null)
             {
-                _activeInput = null;
-                return null;
+                inputMap = _inputMapper.Map(_inputHoldTiming.TimeInput(EmptyInputSet, PauseInputDuration));
+                inputMap[_queueTransitionInputs.QueueEmpty] = true;
+                _activeInput = inputMap;
             }
-
-            static string CasefoldKeyForDesmume(string key) => key.Length == 1 ? key : key.ToLower();
-
-            InputMap inputMap;
-            if (_activeInput != null)
-            {
-                inputMap = _activeInput;
-            }
-            else if (_inputBufferQueue.IsEmpty)
+            else
             {
                 inputMap = new Dictionary<string, object>();
+                // empty input map doesn't need to be stored as the active input
+            }
+        }
+        else
+        {
+            if (_wasQueueEmptyLastPoll && _queueTransitionInputs.QueueNoLongerEmpty != null)
+            {
+                inputMap = _inputMapper.Map(_inputHoldTiming.TimeInput(EmptyInputSet, UnpauseInputDuration));
+                inputMap[_queueTransitionInputs.QueueNoLongerEmpty] = true;
+                _activeInput = inputMap;
             }
             else
             {
@@ -87,26 +128,17 @@ namespace TPP.Core
                 TimedInputSet timedInputSet = _inputHoldTiming.TimeInput(queuedInput.InputSet, duration);
                 inputMap = _inputMapper.Map(timedInputSet);
                 inputMap["Input_Id"] = queuedInput.InputId; // So client can reject duplicate inputs
-                _activeInput = inputMap;
 
                 await _overlayConnection.Send(new AnarchyInputStart(queuedInput.InputId, timedInputSet, _fps),
                     CancellationToken.None);
                 Task _ = Task.Delay(TimeSpan.FromSeconds(timedInputSet.HoldDuration))
                     .ContinueWith(async _ => await _overlayConnection.Send(
                         new AnarchyInputStop(queuedInput.InputId), CancellationToken.None));
+                _activeInput = inputMap;
             }
-
-            var endpoints = new Dictionary<string, Func<InputMap>>
-            {
-                ["/gbmode_input_request_bizhawk"] = () => inputMap,
-                ["/gbmode_input_request_desmume"] = () => inputMap
-                    .ToDictionary(kvp => CasefoldKeyForDesmume(kvp.Key), kvp => kvp.Value),
-            };
-            if (endpoints.TryGetValue(path ?? "", out Func<InputMap>? getResultForEndpoint))
-                return getResultForEndpoint();
-            else
-                throw new ArgumentException($"unrecognized input polling endpoint '{path}'. " +
-                                            $"Available endpoints: {string.Join(", ", endpoints.Keys)}");
         }
+        _wasQueueEmptyLastPoll = queueEmpty;
+
+        return getResultForEndpoint(inputMap);
     }
 }
