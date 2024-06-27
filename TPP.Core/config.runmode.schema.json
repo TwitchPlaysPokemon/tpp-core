@@ -72,7 +72,8 @@
             "dualgbp",
             "dualn3dsoffset",
             "dualn3dsscaled",
-            "dualswitchgb"
+            "dualswitchgb",
+            "nestris"
           ]
         },
         "FramesPerSecond": {
