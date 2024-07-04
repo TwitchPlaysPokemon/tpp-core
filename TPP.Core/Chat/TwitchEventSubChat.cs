@@ -337,7 +337,7 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
                     secondaryChat.ChannelName, cleanMessageText);
                 return;
             }
-            if (_channelState?.SlowMode != null)
+            if (_channelState?.SlowMode == true)
             {
                 // If the main channel is in slow-mode, we don't want to accept faster inputs from other channels.
                 // Emulate slow-mode by dropping too fast inputs on a per-user basis.
