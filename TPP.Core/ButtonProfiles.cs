@@ -141,6 +141,7 @@ namespace TPP.Core
                     .SimpleAliasedDPad("d", "")
                     .AnalogStick("l", true)
                     .AnalogStick("r", true)
+                    .SimpleAliasedAnalogStick("", "l", true)
                     .SimpleAliasedAnalogStick("c", "r", true)
                     .LengthRestrictions(maxSetLength: 4, maxSequenceLength: 1),
 
