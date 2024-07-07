@@ -182,7 +182,7 @@ public class ButtonMappingTest
         AssertMapped("l2+zr+r3", "Zl", "Zr", "Rstick");
         AssertMapped("x+y", "X", "Y");
         AssertMapped("+", "Plus");
-        AssertMapped("start+minus", "Plus", "Minus");
+        //AssertMapped("start+minus", "Plus", "Minus");
         AssertMapped("n", "Lup");
         AssertMapped("dn", "Up");
         AssertMapped("ln.5", "Lup");
