@@ -23,22 +23,22 @@ else
 fi
 
 myhostaddr="$(hostname -I | tr -d '[:space:]'):27017"
-mymemberstatus=$(mongo --quiet --eval 'JSON.stringify(rs.status().members)' | jq -r -c ".[] | select(.self).stateStr")
-mynumvotes=$(mongo --quiet --eval 'JSON.stringify(rs.conf().members)' | jq -r -c ".[] | select(.host == \"$myhostaddr\").votes")
-mypriority=$(mongo --quiet --eval 'JSON.stringify(rs.conf().members)' | jq -r -c ".[] | select(.host == \"$myhostaddr\").priority")
-allvotes=$(mongo --quiet --eval 'JSON.stringify(rs.conf().members)' | jq -r -c "[.[] | .votes] | add")
-allprios=$(mongo --quiet --eval 'JSON.stringify(rs.conf().members)' | jq -r -c "[.[] | .priority] | add")
-numsecondaries=$(mongo --quiet --eval 'JSON.stringify(rs.status().members)' | jq -r -c "[.[] | select(.stateStr == \"SECONDARY\")] | length")
+mymemberstatus=$(mongosh --quiet --eval 'JSON.stringify(rs.status().members)' | jq -r -c ".[] | select(.self).stateStr")
+mynumvotes=$(mongosh --quiet --eval 'JSON.stringify(rs.conf().members)' | jq -r -c ".[] | select(.host == \"$myhostaddr\").votes")
+mypriority=$(mongosh --quiet --eval 'JSON.stringify(rs.conf().members)' | jq -r -c ".[] | select(.host == \"$myhostaddr\").priority")
+allvotes=$(mongosh --quiet --eval 'JSON.stringify(rs.conf().members)' | jq -r -c "[.[] | .votes] | add")
+allprios=$(mongosh --quiet --eval 'JSON.stringify(rs.conf().members)' | jq -r -c "[.[] | .priority] | add")
+numsecondaries=$(mongosh --quiet --eval 'JSON.stringify(rs.status().members)' | jq -r -c "[.[] | select(.stateStr == \"SECONDARY\")] | length")
 
 if [ "$mymemberstatus" != "SECONDARY" ]; then
   if [ "$mymemberstatus" = "PRIMARY" ]; then
     if [[ $numsecondaries -ge 2 ]]; then
       echo "Detected current node as primary and that there are $numsecondaries secondaries that can take over."
       echo "Automatically stepping down current node..."
-      mongo --quiet --eval 'rs.stepDown()'
+      mongosh --quiet --eval 'rs.stepDown()'
       echo "Waiting 20 seconds for primary election to finish..."
       sleep 20
-      mymemberstatus=$(mongo --quiet --eval 'JSON.stringify(rs.status().members)' | jq -r -c ".[] | select(.self).stateStr")
+      mymemberstatus=$(mongosh --quiet --eval 'JSON.stringify(rs.status().members)' | jq -r -c ".[] | select(.self).stateStr")
       if [ "$mymemberstatus" != "SECONDARY" ]; then
         echo -e "${RED}Could not verify that the current node $myhostaddr is in SECONDARY state. Detected '$mymemberstatus'${NC}"
         exit 1
@@ -81,7 +81,7 @@ echo "Launching mongodb service with custom config for backup..."
 sudo touch "$logpath" && sudo chown mongodb:mongodb "$logpath" \
 && sudo -u mongodb mongod --dbpath=/var/lib/mongodb --bind_ip=127.0.0.1 --port=27018 --logappend --logpath="$logpath" &
 echo -e "${CYAN}If you cancel this script now, you need to manually stop the mongodb instance running on port 27018 first!${NC}"
-echo -e "${CYAN}To do that, run: mongo --port 27018 admin --eval \"db.shutdownServer();\"${NC}"
+echo -e "${CYAN}To do that, run: mongosh --port 27018 admin --eval \"db.shutdownServer();\"${NC}"
 sleep 10
 
 echo -e "Starting backup of database ${CYAN}$dbname${NC}, target path is $outpath"
@@ -91,7 +91,7 @@ sudo mkdir "$outpath" \
 backup_success=$?
 
 echo "Stopping mongodb server running on port 27018 ..."
-mongo --port 27018 admin --eval "db.shutdownServer();" > /dev/null
+mongosh --port 27018 admin --eval "db.shutdownServer();" > /dev/null
 sleep 3
 
 if [ "$backup_success" != "0" ]; then
