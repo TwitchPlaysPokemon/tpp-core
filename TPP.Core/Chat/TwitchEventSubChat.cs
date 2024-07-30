@@ -383,7 +383,7 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
         IncomingMessage?.Invoke(this, new MessageEventArgs(message));
     }
 
-    private static string ConstructWhisperIrcString(UserWhisperMessage whisperMessage, IImmutableList<Emote> emotes)
+    private static string ConstructWhisperIrcString(UserWhisperMessage whisperMessage)
     {
         UserWhisperMessage.Event evt = whisperMessage.Payload.Event;
         var ircTags = new Dictionary<string, string>
@@ -409,15 +409,14 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
             FromWhisper: true,
             UpdatedAt: whisperMessage.Metadata.MessageTimestamp
         ));
-        IImmutableList<Emote> emotes = []; // TODO EventSub whisper event does not supply emote data (yet)
         var message = new Message(user, whisperEvent.Whisper.Text, new MessageSource.Whisper(),
-            ConstructWhisperIrcString(whisperMessage, emotes))
+            ConstructWhisperIrcString(whisperMessage))
         {
             Details = new MessageDetails(
                 MessageId: null,
                 IsAction: false,
                 IsStaff: false,
-                Emotes: emotes
+                Emotes: []
             )
         };
         IncomingMessage?.Invoke(this, new MessageEventArgs(message));
