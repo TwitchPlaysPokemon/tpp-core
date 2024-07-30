@@ -30,7 +30,10 @@ namespace TPP.Core
 
     /// Information on a user subscribing through a gifted subscription.
     public record SubscriptionGiftInfo(
-        SubscriptionInfo SubscriptionInfo, User Gifter, int NumGiftedMonths, bool IsAnonymous);
+        User? Gifter,
+        SubscriptionTier Tier,
+        int NumGiftedMonths,
+        bool IsAnonymous);
 
     public interface ISubscriptionProcessor
     {
@@ -48,6 +51,7 @@ namespace TPP.Core
                 int NewLoyaltyLeague,
                 int CumulativeMonths,
                 bool SubCountCorrected) : SubResult;
+
             public sealed record SameMonth(int Month) : SubResult;
         }
 
@@ -62,13 +66,13 @@ namespace TPP.Core
             /// The gifter successfully received a token reward
             public sealed record Ok(int GifterTokens) : SubGiftResult;
             /// The gifter is linked to the gift recipient and has not received a token reward
-            public sealed record LinkedAccount : SubGiftResult;
+            // public sealed record LinkedAccount : SubGiftResult;
             /// The subscription was deemed a duplicate and the gifter has not received a token reward
             public sealed record SameMonth(int Month) : SubGiftResult;
         }
 
         Task<SubResult> ProcessSubscription(SubscriptionInfo subscriptionInfo);
-        Task<(SubResult, SubGiftResult)> ProcessSubscriptionGift(SubscriptionGiftInfo subscriptionGiftInfo);
+        Task<SubGiftResult> ProcessSubscriptionGift(SubscriptionGiftInfo subscriptionGiftInfo);
     }
 
     public class SubscriptionProcessor : ISubscriptionProcessor
@@ -186,31 +190,29 @@ namespace TPP.Core
                 SubCountCorrected: subCountCorrected);
         }
 
-        public async Task<(ISubscriptionProcessor.SubResult, ISubscriptionProcessor.SubGiftResult)> ProcessSubscriptionGift(
+        public async Task<ISubscriptionProcessor.SubGiftResult> ProcessSubscriptionGift(
             SubscriptionGiftInfo subscriptionGiftInfo)
         {
-            SubscriptionInfo subscriptionInfo = subscriptionGiftInfo.SubscriptionInfo;
-            ISubscriptionProcessor.SubResult subResult =
-                await ProcessSubscription(subscriptionInfo);
-            bool isLinkedAccount = await _linkedAccountRepo.AreLinked(
-                subscriptionGiftInfo.Gifter.Id,
-                subscriptionInfo.Subscriber.Id);
+            // bool isLinkedAccount = subscriptionGiftInfo.Gifter != null && await _linkedAccountRepo.AreLinked(
+            //     subscriptionGiftInfo.Gifter.Id,
+            //     subscriptionInfo.Subscriber.Id);
 
-            if (isLinkedAccount)
-                return (subResult, new ISubscriptionProcessor.SubGiftResult.LinkedAccount());
-
-            if (subResult is ISubscriptionProcessor.SubResult.SameMonth { Month: var month })
-                return (subResult, new ISubscriptionProcessor.SubGiftResult.SameMonth(month));
+            // if (isLinkedAccount)
+            //     return new ISubscriptionProcessor.SubGiftResult.LinkedAccount();
 
             const int tokensPerRank = 10;
-            int rewardTokens = subscriptionGiftInfo.NumGiftedMonths * subscriptionInfo.Tier.ToRank() * tokensPerRank;
-            await _tokenBank.PerformTransaction(new Transaction<User>(
-                subscriptionGiftInfo.Gifter,
-                rewardTokens,
-                TransactionType.SubscriptionGift
-            ));
+            int rewardTokens = subscriptionGiftInfo.NumGiftedMonths * subscriptionGiftInfo.Tier.ToRank() *
+                               tokensPerRank;
+            if (subscriptionGiftInfo.Gifter != null)
+            {
+                await _tokenBank.PerformTransaction(new Transaction<User>(
+                    subscriptionGiftInfo.Gifter,
+                    rewardTokens,
+                    TransactionType.SubscriptionGift
+                ));
+            }
 
-            return (subResult, new ISubscriptionProcessor.SubGiftResult.Ok(rewardTokens));
+            return new ISubscriptionProcessor.SubGiftResult.Ok(rewardTokens);
         }
     }
 }
