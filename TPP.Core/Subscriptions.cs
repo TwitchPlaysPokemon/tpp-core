@@ -23,7 +23,7 @@ namespace TPP.Core
         int NumMonths,
         int? StreakMonths,
         SubscriptionTier Tier,
-        string PlanName,
+        string? PlanName, // informational, IRC used to send something like "Channel\sSubscription:\s$24.99\sSub" along
         Instant SubscriptionAt,
         string? Message,
         IImmutableList<EmoteOccurrence> Emotes);

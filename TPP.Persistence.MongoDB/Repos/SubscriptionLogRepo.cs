@@ -47,7 +47,7 @@ namespace TPP.Persistence.MongoDB.Repos
         public async Task<SubscriptionLog> LogSubscription(
             string userId, Instant timestamp, int? monthsStreak, int monthsNumPrev,
             int monthsNumNew, int monthsDifference, int loyaltyLeaguePrev, int loyaltyLeagueNew, int loyaltyCompletions,
-            int rewardTokens, string? subMessage, SubscriptionTier subPlan, string subPlanName)
+            int rewardTokens, string? subMessage, SubscriptionTier subPlan, string? subPlanName)
         {
             var item = new SubscriptionLog(
                 string.Empty, userId, timestamp,

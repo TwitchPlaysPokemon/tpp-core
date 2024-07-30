@@ -20,6 +20,6 @@ namespace TPP.Persistence
             int rewardTokens,
             string? subMessage,
             SubscriptionTier subPlan,
-            string subPlanName);
+            string? subPlanName);
     }
 }
