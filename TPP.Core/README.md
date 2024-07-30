@@ -86,6 +86,7 @@ The following scopes are currently in use:
 | moderator:manage:banned_users  | Timeout, ban and unban users (tpp automod, mod commands).     |
 | moderator:manage:chat_messages | Delete chat messages (tpp automod, purge invalid bets).       |
 | moderator:manage:chat_settings | Change chat settings, e.g. emote-only mode (mod commands).    |
+| channel:read:subscriptions     | Reacting to incoming subscriptions                            |
 
 ## modes
 
