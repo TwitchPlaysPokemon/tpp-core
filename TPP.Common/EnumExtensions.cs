@@ -7,10 +7,9 @@ namespace TPP.Common
 {
     public static class EnumExtensions
     {
-        public static string? GetEnumMemberValue<T>(this T value)
-            where T : struct, IConvertible
+        public static string? GetEnumMemberValue(this Enum value)
         {
-            return typeof(T)
+            return value.GetType()
                 .GetTypeInfo()
                 .DeclaredMembers
                 .SingleOrDefault(x => x.Name == value.ToString())
