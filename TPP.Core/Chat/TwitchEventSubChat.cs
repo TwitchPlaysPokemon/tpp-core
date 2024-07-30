@@ -77,6 +77,12 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
                     await MessageReceived(chatMessage);
                 else if (notification is UserWhisperMessage whisperMessage)
                     await WhisperReceived(whisperMessage);
+                else if (notification is ChannelSubscribe channelSubscribe)
+                    await ChannelSubscribeReceived(channelSubscribe); // new subscriptions only
+                else if (notification is ChannelSubscriptionMessage channelSubscriptionMessage)
+                    await ChannelSubscriptionMessageReceived(channelSubscriptionMessage); // resubscriptions only
+                else if (notification is ChannelSubscriptionGift channelSubscriptionGift)
+                    await ChannelSubscriptionGiftReceived(channelSubscriptionGift);
                 else if (notification is ChannelChatSettingsUpdate settingsUpdate)
                     _channelState = settingsUpdate.Payload.Event;
                 else
@@ -96,6 +102,12 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
                 new ChannelChatMessage.Condition(BroadcasterUserId: _channelId, UserId: _userId).AsDict()),
             _twitchApi.SubscribeToEventSub<UserWhisperMessage>(session.Id,
                 new UserWhisperMessage.Condition(UserId: _userId).AsDict()),
+            _twitchApi.SubscribeToEventSub<ChannelSubscribe>(session.Id,
+                new ChannelSubscribe.Condition(BroadcasterUserId: _channelId).AsDict()),
+            _twitchApi.SubscribeToEventSub<ChannelSubscriptionMessage>(session.Id,
+                new ChannelSubscriptionMessage.Condition(BroadcasterUserId: _channelId).AsDict()),
+            _twitchApi.SubscribeToEventSub<ChannelSubscriptionGift>(session.Id,
+                new ChannelSubscriptionGift.Condition(BroadcasterUserId: _channelId).AsDict()),
             _twitchApi.SubscribeToEventSub<ChannelChatSettingsUpdate>(session.Id,
                 new ChannelChatSettingsUpdate.Condition(BroadcasterUserId: _channelId, UserId: _userId).AsDict())
         );
@@ -409,5 +421,23 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
             )
         };
         IncomingMessage?.Invoke(this, new MessageEventArgs(message));
+    }
+
+    private async Task ChannelSubscribeReceived(ChannelSubscribe channelSubscribe)
+    {
+        // TODO handle
+        await Task.CompletedTask;
+    }
+
+    private async Task ChannelSubscriptionMessageReceived(ChannelSubscriptionMessage channelSubscriptionMessage)
+    {
+        // TODO handle
+        await Task.CompletedTask;
+    }
+
+    private async Task ChannelSubscriptionGiftReceived(ChannelSubscriptionGift channelSubscriptionGift)
+    {
+        // TODO handle
+        await Task.CompletedTask;
     }
 }
