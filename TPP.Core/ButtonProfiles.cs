@@ -143,7 +143,7 @@ namespace TPP.Core
                     .AnalogStick("r", true)
                     .SimpleAliasedAnalogStick("", "l", true)
                     .SimpleAliasedAnalogStick("c", "r", true)
-                    .Conflicts(("plus", "minus"), ("select", "start"), ("minus", "start"), ("plus", "select")) // Screenshot shortcut when using Wii U controller
+                    //.Conflicts(("plus", "minus"), ("select", "start"), ("minus", "start"), ("plus", "select")) // Screenshot shortcut when using Wii U controller
                     .LengthRestrictions(maxSetLength: 4, maxSequenceLength: 1),
 
                 ButtonProfile.SuperGameBoy => ButtonProfile.GameBoy.ToInputParserBuilder(),
