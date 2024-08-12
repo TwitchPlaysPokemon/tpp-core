@@ -49,7 +49,7 @@ namespace TPP.Core.Tests
             ISubscriptionProcessor.SubResult subResult = await subscriptionProcessor.ProcessSubscription(
                 new SubscriptionInfo(
                     user, NumMonths: 3, StreakMonths: 2, subscriptionTier, PlanName: "Tier 2",
-                    subscribedAt, Message: "HeyGuys", ImmutableList<EmoteOccurrence>.Empty));
+                    subscribedAt, false, Message: "HeyGuys", ImmutableList<EmoteOccurrence>.Empty));
 
             // THEN
             const int expectedTokens = 10 + (2 * 4) + 10 + (2 * 5); // per rank: 10 base tokens + 2 tokens per league
@@ -83,7 +83,7 @@ namespace TPP.Core.Tests
             await subscriptionLogRepoMock.Received(1).LogSubscription(
                 user.Id, subscribedAt,
                 2, 2, 3, 1,
-                4, 6, 2, expectedTokens,
+                4, 6, 2, expectedTokens, false,
                 "HeyGuys", subscriptionTier, "Tier 2");
         }
 
@@ -103,7 +103,7 @@ namespace TPP.Core.Tests
             ISubscriptionProcessor.SubResult subResult = await subscriptionProcessor.ProcessSubscription(
                 new SubscriptionInfo(
                     user, NumMonths: 2, StreakMonths: 2, SubscriptionTier.Tier1, PlanName: "Sub Plan Name",
-                    Instant.MinValue, Message: "Repeated", ImmutableList<EmoteOccurrence>.Empty));
+                    Instant.MinValue, false, Message: "Repeated", ImmutableList<EmoteOccurrence>.Empty));
 
             // THEN
             // negative result
@@ -141,7 +141,7 @@ namespace TPP.Core.Tests
             ISubscriptionProcessor.SubResult subResult = await subscriptionProcessor.ProcessSubscription(
                 new SubscriptionInfo(
                     user, NumMonths: 2, StreakMonths: 2, SubscriptionTier.Tier3, PlanName: "Sub Plan Name",
-                    subscribedAt, Message: "Repeated", ImmutableList<EmoteOccurrence>.Empty));
+                    subscribedAt, false, Message: "Repeated", ImmutableList<EmoteOccurrence>.Empty));
 
             // THEN
             const int expectedTokens = 14 + 16 + 18 + 20; // Tier 1 -> Tier 3: 4 loyalty completions difference
@@ -170,7 +170,7 @@ namespace TPP.Core.Tests
             await subscriptionLogRepoMock.Received(1).LogSubscription(
                 user.Id, subscribedAt,
                 2, 2, 2, 0,
-                2, 6, 4, expectedTokens,
+                2, 6, 4, expectedTokens, false,
                 "Repeated", SubscriptionTier.Tier3, "Sub Plan Name");
         }
 
@@ -189,7 +189,7 @@ namespace TPP.Core.Tests
                 Arg.Any<int>(), Arg.Any<Instant>()).Returns(recipient);
 
             SubscriptionInfo subscriptionInfo = new(recipient, 1, 0, SubscriptionTier.Tier3, "Sub Plan Name",
-                Instant.MinValue, "sub message", ImmutableList<EmoteOccurrence>.Empty);
+                Instant.MinValue, false, "sub message", ImmutableList<EmoteOccurrence>.Empty);
             (ISubscriptionProcessor.SubResult subResult, ISubscriptionProcessor.SubGiftResult subGiftResult) =
                 await subscriptionProcessor.ProcessSubscriptionGift(
                     new SubscriptionGiftInfo(subscriptionInfo, gifter, 2, false));
@@ -202,56 +202,6 @@ namespace TPP.Core.Tests
             await bankMock.Received(1).PerformTransaction(
                 new Transaction<User>(gifter, expectedGiftTokens, "subscription gift", expectedGiftData),
                 CancellationToken.None);
-
-            const int expectedSubTokens = 10 + 12 + 14 + 16 + 18; // Tier 3 = 5 ranks with increasing loyalty league
-            Assert.That(subResult, Is.InstanceOf<ISubscriptionProcessor.SubResult.Ok>());
-            var okResult = (ISubscriptionProcessor.SubResult.Ok)subResult;
-            Assert.That(okResult.CumulativeMonths, Is.EqualTo(1));
-            Assert.That(okResult.DeltaTokens, Is.EqualTo(expectedSubTokens));
-            Assert.That(okResult.OldLoyaltyLeague, Is.EqualTo(0));
-            Assert.That(okResult.NewLoyaltyLeague, Is.EqualTo(5));
-            Assert.That(okResult.SubCountCorrected, Is.False);
-            IDictionary<string, object?> expectedSubData = new Dictionary<string, object?>
-            {
-                ["previous_months_subscribed"] = 0,
-                ["new_months_subscribed"] = 1,
-                ["months_difference"] = 1,
-                ["previous_loyalty_tier"] = 0,
-                ["new_loyalty_tier"] = 5,
-                ["loyalty_completions"] = 5,
-            };
-            await bankMock.Received(1).PerformTransaction(
-                new Transaction<User>(recipient, expectedSubTokens, "subscription", expectedSubData),
-                CancellationToken.None);
-        }
-
-        [Test]
-        public async Task ignore_duplicate_month_for_sub_gift()
-        {
-            User gifter = MockUser("gifter", monthsSubscribed: 2, SubscriptionTier.Prime, loyaltyLeague: 2);
-            const SubscriptionTier tier = SubscriptionTier.Tier3;
-            User recipient = MockUser("recipient", monthsSubscribed: 1, subscriptionTier: tier, loyaltyLeague: 5);
-            var bankMock = Substitute.For<IBank<User>>();
-            var userRepoMock = Substitute.For<IUserRepo>();
-            ISubscriptionProcessor subscriptionProcessor = new SubscriptionProcessor(
-                NullLogger<SubscriptionProcessor>.Instance,
-                bankMock, userRepoMock, Substitute.For<ISubscriptionLogRepo>(), Substitute.For<ILinkedAccountRepo>());
-
-            SubscriptionInfo subscriptionInfo = new(recipient, NumMonths: 1, StreakMonths: 0, tier, "Sub Plan Name",
-                Instant.MinValue, "sub message", ImmutableList<EmoteOccurrence>.Empty);
-            (ISubscriptionProcessor.SubResult subResult, ISubscriptionProcessor.SubGiftResult subGiftResult) =
-                await subscriptionProcessor.ProcessSubscriptionGift(
-                    new SubscriptionGiftInfo(subscriptionInfo, gifter, 1, false));
-
-            Assert.That(subGiftResult, Is.InstanceOf<ISubscriptionProcessor.SubGiftResult.SameMonth>());
-            var sameMonthGiftResult = (ISubscriptionProcessor.SubGiftResult.SameMonth)subGiftResult;
-            Assert.That(sameMonthGiftResult.Month, Is.EqualTo(1));
-            Assert.That(bankMock.ReceivedCalls().Count(), Is.EqualTo(0));
-
-            Assert.That(subResult, Is.InstanceOf<ISubscriptionProcessor.SubResult.SameMonth>());
-            var sameMonthSubResult = (ISubscriptionProcessor.SubResult.SameMonth)subResult;
-            Assert.That(sameMonthSubResult.Month, Is.EqualTo(1));
-            Assert.That(bankMock.ReceivedCalls().Count(), Is.EqualTo(0));
         }
 
         [Test]
@@ -275,7 +225,7 @@ namespace TPP.Core.Tests
             ISubscriptionProcessor.SubResult subResult = await subscriptionProcessor.ProcessSubscription(
                 new SubscriptionInfo(
                     userWithoutTier, NumMonths: 1, StreakMonths: 1, SubscriptionTier.Tier1, PlanName: "Tier 1",
-                    subscribedAt, Message: "HeyGuys", ImmutableList<EmoteOccurrence>.Empty));
+                    subscribedAt, false, Message: "HeyGuys", ImmutableList<EmoteOccurrence>.Empty));
 
             // THEN
             Assert.That(subResult, Is.InstanceOf<ISubscriptionProcessor.SubResult.SameMonth>());

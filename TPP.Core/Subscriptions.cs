@@ -25,6 +25,7 @@ namespace TPP.Core
         SubscriptionTier Tier,
         string? PlanName, // informational, IRC used to send something like "Channel\sSubscription:\s$24.99\sSub" along
         Instant SubscriptionAt,
+        bool IsGift,
         string? Message,
         IImmutableList<EmoteOccurrence> Emotes);
 
@@ -123,7 +124,8 @@ namespace TPP.Core
             }
             // If our internal months subscribed count is less than what Twitch says it is,
             // we update our count and give the subscriber "back pay" tokens.
-            // This can occur when users (re)subscribe while the tpp bot is down.
+            // This can occur when users (re)subscribe while the tpp bot is down,
+            // or does not trigger the resubscription message for one or more months.
 
             Debug.Assert(subscriptionInfo.NumMonths > user.MonthsSubscribed ||
                          (subscriptionInfo.NumMonths == user.MonthsSubscribed &&
@@ -160,7 +162,7 @@ namespace TPP.Core
             await _subscriptionLogRepo.LogSubscription(
                 user.Id, subscriptionInfo.SubscriptionAt,
                 subscriptionInfo.StreakMonths, user.MonthsSubscribed, subscriptionInfo.NumMonths, monthsDifference,
-                oldLoyaltyLeague, newLoyaltyLeague, loyaltyCompletions, tokens,
+                oldLoyaltyLeague, newLoyaltyLeague, loyaltyCompletions, tokens, subscriptionInfo.IsGift,
                 subscriptionInfo.Message, subscriptionInfo.Tier, subscriptionInfo.PlanName);
 
             await _tokenBank.PerformTransaction(new Transaction<User>(

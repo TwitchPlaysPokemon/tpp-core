@@ -18,6 +18,7 @@ namespace TPP.Persistence
             int loyaltyLeagueNew,
             int loyaltyCompletions,
             int rewardTokens,
+            bool isGift,
             string? subMessage,
             SubscriptionTier subPlan,
             string? subPlanName);

@@ -32,6 +32,9 @@ namespace TPP.Persistence.MongoDB.Repos
                 cm.MapProperty(i => i.LoyaltyLeagueNew).SetElementName("new_loyalty_tier");
                 cm.MapProperty(i => i.LoyaltyCompletions).SetElementName("loyalty_completions");
                 cm.MapProperty(i => i.RewardTokens).SetElementName("tokens");
+                cm.MapProperty(i => i.IsGift).SetElementName("is_gift")
+                    .SetDefaultValue(false)
+                    .SetIgnoreIfNull(true);
                 cm.MapProperty(i => i.SubMessage).SetElementName("message");
                 cm.MapProperty(i => i.SubPlan).SetElementName("plan");
                 cm.MapProperty(i => i.SubPlanName).SetElementName("plan_name");
@@ -47,12 +50,12 @@ namespace TPP.Persistence.MongoDB.Repos
         public async Task<SubscriptionLog> LogSubscription(
             string userId, Instant timestamp, int? monthsStreak, int monthsNumPrev,
             int monthsNumNew, int monthsDifference, int loyaltyLeaguePrev, int loyaltyLeagueNew, int loyaltyCompletions,
-            int rewardTokens, string? subMessage, SubscriptionTier subPlan, string? subPlanName)
+            int rewardTokens, bool isGift, string? subMessage, SubscriptionTier subPlan, string? subPlanName)
         {
             var item = new SubscriptionLog(
                 string.Empty, userId, timestamp,
                 monthsStreak, monthsNumPrev, monthsNumNew, monthsDifference,
-                loyaltyLeaguePrev, loyaltyLeagueNew, loyaltyCompletions, rewardTokens,
+                loyaltyLeaguePrev, loyaltyLeagueNew, loyaltyCompletions, rewardTokens, isGift,
                 subMessage, subPlan, subPlanName);
             await Collection.InsertOneAsync(item);
             return item;

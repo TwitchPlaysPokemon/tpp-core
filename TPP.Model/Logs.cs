@@ -83,6 +83,7 @@ namespace TPP.Model
         int LoyaltyLeagueNew,
         int LoyaltyCompletions,
         int RewardTokens,
+        bool IsGift,
         string? SubMessage,
         SubscriptionTier SubPlan,
         string? SubPlanName);
