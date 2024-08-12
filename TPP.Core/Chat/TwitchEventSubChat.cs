@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -10,6 +11,8 @@ using Microsoft.Extensions.Logging;
 using NodaTime;
 using TPP.Common;
 using TPP.Common.Utils;
+using TPP.Core.Overlay;
+using TPP.Core.Overlay.Events;
 using TPP.Core.Utils;
 using TPP.Persistence;
 using TPP.Twitch.EventSub;
@@ -30,6 +33,9 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
     private readonly TwitchApi _twitchApi;
     private readonly IClock _clock;
     private readonly IUserRepo _userRepo;
+    private readonly ISubscriptionProcessor _subscriptionProcessor;
+    private readonly OverlayConnection _overlayConnection;
+    private readonly IMessageSender _responseSender;
 
     private readonly bool _coStreamInputsEnabled;
     private readonly bool _coStreamInputsOnlyLive;
@@ -49,6 +55,9 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
         IClock clock,
         TwitchApi twitchApi,
         IUserRepo userRepo,
+        ISubscriptionProcessor subscriptionProcessor,
+        OverlayConnection overlayConnection,
+        IMessageSender responseSender,
         string channelId,
         string userId,
         bool coStreamInputsEnabled,
@@ -59,6 +68,9 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
         _twitchApi = twitchApi;
         _clock = clock;
         _userRepo = userRepo;
+        _subscriptionProcessor = subscriptionProcessor;
+        _overlayConnection = overlayConnection;
+        _responseSender = responseSender;
         _channelId = channelId;
         _userId = userId;
         _coStreamInputsEnabled = coStreamInputsEnabled;
@@ -422,21 +434,175 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
         IncomingMessage?.Invoke(this, new MessageEventArgs(message));
     }
 
+    private static SubscriptionTier ParseTier(ChannelSubscribe.Tier tier) =>
+        tier switch
+        {
+            ChannelSubscribe.Tier.Tier1000 => SubscriptionTier.Tier1,
+            ChannelSubscribe.Tier.Tier2000 => SubscriptionTier.Tier2,
+            ChannelSubscribe.Tier.Tier3000 => SubscriptionTier.Tier3,
+        };
+
     private async Task ChannelSubscribeReceived(ChannelSubscribe channelSubscribe)
     {
-        // TODO handle
-        await Task.CompletedTask;
+        ChannelSubscribe.Event evt = channelSubscribe.Payload.Event;
+        Debug.Assert(evt.BroadcasterUserId == _channelId, "Must only process subs of own channel");
+        User subscriber = await _userRepo.RecordUser(new UserInfo(
+            Id: evt.UserId,
+            TwitchDisplayName: evt.UserName,
+            SimpleName: evt.UserLogin,
+            UpdatedAt: channelSubscribe.Metadata.MessageTimestamp
+        ));
+        // If a user subscribes, then cancels, and later subscribes again, I believe we get this message.
+        // This event does not tell us the cumulative months, so let's just guess using our previous knowledge.
+        int cumulativeMonths = subscriber.MonthsSubscribed + 1;
+        SubscriptionInfo subscriptionInfo = new(
+            Subscriber: subscriber,
+            NumMonths: cumulativeMonths,
+            StreakMonths: null, // this is a new subscription, hence no streak
+            Tier: ParseTier(evt.Tier),
+            PlanName: null, // EventSub does not give us the informational plan name (like "Channel Subscription: $24.99 Sub")
+            SubscriptionAt: channelSubscribe.Metadata.MessageTimestamp,
+            IsGift: evt.IsGift,
+            Message: null, // Only the "subscription message event" (resubs) has user defined messages
+            Emotes: []
+        );
+        ISubscriptionProcessor.SubResult subResult = await _subscriptionProcessor
+            .ProcessSubscription(subscriptionInfo);
+
+        string response = BuildSubResponse(subResult, null, false);
+        await _responseSender.SendWhisper(subscriptionInfo.Subscriber, response);
+        await _overlayConnection.Send(new NewSubscriber
+        {
+            User = subscriptionInfo.Subscriber,
+            Emotes = subscriptionInfo.Emotes.Select(EmoteInfo.FromOccurence).ToImmutableList(),
+            SubMessage = subscriptionInfo.Message,
+            ShareSub = true,
+        }, CancellationToken.None);
     }
 
     private async Task ChannelSubscriptionMessageReceived(ChannelSubscriptionMessage channelSubscriptionMessage)
     {
-        // TODO handle
-        await Task.CompletedTask;
+        ChannelSubscriptionMessage.Event evt = channelSubscriptionMessage.Payload.Event;
+        Debug.Assert(evt.BroadcasterUserId == _channelId, "Must only process subs of own channel");
+        User subscriber = await _userRepo.RecordUser(new UserInfo(
+            Id: evt.UserId,
+            TwitchDisplayName: evt.UserName,
+            SimpleName: evt.UserLogin,
+            UpdatedAt: channelSubscriptionMessage.Metadata.MessageTimestamp
+        ));
+        SubscriptionInfo subscriptionInfo = new(
+            Subscriber: subscriber,
+            NumMonths: evt.CumulativeMonths,
+            StreakMonths: evt.StreakMonths,
+            Tier: ParseTier(evt.Tier),
+            PlanName: null, // EventSub does not give us the informational plan name (like "Channel Subscription: $24.99 Sub")
+            SubscriptionAt: channelSubscriptionMessage.Metadata.MessageTimestamp,
+            IsGift: false, // Resubscriptions are never gifts. Gifts are always "new" subscriptions, not continuations
+            Message: evt.Message.Text,
+            Emotes: evt.Message.Emotes.Select(e => new EmoteOccurrence(
+                    e.Id, evt.Message.Text.Substring(e.Begin, e.End - e.Begin + 1), e.Begin, e.End))
+                .ToImmutableList()
+        );
+        ISubscriptionProcessor.SubResult subResult = await _subscriptionProcessor.ProcessSubscription(
+            subscriptionInfo);
+
+        string response = BuildSubResponse(subResult, null, false);
+        await _responseSender.SendWhisper(subscriptionInfo.Subscriber, response);
+
+        await _overlayConnection.Send(new NewSubscriber
+        {
+            User = subscriptionInfo.Subscriber,
+            Emotes = subscriptionInfo.Emotes.Select(EmoteInfo.FromOccurence).ToImmutableList(),
+            SubMessage = subscriptionInfo.Message,
+            ShareSub = true,
+        }, CancellationToken.None);
     }
 
     private async Task ChannelSubscriptionGiftReceived(ChannelSubscriptionGift channelSubscriptionGift)
     {
-        // TODO handle
-        await Task.CompletedTask;
+        ChannelSubscriptionGift.Event evt = channelSubscriptionGift.Payload.Event;
+        Debug.Assert(evt.BroadcasterUserId == _channelId, "Must only process subs of own channel");
+        if (evt.IsAnonymous)
+        {
+            _logger.LogDebug("Skipping processing of sub gift event because gifter is anonymous");
+            return;
+        }
+
+        int? cumulativeTotal = evt.CumulativeTotal; // TODO use?
+        User gifter = await _userRepo.RecordUser(new UserInfo(
+            Id: evt.UserId!,
+            TwitchDisplayName: evt.UserName!,
+            SimpleName: evt.UserLogin!,
+            UpdatedAt: channelSubscriptionGift.Metadata.MessageTimestamp
+        ));
+        SubscriptionGiftInfo subscriptionGiftInfo = new(
+            Gifter: gifter,
+            Tier: ParseTier(evt.Tier),
+            SubscriptionGiftAt: channelSubscriptionGift.Metadata.MessageTimestamp,
+            NumGifts: evt.Total
+        );
+        ISubscriptionProcessor.SubGiftResult subGiftResult = await _subscriptionProcessor.ProcessSubscriptionGift(
+            subscriptionGiftInfo);
+        string subGiftResponse = subGiftResult switch
+        {
+            ISubscriptionProcessor.SubGiftResult.OkButLinked {GifterTokens: 0, LinkedUsers: [var linked]}  =>
+                $"As you are linked to the account '{linked.Name}' you have gifted to, " +
+                $"you have not received a token bonus. " +
+                "The recipient account still gains the normal benefits however. Thanks for subscribing!",
+            ISubscriptionProcessor.SubGiftResult.OkButLinked {GifterTokens: 0, LinkedUsers: var linked}  =>
+                $"As you are linked to the accounts you have gifted to " +
+                $"({string.Join(", ", linked.Select(u => u.Name))}), you have not received a token bonus. " +
+                "The recipient accounts still gain the normal benefits however. Thanks for subscribing!",
+            ISubscriptionProcessor.SubGiftResult.OkButLinked {GifterTokens: var tokens, LinkedUsers: var linked} =>
+                $"Thank you for your generosity! You received T{tokens} tokens for giving a gift subscription. " +
+                $"Note that as you are linked to some accounts you have gifted to " +
+                $"({string.Join(", ", linked.Select(u => u.Name))}), you have received a smaller token bonus. " +
+                "The recipient accounts still gain the normal benefits however. Thanks for subscribing!",
+            ISubscriptionProcessor.SubGiftResult.Ok { GifterTokens: var tokens, NumGifts: 1 } =>
+                $"Thank you for your generosity! You received T{tokens} tokens for giving a gift subscription. " +
+                "The recipient has been notified and awarded their token benefits.",
+            ISubscriptionProcessor.SubGiftResult.Ok { GifterTokens: var tokens } =>
+                $"Thank you for your generosity! You received T{tokens} tokens for giving some gift subscriptions. " +
+                "The recipients have been notified and awarded their token benefits.",
+            _ => throw new ArgumentOutOfRangeException(nameof(subGiftResult))
+        };
+        await _responseSender.SendWhisper(subscriptionGiftInfo.Gifter, subGiftResponse);
+    }
+
+    private static string BuildSubResponse(
+        ISubscriptionProcessor.SubResult subResult, User? gifter, bool isAnonymous)
+    {
+        return subResult switch
+        {
+            ISubscriptionProcessor.SubResult.Ok ok => BuildOkMessage(ok, gifter, isAnonymous),
+            ISubscriptionProcessor.SubResult.SameMonth sameMonth =>
+                $"We detected that you've already announced your resub for month {sameMonth.Month}, " +
+                "and received the appropriate tokens. " +
+                "If you believe this is in error, please contact a moderator so this can be corrected.",
+            _ => throw new ArgumentOutOfRangeException(nameof(subResult)),
+        };
+
+        static string BuildOkMessage(ISubscriptionProcessor.SubResult.Ok ok, User? gifter, bool isAnonymous)
+        {
+            string message = "";
+            if (ok.SubCountCorrected)
+                message +=
+                    $"We detected that the amount of months subscribed ({ok.CumulativeMonths}) is lower than " +
+                    "our system expected. This happened due to erroneously detected subscriptions in the past. " +
+                    "Your account data has been adjusted accordingly, and you will receive your rewards normally. ";
+            if (ok.NewLoyaltyLeague > ok.OldLoyaltyLeague)
+                message += $"You reached Loyalty League {ok.NewLoyaltyLeague}! ";
+            if (ok.DeltaTokens > 0)
+                message += $"You gained T{ok.DeltaTokens} tokens! ";
+            if (gifter != null && isAnonymous)
+                message += "An anonymous user gifted you a subscription!";
+            else if (gifter != null && !isAnonymous)
+                message += $"{gifter.Name} gifted you a subscription!";
+            else if (ok.CumulativeMonths > 1)
+                message += "Thank you for resubscribing!";
+            else
+                message += "Thank you for subscribing!";
+            return message;
+        }
     }
 }

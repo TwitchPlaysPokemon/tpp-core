@@ -50,12 +50,13 @@ namespace TPP.Core.Chat
                 chatConfig.RefreshToken,
                 chatConfig.AppClientId,
                 chatConfig.AppClientSecret);
+            _twitchChatSender = new TwitchChatSender(loggerFactory, TwitchApi, chatConfig, useTwitchReplies);
             TwitchEventSubChat = new TwitchEventSubChat(loggerFactory, clock, TwitchApi, userRepo,
+                subscriptionProcessor, overlayConnection, _twitchChatSender,
                 chatConfig.ChannelId, chatConfig.UserId,
                 chatConfig.CoStreamInputsEnabled, chatConfig.CoStreamInputsOnlyLive, coStreamChannelsRepo);
 
             TwitchEventSubChat.IncomingMessage += MessageReceived;
-            _twitchChatSender = new TwitchChatSender(loggerFactory, TwitchApi, chatConfig, useTwitchReplies);
             _twitchChatModeChanger = new TwitchChatModeChanger(
                 loggerFactory.CreateLogger<TwitchChatModeChanger>(), TwitchApi, chatConfig);
             _twitchChatExecutor = new TwitchChatExecutor(loggerFactory.CreateLogger<TwitchChatExecutor>(),

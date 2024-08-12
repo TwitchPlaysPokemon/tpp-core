@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.IdGenerators;
@@ -60,5 +61,10 @@ namespace TPP.Persistence.MongoDB.Repos
             await Collection.InsertOneAsync(item);
             return item;
         }
+
+        public Task<List<string>> FindRecentGiftSubs(Instant cutoff) => Collection
+            .Find(log => log.IsGift && log.Timestamp >= cutoff)
+            .Project(log => log.UserId)
+            .ToListAsync();
     }
 }
