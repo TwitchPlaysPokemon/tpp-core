@@ -31,7 +31,14 @@ public class EventSubClient
 
     private readonly TtlSet<string> _seenMessageIDs;
 
-    public enum DisconnectReason { KeepaliveTimeout, RemoteDisconnected }
+    public record DisconnectReason
+    {
+        private DisconnectReason() { } // simulate a sum type with a closed hierarchy
+        public sealed record KeepaliveTimeout(Duration Timeout) : DisconnectReason;
+        public sealed record ConnectionClosed : DisconnectReason;
+        public sealed record WebsocketClosed(int CloseStatus, string? CloseStatusDescription) : DisconnectReason;
+    }
+
     public event EventHandler<INotification>? NotificationReceived;
     public event EventHandler<Revocation>? RevocationReceived;
     public event EventHandler<SessionWelcome>? Connected;
@@ -55,7 +62,15 @@ public class EventSubClient
         _seenMessageIDs = new TtlSet<string>(MaxMessageAge, _clock);
     }
 
-    private static async Task<string?> ReadMessageText(WebSocket webSocket, CancellationToken cancellationToken)
+    private record ReadMessageResponse
+    {
+        private ReadMessageResponse() { } // simulate a sum type with a closed hierarchy
+        public sealed record Ok(ParseResult Result) : ReadMessageResponse;
+        public sealed record ConnectionClosed : ReadMessageResponse;
+        public sealed record WebsocketClosed(int CloseStatus, string? CloseStatusDescription) : ReadMessageResponse;
+    }
+
+    private static async Task<ReadMessageResponse> ReadMessage(WebSocket webSocket, CancellationToken cancellationToken)
     {
         var bufferSegment = new ArraySegment<byte>(new byte[8192]);
         await using var ms = new MemoryStream();
@@ -69,12 +84,13 @@ public class EventSubClient
             catch (WebSocketException e) when (e.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
             {
                 // This isn't a nice way to close the connection, but let's treat it as a normal closure for simplicity.
-                return null;
+                return new ReadMessageResponse.ConnectionClosed();
             }
             if (result.CloseStatus != null)
             {
                 await webSocket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, string.Empty, cancellationToken);
-                return null;
+                return new ReadMessageResponse.WebsocketClosed((int)result.CloseStatus.Value,
+                    result.CloseStatusDescription);
             }
             if (result.MessageType != WebSocketMessageType.Text)
             {
@@ -90,15 +106,8 @@ public class EventSubClient
             throw new TaskCanceledException();
 
         ms.Seek(0, SeekOrigin.Begin);
-        return await new StreamReader(ms, Utf8NoBom).ReadToEndAsync(cancellationToken);
-    }
-
-    private static async Task<ParseResult?> ReadMessage(WebSocket webSocket, CancellationToken cancellationToken)
-    {
-        string? json = await ReadMessageText(webSocket, cancellationToken);
-        if (json == null)
-            return null; // connection closed
-        return Parse(json);
+        string json = await new StreamReader(ms, Utf8NoBom).ReadToEndAsync(cancellationToken);
+        return new ReadMessageResponse.Ok(Parse(json));
     }
 
     /// <summary>
@@ -132,7 +141,7 @@ public class EventSubClient
         {
             // Don't pass the cancellation token here. Instead, once cancelled we perform a graceful websocket closure.
             // Otherwise the websocket would be immediately put in an aborted state, but we're not in that of a hurry.
-            Task<ParseResult?> readTask = ReadMessage(webSocketBox.WebSocket, CancellationToken.None);
+            Task<ReadMessageResponse> readTask = ReadMessage(webSocketBox.WebSocket, CancellationToken.None);
             Instant assumeDeadAt = lastMessageTimestamp + KeepaliveDuration + KeepAliveGrace;
             Instant now = _clock.GetCurrentInstant();
             Task timeoutTask = assumeDeadAt < now
@@ -156,10 +165,15 @@ public class EventSubClient
                 // Regarding "Keepalive message", Twitch recommends:
                 // If your client doesn't receive an event or keepalive message for longer than keepalive_timeout_seconds,
                 // you should assume the connection is lost and reconnect to the server and resubscribe to the events.
-                return DisconnectReason.KeepaliveTimeout;
-            ParseResult? parseResult = await readTask;
-            if (parseResult == null) // connection closed
-                return DisconnectReason.RemoteDisconnected;
+                return new DisconnectReason.KeepaliveTimeout(KeepaliveDuration);
+            ReadMessageResponse messageResult = await readTask;
+            if (messageResult is ReadMessageResponse.ConnectionClosed)
+                return new DisconnectReason.ConnectionClosed();
+            if (messageResult is ReadMessageResponse.WebsocketClosed closed)
+                return new DisconnectReason.WebsocketClosed(closed.CloseStatus, closed.CloseStatusDescription);
+            if (messageResult is not ReadMessageResponse.Ok(var parseResult))
+                throw new ArgumentOutOfRangeException(nameof(messageResult));
+
             if (parseResult is not ParseResult.Ok(var message))
             {
                 if (parseResult is ParseResult.InvalidMessage(var error))
@@ -238,7 +252,9 @@ public class EventSubClient
     {
         var newWebSocket = new ClientWebSocket();
         await newWebSocket.ConnectAsync(reconnectUri, cancellationToken);
-        ParseResult? firstReceivedMessage = await ReadMessage(newWebSocket, cancellationToken);
+        ReadMessageResponse firstReceivedWebsocketMessage = await ReadMessage(newWebSocket, cancellationToken);
+        if (firstReceivedWebsocketMessage is not ReadMessageResponse.Ok(var firstReceivedMessage))
+            throw new IOException("Unexpectedly lost connection on new connection after changeover");
         if (firstReceivedMessage is ParseResult.Ok(SessionWelcome welcomeOnNewWebsocket))
         {
             // Small delay so it's unlikely we drop already in-flight messages from the old websocket.
