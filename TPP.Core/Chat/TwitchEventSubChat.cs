@@ -226,10 +226,13 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
             {
                 _logger.LogDebug("EventSub websocket client connecting...");
                 EventSubClient.DisconnectReason disconnectReason = await _client.ConnectAndReceive(cancellationToken);
-                if (disconnectReason == EventSubClient.DisconnectReason.KeepaliveTimeout)
+                if (disconnectReason is EventSubClient.DisconnectReason.KeepaliveTimeout)
                     _logger.LogWarning("EventSub websocket closed because of keepalive timeout, reconnecting...");
-                else if (disconnectReason == EventSubClient.DisconnectReason.RemoteDisconnected)
-                    _logger.LogWarning("EventSub websocket unexpectedly closed by the remote, reconnecting...");
+                else if (disconnectReason is EventSubClient.DisconnectReason.ConnectionClosed)
+                    _logger.LogWarning("EventSub tcp connection unexpectedly closed, reconnecting...");
+                else if (disconnectReason is EventSubClient.DisconnectReason.WebsocketClosed(var status, var desc))
+                    _logger.LogWarning("EventSub websocket unexpectedly closed by the remote with status {Status} " +
+                                       "and description '{Description}', reconnecting...", status, desc);
                 else
                     _logger.LogWarning("EventSub websocket closed for unknown reasons ({Reason})", disconnectReason);
             }
