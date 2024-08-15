@@ -6,6 +6,7 @@ using NodaTime;
 using TPP.Core.Chat;
 using TPP.Twitch.EventSub;
 using TwitchLib.Api;
+using TwitchLib.Api.Auth;
 using TwitchLib.Api.Core.Enums;
 using TwitchLib.Api.Core.Exceptions;
 using TwitchLib.Api.Helix.Models.Chat.ChatSettings;
@@ -52,6 +53,10 @@ public class TwitchApi(
             return (byte)0;
         });
     }
+
+    // Meta
+    public Task<ValidateAccessTokenResponse> Validate() =>
+        Retrying(api => api.Auth.ValidateAccessTokenAsync());
 
     // Chat (and whispers)
     public Task<GetChattersResponse> GetChattersAsync(
