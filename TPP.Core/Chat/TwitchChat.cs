@@ -10,6 +10,7 @@ using TPP.Core.Moderation;
 using TPP.Core.Overlay;
 using TPP.Core.Utils;
 using TPP.Persistence;
+using TwitchLib.Api.Auth;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
@@ -117,8 +118,40 @@ namespace TPP.Core.Chat
             await _twitchClient.DisconnectAsync();
         }
 
+        /// Copied from TPP.Core's README.md
+        private static readonly Dictionary<string, string> ScopesAndWhatTheyAreNeededFor = new()
+        {
+            ["chat:read"] = "Read messages from chat (via IRC/TMI)",
+            ["chat:edit"] = "Send messages to chat (via IRC/TMI)",
+            ["user:bot"] = "Appear in chat as bot",
+            ["user:read:chat"] = "Read messages from chat. (via EventSub)",
+            ["user:write:chat"] = "Send messages to chat. (via Twitch API)",
+            ["user:manage:whispers"] = "Sending and receiving whispers",
+            ["moderator:read:chatters"] = "Read the chatters list in the channel (e.g. for badge drops)",
+            ["moderator:read:followers"] = "Read the followers list (currently old core)",
+            ["moderator:manage:banned_users"] = "Timeout, ban and unban users (tpp automod, mod commands)",
+            ["moderator:manage:chat_messages"] = "Delete chat messages (tpp automod, purge invalid bets)",
+            ["moderator:manage:chat_settings"] = "Change chat settings, e.g. emote-only mode (mod commands)",
+            ["channel:read:subscriptions"] = "Reacting to incoming subscriptions",
+        };
+
+        private void ValidateScopes(HashSet<string> presentScopes)
+        {
+            foreach ((string scope, string neededFor) in ScopesAndWhatTheyAreNeededFor)
+                if (!presentScopes.Contains(scope))
+                    _logger.LogWarning("Missing Twitch-API scope '{Scope}', needed for: {NeededFor}", scope, neededFor);
+        }
+
         public async Task Start(CancellationToken cancellationToken)
         {
+            _logger.LogDebug("Validating API access token...");
+            ValidateAccessTokenResponse validateResult = await TwitchApi.Validate();
+            _logger.LogInformation(
+                "Successfully validated Twitch API access token! Client-ID: {ClientID}, User-ID: {UserID}, " +
+                "Login: {Login}, Expires in: {Expires}s, Scopes: {Scopes}", validateResult.ClientId,
+                validateResult.UserId, validateResult.Login, validateResult.ExpiresIn, validateResult.Scopes);
+            ValidateScopes(validateResult.Scopes.ToHashSet());
+
             await _twitchClient.ConnectAsync();
             _logger.LogInformation("Connected to Twitch, channels: {Channels}",
                 string.Join(", ", _twitchClient.JoinedChannels.Select(c => c.Channel)));

@@ -119,6 +119,7 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
                 }
             }
         }
+        _logger.LogDebug("Finished setting up EventSub subscriptions");
     }
 
     public enum JoinResult { Ok, NotEnabled, AlreadyJoined, UserNotFound, StreamOffline }
