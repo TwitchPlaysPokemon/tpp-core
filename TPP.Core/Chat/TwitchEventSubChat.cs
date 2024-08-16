@@ -110,17 +110,17 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
         _session = session;
         _logger.LogDebug("Setting up EventSub subscriptions");
         await Task.WhenAll(
-            _twitchApi.SubscribeToEventSub<ChannelChatMessage>(session.Id,
+            _twitchApi.SubscribeToEventSubBot<ChannelChatMessage>(session.Id,
                 new ChannelChatMessage.Condition(BroadcasterUserId: _channelId, UserId: _userId).AsDict()),
-            _twitchApi.SubscribeToEventSub<UserWhisperMessage>(session.Id,
+            _twitchApi.SubscribeToEventSubBot<UserWhisperMessage>(session.Id,
                 new UserWhisperMessage.Condition(UserId: _userId).AsDict()),
-            _twitchApi.SubscribeToEventSub<ChannelSubscribe>(session.Id,
+            _twitchApi.SubscribeToEventSubChannel<ChannelSubscribe>(session.Id,
                 new ChannelSubscribe.Condition(BroadcasterUserId: _channelId).AsDict()),
-            _twitchApi.SubscribeToEventSub<ChannelSubscriptionMessage>(session.Id,
+            _twitchApi.SubscribeToEventSubChannel<ChannelSubscriptionMessage>(session.Id,
                 new ChannelSubscriptionMessage.Condition(BroadcasterUserId: _channelId).AsDict()),
-            _twitchApi.SubscribeToEventSub<ChannelSubscriptionGift>(session.Id,
+            _twitchApi.SubscribeToEventSubChannel<ChannelSubscriptionGift>(session.Id,
                 new ChannelSubscriptionGift.Condition(BroadcasterUserId: _channelId).AsDict()),
-            _twitchApi.SubscribeToEventSub<ChannelChatSettingsUpdate>(session.Id,
+            _twitchApi.SubscribeToEventSubBot<ChannelChatSettingsUpdate>(session.Id,
                 new ChannelChatSettingsUpdate.Condition(BroadcasterUserId: _channelId, UserId: _userId).AsDict())
         );
 
@@ -130,7 +130,7 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
             {
                 try
                 {
-                    var response = await _twitchApi.SubscribeToEventSub<ChannelChatMessage>(session.Id,
+                    var response = await _twitchApi.SubscribeToEventSubBot<ChannelChatMessage>(session.Id,
                         new ChannelChatMessage.Condition(BroadcasterUserId: channelId, UserId: _userId).AsDict());
                     _coStreamEventSubSubscriptions[channelId] = response.Subscriptions[0].Id;
                 }
@@ -170,7 +170,7 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
         }
 
         await _coStreamChannelsRepo.Add(userId, user.ProfileImageUrl);
-        var response = await _twitchApi.SubscribeToEventSub<ChannelChatMessage>(_session!.Id,
+        var response = await _twitchApi.SubscribeToEventSubBot<ChannelChatMessage>(_session!.Id,
             new ChannelChatMessage.Condition(BroadcasterUserId: userId, UserId: _userId).AsDict());
         _coStreamEventSubSubscriptions[userId] = response.Subscriptions[0].Id;
         await _twitchApi.SendChatMessage(userId, _userId, "Joined channel, hello!");
@@ -192,7 +192,7 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
             _logger.LogError(ex, "Failed sending goodbye message to {ChannelID} after leaving, ignoring", userId);
         }
         if (_coStreamEventSubSubscriptions.TryGetValue(userId, out string? subscriptionId))
-            await _twitchApi.DeleteEventSubSubscriptionAsync(subscriptionId);
+            await _twitchApi.DeleteEventSubSubscriptionAsyncBot(subscriptionId);
         _coStreamEventSubSubscriptions.Remove(userId);
         await _coStreamChannelsRepo.Remove(userId);
         return LeaveResult.Ok;

@@ -23,6 +23,8 @@ namespace TPP.Core.Chat
         private readonly ILogger<TwitchChat> _logger;
         public readonly string ChannelId;
         public readonly TwitchApi TwitchApi;
+        private readonly string _channelName;
+        private readonly string _botUsername;
         private readonly TwitchChatSender _twitchChatSender;
         private readonly TwitchChatModeChanger _twitchChatModeChanger;
         private readonly TwitchChatExecutor _twitchChatExecutor;
@@ -42,12 +44,16 @@ namespace TPP.Core.Chat
             Name = name;
             _logger = loggerFactory.CreateLogger<TwitchChat>();
             ChannelId = chatConfig.ChannelId;
+            _channelName = chatConfig.Channel;
+            _botUsername = chatConfig.Username;
 
             TwitchApi = new TwitchApi(
                 loggerFactory,
                 clock,
                 chatConfig.InfiniteAccessToken,
                 chatConfig.RefreshToken,
+                chatConfig.ChannelInfiniteAccessToken,
+                chatConfig.ChannelRefreshToken,
                 chatConfig.AppClientId,
                 chatConfig.AppClientSecret);
             _twitchChatSender = new TwitchChatSender(loggerFactory, TwitchApi, chatConfig, useTwitchReplies);
@@ -68,39 +74,68 @@ namespace TPP.Core.Chat
             IncomingMessage?.Invoke(this, args);
         }
 
-        /// Copied from TPP.Core's README.md
-        private static readonly Dictionary<string, string> ScopesAndWhatTheyAreNeededFor = new()
-        {
-            ["chat:read"] = "Read messages from chat (via IRC/TMI)",
-            ["chat:edit"] = "Send messages to chat (via IRC/TMI)",
-            ["user:bot"] = "Appear in chat as bot",
-            ["user:read:chat"] = "Read messages from chat. (via EventSub)",
-            ["user:write:chat"] = "Send messages to chat. (via Twitch API)",
-            ["user:manage:whispers"] = "Sending and receiving whispers",
-            ["moderator:read:chatters"] = "Read the chatters list in the channel (e.g. for badge drops)",
-            ["moderator:read:followers"] = "Read the followers list (currently old core)",
-            ["moderator:manage:banned_users"] = "Timeout, ban and unban users (tpp automod, mod commands)",
-            ["moderator:manage:chat_messages"] = "Delete chat messages (tpp automod, purge invalid bets)",
-            ["moderator:manage:chat_settings"] = "Change chat settings, e.g. emote-only mode (mod commands)",
-            ["channel:read:subscriptions"] = "Reacting to incoming subscriptions",
-        };
+        private enum ScopeType { Bot, Channel, Both }
+        private record ScopeInfo(string Scope, string NeededFor, ScopeType ScopeType);
+        /// Mostly copied from TPP.Core's README.md
+        private static readonly List<ScopeInfo> ScopeInfos =
+        [
+            new ScopeInfo("chat:read", "Read messages from chat (via IRC/TMI)", ScopeType.Bot),
+            new ScopeInfo("chat:edit", "Send messages to chat (via IRC/TMI)", ScopeType.Bot),
+            new ScopeInfo("user:bot", "Appear in chat as bot", ScopeType.Bot),
+            new ScopeInfo("user:read:chat", "Read messages from chat. (via EventSub)", ScopeType.Bot),
+            new ScopeInfo("user:write:chat", "Send messages to chat. (via Twitch API)", ScopeType.Bot),
+            new ScopeInfo("user:manage:whispers", "Sending and receiving whispers", ScopeType.Bot),
+            new ScopeInfo("moderator:read:chatters", "Read the chatters list in the channel (e.g. for badge drops)",
+                ScopeType.Bot),
+            new ScopeInfo("moderator:read:followers", "Read the followers list (currently old core)", ScopeType.Bot),
+            new ScopeInfo("moderator:manage:banned_users", "Timeout, ban and unban users (tpp automod, mod commands)",
+                ScopeType.Bot),
+            new ScopeInfo("moderator:manage:chat_messages", "Delete chat messages (tpp automod, purge invalid bets)",
+                ScopeType.Bot),
+            new ScopeInfo("moderator:manage:chat_settings", "Change chat settings, e.g. emote-only mode (mod commands)",
+                ScopeType.Bot),
+            new ScopeInfo("channel:read:subscriptions", "Reacting to incoming subscriptions", ScopeType.Channel)
+        ];
+        private static readonly Dictionary<string, ScopeInfo> ScopeInfosPerScope = ScopeInfos
+            .ToDictionary(scopeInfo => scopeInfo.Scope, scopeInfo => scopeInfo);
 
-        private void ValidateScopes(HashSet<string> presentScopes)
+        private async Task ValidateApiTokens()
         {
-            foreach ((string scope, string neededFor) in ScopesAndWhatTheyAreNeededFor)
-                if (!presentScopes.Contains(scope))
-                    _logger.LogWarning("Missing Twitch-API scope '{Scope}', needed for: {NeededFor}", scope, neededFor);
+            _logger.LogDebug("Validating API access token...");
+            ValidateAccessTokenResponse botTokenInfo = await TwitchApi.ValidateBot();
+            _logger.LogInformation(
+                "Successfully got Twitch API bot access token info! Client-ID: {ClientID}, User-ID: {UserID}, " +
+                "Login: {Login}, Expires in: {Expires}s, Scopes: {Scopes}", botTokenInfo.ClientId,
+                botTokenInfo.UserId, botTokenInfo.Login, botTokenInfo.ExpiresIn, botTokenInfo.Scopes);
+            ValidateAccessTokenResponse channelTokenInfo = await TwitchApi.ValidateChannel();
+            _logger.LogInformation(
+                "Successfully got Twitch API channel access token info! Client-ID: {ClientID}, User-ID: {UserID}, " +
+                "Login: {Login}, Expires in: {Expires}s, Scopes: {Scopes}", channelTokenInfo.ClientId,
+                channelTokenInfo.UserId, channelTokenInfo.Login, channelTokenInfo.ExpiresIn, channelTokenInfo.Scopes);
+
+            // Validate correct usernames
+            if (!botTokenInfo.Login.Equals(_botUsername, StringComparison.InvariantCultureIgnoreCase))
+                _logger.LogWarning("Bot token login '{Login}' does not match configured bot username '{Username}'",
+                    botTokenInfo.Login, _botUsername);
+            if (!channelTokenInfo.Login.Equals(_channelName, StringComparison.InvariantCultureIgnoreCase))
+                _logger.LogWarning("Channel token login '{Login}' does not match configured channel '{Channel}'",
+                    botTokenInfo.Login, _channelName);
+
+            // Validate Scopes
+            foreach ((string scope, ScopeInfo scopeInfo) in ScopeInfosPerScope)
+            {
+                if (scopeInfo.ScopeType == ScopeType.Bot && !botTokenInfo.Scopes.ToHashSet().Contains(scope))
+                    _logger.LogWarning("Missing Twitch-API scope '{Scope}' (bot), needed for: {NeededFor}",
+                        scope, scopeInfo.NeededFor);
+                if (scopeInfo.ScopeType == ScopeType.Channel && !channelTokenInfo.Scopes.ToHashSet().Contains(scope))
+                    _logger.LogWarning("Missing Twitch-API scope '{Scope}' (channel), needed for: {NeededFor}",
+                        scope, scopeInfo.NeededFor);
+            }
         }
 
         public async Task Start(CancellationToken cancellationToken)
         {
-            _logger.LogDebug("Validating API access token...");
-            ValidateAccessTokenResponse validateResult = await TwitchApi.Validate();
-            _logger.LogInformation(
-                "Successfully validated Twitch API access token! Client-ID: {ClientID}, User-ID: {UserID}, " +
-                "Login: {Login}, Expires in: {Expires}s, Scopes: {Scopes}", validateResult.ClientId,
-                validateResult.UserId, validateResult.Login, validateResult.ExpiresIn, validateResult.Scopes);
-            ValidateScopes(validateResult.Scopes.ToHashSet());
+            await ValidateApiTokens();
 
             List<Task> tasks = [];
             tasks.Add(TwitchEventSubChat.Start(cancellationToken));

@@ -22,78 +22,97 @@ namespace TPP.Core;
 public class TwitchApi(
     ILoggerFactory loggerFactory,
     IClock clock,
-    string? infiniteAccessToken,
-    string? refreshToken,
+    string? botInfiniteAccessToken,
+    string? botRefreshToken,
+    string? channelInfiniteAccessToken,
+    string? channelRefreshToken,
     string appClientId,
     string appClientSecret)
 {
-    private readonly TwitchApiProvider _twitchApiProvider = new(
-        loggerFactory, clock, infiniteAccessToken, refreshToken, appClientId, appClientSecret);
+    private readonly TwitchApiProvider _botTwitchApiProvider = new(
+        loggerFactory, clock, botInfiniteAccessToken, botRefreshToken, appClientId, appClientSecret);
+    private readonly TwitchApiProvider _channelTwitchApiProvider = new(
+        loggerFactory, clock, channelInfiniteAccessToken, channelRefreshToken, appClientId, appClientSecret);
 
-    private async Task<T> Retrying<T>(Func<TwitchAPI, Task<T>> action)
+    private async Task<T> Retrying<T>(TwitchApiProvider apiProvider, Func<TwitchAPI, Task<T>> action)
     {
         try
         {
-            return await action(await _twitchApiProvider.Get());
+            return await action(await apiProvider.Get());
         }
         catch (HttpResponseException)
         {
             // Try everything twice. E.g. 500 Internal server errors or unexpectedly expired tokens are retryable.
             // If it's an actual issue, it will be thrown a second time anyway.
-            await _twitchApiProvider.Invalidate();
-            return await action(await _twitchApiProvider.Get());
+            await apiProvider.Invalidate();
+            return await action(await apiProvider.Get());
         }
     }
 
-    private async Task Retrying(Func<TwitchAPI, Task> action)
+    private async Task Retrying(TwitchApiProvider apiProvider, Func<TwitchAPI, Task> action)
     {
-        await Retrying(async api =>
+        await Retrying(apiProvider, async api =>
         {
             await action(api);
             return (byte)0;
         });
     }
 
+    private Task<T> RetryingBot<T>(Func<TwitchAPI, Task<T>> action) => Retrying(_botTwitchApiProvider, action);
+    private Task<T> RetryingChannel<T>(Func<TwitchAPI, Task<T>> action) => Retrying(_channelTwitchApiProvider, action);
+    private Task RetryingBot(Func<TwitchAPI, Task> action) => Retrying(_botTwitchApiProvider, action);
+    private Task RetryingChannel(Func<TwitchAPI, Task> action) => Retrying(_channelTwitchApiProvider, action);
+
     // Meta
-    public Task<ValidateAccessTokenResponse> Validate() =>
-        Retrying(api => api.Auth.ValidateAccessTokenAsync());
+    public Task<ValidateAccessTokenResponse> ValidateBot() =>
+        RetryingBot(api => api.Auth.ValidateAccessTokenAsync());
+    public Task<ValidateAccessTokenResponse> ValidateChannel() =>
+        RetryingChannel(api => api.Auth.ValidateAccessTokenAsync());
 
     // Chat (and whispers)
     public Task<GetChattersResponse> GetChattersAsync(
         string broadcasterId, string moderatorId, int first = 100, string? after = null) =>
-        Retrying(api => api.Helix.Chat.GetChattersAsync(broadcasterId, moderatorId, first, after));
+        RetryingBot(api => api.Helix.Chat.GetChattersAsync(broadcasterId, moderatorId, first, after));
     public Task<GetChatSettingsResponse> GetChatSettingsAsync(string broadcasterId, string moderatorId) =>
-        Retrying(api => api.Helix.Chat.GetChatSettingsAsync(broadcasterId, moderatorId));
+        RetryingBot(api => api.Helix.Chat.GetChatSettingsAsync(broadcasterId, moderatorId));
     public Task UpdateChatSettingsAsync(string broadcasterId, string moderatorId, ChatSettings settings) =>
-        Retrying(api => api.Helix.Chat.UpdateChatSettingsAsync(broadcasterId, moderatorId, settings));
+        RetryingBot(api => api.Helix.Chat.UpdateChatSettingsAsync(broadcasterId, moderatorId, settings));
     public Task SendChatMessage(string broadcasterId, string senderUserId, string message, string? replyParentMessageId = null) =>
-        Retrying(api => api.Helix.Chat.SendChatMessage(broadcasterId, senderUserId, message, replyParentMessageId: replyParentMessageId));
+        RetryingBot(api => api.Helix.Chat.SendChatMessage(broadcasterId, senderUserId, message, replyParentMessageId: replyParentMessageId));
     public Task SendWhisperAsync(string fromUserId, string toUserId, string message, bool newRecipient) =>
-        Retrying(api => api.Helix.Whispers.SendWhisperAsync(fromUserId, toUserId, message, newRecipient));
+        RetryingBot(api => api.Helix.Whispers.SendWhisperAsync(fromUserId, toUserId, message, newRecipient));
 
     // Users
     public Task<GetUsersResponse> GetUsersAsync(List<string> ids) =>
-        Retrying(api => api.Helix.Users.GetUsersAsync(ids: ids));
+        RetryingBot(api => api.Helix.Users.GetUsersAsync(ids: ids));
 
     // Streams
     public Task<GetStreamsResponse> GetStreamsAsync(List<string>? userIds, int first = 20) =>
-        Retrying(api => api.Helix.Streams.GetStreamsAsync(first: first, userIds: userIds));
+        RetryingBot(api => api.Helix.Streams.GetStreamsAsync(first: first, userIds: userIds));
 
     // Moderation
     public Task DeleteChatMessagesAsync(string broadcasterId, string moderatorId, string messageId) =>
-        Retrying(api => api.Helix.Moderation.DeleteChatMessagesAsync(broadcasterId, moderatorId, messageId));
+        RetryingBot(api => api.Helix.Moderation.DeleteChatMessagesAsync(broadcasterId, moderatorId, messageId));
     public Task BanUserAsync(string broadcasterId, string moderatorId, BanUserRequest banUserRequest) =>
-        Retrying(api => api.Helix.Moderation.BanUserAsync(broadcasterId, moderatorId, banUserRequest));
+        RetryingBot(api => api.Helix.Moderation.BanUserAsync(broadcasterId, moderatorId, banUserRequest));
     public Task UnbanUserAsync(string broadcasterId, string moderatorId, string userId) =>
-        Retrying(api => api.Helix.Moderation.UnbanUserAsync(broadcasterId, moderatorId, userId));
+        RetryingBot(api => api.Helix.Moderation.UnbanUserAsync(broadcasterId, moderatorId, userId));
 
     // EventSub
-    public Task<CreateEventSubSubscriptionResponse> SubscribeToEventSub<T>(
+    public Task<CreateEventSubSubscriptionResponse> SubscribeToEventSubBot<T>(
         string sessionId, Dictionary<string, string> condition)
         where T : INotification, IHasSubscriptionType =>
-        Retrying(api => api.Helix.EventSub.CreateEventSubSubscriptionAsync(
+        RetryingBot(api => api.Helix.EventSub.CreateEventSubSubscriptionAsync(
             T.SubscriptionType, T.SubscriptionVersion, condition,
             EventSubTransportMethod.Websocket, websocketSessionId: sessionId));
-    public Task<bool> DeleteEventSubSubscriptionAsync(string subscriptionId) =>
-        Retrying(api => api.Helix.EventSub.DeleteEventSubSubscriptionAsync(subscriptionId));
+    public Task<bool> DeleteEventSubSubscriptionAsyncBot(string subscriptionId) =>
+        RetryingBot(api => api.Helix.EventSub.DeleteEventSubSubscriptionAsync(subscriptionId));
+    public Task<CreateEventSubSubscriptionResponse> SubscribeToEventSubChannel<T>(
+        string sessionId, Dictionary<string, string> condition)
+        where T : INotification, IHasSubscriptionType =>
+        RetryingChannel(api => api.Helix.EventSub.CreateEventSubSubscriptionAsync(
+            T.SubscriptionType, T.SubscriptionVersion, condition,
+            EventSubTransportMethod.Websocket, websocketSessionId: sessionId));
+    public Task<bool> DeleteEventSubSubscriptionAsyncChannel(string subscriptionId) =>
+        RetryingChannel(api => api.Helix.EventSub.DeleteEventSubSubscriptionAsync(subscriptionId));
 }
