@@ -40,12 +40,21 @@ public class TwitchApi(
         {
             return await action(await apiProvider.Get());
         }
-        catch (HttpResponseException)
+        catch (HttpResponseException ex)
         {
-            // Try everything twice. E.g. 500 Internal server errors or unexpectedly expired tokens are retryable.
-            // If it's an actual issue, it will be thrown a second time anyway.
-            await apiProvider.Invalidate();
-            return await action(await apiProvider.Get());
+            switch ((int)ex.HttpResponse.StatusCode)
+            {
+                case 401:
+                    // unexpectedly expired tokens are retryable if we successfully refresh the token.
+                    await apiProvider.Invalidate();
+                    return await action(await apiProvider.Get());
+                case >= 500 and < 600:
+                    // issues on Twitch's end may be transient and often don't occurr a second time
+                    return await action(await apiProvider.Get());
+                default:
+                    // otherwise, assume it's an actual error with our request and don't retry it
+                    throw;
+            }
         }
     }
 
