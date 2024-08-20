@@ -25,6 +25,7 @@ namespace TPP.Core.Chat
         public readonly TwitchApi TwitchApi;
         private readonly string _channelName;
         private readonly string _botUsername;
+        private readonly string _appClientId;
         private readonly TwitchChatSender _twitchChatSender;
         private readonly TwitchChatModeChanger _twitchChatModeChanger;
         private readonly TwitchChatExecutor _twitchChatExecutor;
@@ -46,6 +47,7 @@ namespace TPP.Core.Chat
             ChannelId = chatConfig.ChannelId;
             _channelName = chatConfig.Channel;
             _botUsername = chatConfig.Username;
+            _appClientId = chatConfig.AppClientId;
 
             TwitchApi = new TwitchApi(
                 loggerFactory,
@@ -120,6 +122,16 @@ namespace TPP.Core.Chat
             if (!channelTokenInfo.Login.Equals(_channelName, StringComparison.InvariantCultureIgnoreCase))
                 _logger.LogWarning("Channel token login '{Login}' does not match configured channel '{Channel}'",
                     botTokenInfo.Login, _channelName);
+
+            // Validate correct Client-IDs
+            if (!botTokenInfo.ClientId.Equals(_appClientId, StringComparison.InvariantCultureIgnoreCase))
+                _logger.LogWarning(
+                    "Bot token Client-ID '{ClientID}' does not match configured App-Client-ID '{AppClientId}'. " +
+                    "Did you create the token using the wrong App-Client-ID?", botTokenInfo.ClientId, _appClientId);
+            if (!channelTokenInfo.ClientId.Equals(_appClientId, StringComparison.InvariantCultureIgnoreCase))
+                _logger.LogWarning(
+                    "Channel token Client-ID '{ClientID}' does not match configured App-Client-ID '{AppClientId}'. " +
+                    "Did you create the token using the wrong App-Client-ID?", channelTokenInfo.ClientId, _appClientId);
 
             // Validate Scopes
             foreach ((string scope, ScopeInfo scopeInfo) in ScopeInfosPerScope)
