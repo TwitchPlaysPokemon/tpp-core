@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
+        <DebugType>embedded</DebugType>
 		<OutputType>Exe</OutputType>
 	</PropertyGroup>
 
