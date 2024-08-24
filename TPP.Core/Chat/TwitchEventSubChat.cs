@@ -498,9 +498,9 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
             PlanName: null, // EventSub does not give us the informational plan name (like "Channel Subscription: $24.99 Sub")
             SubscriptionAt: channelSubscriptionMessage.Metadata.MessageTimestamp,
             IsGift: false, // Resubscriptions are never gifts. Gifts are always "new" subscriptions, not continuations
-            Message: evt.Message.Text,
-            Emotes: evt.Message.Emotes.Select(e => new EmoteOccurrence(
-                    e.Id, evt.Message.Text.Substring(e.Begin, e.End - e.Begin + 1), e.Begin, e.End))
+            Message: evt.Message?.Text,
+            Emotes: (evt.Message?.Emotes ?? []).Select(e => new EmoteOccurrence(
+                    e.Id, evt.Message!.Text!.Substring(e.Begin, e.End - e.Begin + 1), e.Begin, e.End))
                 .ToImmutableList()
         );
         ISubscriptionProcessor.SubResult subResult = await _subscriptionProcessor.ProcessSubscription(
