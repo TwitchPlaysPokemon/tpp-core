@@ -71,7 +71,7 @@ namespace TPP.Core.Chat
             while (_queue.Count > _maxQueueLength)
             {
                 (string, OutgoingMessage) discarded = _queue.DequeueLast()!.Value;
-                _logger.LogDebug(
+                _logger.LogWarning(
                     "Outgoing message queue is full (size {Capacity})! Discarded message from user {User}: {Message}",
                     _maxQueueLength, discarded.Item1, discarded.Item2);
             }
