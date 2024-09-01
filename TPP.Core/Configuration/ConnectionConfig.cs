@@ -9,9 +9,9 @@ using TPP.Core.Utils;
 namespace TPP.Core.Configuration;
 
 [JsonConverter(typeof(JsonSubtypes), nameof(Type))]
-[JsonSubtypes.KnownSubTypeAttribute(typeof(Console), "console")]
-[JsonSubtypes.KnownSubTypeAttribute(typeof(Twitch), "twitch")]
-[JsonSubtypes.KnownSubTypeAttribute(typeof(Simulation), "simulation")]
+[JsonSubtypes.KnownSubType(typeof(Console), "console")]
+[JsonSubtypes.KnownSubType(typeof(Twitch), "twitch")]
+[JsonSubtypes.KnownSubType(typeof(Simulation), "simulation")]
 public abstract class ConnectionConfig : ConfigBase
 {
     public abstract string Type { get; init; }
@@ -42,6 +42,11 @@ public abstract class ConnectionConfig : ConfigBase
         public string? InfiniteAccessToken { get; init; } = null;
         // if no access token is specified, dynamically create access tokens from this refresh token
         public string? RefreshToken { get; init; } = "myrefreshtoken";
+
+        // Same as above, but for channel scopes (e.g. "TwitchPlaysPokemon" instead of "tpp")
+        public string? ChannelInfiniteAccessToken { get; init; } = null;
+        public string? ChannelRefreshToken { get; init; } = null;
+
         public string AppClientId { get; init; } = "myappclientid";
         public string AppClientSecret { get; init; } = "myappclientsecret";
 

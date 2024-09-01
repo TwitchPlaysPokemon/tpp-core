@@ -83,9 +83,10 @@ namespace TPP.Model
         int LoyaltyLeagueNew,
         int LoyaltyCompletions,
         int RewardTokens,
+        bool IsGift,
         string? SubMessage,
         SubscriptionTier SubPlan,
-        string SubPlanName);
+        string? SubPlanName);
 
     /// <summary>
     /// Transaction logs are read-only entities that get created by <c>IBank&lt;T&gt;</c> implementations.

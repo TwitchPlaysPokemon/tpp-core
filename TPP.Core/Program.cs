@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Schema.Generation;
+using NodaTime;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.Discord;
@@ -149,7 +151,8 @@ Options:
                 if (baseConfig.DiscordLoggingConfig != null)
                 {
                     builder.AddSerilog(new LoggerConfiguration()
-                        .WriteTo.Discord(baseConfig.DiscordLoggingConfig.WebhookId, baseConfig.DiscordLoggingConfig.WebhookToken)
+                        .WriteTo.Discord(baseConfig.DiscordLoggingConfig.WebhookId,
+                            baseConfig.DiscordLoggingConfig.WebhookToken)
                         .MinimumLevel.Is(baseConfig.DiscordLoggingConfig.MinLogLevel)
                         .Filter.ByExcluding(logEvent =>
                         {
@@ -183,8 +186,10 @@ Options:
             CancellationTokenSource cts = new();
             IWithLifecycle mode = modeName switch
             {
-                "run" => new Runmode(loggerFactory, baseConfig, cts, () => ReadConfig<RunmodeConfig>(modeConfigFilename)),
-                "match" => new Matchmode(loggerFactory, baseConfig, cts, ReadConfig<MatchmodeConfig>(modeConfigFilename)),
+                "run" => new Runmode(loggerFactory, baseConfig, cts,
+                    () => ReadConfig<RunmodeConfig>(modeConfigFilename)),
+                "match" => new Matchmode(loggerFactory, baseConfig, cts,
+                    ReadConfig<MatchmodeConfig>(modeConfigFilename)),
                 "dualcore" => new DualcoreMode(loggerFactory, baseConfig, cts),
                 "dummy" => new DummyMode(loggerFactory, baseConfig),
                 _ => throw new NotSupportedException($"Invalid mode '{modeName}'")
@@ -227,20 +232,66 @@ Options:
             string? mode,
             string modeConfigFilename)
         {
-            // just try to read the configs, don't do anything with them
+            List<string> errors = TestConfigCollectErrors(configFilename, mode, modeConfigFilename);
+            foreach (string error in errors)
+                Console.Error.WriteLine(error);
+            if (errors.Count > 0)
+            {
+                Environment.Exit(42); // Arbitrary exit code to indicate a semantic error, see also deploy.sh
+            }
+        }
+
+        private static List<string> TestConfigCollectErrors(
+            string configFilename,
+            string? mode,
+            string modeConfigFilename)
+        {
+            List<string> errors = [];
 
             if (File.Exists(configFilename))
-                ReadConfig<BaseConfig>(configFilename);
+                try
+                {
+                    var baseConfig = ReadConfig<BaseConfig>(configFilename);
+                    ILoggerFactory loggerFactory = BuildLoggerFactory(baseConfig);
+                    foreach (var twitchConnection in baseConfig.Chat.Connections.OfType<ConnectionConfig.Twitch>())
+                    {
+                        var twitchApi = new TwitchApi(loggerFactory, SystemClock.Instance,
+                            twitchConnection.InfiniteAccessToken, twitchConnection.RefreshToken,
+                            twitchConnection.ChannelInfiniteAccessToken, twitchConnection.ChannelRefreshToken,
+                            twitchConnection.AppClientId, twitchConnection.AppClientSecret);
+                        List<string> problems = twitchApi
+                            .DetectProblems(twitchConnection.Username, twitchConnection.Channel).Result;
+                        foreach (string problem in problems)
+                            errors.Add($"TwitchAPI config issue for '{twitchConnection.Name}': {problem}");
+                    }
+                }
+                catch (JsonReaderException ex)
+                {
+                    Console.Error.WriteLine(ex.Message);
+                    errors.Add($"{configFilename}: JSON parsing failed at {ex.LineNumber}:{ex.LinePosition}. " +
+                               $"Error message suppressed to avoid leaking any secrets, but printed to stderr");
+                }
             else
-                Console.Error.WriteLine(MissingConfigErrorMessage(null, configFilename));
+                errors.Add(MissingConfigErrorMessage(null, configFilename));
 
             if (mode != null && ModeHasItsOwnConfig(mode))
             {
                 if (File.Exists(modeConfigFilename))
-                    ReadConfig(modeConfigFilename, DefaultConfigs[mode]!.GetType());
+                    try
+                    {
+                        ReadConfig(modeConfigFilename, DefaultConfigs[mode]!.GetType());
+                    }
+                    catch (JsonReaderException ex)
+                    {
+                        Console.Error.WriteLine(ex.Message);
+                        errors.Add($"{modeConfigFilename}: JSON parsing failed at {ex.LineNumber}:{ex.LinePosition}. " +
+                                   $"Error message suppressed to avoid leaking any secrets, but printed to stderr");
+                    }
                 else
-                    Console.Error.WriteLine(MissingConfigErrorMessage(mode, modeConfigFilename));
+                    errors.Add(MissingConfigErrorMessage(mode, modeConfigFilename));
             }
+
+            return errors;
         }
 
         private static void OutputDefaultConfig(string? modeName, ValueObject? outfileArgument)

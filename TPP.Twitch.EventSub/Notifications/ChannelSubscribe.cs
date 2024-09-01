@@ -1,8 +1,4 @@
-using System;
 using System.Runtime.Serialization;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using TPP.Common;
 using TPP.Twitch.EventSub.Messages;
 
 namespace TPP.Twitch.EventSub.Notifications;
@@ -25,29 +21,10 @@ public class ChannelSubscribe(NotificationMetadata metadata, NotificationPayload
     /// </summary>
     public record Condition(string BroadcasterUserId) : EventSub.Condition;
 
-    // Can't use the default enum name serialization for Tier because enum names can't be numbers.
-    public class TierConverter : JsonConverter<Tier>
-    {
-        public override Tier Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        {
-            string tierStr = reader.GetString() ?? throw new JsonException("tier must not be null");
-            foreach (Tier tier in Enum.GetValues<Tier>())
-                if (tier.GetEnumMemberValue() == tierStr)
-                    return tier;
-            throw new JsonException("Unknown Tier: " + tierStr);
-        }
-        public override void Write(Utf8JsonWriter writer, Tier value, JsonSerializerOptions options)
-        {
-            writer.WriteStringValue(value.GetEnumMemberValue());
-        }
-    }
-
     /// <summary>
     /// The tier of the subscription. Valid values are 1000, 2000, and 3000.
     /// </summary>
-    // [JsonConverter(typeof(TierConverter))] // is instead specified in Parsing#SerializerOptions before the
-    // JsonStringEnumConverter, because otherwise the custom converter gets ignored since System.Text.Json just uses
-    // whatever enum converter it finds first. There is no consideration for anyone overwriting it for _some_ enums :(
+    [DataContract] // Custom enum member values, because enums cannot be numbers in code
     public enum Tier
     {
         [EnumMember(Value = "1000")] Tier1000,

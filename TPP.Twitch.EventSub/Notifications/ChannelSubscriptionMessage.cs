@@ -35,20 +35,22 @@ public class ChannelSubscriptionMessage(NotificationMetadata metadata, Notificat
     /// <summary>
     /// An object that contains the resubscription message and emote information needed to recreate the message.
     /// </summary>
-    /// <param name="Text">The text of the resubscription chat message.</param>
-    /// <param name="Emotes">An array that includes the emote ID and start and end positions for where the emote appears in the text.</param>
-    public record Message(
-        string Text,
-        Emote[] Emotes)
+    /// <param name="Text">The text of the resubscription chat message.
+    /// This might not be nullable, but since the documentation sometimes forgets to note possible nulls, better be safe.</param>
+    /// <param name="Emotes">An array that includes the emote ID and start and end positions for where the emote appears in the text.
+    /// Although the documentation doesn't say it explicitly, it is nullable.</param>
+    public record Message(string? Text, Emote[]? Emotes)
     {
         // override Equals and GetHashCode to fix value semantics for collections: Emotes
         public virtual bool Equals(Message? other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Text == other.Text && Emotes.SequenceEqual(other.Emotes);
+            return Text == other.Text && (Emotes == null
+                ? other.Emotes == null
+                : other.Emotes != null && Emotes.SequenceEqual(other.Emotes));
         }
-        public override int GetHashCode() => Text.GetHashCode();
+        public override int GetHashCode() => Text?.GetHashCode() ?? 0;
     }
 
     /// <summary>
@@ -61,7 +63,8 @@ public class ChannelSubscriptionMessage(NotificationMetadata metadata, Notificat
     /// <param name="BroadcasterUserLogin">The broadcaster login.</param>
     /// <param name="BroadcasterUserName">The broadcaster display name.</param>
     /// <param name="Tier">The tier of the user’s subscription.</param>
-    /// <param name="Message">An object that contains the resubscription message and emote information needed to recreate the message.</param>
+    /// <param name="Message">An object that contains the resubscription message and emote information needed to recreate the message.
+    /// This might not be nullable, but since the documentation sometimes forgets to note possible nulls, better be safe.</param>
     /// <param name="CumulativeMonths">The total number of months the user has been subscribed to the channel.</param>
     /// <param name="StreakMonths">The number of consecutive months the user’s current subscription has been active. This value is null if the user has opted out of sharing this information. null if not shared.</param>
     /// <param name="DurationMonths">The month duration of the subscription.</param>
@@ -73,7 +76,7 @@ public class ChannelSubscriptionMessage(NotificationMetadata metadata, Notificat
         string BroadcasterUserLogin,
         string BroadcasterUserName,
         ChannelSubscribe.Tier Tier,
-        Message Message,
+        Message? Message,
         int CumulativeMonths,
         int? StreakMonths,
         int DurationMonths

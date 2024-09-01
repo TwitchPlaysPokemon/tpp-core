@@ -140,6 +140,7 @@ public class LogRepoTests : MongoTestBase
         const int loyaltyLeagueNew = 21;
         const int loyaltyCompletions = 1;
         const int rewardTokens = 10;
+        const bool isGift = true;
         const string subMessage = "message text";
         const SubscriptionTier subPlan = SubscriptionTier.Tier2;
         const string subPlanName = "plan name";
@@ -147,7 +148,7 @@ public class LogRepoTests : MongoTestBase
         // persist to db
         SubscriptionLog written = await repo.LogSubscription(userId, timestamp,
             monthsStreak, monthsNumPrev, monthsNumNew, monthsDifference,
-            loyaltyLeaguePrev, loyaltyLeagueNew, loyaltyCompletions, rewardTokens,
+            loyaltyLeaguePrev, loyaltyLeagueNew, loyaltyCompletions, rewardTokens, isGift,
             subMessage, subPlan, subPlanName);
         Assert.That(written.Timestamp, Is.EqualTo(timestamp));
         Assert.That(written.UserId, Is.EqualTo(userId));
@@ -159,6 +160,7 @@ public class LogRepoTests : MongoTestBase
         Assert.That(written.LoyaltyLeagueNew, Is.EqualTo(loyaltyLeagueNew));
         Assert.That(written.LoyaltyCompletions, Is.EqualTo(loyaltyCompletions));
         Assert.That(written.RewardTokens, Is.EqualTo(rewardTokens));
+        Assert.That(written.IsGift, Is.EqualTo(isGift));
         Assert.That(written.SubMessage, Is.EqualTo(subMessage));
         Assert.That(written.SubPlan, Is.EqualTo(subPlan));
         Assert.That(written.SubPlanName, Is.EqualTo(subPlanName));
@@ -181,6 +183,7 @@ public class LogRepoTests : MongoTestBase
         Assert.That(read.LoyaltyLeagueNew, Is.EqualTo(loyaltyLeagueNew));
         Assert.That(read.LoyaltyCompletions, Is.EqualTo(loyaltyCompletions));
         Assert.That(read.RewardTokens, Is.EqualTo(rewardTokens));
+        Assert.That(read.IsGift, Is.EqualTo(isGift));
         Assert.That(read.SubMessage, Is.EqualTo(subMessage));
         Assert.That(read.SubPlan, Is.EqualTo(subPlan));
         Assert.That(read.SubPlanName, Is.EqualTo(subPlanName));
