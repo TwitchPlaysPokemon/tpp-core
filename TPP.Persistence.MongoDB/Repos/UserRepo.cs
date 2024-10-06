@@ -62,6 +62,8 @@ namespace TPP.Persistence.MongoDB.Repos
                 cm.MapProperty(u => u.TimeoutExpiration).SetElementName("timeout_expiration");
                 cm.MapProperty(u => u.Roles).SetElementName("roles")
                     .SetDefaultValue(new HashSet<Role>());
+                cm.MapProperty(u => u.PermaBanned).SetElementName("permabanned");
+                cm.MapProperty(u => u.AppealDate).SetElementName("appeal_date");
             });
         }
 
@@ -273,6 +275,14 @@ namespace TPP.Persistence.MongoDB.Repos
                 Builders<User>.Update
                     .Set(u => u.Banned, false)
                     .Set(u => u.TimeoutExpiration, timeoutExpiration),
+                new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After });
+
+        public async Task<User> SetAppealCooldown(User user, Instant? canAppeal) =>
+            await Collection.FindOneAndUpdateAsync<User>(
+                u => u.Id == user.Id,
+                Builders<User>.Update
+                    .Set(u => u.AppealDate, canAppeal)
+                    .Set(u => u.PermaBanned, !canAppeal.HasValue),
                 new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After });
     }
 }

@@ -19,15 +19,17 @@ public class ModerationCommands : ICommandCollection
     private readonly IBanLogRepo _banLogRepo;
     private readonly ITimeoutLogRepo _timeoutLogRepo;
     private readonly IUserRepo _userRepo;
+    private readonly IAppealCooldownLogRepo _appealCooldownRepo;
     private readonly IClock _clock;
 
     public ModerationCommands(
-        ModerationService moderationService, IBanLogRepo banLogRepo, ITimeoutLogRepo timeoutLogRepo, IUserRepo userRepo,
+        ModerationService moderationService, IBanLogRepo banLogRepo, ITimeoutLogRepo timeoutLogRepo, IAppealCooldownLogRepo appealCooldownRepo, IUserRepo userRepo,
         IClock clock)
     {
         _moderationService = moderationService;
         _banLogRepo = banLogRepo;
         _timeoutLogRepo = timeoutLogRepo;
+        _appealCooldownRepo = appealCooldownRepo;
         _userRepo = userRepo;
         _clock = clock;
     }
@@ -40,6 +42,9 @@ public class ModerationCommands : ICommandCollection
         new Command("timeout", TimeoutCmd),
         new Command("untimeout", UntimeoutCmd),
         new Command("checktimeout", CheckTimeout),
+        new Command("setappealcooldown", SetAppealCooldown),
+        new Command("setunappealable", SetUnappealable),
+        new Command("checkappealcooldown", CheckAppealCooldown),
     }.Select(cmd => cmd.WithModeratorsOnly());
 
     private static string ParseReasonArgs(ManyOf<string> reasonParts)
@@ -160,6 +165,61 @@ public class ModerationCommands : ICommandCollection
             Response = remainingTimeout > Duration.Zero
                 ? $"{targetUser.Name} is timed out for another {remainingTimeout.ToTimeSpan().ToHumanReadable()}. {infoText}"
                 : $"{targetUser.Name} is not timed out. {infoText}"
+        };
+    }
+
+    private async Task<CommandResult> SetAppealCooldown(CommandContext context)
+    {
+        (User targetUser, TimeSpan timeSpan) =
+             await context.ParseArgs<User, TimeSpan>();
+        Duration duration = Duration.FromTimeSpan(timeSpan);
+        return new CommandResult
+        {
+            Response = await _moderationService.SetAppealCooldown(context.Message.User, targetUser, duration) switch
+            {
+                SetAppealCooldownResult.Ok => $"{targetUser.Name} is now eligible to appeal at {_clock.GetCurrentInstant() + duration}.",
+                SetAppealCooldownResult.UserNotBanned => $"{targetUser.Name} is not banned.",
+                SetAppealCooldownResult.AlreadyPermanent => throw new InvalidOperationException("Unexpected AlreadyPermanent repsonse"),
+            }
+        };
+    }
+
+    private async Task<CommandResult> SetUnappealable(CommandContext context)
+    {
+        User targetUser = await context.ParseArgs<User>();
+        return new CommandResult
+        {
+            Response = await _moderationService.SetUnappealable(context.Message.User, targetUser) switch
+            {
+                SetAppealCooldownResult.Ok => $"{targetUser.Name} is now ineligible to appeal their ban.",
+                SetAppealCooldownResult.UserNotBanned => $"{targetUser.Name} is not banned.",
+                SetAppealCooldownResult.AlreadyPermanent => $"{targetUser.Name} is already ineligible to appeal.",
+            }
+        };
+    }
+
+    private async Task<CommandResult> CheckAppealCooldown(CommandContext context)
+    {
+        User targetUser = await context.ParseArgs<User>();
+        if (!targetUser.Banned)
+            return new CommandResult { Response = $"{targetUser.Name} is not banned." };
+
+        AppealCooldownLog? recentLog = await _appealCooldownRepo.FindMostRecent(targetUser.Id);
+        string? issuerName = recentLog?.IssuerUserId == null
+            ? "<automated>"
+            : (await _userRepo.FindById(recentLog.IssuerUserId))?.Name;
+        string infoText = recentLog == null
+            ? "No logs available."
+            : $"Last action was {recentLog.Type} by {issuerName} " +
+              $"at {recentLog.Timestamp}";
+        if (recentLog?.Duration != null) infoText += $" for {recentLog.Duration.Value.ToTimeSpan().ToHumanReadable()}";
+
+        return new CommandResult { Response =
+            targetUser.PermaBanned
+            ? $"{targetUser.Name} is not eligible to appeal. {infoText}"
+            : targetUser.AppealDate < _clock.GetCurrentInstant()
+            ? $"{targetUser.Name} is eligible to appeal now. {infoText}"
+            : $"{targetUser.Name} will be eligible to appeal on {targetUser.AppealDate}. {infoText}"
         };
     }
 }

@@ -20,4 +20,10 @@ namespace TPP.Persistence
             string userId, string type, string reason, string? issuerUserId, Instant timestamp, Duration? duration);
         Task<TimeoutLog?> FindMostRecent(string userId);
     }
+    public interface IAppealCooldownLogRepo
+    {
+        Task<AppealCooldownLog> LogAppealCooldownChange(
+            string userId, string type, string issuerUserId, Instant timestamp, Duration? duration);
+        Task<AppealCooldownLog?> FindMostRecent(string userId);
+    }
 }
