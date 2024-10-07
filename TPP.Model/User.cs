@@ -77,12 +77,7 @@ public class User : PropertyEquatable<User>
     public Instant? TimeoutExpiration { get; init; }
     public bool Banned { get; init; }
     /// <summary>
-    /// Not to be confused with Banned. If true, this user can never submit an appeal.
-    /// </summary>
-    public bool PermaBanned { get; init; }
-    /// <summary>
-    /// When a user can appeal. For backwards compatibility, if this field is null,
-    /// it is assumed the user is allowed to appeal immediately unless PermaBanned is true.
+    /// When a user can appeal. If null, the user is never allowed to appeal.
     /// </summary>
     public Instant? AppealDate { get; init; }
 

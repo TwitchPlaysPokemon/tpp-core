@@ -145,7 +145,7 @@ public class ModerationService
         }
         else
         {
-            if (targetUser.PermaBanned)
+            if (targetUser.AppealDate is null)
                 return SetAppealCooldownResult.AlreadyPermanent;
             await _userRepo.SetAppealCooldown(targetUser, null);
             await _appealCooldownLogRepo.LogAppealCooldownChange(targetUser.Id, "manual_perma", issueruser.Id, now, null);

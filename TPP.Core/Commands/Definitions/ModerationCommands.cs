@@ -215,7 +215,7 @@ public class ModerationCommands : ICommandCollection
         if (recentLog?.Duration != null) infoText += $" for {recentLog.Duration.Value.ToTimeSpan().ToHumanReadable()}";
 
         return new CommandResult { Response =
-            targetUser.PermaBanned
+            targetUser.AppealDate is null
             ? $"{targetUser.Name} is not eligible to appeal. {infoText}"
             : targetUser.AppealDate < _clock.GetCurrentInstant()
             ? $"{targetUser.Name} is eligible to appeal now. {infoText}"
