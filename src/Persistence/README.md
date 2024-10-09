@@ -1,4 +1,4 @@
-﻿This project simply defines repository interfaces for all [Models](../TPP.Model) that can be persisted,
+﻿This project simply defines repository interfaces for all [Models](../Model) that can be persisted,
 without imposing how the persistence may be implemented.
 This realizes the [Data Access Object pattern](https://en.wikipedia.org/wiki/Data_access_object).
 

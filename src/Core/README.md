@@ -52,17 +52,22 @@ If you want to connect to an actual Twitch chat you need to keep the `twitch` en
 
 All unchanged entries can be deleted. Missing configurations revert to their default value.
 A minimal configuration may look like this:
+
 ```json
 {
-  "$schema": "./config.schema.json",
-  "Chat": {
-    "Connections": [{"Type": "console"}]
-  }
+   "$schema": "config.schema.json",
+   "Chat": {
+      "Connections": [
+         {
+            "Type": "console"
+         }
+      ]
+   }
 }
 ```
 
 Ensure that you have a properly configured MongoDB server running.
-See the [TPP.Persistence.MongoDB](../TPP.Persistence.MongoDB) project for instructions.
+See the [TPP.Persistence.MongoDB](../PersistenceMongoDB) project for instructions.
 
 Finally, you run the project, e.g. in dualcore mode:
 ```

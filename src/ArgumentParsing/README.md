@@ -28,7 +28,7 @@ This project already includes parser implementations for a bunch of commonly use
 but can be extended by deriving from [IArgumentParser](IArgumentParser.cs)
 and adding that parser to your `ArgsParser`-instance.
 
-Take a look at the [tests](../tests/TPP.ArgsParsing.Tests) for more in-depth usage examples.
+Take a look at the [tests](../../tests/TPP.ArgsParsing.Tests) for more in-depth usage examples.
 
 # built-in types
 

@@ -1,4 +1,4 @@
-﻿This project implements the [Persistence interface](../TPP.Persistence) using a MongoDB database.
+﻿This project implements the [Persistence interface](../Persistence) using a MongoDB database.
 It is designed to seamlessly function with the same database the old core uses.
 
 ## run MongoDB
@@ -18,5 +18,5 @@ It is designed to seamlessly function with the same database the old core uses.
   and you will then be able to execute the mongodb integration tests,
   if the server is running on localhost with the default port `27017`.
   If you already chose a different name, you can rename the replica set [like this](https://stackoverflow.com/a/33400608/3688648).
-- If you run MongoDB with those defaults, running the [TPP.Core](../TPP.Core)
+- If you run MongoDB with those defaults, running the [TPP.Core](../Core)
   project will also work without requiring any further configuration changes.

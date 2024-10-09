@@ -18,10 +18,10 @@ Porting features over is an ongoing process.
 ## requirements
 - .NET 8 SDK (exactly, not 9 or up), you can get one from [dotnet.microsoft.com](https://dotnet.microsoft.com/download)
 - If you use or run any components with persistence, MongoDB.
-  See [TPP.Persistence.MongoDB](TPP.Persistence.MongoDB) for details.
+  See [TPP.Persistence.MongoDB](src/PersistenceMongoDB) for details.
 
 ## run
-The executable project is located at [TPP.Core](TPP.Core). See its readme for further instructions.
+The executable project is located at [TPP.Core](src/Core). See its readme for further instructions.
 
 ## run tests
 - `dotnet test` runs all tests
