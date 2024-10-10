@@ -1,8 +1,8 @@
 using NodaTime;
 using NUnit.Framework;
-using TwitchEventSub.Notifications;
+using EventSub.Notifications;
 
-namespace TwitchEventSub.Tests;
+namespace EventSub.Tests;
 
 /// <summary>
 /// Tests that the examples from the Twitch documentation page

@@ -26,7 +26,7 @@ namespace Core.Chat
         private readonly TwitchChatSender _twitchChatSender;
         private readonly TwitchChatModeChanger _twitchChatModeChanger;
         private readonly TwitchChatExecutor _twitchChatExecutor;
-        public TwitchEventSubChat TwitchEventSubChat { get; }
+        public EventSubChat EventSubChat { get; }
 
         public TwitchChat(
             string name,
@@ -55,12 +55,12 @@ namespace Core.Chat
                 chatConfig.AppClientId,
                 chatConfig.AppClientSecret);
             _twitchChatSender = new TwitchChatSender(loggerFactory, TwitchApi, chatConfig, useTwitchReplies);
-            TwitchEventSubChat = new TwitchEventSubChat(loggerFactory, clock, TwitchApi, userRepo,
+            EventSubChat = new EventSubChat(loggerFactory, clock, TwitchApi, userRepo,
                 subscriptionProcessor, overlayConnection, _twitchChatSender,
                 chatConfig.ChannelId, chatConfig.UserId,
                 chatConfig.CoStreamInputsEnabled, chatConfig.CoStreamInputsOnlyLive, coStreamChannelsRepo);
 
-            TwitchEventSubChat.IncomingMessage += MessageReceived;
+            EventSubChat.IncomingMessage += MessageReceived;
             _twitchChatModeChanger = new TwitchChatModeChanger(
                 loggerFactory.CreateLogger<TwitchChatModeChanger>(), TwitchApi, chatConfig);
             _twitchChatExecutor = new TwitchChatExecutor(loggerFactory.CreateLogger<TwitchChatExecutor>(),
@@ -78,11 +78,11 @@ namespace Core.Chat
                 _logger.LogWarning("TwitchAPI problem detected: {Problem}", problem);
 
             List<Task> tasks = [];
-            tasks.Add(TwitchEventSubChat.Start(cancellationToken));
+            tasks.Add(EventSubChat.Start(cancellationToken));
             await TaskUtils.WhenAllFastExit(tasks);
 
             await _twitchChatSender.DisposeAsync();
-            TwitchEventSubChat.IncomingMessage -= MessageReceived;
+            EventSubChat.IncomingMessage -= MessageReceived;
             _logger.LogDebug("twitch chat is now fully shut down");
         }
 

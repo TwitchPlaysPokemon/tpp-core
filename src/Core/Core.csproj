@@ -26,11 +26,11 @@
 		<ProjectReference Include="..\Inputting\Inputting.csproj" />
 		<ProjectReference Include="..\Match\Match.csproj" />
 		<ProjectReference Include="..\PersistenceMongoDB\PersistenceMongoDB.csproj" />
-		<ProjectReference Include="..\TwitchEventSub\TwitchEventSub.csproj" />
+		<ProjectReference Include="..\EventSub\EventSub.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="..\Resources\**\*" />
+		<EmbeddedResource Include="Resources\**\*" />
 	</ItemGroup>
 
 </Project>

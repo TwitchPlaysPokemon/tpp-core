@@ -15,8 +15,8 @@ using Core.Overlay;
 using Core.Overlay.Events;
 using Core.Utils;
 using Persistence;
-using TwitchEventSub;
-using TwitchEventSub.Notifications;
+using EventSub;
+using EventSub.Notifications;
 using TwitchLib.Api.Core.Exceptions;
 using TwitchLib.Api.Helix.Models.Streams.GetStreams;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;
@@ -25,11 +25,11 @@ using User = Model.User;
 
 namespace Core.Chat;
 
-public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
+public partial class EventSubChat : IWithLifecycle, IMessageSource
 {
     public event EventHandler<MessageEventArgs>? IncomingMessage;
 
-    private readonly ILogger<TwitchEventSubChat> _logger;
+    private readonly ILogger<EventSubChat> _logger;
     private readonly TwitchApi _twitchApi;
     private readonly IClock _clock;
     private readonly IUserRepo _userRepo;
@@ -50,7 +50,7 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
     private readonly Dictionary<User, Instant> _lastInputPerUser = new();
     private Session? _session;
 
-    public TwitchEventSubChat(
+    public EventSubChat(
         ILoggerFactory loggerFactory,
         IClock clock,
         TwitchApi twitchApi,
@@ -64,7 +64,7 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
         bool coStreamInputsOnlyLive,
         ICoStreamChannelsRepo coStreamChannelsRepo)
     {
-        _logger = loggerFactory.CreateLogger<TwitchEventSubChat>();
+        _logger = loggerFactory.CreateLogger<EventSubChat>();
         _twitchApi = twitchApi;
         _clock = clock;
         _userRepo = userRepo;
