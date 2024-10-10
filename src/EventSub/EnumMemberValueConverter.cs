@@ -5,7 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Common;
 
-namespace TwitchEventSub;
+namespace EventSub;
 
 /// <summary>
 /// Custom json converter that supports serializing and deserializing enums to and from the string each member value

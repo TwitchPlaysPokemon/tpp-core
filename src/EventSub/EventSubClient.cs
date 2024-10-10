@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
 using Common.Utils;
-using TwitchEventSub.Messages;
-using static TwitchEventSub.Parsing;
+using EventSub.Messages;
+using static EventSub.Parsing;
 
-namespace TwitchEventSub;
+namespace EventSub;
 
 internal record WebsocketChangeover(ClientWebSocket NewWebSocket, SessionWelcome Welcome);
 

@@ -1,6 +1,6 @@
 using NodaTime;
 
-namespace TwitchEventSub;
+namespace EventSub;
 
 public record Metadata(
     string MessageId,

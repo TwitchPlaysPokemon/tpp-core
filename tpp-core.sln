@@ -23,9 +23,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersistenceMongoDB", "src\P
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersistenceMongoDB.Tests", "tests\PersistenceMongoDB.Tests\PersistenceMongoDB.Tests.csproj", "{F3C54668-4632-4EF4-A036-D180B2FC619A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TwitchEventSub", "src\TwitchEventSub\TwitchEventSub.csproj", "{8CD23341-8D1D-47CD-B21F-0DA6B233F1DC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSub", "src\EventSub\EventSub.csproj", "{8CD23341-8D1D-47CD-B21F-0DA6B233F1DC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TwitchEventSub.Tests", "tests\TwitchEventSub.Tests\TwitchEventSub.Tests.csproj", "{5CB175CD-FF22-4117-AC62-F103C4AC8712}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSub.Tests", "tests\EventSub.Tests\EventSub.Tests.csproj", "{5CB175CD-FF22-4117-AC62-F103C4AC8712}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

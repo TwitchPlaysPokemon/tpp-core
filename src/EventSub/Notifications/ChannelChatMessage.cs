@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Immutable;
 using System.Linq;
-using TwitchEventSub.Messages;
+using EventSub.Messages;
 
-namespace TwitchEventSub.Notifications;
+namespace EventSub.Notifications;
 
 using static ChannelChatMessage;
 
