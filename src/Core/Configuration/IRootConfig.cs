@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace TPP.Core.Configuration;
+namespace Core.Configuration;
 
 /// <summary>
 /// Interface for configs that are _not_ just part of another configuration,

@@ -1,5 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-    <ItemGroup>
-        <ProjectReference Include="..\..\TPP.ArgsParsing\TPP.ArgsParsing.csproj"/>
-    </ItemGroup>
-</Project>

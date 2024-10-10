@@ -9,21 +9,21 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
-using TPP.Common;
-using TPP.Common.Utils;
-using TPP.Core.Overlay;
-using TPP.Core.Overlay.Events;
-using TPP.Core.Utils;
-using TPP.Persistence;
-using TPP.Twitch.EventSub;
-using TPP.Twitch.EventSub.Notifications;
+using Common;
+using Common.Utils;
+using Core.Overlay;
+using Core.Overlay.Events;
+using Core.Utils;
+using Persistence;
+using TwitchEventSub;
+using TwitchEventSub.Notifications;
 using TwitchLib.Api.Core.Exceptions;
 using TwitchLib.Api.Helix.Models.Streams.GetStreams;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;
-using static TPP.Core.EventUtils;
-using User = TPP.Model.User;
+using static Core.EventUtils;
+using User = Model.User;
 
-namespace TPP.Core.Chat;
+namespace Core.Chat;
 
 public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
 {

@@ -6,10 +6,10 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Driver;
-using TPP.Model;
-using TPP.Persistence.MongoDB.Serializers;
+using Model;
+using PersistenceMongoDB.Serializers;
 
-namespace TPP.Persistence.MongoDB.Repos
+namespace PersistenceMongoDB.Repos
 {
     internal record LinkedAccount(string Id, HashSet<string> UserIds);
 

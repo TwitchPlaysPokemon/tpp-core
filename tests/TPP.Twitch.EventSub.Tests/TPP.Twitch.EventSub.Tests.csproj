@@ -1,5 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-    <ItemGroup>
-        <ProjectReference Include="..\..\TPP.Twitch.EventSub\TPP.Twitch.EventSub.csproj" />
-    </ItemGroup>
-</Project>

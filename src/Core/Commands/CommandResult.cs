@@ -1,4 +1,4 @@
-namespace TPP.Core.Commands
+namespace Core.Commands
 {
     public enum ResponseTarget
     {

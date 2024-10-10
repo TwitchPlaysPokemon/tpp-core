@@ -1,9 +1,9 @@
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text.RegularExpressions;
-using TPP.Inputting.Inputs;
+using Inputting.Inputs;
 
-namespace TPP.Inputting.Parsing;
+namespace Inputting.Parsing;
 
 /// <summary>
 /// Parses inputs so that each input set includes a <see cref="SideInput"/> indicating which side it belongs to.

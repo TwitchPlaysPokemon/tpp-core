@@ -7,11 +7,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
-using TPP.Common.Utils;
-using TPP.Twitch.EventSub.Messages;
-using static TPP.Twitch.EventSub.Parsing;
+using Common.Utils;
+using TwitchEventSub.Messages;
+using static TwitchEventSub.Parsing;
 
-namespace TPP.Twitch.EventSub;
+namespace TwitchEventSub;
 
 internal record WebsocketChangeover(ClientWebSocket NewWebSocket, SessionWelcome Welcome);
 

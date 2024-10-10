@@ -1,6 +1,6 @@
 using NodaTime;
 
-namespace TPP.Model;
+namespace Model;
 
 public enum MessageType { Chat, Whisper }
 

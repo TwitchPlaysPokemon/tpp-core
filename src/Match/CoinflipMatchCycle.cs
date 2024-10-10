@@ -3,9 +3,9 @@ using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using TPP.Model;
+using Model;
 
-namespace TPP.Match
+namespace Match
 {
     /// Match cycle for testing purposes that does not run an actual game.
     public class CoinflipMatchCycle : IMatchCycle

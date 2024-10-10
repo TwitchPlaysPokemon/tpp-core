@@ -1,6 +1,6 @@
-using TPP.Inputting.Inputs;
+using Inputting.Inputs;
 
-namespace TPP.Inputting.InputDefinitions
+namespace Inputting.InputDefinitions
 {
     /// <summary>
     /// This is basically an aliased or remapped touchscreen coordinate.

@@ -3,10 +3,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
-using TPP.Model;
-using TPP.Persistence;
+using Model;
+using Persistence;
 
-namespace TPP.Core.Chat;
+namespace Core.Chat;
 
 /// <summary>
 /// Sends out messages that the old core queued in the database.

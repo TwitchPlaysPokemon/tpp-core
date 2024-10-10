@@ -4,11 +4,11 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using TPP.Match;
-using TPP.Model;
-using TPP.Persistence;
+using Match;
+using Model;
+using Persistence;
 
-namespace TPP.Core
+namespace Core
 {
     public interface IBettingPeriod<T> where T : notnull
     {

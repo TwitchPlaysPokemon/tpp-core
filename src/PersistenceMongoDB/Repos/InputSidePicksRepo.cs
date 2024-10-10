@@ -2,9 +2,9 @@ using System.Threading.Tasks;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using NodaTime;
-using TPP.Model;
+using Model;
 
-namespace TPP.Persistence.MongoDB.Repos;
+namespace PersistenceMongoDB.Repos;
 
 public class InputSidePicksRepo : IInputSidePicksRepo
 {

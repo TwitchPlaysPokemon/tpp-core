@@ -1,9 +1,9 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
-using TPP.Common;
+using Common;
 
-namespace TPP.Persistence.MongoDB.Serializers
+namespace PersistenceMongoDB.Serializers
 {
     /// <summary>
     /// Serializer for <see cref="PkmnSpecies"/>.

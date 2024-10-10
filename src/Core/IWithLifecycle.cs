@@ -1,9 +1,9 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using TPP.Core.Utils;
+using Core.Utils;
 
-namespace TPP.Core;
+namespace Core;
 
 /// <summary>
 /// This interface is just a semantic bundle for the typical use-case of having many, concurrently running features.

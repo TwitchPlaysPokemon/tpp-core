@@ -1,10 +1,10 @@
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using TPP.Core.Configuration;
+using Core.Configuration;
 using TwitchLib.Api.Helix.Models.Chat.ChatSettings;
-using static TPP.Core.Configuration.ConnectionConfig.Twitch;
+using static Core.Configuration.ConnectionConfig.Twitch;
 
-namespace TPP.Core.Chat;
+namespace Core.Chat;
 
 public sealed class TwitchChatModeChanger(
     ILogger<TwitchChatModeChanger> logger,

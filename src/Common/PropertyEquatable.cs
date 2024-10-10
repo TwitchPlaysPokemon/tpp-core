@@ -1,6 +1,6 @@
 using System;
 
-namespace TPP.Common
+namespace Common
 {
     /// <summary>
     /// Convenience base class that implements <see cref="IEquatable{T}"/>

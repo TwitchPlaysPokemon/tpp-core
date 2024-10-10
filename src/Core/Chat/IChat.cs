@@ -1,9 +1,9 @@
 using System;
 using System.Threading.Tasks;
-using TPP.Core.Moderation;
-using TPP.Model;
+using Core.Moderation;
+using Model;
 
-namespace TPP.Core.Chat
+namespace Core.Chat
 {
     public class MessageEventArgs : EventArgs
     {

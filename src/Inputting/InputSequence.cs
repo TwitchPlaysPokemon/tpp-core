@@ -2,7 +2,7 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 
-namespace TPP.Inputting
+namespace Inputting
 {
     /// <summary>
     /// An input sequence is a sequence of <see cref="InputSet"/> that are inputted in sequence.

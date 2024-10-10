@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using TPP.ArgsParsing.Types;
-using TPP.Core.Chat;
-using TPP.Model;
-using TPP.Persistence;
+using ArgsParsing.Types;
+using Core.Chat;
+using Model;
+using Persistence;
 
-namespace TPP.Core.Commands.Definitions;
+namespace Core.Commands.Definitions;
 
 public class CurrencyCommands : ICommandCollection
 {

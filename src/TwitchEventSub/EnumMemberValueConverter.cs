@@ -3,9 +3,9 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using TPP.Common;
+using Common;
 
-namespace TPP.Twitch.EventSub;
+namespace TwitchEventSub;
 
 /// <summary>
 /// Custom json converter that supports serializing and deserializing enums to and from the string each member value

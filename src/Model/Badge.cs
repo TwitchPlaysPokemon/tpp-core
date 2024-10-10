@@ -1,7 +1,7 @@
 using NodaTime;
-using TPP.Common;
+using Common;
 
-namespace TPP.Model
+namespace Model
 {
     public class Badge : PropertyEquatable<Badge>
     {

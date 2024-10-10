@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using NodaTime;
-using TPP.Model;
+using Model;
 
-namespace TPP.Core.Commands
+namespace Core.Commands
 {
     public class GlobalCooldown
     {

@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.Serialization;
-using TPP.Inputting;
-using TPP.Inputting.Inputs;
-using TPP.Model;
+using Inputting;
+using Inputting.Inputs;
+using Model;
 
-namespace TPP.Core.Overlay.Events
+namespace Core.Overlay.Events
 {
     [DataContract]
     public sealed class NewAnarchyInput : IOverlayEvent

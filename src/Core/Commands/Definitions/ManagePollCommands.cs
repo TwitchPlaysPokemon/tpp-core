@@ -3,10 +3,10 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using TPP.ArgsParsing.Types;
-using TPP.Persistence;
+using ArgsParsing.Types;
+using Persistence;
 
-namespace TPP.Core.Commands.Definitions
+namespace Core.Commands.Definitions
 {
     class ManagePollCommands : ICommandCollection
     {

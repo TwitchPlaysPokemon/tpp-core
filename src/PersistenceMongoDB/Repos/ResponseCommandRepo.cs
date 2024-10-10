@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
-using TPP.Model;
+using Model;
 
-namespace TPP.Persistence.MongoDB.Repos
+namespace PersistenceMongoDB.Repos
 {
     public class ResponseCommandRepo : IResponseCommandRepo
     {

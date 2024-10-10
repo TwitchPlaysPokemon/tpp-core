@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace TPP.Core.Configuration;
+namespace Core.Configuration;
 
 /// <summary>
 /// Various configuration related utility functions.

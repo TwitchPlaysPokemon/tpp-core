@@ -4,9 +4,9 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
-using TPP.Common;
+using Common;
 
-namespace TPP.Core
+namespace Core
 {
     public enum Generation
     {

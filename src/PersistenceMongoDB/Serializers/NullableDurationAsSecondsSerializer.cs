@@ -3,7 +3,7 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using NodaTime;
 
-namespace TPP.Persistence.MongoDB.Serializers;
+namespace PersistenceMongoDB.Serializers;
 
 /// <summary>
 /// Purposefully not registered as a global serializer in <see cref="CustomSerializers"/>,

@@ -1,6 +1,6 @@
 using System;
 
-namespace TPP.Inputting.Inputs
+namespace Inputting.Inputs
 {
     /// <summary>
     /// An input is the smallest amount of input that can be expressed.

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using TPP.Common;
-using TPP.Model;
+using Common;
+using Model;
 
-namespace TPP.Persistence.MongoDB.Serializers
+namespace PersistenceMongoDB.Serializers
 {
     public class BadgeSourceSerializer : EnumToStringUsingTranslationMappingSerializer<Badge.BadgeSource>
     {

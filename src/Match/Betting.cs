@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using TPP.Model;
+using Model;
 
-namespace TPP.Match
+namespace Match
 {
     /// Failure outcome of attempting to place a bet.
     /// This is an exhaustive set of possible failures,

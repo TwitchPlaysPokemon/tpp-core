@@ -6,21 +6,21 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
-using TPP.ArgsParsing;
-using TPP.Core.Chat;
-using TPP.Core.Commands;
-using TPP.Core.Commands.Definitions;
-using TPP.Core.Configuration;
-using TPP.Core.Moderation;
-using TPP.Core.Overlay;
-using TPP.Core.Utils;
-using TPP.Inputting;
-using TPP.Model;
-using TPP.Persistence;
-using static TPP.Core.EventUtils;
-using static TPP.Core.MessageSource;
+using ArgsParsing;
+using Core.Chat;
+using Core.Commands;
+using Core.Commands.Definitions;
+using Core.Configuration;
+using Core.Moderation;
+using Core.Overlay;
+using Core.Utils;
+using Inputting;
+using Model;
+using Persistence;
+using static Core.EventUtils;
+using static Core.MessageSource;
 
-namespace TPP.Core.Modes
+namespace Core.Modes
 {
     public sealed class ModeBase : IWithLifecycle
     {

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 
-namespace TPP.Twitch.EventSub;
+namespace TwitchEventSub;
 
 public static class EventSubExtensions
 {

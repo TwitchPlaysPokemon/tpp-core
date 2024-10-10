@@ -5,18 +5,18 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
-using TPP.Core.Commands;
-using TPP.Core.Commands.Definitions;
-using TPP.Core.Configuration;
-using TPP.Core.Overlay;
-using TPP.Core.Overlay.Events;
-using TPP.Core.Utils;
-using TPP.Match;
-using TPP.Model;
-using TPP.Persistence;
-using static TPP.Core.EventUtils;
+using Core.Commands;
+using Core.Commands.Definitions;
+using Core.Configuration;
+using Core.Overlay;
+using Core.Overlay.Events;
+using Core.Utils;
+using Match;
+using Model;
+using Persistence;
+using static Core.EventUtils;
 
-namespace TPP.Core.Modes;
+namespace Core.Modes;
 
 public sealed class Matchmode : IWithLifecycle
 {

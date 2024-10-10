@@ -6,11 +6,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
-using TPP.Common;
-using TPP.Model;
-using TPP.Persistence;
+using Common;
+using Model;
+using Persistence;
 
-namespace TPP.Core
+namespace Core
 {
     public record EmoteOccurrence(string Id, string Code, int StartIndex, int EndIndex);
 

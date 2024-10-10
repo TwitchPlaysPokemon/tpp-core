@@ -4,10 +4,10 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using TPP.Common;
-using TPP.Model;
+using Common;
+using Model;
 
-namespace TPP.Persistence
+namespace Persistence
 {
     /// <summary>
     /// Exception thrown when a user related operation failed because the user did not exist.

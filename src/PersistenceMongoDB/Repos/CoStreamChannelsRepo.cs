@@ -5,7 +5,7 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using NodaTime;
 
-namespace TPP.Persistence.MongoDB.Repos;
+namespace PersistenceMongoDB.Repos;
 
 public class CoStreamChannelsRepo : ICoStreamChannelsRepo
 {

@@ -5,13 +5,13 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using NodaTime;
-using TPP.ArgsParsing.Types;
-using TPP.Common;
-using TPP.Core.Chat;
-using TPP.Model;
-using TPP.Persistence;
+using ArgsParsing.Types;
+using Common;
+using Core.Chat;
+using Model;
+using Persistence;
 
-namespace TPP.Core.Commands.Definitions
+namespace Core.Commands.Definitions
 {
     /// <summary>
     /// Helper class to store all relevant Information for a single Region

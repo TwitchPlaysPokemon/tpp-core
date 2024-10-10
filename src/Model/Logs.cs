@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NodaTime;
-using TPP.Common;
+using Common;
 
-namespace TPP.Model
+namespace Model
 {
     public sealed record BadgeLog(
         string Id,

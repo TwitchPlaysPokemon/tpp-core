@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace TPP.Core.Utils;
+namespace Core.Utils;
 
 public static class TaskUtils
 {

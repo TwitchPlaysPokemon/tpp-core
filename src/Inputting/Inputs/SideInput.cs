@@ -1,4 +1,4 @@
-namespace TPP.Inputting.Inputs;
+namespace Inputting.Inputs;
 
 public enum InputSide { Left, Right }
 

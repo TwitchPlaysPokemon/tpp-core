@@ -1,4 +1,4 @@
-namespace TPP.Core.Moderation
+namespace Core.Moderation
 {
     public interface IModerationRule
     {

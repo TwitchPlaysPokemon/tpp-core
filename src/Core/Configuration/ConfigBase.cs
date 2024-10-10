@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace TPP.Core.Configuration;
+namespace Core.Configuration;
 
 /// <summary>
 /// Base class all configuration classes need to inherit from.

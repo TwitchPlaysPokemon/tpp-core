@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using NodaTime;
 
-namespace TPP.Common.Utils;
+namespace Common.Utils;
 
 internal record TimedEntry<T>(Instant InsertedAt, T Value);
 

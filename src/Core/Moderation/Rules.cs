@@ -8,11 +8,11 @@ using System.Text;
 using System.Text.RegularExpressions;
 using F23.StringSimilarity;
 using NodaTime;
-using TPP.Common.Utils;
-using TPP.Model;
+using Common.Utils;
+using Model;
 using static System.Globalization.UnicodeCategory;
 
-namespace TPP.Core.Moderation
+namespace Core.Moderation
 {
     internal static class Utils
     {

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace TPP.Core.Commands.Definitions
+namespace Core.Commands.Definitions
 {
     public class HelpCommand
     {

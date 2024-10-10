@@ -1,8 +1,8 @@
 using System.Threading.Tasks;
 using NodaTime;
-using TPP.Model;
+using Model;
 
-namespace TPP.Core.Moderation
+namespace Core.Moderation
 {
     /// performs moderator actions
     public interface IExecutor

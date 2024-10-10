@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
-using TPP.Model;
+using Model;
 
-namespace TPP.Core
+namespace Core
 {
     public record MessageSource
     {

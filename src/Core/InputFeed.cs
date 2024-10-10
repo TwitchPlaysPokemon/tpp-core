@@ -5,14 +5,14 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NodaTime;
-using TPP.Core.Overlay;
-using TPP.Core.Overlay.Events;
-using TPP.Inputting;
-using TPP.Inputting.Inputs;
-using TPP.Model;
+using Core.Overlay;
+using Core.Overlay.Events;
+using Inputting;
+using Inputting.Inputs;
+using Model;
 using InputMap = System.Collections.Generic.IDictionary<string, object>;
 
-namespace TPP.Core;
+namespace Core;
 
 public record QueuedInput(long InputId, InputSet InputSet);
 

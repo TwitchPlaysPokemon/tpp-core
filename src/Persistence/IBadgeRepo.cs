@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using NodaTime;
-using TPP.Common;
-using TPP.Model;
+using Common;
+using Model;
 
-namespace TPP.Persistence
+namespace Persistence
 {
     public class UserLostBadgeSpeciesEventArgs : EventArgs
     {

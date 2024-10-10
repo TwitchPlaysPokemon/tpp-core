@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace TPP.Common
+namespace Common
 {
     public static class Emblems
     {

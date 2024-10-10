@@ -4,12 +4,12 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using NodaTime;
-using TPP.Common;
-using TPP.Model;
-using TPP.Persistence;
-using TPP.Persistence.MongoDB.Repos;
+using Common;
+using Model;
+using Persistence;
+using PersistenceMongoDB.Repos;
 
-namespace TPP.Core;
+namespace Core;
 
 public class TransmuteException : Exception
 {

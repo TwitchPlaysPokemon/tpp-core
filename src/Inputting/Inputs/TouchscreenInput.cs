@@ -1,4 +1,4 @@
-namespace TPP.Inputting.Inputs
+namespace Inputting.Inputs
 {
     /// <summary>
     /// A touchscreen input is an input in the form of <c>x,y</c>, e.g. <c>120,215</c>,

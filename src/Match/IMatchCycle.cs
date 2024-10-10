@@ -1,8 +1,8 @@
 using System.Threading;
 using System.Threading.Tasks;
-using TPP.Model;
+using Model;
 
-namespace TPP.Match
+namespace Match
 {
     public interface IMatchCycle
     {

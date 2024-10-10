@@ -3,11 +3,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using NodaTime;
 using NodaTime.Extensions;
-using TPP.Common;
-using TPP.Core.Chat;
+using Common;
+using Core.Chat;
 using TwitchLib.Api.Helix.Models.Streams.GetStreams;
 
-namespace TPP.Core.Commands.Definitions
+namespace Core.Commands.Definitions
 {
     class UptimeData
     {

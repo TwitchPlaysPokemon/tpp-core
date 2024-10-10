@@ -1,6 +1,6 @@
 using System;
 
-namespace TPP.Inputting.Inputs
+namespace Inputting.Inputs
 {
     /// <summary>
     /// An analog input is an input that has a float value from 0 to 1 describing the intensity of the input.

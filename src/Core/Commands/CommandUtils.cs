@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace TPP.Core.Commands
+namespace Core.Commands
 {
     public static class CommandUtils
     {

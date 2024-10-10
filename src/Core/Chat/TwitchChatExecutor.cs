@@ -1,13 +1,13 @@
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
-using TPP.Core.Configuration;
-using TPP.Core.Moderation;
-using TPP.Model;
+using Core.Configuration;
+using Core.Moderation;
+using Model;
 using TwitchLib.Api.Helix.Models.Moderation.BanUser;
-using static TPP.Core.Configuration.ConnectionConfig.Twitch;
+using static Core.Configuration.ConnectionConfig.Twitch;
 
-namespace TPP.Core.Chat;
+namespace Core.Chat;
 
 public sealed class TwitchChatExecutor(
     ILogger<TwitchChatExecutor> logger,

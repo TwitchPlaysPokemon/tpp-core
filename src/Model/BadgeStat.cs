@@ -1,6 +1,6 @@
-using TPP.Common;
+using Common;
 
-namespace TPP.Model
+namespace Model
 {
     public record BadgeStat(
         PkmnSpecies Species,

@@ -10,11 +10,11 @@ using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 using NodaTime;
-using TPP.Common;
-using TPP.Model;
-using TPP.Persistence.MongoDB.Serializers;
+using Common;
+using Model;
+using PersistenceMongoDB.Serializers;
 
-namespace TPP.Persistence.MongoDB.Repos;
+namespace PersistenceMongoDB.Repos;
 
 public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo
 {

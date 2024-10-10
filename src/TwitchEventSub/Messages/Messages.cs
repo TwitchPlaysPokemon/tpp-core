@@ -1,4 +1,4 @@
-namespace TPP.Twitch.EventSub.Messages;
+namespace TwitchEventSub.Messages;
 
 public class SessionKeepalive(Metadata metadata, SessionKeepalive.KeepalivePayload payload)
     : Message<Metadata, SessionKeepalive.KeepalivePayload>(metadata, payload), IHasMessageType

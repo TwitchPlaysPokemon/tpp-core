@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using NodaTime;
-using TPP.Common;
-using TPP.Model;
+using Common;
+using Model;
 
-namespace TPP.Persistence;
+namespace Persistence;
 
 public interface ISubscriptionLogRepo
 {

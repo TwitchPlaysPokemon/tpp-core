@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Runtime.Serialization;
-using TPP.Common;
+using Common;
 
-namespace TPP.Model
+namespace Model
 {
     // This file contains POCOs for generic pokemon related data that adhere to the
     // [pokecat specification](https://github.com/TwitchPlaysPokemon/pokecat/blob/master/unified_objects.md)

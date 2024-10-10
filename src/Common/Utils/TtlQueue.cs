@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NodaTime;
 
-namespace TPP.Common.Utils
+namespace Common.Utils
 {
     /// A queue, but with a time to live.
     /// Items are automatically removed after the ttl and cannot be dequeued manually.

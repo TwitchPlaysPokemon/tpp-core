@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TPP.Inputting
+namespace Inputting
 {
     /// <summary>
     /// The input buffer queue is responsible for putting inputs in reference to time,

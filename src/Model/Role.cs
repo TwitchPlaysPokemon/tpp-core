@@ -1,4 +1,4 @@
-namespace TPP.Model
+namespace Model
 {
     public enum Role
     {

@@ -1,10 +1,10 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using TPP.Core.Configuration;
-using TPP.Core.Utils;
+using Core.Configuration;
+using Core.Utils;
 
-namespace TPP.Core.Modes
+namespace Core.Modes
 {
     /// A mode for testing purposes that can be run without any preconditions or configurations.
     public sealed class DummyMode : IWithLifecycle

@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
-namespace TPP.Core.Utils;
+namespace Core.Utils;
 
 /// <summary>
 /// ImmutableHashSet can already be made case insensitive by providing a custom comparer,

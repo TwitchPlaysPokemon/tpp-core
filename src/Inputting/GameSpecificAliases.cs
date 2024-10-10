@@ -5,7 +5,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TPP.Inputting
+namespace Inputting
 {
     public enum GameSpecificAlias
     {
@@ -99,7 +99,7 @@ namespace TPP.Inputting
                 ("poke5", 5, 98),
                 ("poke6", 130, 150)
             );
-        
+
         private static InputParserBuilder AddXYAliases(this InputParserBuilder builder) =>
             builder.AliasedTouchscreenInputs(
                 ("move1", 40, 70),

@@ -6,11 +6,11 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using TPP.Core.Utils;
-using TPP.Inputting;
+using Core.Utils;
+using Inputting;
 using InputMap = System.Collections.Generic.IDictionary<string, object>;
 
-namespace TPP.Core;
+namespace Core;
 
 public sealed class InputServer : IWithLifecycle
 {

@@ -7,9 +7,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using TPP.Core.Utils;
+using Core.Utils;
 
-namespace TPP.Core.Overlay
+namespace Core.Overlay
 {
     public interface IBroadcastServer
     {

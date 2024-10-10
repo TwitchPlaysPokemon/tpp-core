@@ -155,7 +155,7 @@ A
 A
 ```
 
-For more examples, check out the [tests](../../tests/TPP.Inputting.Tests).
+For more examples, check out the [tests](../../tests/Inputting.Tests).
 
 ## input duration
 

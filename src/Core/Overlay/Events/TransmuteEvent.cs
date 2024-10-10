@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.Serialization;
-using TPP.Common;
+using Common;
 
-namespace TPP.Core.Overlay.Events;
+namespace Core.Overlay.Events;
 
 [DataContract]
 public class TransmuteEvent : IOverlayEvent

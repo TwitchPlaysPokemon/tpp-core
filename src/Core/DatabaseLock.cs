@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson.Serialization.Attributes;
 using NodaTime;
-using TPP.Persistence;
+using Persistence;
 
-namespace TPP.Core
+namespace Core
 {
     internal class DatabaseLockEntry
     {

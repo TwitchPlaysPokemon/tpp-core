@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace TPP.Persistence
+namespace Persistence
 {
     public interface IKeyValueStore
     {

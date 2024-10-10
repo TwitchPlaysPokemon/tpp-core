@@ -1,7 +1,7 @@
 using System;
 using System.Text.RegularExpressions;
 
-namespace TPP.Common
+namespace Common
 {
     /// <summary>
     /// Wrapper around a color in hexadecimal string notation, e.g. <c>#FF0000</c> for pure red.

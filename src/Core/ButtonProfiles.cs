@@ -1,10 +1,10 @@
 using System;
 using System.Linq;
 using System.Runtime.Serialization;
-using TPP.Common;
-using TPP.Inputting;
+using Common;
+using Inputting;
 
-namespace TPP.Core
+namespace Core
 {
     [DataContract]
     public enum ButtonProfile
