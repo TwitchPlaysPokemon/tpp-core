@@ -2,12 +2,12 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using ArgsParsing.Types;
-using Core.Chat;
-using Model;
-using Persistence;
+using TPP.ArgsParsing.Types;
+using TPP.Core.Chat;
+using TPP.Model;
+using TPP.Persistence;
 
-namespace Core.Commands.Definitions
+namespace TPP.Core.Commands.Definitions
 {
     public class ModeratorCommands : ICommandCollection
     {
