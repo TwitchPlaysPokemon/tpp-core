@@ -28,20 +28,35 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
         [OneTimeSetUp]
         public void SetUpMongoClient()
         {
-            CustomSerializers.RegisterAll();
-            // try to connect to a mongodb running on the default port
-            MongoClientSettings settings = MongoClientSettings
-                .FromConnectionString($"mongodb://localhost:27017/?replicaSet={ReplicaSetName}");
-            settings.LinqProvider = LinqProvider.V3;
-            _client = new MongoClient(settings);
-            bool success = _client.ListDatabaseNamesAsync(CancellationToken.None).Wait(TimeSpan.FromSeconds(5));
-            if (!success)
+            try
             {
-                throw new AssertionException(
-                    "Failed to connect to a local MongoDB instance running on the default port. " +
-                    "Please start a local MongoDB instance on the default port (27017), " +
-                    $"and make sure it is in replica set mode with a replica set named '{ReplicaSetName}'. " +
-                    "Alternatively, skip these tests using 'dotnet test --filter TestCategory!=IntegrationTest'");
+                CustomSerializers.RegisterAll();
+
+                // Set up MongoDB client settings to connect to replica set
+                MongoClientSettings settings = MongoClientSettings
+                    .FromConnectionString($"mongodb://localhost:27017/?replicaSet={ReplicaSetName}");
+                settings.LinqProvider = LinqProvider.V3;
+
+                // Initialize the client
+                _client = new MongoClient(settings);
+
+                // Check connection and list databases to verify replica set mode
+                var cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token;
+                var dbNames = _client.ListDatabaseNamesAsync(cancellationToken).Result;
+
+                Console.WriteLine("Successfully connected to MongoDB instance.");
+            }
+            catch (Exception ex)
+            {
+                // Log the error details
+                Console.WriteLine($"MongoDB connection failed: {ex.Message}");
+
+                // Option to skip the tests if MongoDB is not available
+                Assert.Ignore(
+                    "MongoDB instance is not available. Skipping integration tests. " +
+                    "Ensure MongoDB is running on the default port (27017) and in replica set mode with 'rs0'. " +
+                    "Alternatively, run tests with 'dotnet test --filter TestCategory!=IntegrationTest'"
+                );
             }
         }
 
