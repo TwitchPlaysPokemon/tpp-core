@@ -10,6 +10,7 @@ using NodaTime.Extensions;
 using NodaTime.Text;
 using NUnit.Framework;
 using Model;
+using Persistence;
 using PersistenceMongoDB.Repos;
 
 namespace PersistenceMongoDB.Tests.Repos

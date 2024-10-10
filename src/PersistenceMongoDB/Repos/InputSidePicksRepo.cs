@@ -3,6 +3,7 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using NodaTime;
 using Model;
+using Persistence;
 
 namespace PersistenceMongoDB.Repos;
 

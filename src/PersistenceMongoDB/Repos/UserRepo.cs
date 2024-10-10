@@ -8,6 +8,7 @@ using MongoDB.Driver;
 using NodaTime;
 using Common;
 using Model;
+using Persistence;
 
 namespace PersistenceMongoDB.Repos
 {

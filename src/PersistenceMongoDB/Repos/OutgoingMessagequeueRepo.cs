@@ -3,6 +3,7 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Driver;
 using Model;
+using Persistence;
 using PersistenceMongoDB.Serializers;
 
 namespace PersistenceMongoDB.Repos;

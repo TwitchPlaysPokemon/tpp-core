@@ -6,6 +6,7 @@ using NodaTime;
 using NSubstitute;
 using NUnit.Framework;
 using Model;
+using Persistence;
 using PersistenceMongoDB.Repos;
 
 namespace PersistenceMongoDB.Tests.Repos

@@ -5,6 +5,7 @@ using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Driver;
 using NodaTime;
 using Model;
+using Persistence;
 using PersistenceMongoDB.Serializers;
 
 namespace PersistenceMongoDB.Repos;

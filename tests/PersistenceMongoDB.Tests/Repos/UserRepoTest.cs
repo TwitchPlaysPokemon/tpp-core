@@ -9,6 +9,7 @@ using NSubstitute;
 using NUnit.Framework;
 using Common;
 using Model;
+using Persistence;
 using PersistenceMongoDB.Repos;
 
 namespace PersistenceMongoDB.Tests.Repos

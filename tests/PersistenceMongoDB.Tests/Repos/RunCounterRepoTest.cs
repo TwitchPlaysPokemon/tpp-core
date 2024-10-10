@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Persistence;
 using PersistenceMongoDB.Repos;
 
 namespace PersistenceMongoDB.Tests.Repos;

@@ -5,6 +5,7 @@ using System.Xml.Linq;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using Model;
+using Persistence;
 
 namespace PersistenceMongoDB.Repos
 {

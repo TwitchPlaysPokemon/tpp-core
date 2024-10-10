@@ -5,6 +5,7 @@ using MongoDB.Driver;
 using NodaTime;
 using NUnit.Framework;
 using Model;
+using Persistence;
 using PersistenceMongoDB.Repos;
 
 namespace PersistenceMongoDB.Tests.Repos;

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 using NUnit.Framework;
+using Persistence;
 using PersistenceMongoDB.Serializers;
 
 namespace PersistenceMongoDB.Tests.Repos

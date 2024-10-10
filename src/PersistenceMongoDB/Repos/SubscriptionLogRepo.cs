@@ -6,6 +6,7 @@ using MongoDB.Driver;
 using NodaTime;
 using Common;
 using Model;
+using Persistence;
 using PersistenceMongoDB.Serializers;
 
 namespace PersistenceMongoDB.Repos
