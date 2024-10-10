@@ -4,11 +4,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
-using TPP.Core.Configuration;
-using TPP.Model;
-using TPP.Persistence;
+using Core.Configuration;
+using Model;
+using Persistence;
 
-namespace TPP.Core.Chat
+namespace Core.Chat
 {
     /// Simulates a chat using stdin and stdout
     public sealed class ConsoleChat : IChat

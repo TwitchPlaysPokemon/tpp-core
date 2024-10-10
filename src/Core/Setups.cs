@@ -8,25 +8,25 @@ using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 using NodaTime;
-using TPP.ArgsParsing;
-using TPP.ArgsParsing.TypeParsers;
-using TPP.Common;
-using TPP.Core.Chat;
-using TPP.Core.Commands;
-using TPP.Core.Commands.Definitions;
-using TPP.Core.Configuration;
-using TPP.Core.Moderation;
-using TPP.Core.Overlay;
-using TPP.Core.Overlay.Events;
-using TPP.Inputting;
-using TPP.Model;
-using TPP.Persistence;
-using TPP.Persistence.MongoDB;
-using TPP.Persistence.MongoDB.Repos;
-using TPP.Persistence.MongoDB.Serializers;
-using static TPP.Core.EventUtils;
+using ArgsParsing;
+using ArgsParsing.TypeParsers;
+using Common;
+using Core.Chat;
+using Core.Commands;
+using Core.Commands.Definitions;
+using Core.Configuration;
+using Core.Moderation;
+using Core.Overlay;
+using Core.Overlay.Events;
+using Inputting;
+using Model;
+using Persistence;
+using PersistenceMongoDB;
+using PersistenceMongoDB.Repos;
+using PersistenceMongoDB.Serializers;
+using static Core.EventUtils;
 
-namespace TPP.Core
+namespace Core
 {
     /// <summary>
     /// Bundling up boilerplate code required to construct various classes.

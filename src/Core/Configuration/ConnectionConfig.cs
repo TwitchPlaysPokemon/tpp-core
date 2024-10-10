@@ -4,9 +4,9 @@ using System.Linq;
 using JsonSubTypes;
 using Newtonsoft.Json;
 using NodaTime;
-using TPP.Core.Utils;
+using Core.Utils;
 
-namespace TPP.Core.Configuration;
+namespace Core.Configuration;
 
 [JsonConverter(typeof(JsonSubtypes), nameof(Type))]
 [JsonSubtypes.KnownSubType(typeof(Console), "console")]

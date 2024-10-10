@@ -3,7 +3,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 
-namespace TPP.Common
+namespace Common
 {
     public static class EnumExtensions
     {

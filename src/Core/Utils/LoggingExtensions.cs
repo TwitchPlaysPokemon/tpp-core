@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Serilog.Events;
 
-namespace TPP.Core.Utils;
+namespace Core.Utils;
 
 public static class LoggingExtensions
 {

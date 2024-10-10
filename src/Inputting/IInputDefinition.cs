@@ -1,6 +1,6 @@
-using TPP.Inputting.Inputs;
+using Inputting.Inputs;
 
-namespace TPP.Inputting
+namespace Inputting
 {
     /// <summary>
     /// An input definition contains information on how to extract a specific input from a raw input message

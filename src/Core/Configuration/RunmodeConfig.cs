@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using TPP.Inputting;
+using Inputting;
 
-namespace TPP.Core.Configuration;
+namespace Core.Configuration;
 
 public class RunmodeConfig : ConfigBase, IRootConfig
 {

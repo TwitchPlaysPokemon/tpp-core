@@ -3,11 +3,11 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using TPP.Core.Configuration;
-using TPP.Model;
-using static TPP.Core.Configuration.ConnectionConfig.Twitch;
+using Core.Configuration;
+using Model;
+using static Core.Configuration.ConnectionConfig.Twitch;
 
-namespace TPP.Core.Chat;
+namespace Core.Chat;
 
 public sealed class TwitchChatSender : IMessageSender, IAsyncDisposable
 {

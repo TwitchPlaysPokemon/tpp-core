@@ -6,12 +6,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
-using TPP.Core.Configuration;
-using TPP.Core.Utils;
-using TPP.Persistence;
+using Core.Configuration;
+using Core.Utils;
+using Persistence;
 using TwitchLib.Api.Helix.Models.Chat.GetChatters;
 
-namespace TPP.Core;
+namespace Core;
 
 public sealed class ChattersWorker(
     ILoggerFactory loggerFactory,

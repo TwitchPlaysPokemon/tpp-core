@@ -4,10 +4,11 @@ using System.Threading.Tasks;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using NodaTime;
-using TPP.Model;
+using Model;
+using Persistence;
 using static System.Linq.Enumerable;
 
-namespace TPP.Persistence.MongoDB.Repos
+namespace PersistenceMongoDB.Repos
 {
     public class PollRepo : IPollRepo
     {

@@ -1,9 +1,9 @@
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using NodaTime;
-using TPP.Model;
+using Model;
 
-namespace TPP.Persistence;
+namespace Persistence;
 
 public interface IChattersSnapshotsRepo
 {

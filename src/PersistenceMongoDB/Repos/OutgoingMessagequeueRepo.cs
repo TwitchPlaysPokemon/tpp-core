@@ -2,10 +2,11 @@ using System.Threading.Tasks;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Driver;
-using TPP.Model;
-using TPP.Persistence.MongoDB.Serializers;
+using Model;
+using Persistence;
+using PersistenceMongoDB.Serializers;
 
-namespace TPP.Persistence.MongoDB.Repos;
+namespace PersistenceMongoDB.Repos;
 
 public class OutgoingMessagequeueRepo : IOutgoingMessagequeueRepo
 {

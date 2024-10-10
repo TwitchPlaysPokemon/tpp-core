@@ -1,5 +1,5 @@
 using NodaTime;
 
-namespace TPP.Model;
+namespace Model;
 
 public record SidePick(string? UserId, string? Side, Instant PickedAt);

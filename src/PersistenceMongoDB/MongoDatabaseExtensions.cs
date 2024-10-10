@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
-namespace TPP.Persistence.MongoDB
+namespace PersistenceMongoDB
 {
     public static class MongoDatabaseExtensions
     {

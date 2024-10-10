@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace TPP.Core.Commands.Definitions;
+namespace Core.Commands.Definitions;
 
 /// <summary>
 /// Because command definitions are usually split up into separate classes with a few commands each,

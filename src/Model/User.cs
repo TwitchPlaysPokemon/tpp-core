@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using NodaTime;
-using TPP.Common;
+using Common;
 
 //public record Match(long Pokeyen, long Tokens, long PokeyenHighScore);
 
-namespace TPP.Model;
+namespace Model;
 
 public class User : PropertyEquatable<User>
 {

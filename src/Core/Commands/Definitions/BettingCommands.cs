@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using TPP.ArgsParsing.Types;
-using TPP.Match;
-using TPP.Model;
+using ArgsParsing.Types;
+using Match;
+using Model;
 
-namespace TPP.Core.Commands.Definitions
+namespace Core.Commands.Definitions
 {
     public class BettingCommands : ICommandCollection
     {

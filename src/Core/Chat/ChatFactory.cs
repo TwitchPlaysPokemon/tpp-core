@@ -1,12 +1,12 @@
 using System;
 using Microsoft.Extensions.Logging;
 using NodaTime;
-using TPP.Core.Configuration;
-using TPP.Core.Overlay;
-using TPP.Model;
-using TPP.Persistence;
+using Core.Configuration;
+using Core.Overlay;
+using Model;
+using Persistence;
 
-namespace TPP.Core.Chat;
+namespace Core.Chat;
 
 public class ChatFactory(
     ILoggerFactory loggerFactory,

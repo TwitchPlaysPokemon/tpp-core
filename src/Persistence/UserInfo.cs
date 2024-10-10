@@ -1,7 +1,7 @@
 using NodaTime;
-using TPP.Common;
+using Common;
 
-namespace TPP.Persistence;
+namespace Persistence;
 
 public readonly record struct UserInfo
 (

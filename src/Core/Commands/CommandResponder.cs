@@ -1,8 +1,8 @@
 using System;
 using System.Threading.Tasks;
-using TPP.Core.Chat;
+using Core.Chat;
 
-namespace TPP.Core.Commands
+namespace Core.Commands
 {
     public interface ICommandResponder
     {

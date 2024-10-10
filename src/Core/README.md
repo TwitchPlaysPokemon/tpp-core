@@ -67,7 +67,7 @@ A minimal configuration may look like this:
 ```
 
 Ensure that you have a properly configured MongoDB server running.
-See the [TPP.Persistence.MongoDB](../PersistenceMongoDB) project for instructions.
+See the [PersistenceMongoDB](../PersistenceMongoDB) project for instructions.
 
 Finally, you run the project, e.g. in dualcore mode:
 ```
@@ -127,5 +127,5 @@ If you want faster startup times or graceful SIGTERM handling,
 For example, making a release build and running the resulting executable may look like this:
 ```
 dotnet publish -c Release
-../artifacts/publish/TPP.Core/release/TPP.Core.exe --help
+../artifacts/publish/Core/release/Core.exe --help
 ```

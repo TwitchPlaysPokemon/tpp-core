@@ -1,8 +1,8 @@
 using System.Collections.Immutable;
-using TPP.ArgsParsing;
-using TPP.Core.Chat;
+using ArgsParsing;
+using Core.Chat;
 
-namespace TPP.Core.Commands;
+namespace Core.Commands;
 
 public readonly record struct CommandContext(
     Message Message,

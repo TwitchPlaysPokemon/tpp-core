@@ -1,10 +1,10 @@
 using System;
 using System.Threading.Tasks;
 using NodaTime;
-using TPP.Model;
-using TPP.Persistence;
+using Model;
+using Persistence;
 
-namespace TPP.Core.Moderation;
+namespace Core.Moderation;
 
 public enum TimeoutResult { Ok, MustBe2WeeksOrLess, UserIsBanned, UserIsModOrOp, NotSupportedInChannel }
 public enum BanResult { Ok, UserIsModOrOp, NotSupportedInChannel }

@@ -4,9 +4,9 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
-using TPP.Inputting.Inputs;
+using Inputting.Inputs;
 
-namespace TPP.Inputting.Parsing
+namespace Inputting.Parsing
 {
     /// <summary>
     /// This input parser is capable of parsing raw input text into <see cref="InputSequence"/>s

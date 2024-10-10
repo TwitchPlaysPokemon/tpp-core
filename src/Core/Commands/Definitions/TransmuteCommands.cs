@@ -3,11 +3,11 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using NodaTime;
-using TPP.ArgsParsing.Types;
-using TPP.Common;
-using TPP.Model;
+using ArgsParsing.Types;
+using Common;
+using Model;
 
-namespace TPP.Core.Commands.Definitions;
+namespace Core.Commands.Definitions;
 
 public class TransmuteCommands : ICommandCollection
 {

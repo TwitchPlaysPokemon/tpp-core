@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace TPP.Common
+namespace Common
 {
     /// <summary>
     /// A <see cref="PkmnSpecies"/> uniquely identifies and describes a species of pokemon.
@@ -16,7 +16,7 @@ namespace TPP.Common
     /// This class is deliberately not loading any pokemon name data by itself,
     /// since that would most likely be done by loading a large JSON file in application code.
     /// Loading such a file imposes additional startup time, could depend on a JSON library
-    /// (e.g. JSON.net) and takes up significant space. Since this class lives in the "TPP.Common" project,
+    /// (e.g. JSON.net) and takes up significant space. Since this class lives in the "Common" project,
     /// which every other project depends on, that is to be avoided.
     /// Instead, the project bundling all dependencies together (the main application)
     /// should register names for known pokemon using <see cref="RegisterName"/> at startup.

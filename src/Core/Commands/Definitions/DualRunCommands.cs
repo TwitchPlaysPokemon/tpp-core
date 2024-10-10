@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NodaTime;
-using TPP.Common;
-using TPP.Core.Configuration;
-using TPP.Model;
-using TPP.Persistence;
+using Common;
+using Core.Configuration;
+using Model;
+using Persistence;
 
-namespace TPP.Core.Commands.Definitions;
+namespace Core.Commands.Definitions;
 
 public class DualRunCommands(Func<RunmodeConfig> runmodeConfigProvider, IInputSidePicksRepo inputSidePicksRepo, IClock clock)
     : ICommandCollection

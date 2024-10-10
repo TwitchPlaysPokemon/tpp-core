@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
-using TPP.Common;
+using Common;
 
-namespace TPP.Persistence.MongoDB.Serializers
+namespace PersistenceMongoDB.Serializers
 {
     /// <summary>
     /// A serializer that represents an enum with the value of its <see cref="EnumMemberAttribute"/>.

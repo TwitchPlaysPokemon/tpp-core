@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
-using TPP.Model;
+using Model;
 
-namespace TPP.Persistence
+namespace Persistence
 {
     public interface IResponseCommandRepo
     {

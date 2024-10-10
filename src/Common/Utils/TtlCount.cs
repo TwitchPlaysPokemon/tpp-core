@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using NodaTime;
 
-namespace TPP.Common.Utils;
+namespace Common.Utils;
 
 /// A counter whose increments decay after a fixed time.
 /// Useful for counting how often something happened within the past x minutes or so.

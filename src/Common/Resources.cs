@@ -1,7 +1,7 @@
 using System.IO;
 using System.Reflection;
 
-namespace TPP.Common
+namespace Common
 {
     public static class Resources
     {

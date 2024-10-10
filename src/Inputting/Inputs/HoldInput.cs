@@ -1,4 +1,4 @@
-namespace TPP.Inputting.Inputs
+namespace Inputting.Inputs
 {
     /// <summary>
     /// A pseudo-input indicating that an input set should be held down until the next input set.

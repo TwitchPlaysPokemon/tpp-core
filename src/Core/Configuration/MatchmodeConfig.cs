@@ -1,6 +1,6 @@
 using NodaTime;
 
-namespace TPP.Core.Configuration;
+namespace Core.Configuration;
 
 public class MatchmodeConfig : ConfigBase, IRootConfig
 {

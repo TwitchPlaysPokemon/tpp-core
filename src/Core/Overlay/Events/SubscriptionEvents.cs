@@ -1,8 +1,8 @@
 using System.Collections.Immutable;
 using System.Runtime.Serialization;
-using TPP.Model;
+using Model;
 
-namespace TPP.Core.Overlay.Events
+namespace Core.Overlay.Events
 {
     [DataContract]
     public struct EmoteInfo

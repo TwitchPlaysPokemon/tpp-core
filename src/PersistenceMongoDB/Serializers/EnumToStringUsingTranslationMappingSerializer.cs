@@ -5,7 +5,7 @@ using System.Linq;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 
-namespace TPP.Persistence.MongoDB.Serializers
+namespace PersistenceMongoDB.Serializers
 {
     /// <summary>
     /// A serializer for storing enums in the database as strings using a provided translation mapping.

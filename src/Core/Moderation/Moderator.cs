@@ -5,10 +5,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
-using TPP.Model;
-using TPP.Persistence;
+using Model;
+using Persistence;
 
-namespace TPP.Core.Moderation
+namespace Core.Moderation
 {
     public interface IModerator
     {

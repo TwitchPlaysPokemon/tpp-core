@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
-using TPP.Core.Chat;
-using TPP.Persistence;
+using Core.Chat;
+using Persistence;
 
-namespace TPP.Core.Commands.Definitions;
+namespace Core.Commands.Definitions;
 
 public class JoinChatCommands(ICoStreamChannelsRepo coStreamChannelsRepo) : ICommandCollection
 {

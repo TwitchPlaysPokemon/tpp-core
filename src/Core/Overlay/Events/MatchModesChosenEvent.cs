@@ -1,4 +1,4 @@
-namespace TPP.Core.Overlay.Events
+namespace Core.Overlay.Events
 {
     public struct MatchModesChosenEvent : IOverlayEvent
     {

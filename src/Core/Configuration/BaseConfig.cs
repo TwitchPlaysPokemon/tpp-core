@@ -3,7 +3,7 @@ using System.ComponentModel;
 using NodaTime;
 using Serilog.Events;
 
-namespace TPP.Core.Configuration;
+namespace Core.Configuration;
 
 public enum TppFeatures
 {

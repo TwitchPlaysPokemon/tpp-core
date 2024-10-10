@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TPP.Core.Overlay
+namespace Core.Overlay
 {
     /// A websocket client capable of connecting to a websocket server
     /// and reading/writing messages using respective async methods.

@@ -1,7 +1,7 @@
 using System.Runtime.Serialization;
-using TPP.Twitch.EventSub.Messages;
+using TwitchEventSub.Messages;
 
-namespace TPP.Twitch.EventSub.Notifications;
+namespace TwitchEventSub.Notifications;
 
 using static ChannelSubscribe;
 

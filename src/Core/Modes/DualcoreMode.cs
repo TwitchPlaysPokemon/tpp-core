@@ -3,12 +3,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
-using TPP.Core.Commands.Definitions;
-using TPP.Core.Configuration;
-using TPP.Core.Overlay;
-using TPP.Core.Utils;
+using Core.Commands.Definitions;
+using Core.Configuration;
+using Core.Overlay;
+using Core.Utils;
 
-namespace TPP.Core.Modes;
+namespace Core.Modes;
 
 public sealed class DualcoreMode : IWithLifecycle
 {

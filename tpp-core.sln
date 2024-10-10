@@ -1,36 +1,31 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPP.Persistence", "TPP.Persistence\TPP.Persistence.csproj", "{EAEB8ADD-FEEC-4752-B52C-43FBE5645DA0}"
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArgsParsing", "src\ArgsParsing\ArgsParsing.csproj", "{D4FEF9A5-327E-4305-9790-FA0B0ABCAA37}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPP.Persistence.MongoDB.Tests", "tests\TPP.Persistence.MongoDB.Tests\TPP.Persistence.MongoDB.Tests.csproj", "{F3C54668-4632-4EF4-A036-D180B2FC619A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArgsParsing.Tests", "tests\ArgsParsing.Tests\ArgsParsing.Tests.csproj", "{7ECD9706-01AD-4CD1-895B-A2BBD192AEE4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPP.Persistence.MongoDB", "TPP.Persistence.MongoDB\TPP.Persistence.MongoDB.csproj", "{E7FC8D3A-4B64-4C41-9DD0-1DA1F08A3866}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "src\Common\Common.csproj", "{26E6A10F-D04E-4FD4-AC2B-73BB3ABCF215}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPP.Common", "TPP.Common\TPP.Common.csproj", "{26E6A10F-D04E-4FD4-AC2B-73BB3ABCF215}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.Tests", "tests\Common.Tests\Common.Tests.csproj", "{CC5EF486-C1CE-4FAA-BDD6-DD90943CD5B8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPP.Common.Tests", "tests\TPP.Common.Tests\TPP.Common.Tests.csproj", "{CC5EF486-C1CE-4FAA-BDD6-DD90943CD5B8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "src\Core\Core.csproj", "{49841A70-3AC3-438E-BB8D-71F0BE5BE7C9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPP.ArgsParsing", "TPP.ArgsParsing\TPP.ArgsParsing.csproj", "{D4FEF9A5-327E-4305-9790-FA0B0ABCAA37}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core.Tests", "tests\Core.Tests\Core.Tests.csproj", "{E91B0BD1-B30E-415D-B3ED-72BF69E15B35}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPP.ArgsParsing.Tests", "tests\TPP.ArgsParsing.Tests\TPP.ArgsParsing.Tests.csproj", "{7ECD9706-01AD-4CD1-895B-A2BBD192AEE4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Match", "src\Match\Match.csproj", "{056380E9-BA67-48B2-B9B5-AC432586FFD4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPP.Core", "TPP.Core\TPP.Core.csproj", "{49841A70-3AC3-438E-BB8D-71F0BE5BE7C9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Match.Tests", "tests\Match.Tests\Match.Tests.csproj", "{4450DC0C-0C09-4928-A93E-9104545123B1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPP.Core.Tests", "tests\TPP.Core.Tests\TPP.Core.Tests.csproj", "{E91B0BD1-B30E-415D-B3ED-72BF69E15B35}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Model", "src\Model\Model.csproj", "{2BC73B80-BA53-4744-9BC5-853D53B71E45}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPP.Inputting", "TPP.Inputting\TPP.Inputting.csproj", "{CA690D5F-430D-435A-9773-5149B2495321}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Persistence", "src\Persistence\Persistence.csproj", "{EAEB8ADD-FEEC-4752-B52C-43FBE5645DA0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPP.Inputting.Tests", "tests\TPP.Inputting.Tests\TPP.Inputting.Tests.csproj", "{21D41DA5-4DBF-47C6-B1B0-DD326B8974B9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersistenceMongoDB", "src\PersistenceMongoDB\PersistenceMongoDB.csproj", "{E7FC8D3A-4B64-4C41-9DD0-1DA1F08A3866}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPP.Match", "TPP.Match\TPP.Match.csproj", "{056380E9-BA67-48B2-B9B5-AC432586FFD4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersistenceMongoDB.Tests", "tests\PersistenceMongoDB.Tests\PersistenceMongoDB.Tests.csproj", "{F3C54668-4632-4EF4-A036-D180B2FC619A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPP.Match.Tests", "tests\TPP.Match.Tests\TPP.Match.Tests.csproj", "{4450DC0C-0C09-4928-A93E-9104545123B1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TwitchEventSub", "src\TwitchEventSub\TwitchEventSub.csproj", "{8CD23341-8D1D-47CD-B21F-0DA6B233F1DC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPP.Model", "TPP.Model\TPP.Model.csproj", "{2BC73B80-BA53-4744-9BC5-853D53B71E45}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPP.Twitch.EventSub", "TPP.Twitch.EventSub\TPP.Twitch.EventSub.csproj", "{8CD23341-8D1D-47CD-B21F-0DA6B233F1DC}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPP.Twitch.EventSub.Tests", "tests\TPP.Twitch.EventSub.Tests\TPP.Twitch.EventSub.Tests.csproj", "{5CB175CD-FF22-4117-AC62-F103C4AC8712}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TwitchEventSub.Tests", "tests\TwitchEventSub.Tests\TwitchEventSub.Tests.csproj", "{5CB175CD-FF22-4117-AC62-F103C4AC8712}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

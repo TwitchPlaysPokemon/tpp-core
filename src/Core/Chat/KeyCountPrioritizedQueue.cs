@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace TPP.Core.Chat
+namespace Core.Chat
 {
     /// A queue whose items are sorted by the number of occurrences of a key in the queue,
     /// so many entries with the same key get prioritized lower than others.

@@ -4,7 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using NodaTime;
 
-namespace TPP.Core.Moderation
+namespace Core.Moderation
 {
     internal record GivenPoints(int Points, string Reason, Instant GivenAt);
 

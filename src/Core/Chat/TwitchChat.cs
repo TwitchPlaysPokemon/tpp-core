@@ -4,14 +4,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
-using TPP.Core.Configuration;
-using TPP.Core.Moderation;
-using TPP.Core.Overlay;
-using TPP.Core.Utils;
-using TPP.Persistence;
-using User = TPP.Model.User;
+using Core.Configuration;
+using Core.Moderation;
+using Core.Overlay;
+using Core.Utils;
+using Persistence;
+using User = Model.User;
 
-namespace TPP.Core.Chat
+namespace Core.Chat
 {
     public sealed class TwitchChat : IChat, IChatModeChanger, IExecutor
     {

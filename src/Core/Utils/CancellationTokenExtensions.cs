@@ -1,7 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TPP.Core.Utils;
+namespace Core.Utils;
 
 public static class CancellationTokenExtensions
 {

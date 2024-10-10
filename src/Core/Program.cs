@@ -16,12 +16,12 @@ using NodaTime;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.Discord;
-using TPP.Core.Configuration;
-using TPP.Core.Modes;
-using TPP.Core.Utils;
+using Core.Configuration;
+using Core.Modes;
+using Core.Utils;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
-namespace TPP.Core
+namespace Core
 {
     internal static class Program
     {

@@ -1,6 +1,6 @@
-using TPP.Inputting.Inputs;
+using Inputting.Inputs;
 
-namespace TPP.Inputting.InputDefinitions
+namespace Inputting.InputDefinitions
 {
     /// <summary>
     /// A touchscreen drag input is an input in the form of <c>x1,y1>x2,y2</c>, e.g. <c>120,215>80,170</c>,

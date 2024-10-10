@@ -1,10 +1,10 @@
 using System;
 using System.Threading.Tasks;
 using NodaTime;
-using TPP.ArgsParsing;
-using TPP.Model;
+using ArgsParsing;
+using Model;
 
-namespace TPP.Core.Commands;
+namespace Core.Commands;
 
 public static class CommandExtensions
 {

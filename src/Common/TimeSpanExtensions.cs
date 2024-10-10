@@ -1,6 +1,6 @@
 using System;
 
-namespace TPP.Common;
+namespace Common;
 
 public enum FormatPrecision { Days, Hours, Minutes, Seconds, Milliseconds, Adaptive }
 public static class TimeSpanExtensions

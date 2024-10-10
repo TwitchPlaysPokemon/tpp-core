@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
-namespace TPP.Core.Overlay
+namespace Core.Overlay
 {
     /// Adapter over a broadcast server (usually via websocket) that is able to send messages to the (legacy) overlay.
     /// It takes instances of <see cref="IOverlayEvent"/> and sends them as JSON message in the appropriate dialect.

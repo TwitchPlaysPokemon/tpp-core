@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
-using TPP.Inputting.Inputs;
+using Inputting.Inputs;
 
-namespace TPP.Inputting.InputDefinitions
+namespace Inputting.InputDefinitions
 {
     /// <summary>
     /// A button input is an simple input that can either be pressed or not.

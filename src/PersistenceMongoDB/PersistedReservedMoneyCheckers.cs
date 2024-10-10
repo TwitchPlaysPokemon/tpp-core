@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
-using TPP.Model;
+using Model;
 
-namespace TPP.Persistence.MongoDB
+namespace PersistenceMongoDB
 {
     /// <summary>
     /// In order to prevent token overspending in a setup where both the old and new core run simultaneously,

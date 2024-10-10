@@ -2,10 +2,10 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using TPP.ArgsParsing;
-using TPP.Model;
+using ArgsParsing;
+using Model;
 
-namespace TPP.Core
+namespace Core
 {
     public class SideParser : IArgumentParser<Side>
     {

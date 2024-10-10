@@ -6,7 +6,7 @@ using NodaTime;
 using TwitchLib.Api.Auth;
 using TwitchLib.Api.Core;
 
-namespace TPP.Core.Chat;
+namespace Core.Chat;
 
 /// <summary>
 /// If expiring tokens are in use (some old tokens may not expire, but newer ones generally do: https://dev.twitch.tv/docs/authentication/refresh-tokens/),

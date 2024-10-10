@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 
-namespace TPP.Match
+namespace Match
 {
     public static class Features
     {

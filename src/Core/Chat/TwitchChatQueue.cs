@@ -4,10 +4,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
-using TPP.Model;
+using Model;
 using TwitchLib.Api.Core.Exceptions;
 
-namespace TPP.Core.Chat
+namespace Core.Chat
 {
     public record OutgoingMessage
     {

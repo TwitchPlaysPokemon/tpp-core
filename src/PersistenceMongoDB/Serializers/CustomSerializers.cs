@@ -1,6 +1,6 @@
 using MongoDB.Bson.Serialization;
 
-namespace TPP.Persistence.MongoDB.Serializers;
+namespace PersistenceMongoDB.Serializers;
 
 /// <summary>
 /// Offers a convenient way to register all serializers that should be globally registered

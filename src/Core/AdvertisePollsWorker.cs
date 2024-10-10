@@ -4,12 +4,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
-using TPP.Core.Chat;
-using TPP.Core.Commands.Definitions;
-using TPP.Model;
-using TPP.Persistence;
+using Core.Chat;
+using Core.Commands.Definitions;
+using Model;
+using Persistence;
 
-namespace TPP.Core
+namespace Core
 {
     /// <summary>
     /// Advertises polls in chat on an interval.

@@ -4,14 +4,14 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using NodaTime;
-using TPP.ArgsParsing;
-using TPP.ArgsParsing.Types;
-using TPP.Common;
-using TPP.Core.Moderation;
-using TPP.Model;
-using TPP.Persistence;
+using ArgsParsing;
+using ArgsParsing.Types;
+using Common;
+using Core.Moderation;
+using Model;
+using Persistence;
 
-namespace TPP.Core.Commands.Definitions;
+namespace Core.Commands.Definitions;
 
 public class ModerationCommands : ICommandCollection
 {

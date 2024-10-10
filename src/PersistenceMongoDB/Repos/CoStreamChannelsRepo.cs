@@ -4,8 +4,9 @@ using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using NodaTime;
+using Persistence;
 
-namespace TPP.Persistence.MongoDB.Repos;
+namespace PersistenceMongoDB.Repos;
 
 public class CoStreamChannelsRepo : ICoStreamChannelsRepo
 {

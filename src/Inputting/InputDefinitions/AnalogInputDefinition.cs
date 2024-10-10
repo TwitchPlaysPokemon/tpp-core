@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
-using TPP.Inputting.Inputs;
+using Inputting.Inputs;
 
-namespace TPP.Inputting.InputDefinitions
+namespace Inputting.InputDefinitions
 {
     /// <summary>
     /// This input definition creates inputs of type <see cref="AnalogInput"/>.

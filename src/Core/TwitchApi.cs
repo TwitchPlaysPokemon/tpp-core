@@ -4,8 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
-using TPP.Core.Chat;
-using TPP.Twitch.EventSub;
+using Core.Chat;
+using TwitchEventSub;
 using TwitchLib.Api;
 using TwitchLib.Api.Auth;
 using TwitchLib.Api.Core.Enums;
@@ -17,7 +17,7 @@ using TwitchLib.Api.Helix.Models.Moderation.BanUser;
 using TwitchLib.Api.Helix.Models.Streams.GetStreams;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;
 
-namespace TPP.Core;
+namespace Core;
 
 /// Wrapper around TwitchLib API that transparently refreshes tokens and retries requests at least once.
 public class TwitchApi(
@@ -138,7 +138,7 @@ public class TwitchApi(
         public static ScopeInfo Channel(string scope, string neededFor) => new(scope, neededFor, ScopeType.Channel);
     }
 
-    /// Mostly copied from TPP.Core's README.md
+    /// Mostly copied from Core's README.md
     private static readonly List<ScopeInfo> ScopeInfos =
     [
         ScopeInfo.Bot("chat:read",                      "Read messages from chat (via IRC/TMI)"),

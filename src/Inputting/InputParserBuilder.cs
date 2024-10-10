@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
-using TPP.Inputting.InputDefinitions;
-using TPP.Inputting.Parsing;
+using Inputting.InputDefinitions;
+using Inputting.Parsing;
 
-namespace TPP.Inputting
+namespace Inputting
 {
     /// <summary>
     /// This builder can be used for a more convenient and concise way of building <see cref="IInputParser"/> instances.

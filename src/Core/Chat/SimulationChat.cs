@@ -4,11 +4,11 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using TPP.Core.Configuration;
-using TPP.Model;
-using TPP.Persistence;
+using Core.Configuration;
+using Model;
+using Persistence;
 
-namespace TPP.Core.Chat
+namespace Core.Chat
 {
     /// Simulates incoming chat activity
     public sealed class SimulationChat : IChat

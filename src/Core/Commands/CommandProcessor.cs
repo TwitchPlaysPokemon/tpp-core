@@ -4,11 +4,11 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using TPP.ArgsParsing;
-using TPP.Core.Chat;
-using TPP.Persistence;
+using ArgsParsing;
+using Core.Chat;
+using Persistence;
 
-namespace TPP.Core.Commands
+namespace Core.Commands
 {
     /// <summary>
     /// The command processor can be configured using <see cref="Command"/> instances to have commands,

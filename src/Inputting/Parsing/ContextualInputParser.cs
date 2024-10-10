@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using TPP.Inputting.Inputs;
+using Inputting.Inputs;
 
-namespace TPP.Inputting.Parsing
+namespace Inputting.Parsing
 {
     /// <summary>
     /// This input parser is capable of imposing restrictions on inputs being parsed

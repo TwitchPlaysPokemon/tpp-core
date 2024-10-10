@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace TPP.Core.Commands
+namespace Core.Commands
 {
     public readonly struct Command
     {

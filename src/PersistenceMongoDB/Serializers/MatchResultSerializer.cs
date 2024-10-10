@@ -2,9 +2,9 @@ using System;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
-using TPP.Model;
+using Model;
 
-namespace TPP.Persistence.MongoDB.Serializers
+namespace PersistenceMongoDB.Serializers
 {
     /// For historic reasons match results are stored as 0/1/draw instead of blue/red/draw.
     public class MatchResultSerializer : SerializerBase<MatchResult>

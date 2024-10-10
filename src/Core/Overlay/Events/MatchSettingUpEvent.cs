@@ -3,9 +3,9 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Runtime.Serialization;
 using Newtonsoft.Json;
-using TPP.Model;
+using Model;
 
-namespace TPP.Core.Overlay.Events
+namespace Core.Overlay.Events
 {
     [DataContract]
     public struct MovesInputOptions

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace TPP.Core.Chat
+namespace Core.Chat
 {
     public class MessageSplitter
     {

@@ -1,4 +1,4 @@
-namespace TPP.Common
+namespace Common
 {
     public enum SubscriptionTier { Prime, Tier1, Tier2, Tier3 }
 

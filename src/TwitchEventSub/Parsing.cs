@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using NodaTime.Serialization.SystemTextJson;
-using TPP.Twitch.EventSub.Messages;
-using TPP.Twitch.EventSub.Notifications;
+using TwitchEventSub.Messages;
+using TwitchEventSub.Notifications;
 
-namespace TPP.Twitch.EventSub;
+namespace TwitchEventSub;
 
 public static class Parsing
 {

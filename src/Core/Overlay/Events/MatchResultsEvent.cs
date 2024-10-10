@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using System.Runtime.Serialization;
 
-namespace TPP.Core.Overlay.Events
+namespace Core.Overlay.Events
 {
     [DataContract]
     public struct Transaction

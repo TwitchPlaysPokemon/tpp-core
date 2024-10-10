@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace TPP.Core
+namespace Core
 {
     public static class EventUtils
     {

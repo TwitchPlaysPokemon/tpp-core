@@ -3,14 +3,14 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using TPP.ArgsParsing.Types;
-using TPP.Common;
-using TPP.Core.Chat;
-using TPP.Inputting;
-using TPP.Model;
-using TPP.Persistence;
+using ArgsParsing.Types;
+using Common;
+using Core.Chat;
+using Inputting;
+using Model;
+using Persistence;
 
-namespace TPP.Core.Commands.Definitions
+namespace Core.Commands.Definitions
 {
     public interface IStopToken
     {

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NodaTime;
-using static TPP.Core.Commands.CommandUtils;
+using static Core.Commands.CommandUtils;
 
-namespace TPP.Core.Commands.Definitions
+namespace Core.Commands.Definitions
 {
     public class EasterEggCommands : ICommandCollection
     {
