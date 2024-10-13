@@ -8,6 +8,7 @@ namespace TPP.Core.Moderation;
 
 public enum TimeoutResult { Ok, MustBe2WeeksOrLess, UserIsBanned, UserIsModOrOp, NotSupportedInChannel }
 public enum BanResult { Ok, UserIsModOrOp, NotSupportedInChannel }
+public enum SetAppealCooldownResult { Ok, UserNotBanned, AlreadyPermanent }
 public enum ModerationActionType { Ban, Unban, Timeout, Untimeout }
 public class ModerationActionPerformedEventArgs : EventArgs
 {
@@ -28,17 +29,19 @@ public class ModerationService
     private readonly IExecutor? _executor;
     private readonly ITimeoutLogRepo _timeoutLogRepo;
     private readonly IBanLogRepo _banLogRepo;
+    private readonly IAppealCooldownLogRepo _appealCooldownLogRepo;
     private readonly IUserRepo _userRepo;
 
     public event EventHandler<ModerationActionPerformedEventArgs>? ModerationActionPerformed;
 
     public ModerationService(
-        IClock clock, IExecutor? executor, ITimeoutLogRepo timeoutLogRepo, IBanLogRepo banLogRepo, IUserRepo userRepo)
+        IClock clock, IExecutor? executor, ITimeoutLogRepo timeoutLogRepo, IBanLogRepo banLogRepo, IAppealCooldownLogRepo appealCooldownLogRepo, IUserRepo userRepo)
     {
         _clock = clock;
         _executor = executor;
         _timeoutLogRepo = timeoutLogRepo;
         _banLogRepo = banLogRepo;
+        _appealCooldownLogRepo = appealCooldownLogRepo;
         _userRepo = userRepo;
     }
 
@@ -69,6 +72,14 @@ public class ModerationService
             targetUser.Id, isBan ? "untimeout_from_manual_ban" : "untimeout_from_manual_unban", reason,
             issuerUser.Id, now, null);
         await _userRepo.SetBanned(targetUser, isBan);
+
+        // First ban can be appealed after 1 month by default.
+        // I don't want to automatically calculate how many bans the user has had, because some might be joke/mistakes
+        // A mod should manually set the next appeal cooldown based on the rules.
+        var DEFAULT_APPEAL_TIME = Duration.FromDays(30);
+        Instant expiration = now + DEFAULT_APPEAL_TIME;
+        await _userRepo.SetAppealCooldown(targetUser, expiration);
+        await _appealCooldownLogRepo.LogAppealCooldownChange(targetUser.Id, "auto_appeal_cooldown", issuerUser.Id, now, DEFAULT_APPEAL_TIME);
 
         ModerationActionPerformed?.Invoke(this, new ModerationActionPerformedEventArgs(
             issuerUser, targetUser, isBan ? ModerationActionType.Ban : ModerationActionType.Unban));
@@ -111,5 +122,35 @@ public class ModerationService
             issuerUser, targetUser, isIssuing ? ModerationActionType.Timeout : ModerationActionType.Untimeout));
 
         return TimeoutResult.Ok;
+    }
+
+    public Task<SetAppealCooldownResult> SetAppealCooldown(User issueruser, User targetuser, Duration duration) =>
+        _SetAppealCooldown(issueruser, targetuser, duration);
+    public Task<SetAppealCooldownResult> SetUnappealable(User issueruser, User targetuser) =>
+        _SetAppealCooldown(issueruser, targetuser, null);
+
+    private async Task<SetAppealCooldownResult> _SetAppealCooldown(
+        User issueruser, User targetUser, Duration? duration)
+    {
+        if (!targetUser.Banned)
+            return SetAppealCooldownResult.UserNotBanned;
+
+        Instant now = _clock.GetCurrentInstant();
+
+        if (duration.HasValue)
+        {
+            Instant expiration = now + duration.Value;
+            await _userRepo.SetAppealCooldown(targetUser, expiration);
+            await _appealCooldownLogRepo.LogAppealCooldownChange(targetUser.Id, "manual_cooldown_change", issueruser.Id, now, duration);
+        }
+        else
+        {
+            if (targetUser.AppealDate is null)
+                return SetAppealCooldownResult.AlreadyPermanent;
+            await _userRepo.SetAppealCooldown(targetUser, null);
+            await _appealCooldownLogRepo.LogAppealCooldownChange(targetUser.Id, "manual_perma", issueruser.Id, now, null);
+        }
+
+        return SetAppealCooldownResult.Ok;
     }
 }

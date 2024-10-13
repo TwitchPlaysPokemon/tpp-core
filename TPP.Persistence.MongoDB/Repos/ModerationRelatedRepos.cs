@@ -163,3 +163,56 @@ public class TimeoutLogRepo : ITimeoutLogRepo
         .SortByDescending(log => log.Timestamp)
         .FirstOrDefaultAsync();
 }
+
+public class AppealCooldownLogRepo : IAppealCooldownLogRepo
+{
+    private const string CollectionName = "appealcooldownlog";
+
+    public readonly IMongoCollection<AppealCooldownLog> Collection;
+
+    static AppealCooldownLogRepo()
+    {
+        BsonClassMap.RegisterClassMap<AppealCooldownLog>(cm =>
+        {
+            cm.MapIdProperty(b => b.Id)
+                .SetIdGenerator(StringObjectIdGenerator.Instance)
+                .SetSerializer(ObjectIdAsStringSerializer.Instance);
+            cm.MapProperty(b => b.Type).SetElementName("type");
+            cm.MapProperty(b => b.UserId).SetElementName("user");
+            cm.MapProperty(b => b.IssuerUserId).SetElementName("issuer");
+            cm.MapProperty(b => b.Timestamp).SetElementName("timestamp");
+            cm.MapProperty(b => b.Duration).SetElementName("duration")
+                .SetSerializer(NullableDurationAsSecondsSerializer.Instance);
+        });
+    }
+
+    public AppealCooldownLogRepo(IMongoDatabase database)
+    {
+        database.CreateCollectionIfNotExists(CollectionName).Wait();
+        Collection = database.GetCollection<AppealCooldownLog>(CollectionName);
+        InitIndexes();
+    }
+
+    private void InitIndexes()
+    {
+        Collection.Indexes.CreateMany(new[]
+        {
+            new CreateIndexModel<AppealCooldownLog>(Builders<AppealCooldownLog>.IndexKeys.Ascending(u => u.UserId)),
+            new CreateIndexModel<AppealCooldownLog>(Builders<AppealCooldownLog>.IndexKeys.Descending(u => u.Timestamp)),
+        });
+    }
+
+    public async Task<AppealCooldownLog> LogAppealCooldownChange(
+        string userId, string type, string issuerUserId, Instant timestamp, Duration? duration)
+    {
+        var log = new AppealCooldownLog(string.Empty, type, userId, issuerUserId, timestamp, duration);
+        await Collection.InsertOneAsync(log);
+        Debug.Assert(log.Id.Length > 0, "The MongoDB driver injected a generated ID");
+        return log;
+    }
+
+    public async Task<AppealCooldownLog?> FindMostRecent(string userId) => await Collection
+        .Find(log => log.UserId == userId)
+        .SortByDescending(log => log.Timestamp)
+        .FirstOrDefaultAsync();
+}

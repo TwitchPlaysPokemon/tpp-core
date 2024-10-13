@@ -76,6 +76,10 @@ public class User : PropertyEquatable<User>
 
     public Instant? TimeoutExpiration { get; init; }
     public bool Banned { get; init; }
+    /// <summary>
+    /// When a user can appeal. If null, the user is never allowed to appeal.
+    /// </summary>
+    public Instant? AppealDate { get; init; }
 
     public User(
         string id,

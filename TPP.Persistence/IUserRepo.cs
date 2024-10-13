@@ -28,6 +28,10 @@ namespace TPP.Persistence
 
         public Task<User> SetBanned(User user, bool banned);
         public Task<User> SetTimedOut(User user, Instant? timeoutExpiration);
+        /// <summary>
+        ///  Sets the time a user can appeal a ban. Null = can't appeal.
+        /// </summary>
+        public Task<User> SetAppealCooldown(User user, Instant? canAppeal);
 
         /// Unselects the specified species as the presented badge if it is the currently equipped species.
         /// Used for resetting the equipped badge after a user lost all of that species' badges.

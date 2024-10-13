@@ -70,6 +70,8 @@ namespace TPP.Model
     public record TimeoutLog(
         string Id, string Type, string UserId, string Reason, string? IssuerUserId, Instant Timestamp,
         Duration? Duration);
+    public record AppealCooldownLog(
+        string Id, string Type, string UserId, string IssuerUserId, Instant Timestamp, Duration? Duration);
 
     public record SubscriptionLog(
         string Id,

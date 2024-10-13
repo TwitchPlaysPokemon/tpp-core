@@ -112,7 +112,8 @@ namespace TPP.Core
                 databases.CommandLogger, argsParser);
 
             var moderationService = new ModerationService(
-                SystemClock.Instance, executor, databases.TimeoutLogRepo, databases.BanLogRepo, databases.UserRepo);
+                SystemClock.Instance, executor, databases.TimeoutLogRepo, databases.BanLogRepo,
+                databases.AppealCooldownLogRepo, databases.UserRepo);
             ILogger<ModerationService> logger = loggerFactory.CreateLogger<ModerationService>();
             moderationService.ModerationActionPerformed += (_, args) => TaskToVoidSafely(logger, () =>
             {
@@ -139,7 +140,7 @@ namespace TPP.Core
                     chatModeChanger, databases.LinkedAccountRepo, databases.ResponseCommandRepo
                 ).Commands,
                 new ModerationCommands(
-                    moderationService, databases.BanLogRepo, databases.TimeoutLogRepo, databases.UserRepo,
+                    moderationService, databases.BanLogRepo, databases.TimeoutLogRepo, databases.AppealCooldownLogRepo, databases.UserRepo,
                     SystemClock.Instance
                 ).Commands
             }.SelectMany(cmds => cmds).ToList();
@@ -189,6 +190,7 @@ namespace TPP.Core
             IModbotLogRepo ModbotLogRepo,
             IBanLogRepo BanLogRepo,
             ITimeoutLogRepo TimeoutLogRepo,
+            IAppealCooldownLogRepo AppealCooldownLogRepo,
             IResponseCommandRepo ResponseCommandRepo,
             IRunCounterRepo RunCounterRepo,
             IInputLogRepo InputLogRepo,
@@ -252,6 +254,7 @@ namespace TPP.Core
                 ModbotLogRepo: new ModbotLogRepo(mongoDatabase),
                 BanLogRepo: new BanLogRepo(mongoDatabase),
                 TimeoutLogRepo: new TimeoutLogRepo(mongoDatabase),
+                AppealCooldownLogRepo: new AppealCooldownLogRepo(mongoDatabase),
                 ResponseCommandRepo: new ResponseCommandRepo(mongoDatabase),
                 RunCounterRepo: new RunCounterRepo(mongoDatabase),
                 InputLogRepo: new InputLogRepo(mongoDatabase),
