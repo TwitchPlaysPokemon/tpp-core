@@ -22,7 +22,7 @@ public class ModeratorCommands(
     {
         new Command("emoteonly", EnableEmoteOnly)
         {
-            Aliases = new[] { "emoteonlyon" },
+            Aliases = ["emoteonlyon"],
             Description = "Set the chat to emote only mode."
         },
         new Command("emoteonlyoff", DisableEmoteOnly)
@@ -31,18 +31,18 @@ public class ModeratorCommands(
         },
         new Command("linkaccounts", LinkAccounts)
         {
-            Aliases = new[] { "linkaccount" },
+            Aliases = ["linkaccount"],
             Description = "link 2 accounts together to enforce restrictions on alt accounts. " +
                           "Arguments: <target users> (any number, at least 2)"
         },
         new Command("unlinkaccounts", UnlinkAccounts)
         {
-            Aliases = new[] { "unlinkaccount" },
+            Aliases = ["unlinkaccount"],
             Description = "undo linkaccount for one user. Arguments: <target user>"
         },
         new Command("checklinkaccount", CheckLinkAccounts)
         {
-            Aliases = new[] { "checklink", "checkalt", "checklinkedaccount" },
+            Aliases = ["checklink", "checkalt", "checklinkedaccount"],
             Description = "Check the accounts linked to a user. Arguments: <target user>"
         },
         new Command(StaticResponsesCommandName, Responses)
@@ -53,7 +53,7 @@ public class ModeratorCommands(
         new Command(CommandAliasesCommandName, Aliases)
         {
             Description = "Manage static response commands. " +
-                          "Subcommands: add/update <command> <response>, remove <command>, list",
+                          "Subcommands: add/update <command> <target command> [<fixed args>...], remove <command>, list",
             Aliases = ["alias"]
         },
     }.Select(cmd => cmd.WithModeratorsOnly());
@@ -152,23 +152,29 @@ public class ModeratorCommands(
 
     private async Task<CommandResult> Aliases(CommandContext context)
     {
-        if (context.Args.Count == 0)
+        Queue<string> remainingArgs = new(context.Args);
+        if (remainingArgs.Count == 0)
             return new CommandResult { Response = $"See '!help {CommandAliasesCommandName}' for usage." };
-        string subcommand = context.Args[0].ToLower();
+        string subcommand = remainingArgs.Dequeue();
         if (subcommand == "list")
         {
             IImmutableList<CommandAlias> aliases = await commandAliasRepo.GetAliases();
+            if (remainingArgs.Count != 0)
+                return new CommandResult { Response = "Too many arguments" };
             if (aliases.Count == 0)
                 return new CommandResult { Response = "There currently are no command aliases." };
             return new CommandResult
             {
-                Response = "These command aliases currently exist: " +
-                           string.Join(", ", aliases.Select(c => c.Alias + " -> " + c.TargetCommand))
+                Response = "These command aliases currently exist: " + string.Join(", ",
+                    aliases.Select(c => c.Alias + " -> " + string.Join(' ', [c.TargetCommand, ..c.FixedArgs])))
             };
         }
         else if (subcommand == "remove")
         {
-            string alias = context.Args[1];
+            if (!remainingArgs.TryDequeue(out string? alias))
+                return new CommandResult { Response = "Too few arguments, missing alias name" };
+            if (remainingArgs.Count != 0)
+                return new CommandResult { Response = "Too many arguments" };
             bool wasRemoved = await commandAliasRepo.RemoveAlias(alias);
             return new CommandResult
             {
@@ -179,14 +185,17 @@ public class ModeratorCommands(
         }
         else if (subcommand is "add" or "update")
         {
-            string alias = context.Args[1];
-            string targetCommand = context.Args[2];
+            if (!remainingArgs.TryDequeue(out string? alias))
+                return new CommandResult { Response = "Too few arguments, missing alias name" };
+            if (!remainingArgs.TryDequeue(out string? targetCommand))
+                return new CommandResult { Response = "Too few arguments, missing target command" };
             if (string.IsNullOrWhiteSpace(targetCommand))
                 return new CommandResult { Response = "Must provide an alias target for the command." };
-            await commandAliasRepo.UpsertAlias(alias, targetCommand);
+            string[] fixedArgs = remainingArgs.ToArray();
+            await commandAliasRepo.UpsertAlias(alias, targetCommand, fixedArgs);
             return new CommandResult
             {
-                Response = $"Command alias '{alias}' was set to redirect to: {targetCommand}"
+                Response = $"Command alias '{alias}' now redirects to: {string.Join(' ', [targetCommand, ..fixedArgs])}"
             };
         }
         return new CommandResult { Response = $"Unknown subcommand '{subcommand}'." };

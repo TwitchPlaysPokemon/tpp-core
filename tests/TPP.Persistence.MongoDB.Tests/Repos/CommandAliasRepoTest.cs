@@ -14,8 +14,8 @@ public class CommandAliasRepoTest : MongoTestBase
         CommandAliasRepo repo = new(CreateTemporaryDatabase());
         Assert.That(await repo.GetAliases(), Is.Empty);
 
-        CommandAlias alias1 = await repo.UpsertAlias("Alias1", "target1");
-        CommandAlias alias2 = await repo.UpsertAlias("alias2", "target2");
+        CommandAlias alias1 = await repo.UpsertAlias("Alias1", "target1", []);
+        CommandAlias alias2 = await repo.UpsertAlias("alias2", "target2", ["foo", "bar"]);
         Assert.That(await repo.GetAliases(), Is.EquivalentTo(new[] { alias1, alias2 }));
 
         Assert.That(await repo.RemoveAlias("ALIAS1"), Is.True);
@@ -29,9 +29,9 @@ public class CommandAliasRepoTest : MongoTestBase
         CommandAliasRepo repo = new(CreateTemporaryDatabase());
         Assert.That(await repo.GetAliases(), Is.Empty);
 
-        CommandAlias alias1 = await repo.UpsertAlias("alias", "target1");
+        CommandAlias alias1 = await repo.UpsertAlias("alias", "target1", []);
         Assert.That(await repo.GetAliases(), Is.EquivalentTo(new[] { alias1 }));
-        CommandAlias alias2 = await repo.UpsertAlias("ALIAS", "target2");
+        CommandAlias alias2 = await repo.UpsertAlias("ALIAS", "target2", ["foo"]);
         Assert.That(await repo.GetAliases(), Is.EquivalentTo(new[] { alias2 }));
     }
 
@@ -41,6 +41,6 @@ public class CommandAliasRepoTest : MongoTestBase
         CommandAliasRepo repo = new(CreateTemporaryDatabase());
         Assert.That(await repo.GetAliases(), Is.Empty);
 
-        Assert.ThrowsAsync<ArgumentException>(() => repo.UpsertAlias("alias", "target with spaces"));
+        Assert.ThrowsAsync<ArgumentException>(() => repo.UpsertAlias("alias", "target with spaces", []));
     }
 }
