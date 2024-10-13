@@ -134,11 +134,22 @@ namespace TPP.Core.Chat
                     // Trying to whisper people can fail for mostly two reasons:
                     // - The user has blocked the bot, which frequently happens.
                     //   On a side note, we might want to stop whispering people for stuff like pinball drops,
-                    //   at lest until we know somehow they want that, e.g. because they whispered us first.
+                    //   at least until we know somehow they want that, e.g. because they whispered us first.
                     // - The user has not whispered us before and has "Block whispers from strangers" enabled.
                     // In both cases there's nothing we can do about that, so let's just ignore the failure.
                     _logger.LogDebug(e,
                         "Ignoring 403 whisper failure to {Receiver}. " +
+                        "New Recipient: {NewRecipient}, Response: '{Response}'. Whisper: '{Message}'",
+                        whisper.Receiver, whisper.NewRecipient, response, whisper.Message);
+                }
+                else if (e.HttpResponse.StatusCode == HttpStatusCode.NotFound && whisper.NewRecipient)
+                {
+                    // We used to frequently get the error "404 - The recipient is not a valid user" for new users.
+                    // My best guess is that those are new (spam?) accounts that quickly get deleted,
+                    // so when we try to whisper them about e.g. pinball badges they won, they are already gone.
+                    // To avoid log spam, just ignore any 404 errors of new users.
+                    _logger.LogDebug(e,
+                        "Ignoring 404 whisper failure to {Receiver}. " +
                         "New Recipient: {NewRecipient}, Response: '{Response}'. Whisper: '{Message}'",
                         whisper.Receiver, whisper.NewRecipient, response, whisper.Message);
                 }
