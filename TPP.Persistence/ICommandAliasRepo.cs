@@ -11,7 +11,7 @@ public interface ICommandAliasRepo
     public Task<IImmutableList<CommandAlias>> GetAliases();
 
     /// Insert or update an alias.
-    public Task<CommandAlias> UpsertAlias(string alias, string targetCommand);
+    public Task<CommandAlias> UpsertAlias(string alias, string targetCommand, string[] fixedArgs);
 
     /// Remove an alias by name. Returns whether that alias was found and removed.
     public Task<bool> RemoveAlias(string alias);

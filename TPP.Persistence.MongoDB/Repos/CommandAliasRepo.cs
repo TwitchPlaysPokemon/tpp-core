@@ -22,6 +22,8 @@ public class CommandAliasRepo : ICommandAliasRepo
         {
             cm.MapIdProperty(i => i.Alias);
             cm.MapProperty(i => i.TargetCommand).SetElementName("target_command");
+            cm.MapProperty(i => i.FixedArgs).SetElementName("fixed_arguments")
+                .SetDefaultValue(Array.Empty<string>());
         });
     }
 
@@ -34,12 +36,12 @@ public class CommandAliasRepo : ICommandAliasRepo
     public async Task<IImmutableList<CommandAlias>> GetAliases() =>
         (await Collection.Find(FilterDefinition<CommandAlias>.Empty).ToListAsync()).ToImmutableList();
 
-    public async Task<CommandAlias> UpsertAlias(string alias, string targetCommand)
+    public async Task<CommandAlias> UpsertAlias(string alias, string targetCommand, string[] fixedArgs)
     {
         if (targetCommand.IndexOf(' ') != -1)
             throw new ArgumentException(nameof(targetCommand) + " must not contain spaces");
         var aliasLower = alias.ToLower();
-        CommandAlias newAlias = new(aliasLower, targetCommand);
+        CommandAlias newAlias = new(aliasLower, targetCommand, fixedArgs);
         CommandAlias? oldAlias = await Collection.FindOneAndReplaceAsync(
             Builders<CommandAlias>.Filter.Eq(c => c.Alias, aliasLower),
             newAlias,

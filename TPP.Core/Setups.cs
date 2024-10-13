@@ -69,7 +69,7 @@ public static class Setups
 
     public static ITransmuter SetUpTransmuter(
         ILoggerFactory loggerFactory,
-        IImmutableSet<Common.PkmnSpecies> knownSpecies,
+        IImmutableSet<PkmnSpecies> knownSpecies,
         Databases databases,
         OverlayConnection overlayConnection)
     {
@@ -338,7 +338,9 @@ public static class Setups
             }
             else
             {
-                commandProcessor.InstallCommand(new Command(alias.Alias, targetCommand.Value.Execution));
+                var aliasCommand = new Command(alias.Alias, targetCommand.Value.Execution)
+                    { Description = targetCommand.Value.Description };
+                commandProcessor.InstallCommand(aliasCommand.WithFixedArgs(alias.FixedArgs));
                 dynamicallyInstalledAliases.Add(alias.Alias);
             }
         }
