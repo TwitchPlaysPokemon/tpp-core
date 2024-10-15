@@ -85,6 +85,10 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
         _client.NotificationReceived += (_, notification) =>
             TaskToVoidSafely(_logger, async () =>
             {
+                if (notification is ChannelSubscribe or ChannelSubscriptionMessage or ChannelSubscriptionGift)
+                    _logger.LogDebug("received EventSub notification of noteworthy type {Type}, payload: {Payload}",
+                        notification.Metadata.SubscriptionType, notification.Payload);
+
                 if (notification is ChannelChatMessage chatMessage)
                     await MessageReceived(chatMessage);
                 else if (notification is UserWhisperMessage whisperMessage)

@@ -46,7 +46,7 @@ public sealed class SendOutQueuedMessagesWorker : IWithLifecycle
 
     private async Task ProcessOnce(IncomingMessagequeueItem item)
     {
-        _logger.LogDebug("Received message from queue to send out: {Message}", item);
+        _logger.LogTrace("Received message from queue to send out: {Message}", item);
         if (item.MessageType == MessageType.Chat)
         {
             await _messageSender.SendMessage(item.Message);
