@@ -42,7 +42,8 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
     private readonly ICoStreamChannelsRepo _coStreamChannelsRepo;
     private readonly Dictionary<string, string> _coStreamEventSubSubscriptions = new();
 
-    private readonly EventSubClient _client;
+    private readonly EventSubClient _clientChatBot;
+    private readonly EventSubClient _clientChannel;
     private readonly string _channelId;
     private readonly string _userId;
 
@@ -77,53 +78,60 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
         _coStreamInputsOnlyLive = coStreamInputsOnlyLive;
         _coStreamChannelsRepo = coStreamChannelsRepo;
 
-        _client = new EventSubClient(loggerFactory, clock);
-        _client.RevocationReceived += (_, revocation) =>
+        _clientChatBot = new EventSubClient(loggerFactory, clock);
+        _clientChannel = new EventSubClient(loggerFactory, clock);
+        _clientChatBot.RevocationReceived += (_, revocation) =>
             _logger.LogError("received revocation for {SubscriptionType}: {Data}",
                 revocation.Metadata.SubscriptionType,
                 JsonSerializer.Serialize(revocation.Payload.Subscription.Condition));
-        _client.NotificationReceived += (_, notification) =>
+        _clientChannel.RevocationReceived += (_, revocation) =>
+            _logger.LogError("received revocation for {SubscriptionType}: {Data}",
+                revocation.Metadata.SubscriptionType,
+                JsonSerializer.Serialize(revocation.Payload.Subscription.Condition));
+        _clientChatBot.NotificationReceived += (_, notification) =>
             TaskToVoidSafely(_logger, async () =>
             {
-                if (notification is ChannelSubscribe or ChannelSubscriptionMessage or ChannelSubscriptionGift)
-                    _logger.LogDebug("received EventSub notification of noteworthy type {Type}, payload: {Payload}",
-                        notification.Metadata.SubscriptionType, notification.Payload);
-
                 if (notification is ChannelChatMessage chatMessage)
                     await MessageReceived(chatMessage);
                 else if (notification is UserWhisperMessage whisperMessage)
                     await WhisperReceived(whisperMessage);
-                else if (notification is ChannelSubscribe channelSubscribe)
+                else if (notification is ChannelChatSettingsUpdate settingsUpdate)
+                    _channelState = settingsUpdate.Payload.Event;
+                else
+                    _logger.LogWarning("received unhandled bot EventSub notification of type {Type}, payload: {Payload}",
+                        notification.Metadata.SubscriptionType, notification.Payload);
+            });
+        _clientChannel.NotificationReceived += (_, notification) =>
+            TaskToVoidSafely(_logger, async () =>
+            {
+                _logger.LogDebug("received channel EventSub notification of noteworthy type {Type}, payload: {Payload}",
+                    notification.Metadata.SubscriptionType, notification.Payload);
+
+                if (notification is ChannelSubscribe channelSubscribe)
                     await ChannelSubscribeReceived(channelSubscribe); // new subscriptions only
                 else if (notification is ChannelSubscriptionMessage channelSubscriptionMessage)
                     await ChannelSubscriptionMessageReceived(channelSubscriptionMessage); // resubscriptions only
                 else if (notification is ChannelSubscriptionGift channelSubscriptionGift)
                     await ChannelSubscriptionGiftReceived(channelSubscriptionGift);
-                else if (notification is ChannelChatSettingsUpdate settingsUpdate)
-                    _channelState = settingsUpdate.Payload.Event;
                 else
-                    _logger.LogWarning("received unhandled EventSub notification of type {Type}, payload: {Payload}",
+                    _logger.LogWarning("received unhandled channel EventSub notification of type {Type}, payload: {Payload}",
                         notification.Metadata.SubscriptionType, notification.Payload);
             });
-        _client.Connected += (_, welcome) =>
-            TaskToVoidSafely(_logger, () => SetUpSubscriptions(welcome.Payload.Session));
+        _clientChatBot.Connected += (_, welcome) =>
+            TaskToVoidSafely(_logger, () => SetUpChatBotSubscriptions(welcome.Payload.Session));
+        _clientChannel.Connected += (_, welcome) =>
+            TaskToVoidSafely(_logger, () => SetUpChannelSubscriptions(welcome.Payload.Session));
     }
 
-    private async Task SetUpSubscriptions(Session session)
+    private async Task SetUpChatBotSubscriptions(Session session)
     {
         _session = session;
-        _logger.LogDebug("Setting up EventSub subscriptions");
+        _logger.LogDebug("Setting up chat bot EventSub subscriptions");
         await Task.WhenAll(
             _twitchApi.SubscribeToEventSubBot<ChannelChatMessage>(session.Id,
                 new ChannelChatMessage.Condition(BroadcasterUserId: _channelId, UserId: _userId).AsDict()),
             _twitchApi.SubscribeToEventSubBot<UserWhisperMessage>(session.Id,
                 new UserWhisperMessage.Condition(UserId: _userId).AsDict()),
-            _twitchApi.SubscribeToEventSubChannel<ChannelSubscribe>(session.Id,
-                new ChannelSubscribe.Condition(BroadcasterUserId: _channelId).AsDict()),
-            _twitchApi.SubscribeToEventSubChannel<ChannelSubscriptionMessage>(session.Id,
-                new ChannelSubscriptionMessage.Condition(BroadcasterUserId: _channelId).AsDict()),
-            _twitchApi.SubscribeToEventSubChannel<ChannelSubscriptionGift>(session.Id,
-                new ChannelSubscriptionGift.Condition(BroadcasterUserId: _channelId).AsDict()),
             _twitchApi.SubscribeToEventSubBot<ChannelChatSettingsUpdate>(session.Id,
                 new ChannelChatSettingsUpdate.Condition(BroadcasterUserId: _channelId, UserId: _userId).AsDict())
         );
@@ -147,7 +155,22 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
                 }
             }
         }
-        _logger.LogDebug("Finished setting up EventSub subscriptions");
+        _logger.LogDebug("Finished setting up chat bot EventSub subscriptions");
+    }
+
+    private async Task SetUpChannelSubscriptions(Session session)
+    {
+        _session = session;
+        _logger.LogDebug("Setting up channel EventSub subscriptions");
+        await Task.WhenAll(
+            _twitchApi.SubscribeToEventSubChannel<ChannelSubscribe>(session.Id,
+                new ChannelSubscribe.Condition(BroadcasterUserId: _channelId).AsDict()),
+            _twitchApi.SubscribeToEventSubChannel<ChannelSubscriptionMessage>(session.Id,
+                new ChannelSubscriptionMessage.Condition(BroadcasterUserId: _channelId).AsDict()),
+            _twitchApi.SubscribeToEventSubChannel<ChannelSubscriptionGift>(session.Id,
+                new ChannelSubscriptionGift.Condition(BroadcasterUserId: _channelId).AsDict())
+        );
+        _logger.LogDebug("Finished setting up channel EventSub subscriptions");
     }
 
     public enum JoinResult { Ok, NotEnabled, AlreadyJoined, UserNotFound, StreamOffline }
@@ -238,6 +261,8 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
     private readonly TtlCount _recentConnectAttempts = new(Duration.FromMinutes(10), SystemClock.Instance);
     private async Task RunAndReconnectForever(CancellationToken cancellationToken)
     {
+        Task<EventSubClient.DisconnectReason>? chatBotTask = null;
+        Task<EventSubClient.DisconnectReason>? channelTask = null;
         while (!cancellationToken.IsCancellationRequested)
         {
             int throttleSteps = _recentConnectAttempts.Count - 1; // -1 so first reconnect is not throttled
@@ -254,7 +279,11 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
             try
             {
                 _logger.LogDebug("EventSub websocket client connecting...");
-                EventSubClient.DisconnectReason disconnectReason = await _client.ConnectAndReceive(cancellationToken);
+                if (chatBotTask is null or { IsCompleted: true })
+                    chatBotTask = _clientChatBot.ConnectAndReceive(cancellationToken);
+                if (channelTask is null or { IsCompleted: true })
+                    channelTask = _clientChannel.ConnectAndReceive(cancellationToken);
+                EventSubClient.DisconnectReason disconnectReason = await await Task.WhenAny(chatBotTask, channelTask);
                 if (disconnectReason is EventSubClient.DisconnectReason.KeepaliveTimeout)
                     _logger.LogWarning("EventSub websocket closed because of keepalive timeout, reconnecting...");
                 else if (disconnectReason is EventSubClient.DisconnectReason.ConnectionClosed)
