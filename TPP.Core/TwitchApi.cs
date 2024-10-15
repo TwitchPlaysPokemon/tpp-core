@@ -44,21 +44,18 @@ public class TwitchApi(
         }
         catch (HttpResponseException ex)
         {
-            string twitchResponse = await ex.HttpResponse.Content.ReadAsStringAsync();
+            _logger.LogDebug(ex, "TwitchAPI errored: {Error}", await ex.HttpResponse.Content.ReadAsStringAsync());
             switch ((int)ex.HttpResponse.StatusCode)
             {
                 case 401:
                     // unexpectedly expired tokens are retryable if we successfully refresh the token.
-                    _logger.LogDebug(ex, "Retryable TwitchAPI 401 auth error occurred: {Error}", twitchResponse);
                     await apiProvider.Invalidate();
                     return await action(await apiProvider.Get());
                 case >= 500 and < 600:
                     // issues on Twitch's end may be transient and often don't occurr a second time
-                    _logger.LogDebug(ex, "Retryable TwitchAPI 500 server error occurred: {Error}", twitchResponse);
                     return await action(await apiProvider.Get());
                 default:
                     // otherwise, assume it's an actual error with our request and don't retry it
-                    _logger.LogError(ex, "Unretryable TwitchAPI error occurred: {Error}", twitchResponse);
                     throw;
             }
         }
