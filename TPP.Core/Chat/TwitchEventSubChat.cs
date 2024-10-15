@@ -504,7 +504,7 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
             IsGift: false, // Resubscriptions are never gifts. Gifts are always "new" subscriptions, not continuations
             Message: evt.Message?.Text,
             Emotes: (evt.Message?.Emotes ?? []).Select(e => new EmoteOccurrence(
-                    e.Id, evt.Message!.Text!.Substring(e.Begin, e.End - e.Begin + 1), e.Begin, e.End))
+                    e.Id, evt.Message!.Text!.Substring(e.Begin, e.End - e.Begin), e.Begin, e.End))
                 .ToImmutableList()
         );
         ISubscriptionProcessor.SubResult subResult = await _subscriptionProcessor.ProcessSubscription(
