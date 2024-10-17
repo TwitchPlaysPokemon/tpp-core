@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -105,7 +106,8 @@ public static class Setups
         IChatModeChanger? chatModeChanger,
         IExecutor? executor,
         IImmutableSet<PkmnSpecies> knownSpecies,
-        ITransmuter transmuter)
+        ITransmuter transmuter,
+        ICommandHandler commandHandler)
     {
         var commandProcessor = new CommandProcessor(
             loggerFactory.CreateLogger<CommandProcessor>(),
@@ -170,7 +172,8 @@ public static class Setups
             commandProcessor.InstallCommand(command);
         }
         SetUpDynamicCommands(loggerFactory.CreateLogger("setups"), commandProcessor, databases.ResponseCommandRepo);
-        SetUpDynamicAliases(loggerFactory.CreateLogger("setups"), commandProcessor, databases.CommandAliasRepo);
+        SetUpDynamicAliases(loggerFactory.CreateLogger("setups"), commandProcessor, databases.CommandAliasRepo,
+            commandHandler);
         return commandProcessor;
     }
 
@@ -315,7 +318,8 @@ public static class Setups
     }
 
     private static void SetUpDynamicAliases(
-        ILogger logger, CommandProcessor commandProcessor, ICommandAliasRepo commandAliasRepo)
+        ILogger logger, CommandProcessor commandProcessor, ICommandAliasRepo commandAliasRepo,
+        ICommandHandler commandHandler)
     {
         IImmutableList<CommandAlias> aliases = commandAliasRepo.GetAliases().Result;
 
@@ -323,26 +327,56 @@ public static class Setups
         void InstallAlias(CommandAlias alias)
         {
             Command? existing = commandProcessor.FindCommand(alias.Alias);
-            Command? targetCommand = commandProcessor.FindCommand(alias.TargetCommand);
             if (existing != null)
             {
                 logger.LogWarning(
                     "not installing dynamic command alias '{Command}' " +
                     "because it conflicts with an existing command", alias.Alias);
+                return;
             }
-            else if (targetCommand == null)
-            {
-                logger.LogWarning(
-                    "not installing dynamic command alias '{Command}' " +
-                    "because the target command '{TargetCommand}' does not exist", alias.Alias, alias.TargetCommand);
-            }
-            else
-            {
-                var aliasCommand = new Command(alias.Alias, targetCommand.Value.Execution)
-                    { Description = targetCommand.Value.Description };
-                commandProcessor.InstallCommand(aliasCommand.WithFixedArgs(alias.FixedArgs));
-                dynamicallyInstalledAliases.Add(alias.Alias);
-            }
+            // If we didn't want to be able to also alias to old-core commands, we could just look up the target
+            // command and execute it directly, like this:
+            //
+            //     Command? targetCommand = commandProcessor.FindCommand(alias.TargetCommand);
+            //     if (targetCommand == null)
+            //     {
+            //         logger.LogWarning(
+            //             "not installing dynamic command alias '{Command}' " +
+            //             "because the target command '{TargetCommand}' does not exist", alias.Alias, alias.TargetCommand);
+            //         return;
+            //     }
+            //     var aliasCommand = new Command(alias.Alias, targetCommand.Value.Execution)
+            //         { Description = targetCommand.Value.Description };
+            //     commandProcessor.InstallCommand(aliasCommand.WithFixedArgs(alias.FixedArgs));
+            //     dynamicallyInstalledAliases.Add(alias.Alias);
+            //
+            // Unfortunately, we do want old-core support, so we have to take a lengthy detour:
+            // Assemble a brand-new message that has the alias resolved manually,
+            // and run that through the entire processing chain.
+
+            string aliasReplacement = string.Join(' ', [alias.TargetCommand, ..alias.FixedArgs]);
+            var aliasCommand = new Command(alias.Alias, async ctx =>
+                {
+                    string messageTextWithAliasResolved =
+                        new Regex("(?<=!?)" + Regex.Escape(alias.Alias), RegexOptions.IgnoreCase)
+                            .Replace(ctx.Message.MessageText, aliasReplacement, 1);
+                    string ircTextWithAliasResolved =
+                        new Regex("(?<=.*? (?:PRIVMSG|WHISPER) .*? :!?)" + Regex.Escape(alias.Alias), RegexOptions.IgnoreCase)
+                            .Replace(ctx.Message.RawIrcMessage, aliasReplacement, 1);
+
+                    var messageWithAliasResolved = new Message(
+                        ctx.Message.User,
+                        messageTextWithAliasResolved,
+                        ctx.Message.MessageSource,
+                        ircTextWithAliasResolved
+                    );
+                    await commandHandler.ProcessIncomingMessage(ctx.Source!, messageWithAliasResolved);
+                    return new CommandResult();
+                })
+                { Description = "Alias for: " + aliasReplacement };
+
+            commandProcessor.InstallCommand(aliasCommand);
+            dynamicallyInstalledAliases.Add(alias.Alias);
         }
         void UninstallAlias(string aliasName)
         {
