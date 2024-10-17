@@ -23,6 +23,10 @@ public static class CommandExtensions
     public static Task<(T1, T2, T3, T4, T5)> ParseArgs<T1, T2, T3, T4, T5>(this CommandContext ctx) =>
         ctx.ArgsParser.Parse<T1, T2, T3, T4, T5>(ctx.Args);
 
+    /// Replace the command name with a different one.
+    public static Command WithName(this Command command, string newName) =>
+        new(newName, command.Execution) { Aliases = command.Aliases, Description = command.Description };
+
     /// Replace the command execution with a different one.
     public static Command WithExecution(this Command command, Command.Execute newExecution) =>
         new(command.Name, newExecution) { Aliases = command.Aliases, Description = command.Description };
@@ -38,6 +42,12 @@ public static class CommandExtensions
             ? await command.Execution(ctx)
             : ersatzResult ?? new CommandResult());
     }
+
+    /// Prepend a fixed list of args to each command invocation.
+    /// E.g. if the fixed args are ["foo", "bar"] and the command gets called with ["baz"],
+    /// the execution will receive the arguments ["foo", "bar", "baz"].
+    public static Command WithFixedArgs(this Command command, string[] fixedArgs) =>
+        command.WithExecution(ctx => command.Execution(ctx with { Args = [..fixedArgs, ..ctx.Args] }));
 
     /// Replace the command execution with one that does nothing
     /// if the command was recently executed within a given time span.

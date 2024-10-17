@@ -22,7 +22,7 @@ using static TPP.Core.MessageSource;
 
 namespace TPP.Core.Modes
 {
-    public sealed class ModeBase : IWithLifecycle
+    public sealed class ModeBase : IWithLifecycle, ICommandHandler
     {
         private static readonly Role[] ExemptionRoles = { Role.Operator, Role.Moderator, Role.ModbotExempt };
 
@@ -83,7 +83,7 @@ namespace TPP.Core.Modes
                 c => Setups.SetUpCommandProcessor(loggerFactory, baseConfig, argsParser, repos, stopToken,
                     muteInputsToken, messageSender: c,
                     chatModeChanger: c as IChatModeChanger, executor: c as IExecutor,
-                    pokedexData.KnownSpecies, transmuter));
+                    pokedexData.KnownSpecies, transmuter, this));
 
             _outgoingMessagequeueRepo = repos.OutgoingMessagequeueRepo;
             _messagelogRepo = repos.MessagelogRepo;
@@ -170,7 +170,7 @@ namespace TPP.Core.Modes
 
         private static readonly CaseInsensitiveImmutableHashSet CoStreamAllowedCommands =
             new(["left", "right"]);
-        private async Task ProcessIncomingMessage(IChat chat, Message message)
+        public async Task ProcessIncomingMessage(IChat chat, Message message)
         {
             Instant now = _clock.GetCurrentInstant();
             await _messagelogRepo.LogChat(
