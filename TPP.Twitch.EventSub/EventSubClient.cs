@@ -197,7 +197,9 @@ public class EventSubClient
             {
                 // Regarding "Guarding against replay attacks", Twitch recommends:
                 // Make sure you haven’t seen the ID in the message_id field before.
-                continue; // Just drop silently. TODO maybe log or issue an optional "duplicate message" event?
+                _logger.LogWarning("Dropping duplicate message with ID {Id}, Message: {Message}",
+                    message.Metadata.MessageId, message);
+                continue; // Just drop.
             }
             Instant clientNow = _clock.GetCurrentInstant();
             Duration clientServerTimeShift = clientNow - message.Metadata.MessageTimestamp;
