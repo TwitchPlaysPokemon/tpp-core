@@ -203,7 +203,7 @@ public class EventSubClient
             }
             Instant clientNow = _clock.GetCurrentInstant();
             Duration clientServerTimeShift = clientNow - message.Metadata.MessageTimestamp;
-            if (clientServerTimeShift < KeepAliveGrace || clientServerTimeShift > KeepAliveGrace)
+            if (clientServerTimeShift < -KeepAliveGrace || clientServerTimeShift > KeepAliveGrace)
             {
                 _logger.LogWarning(
                     "Client time is {Shift}s ahead of server time: Received message with timestamp {ServerTimestamp}, " +
