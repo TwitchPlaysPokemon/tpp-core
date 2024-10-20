@@ -199,6 +199,16 @@ public class EventSubClient
                 // Make sure you haven’t seen the ID in the message_id field before.
                 continue; // Just drop silently. TODO maybe log or issue an optional "duplicate message" event?
             }
+            Instant clientNow = _clock.GetCurrentInstant();
+            Duration clientServerTimeShift = clientNow - message.Metadata.MessageTimestamp;
+            if (clientServerTimeShift < KeepAliveGrace || clientServerTimeShift > KeepAliveGrace)
+            {
+                _logger.LogWarning(
+                    "Client time is {Shift}s ahead of server time: Received message with timestamp {ServerTimestamp}, " +
+                    "but client timestamp currently is {ClientTimestamp}. " +
+                    "You may want to either increase 'KeepAliveGrace' or fix the clock accuracy.",
+                    clientServerTimeShift.TotalSeconds, message.Metadata.MessageTimestamp, clientNow);
+            }
             lastMessageTimestamp = message.Metadata.MessageTimestamp;
             if (message is SessionWelcome welcome)
             {
