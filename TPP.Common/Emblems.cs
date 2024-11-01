@@ -99,7 +99,8 @@ namespace TPP.Common
             [90] = "Super Gauntlet Sword/Shield",
             [91] = "Super Gauntlet Scarlet/Violet",
             [92] = "Super Gauntlet Legends: Arceus",
-            [93] = "Multiworld Emerald"
+            [93] = "Multiworld Emerald",
+            [94] = "Rocket Edition"
         };
 
         public static string FormatEmblem(int emblemNum)
