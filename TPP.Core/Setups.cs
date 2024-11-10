@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
-using MongoDB.Driver.Linq;
 using NodaTime;
 using TPP.ArgsParsing;
 using TPP.ArgsParsing.TypeParsers;
@@ -209,7 +208,6 @@ public static class Setups
         IClock clock = SystemClock.Instance;
         CustomSerializers.RegisterAll();
         MongoClientSettings settings = MongoClientSettings.FromConnectionString(baseConfig.MongoDbConnectionUri);
-        settings.LinqProvider = LinqProvider.V3;
         IMongoClient mongoClient = new MongoClient(settings);
         IMongoDatabase mongoDatabase = mongoClient.GetDatabase(baseConfig.MongoDbDatabaseName);
         IMongoDatabase mongoDatabaseMessagelog = mongoClient.GetDatabase(baseConfig.MongoDbDatabaseNameMessagelog);

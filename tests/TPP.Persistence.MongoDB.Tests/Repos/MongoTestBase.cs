@@ -32,7 +32,6 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             // try to connect to a mongodb running on the default port
             MongoClientSettings settings = MongoClientSettings
                 .FromConnectionString($"mongodb://localhost:27017/?replicaSet={ReplicaSetName}");
-            settings.LinqProvider = LinqProvider.V3;
             _client = new MongoClient(settings);
             bool success = _client.ListDatabaseNamesAsync(CancellationToken.None).Wait(TimeSpan.FromSeconds(5));
             if (!success)
