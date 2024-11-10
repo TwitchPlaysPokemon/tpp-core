@@ -18,7 +18,7 @@ internal record WebsocketChangeover(ClientWebSocket NewWebSocket, SessionWelcome
 public class EventSubClient
 {
     private static readonly Encoding Utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
-    private static readonly Duration KeepAliveGrace = Duration.FromSeconds(3);
+    private static readonly Duration KeepAliveGrace = Duration.FromSeconds(5);
     private static readonly Duration MaxMessageAge = Duration.FromMinutes(10);
     private static readonly Task<WebsocketChangeover> NoChangeoverTask =
         new TaskCompletionSource<WebsocketChangeover>().Task; // a task that never gets completed
