@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <ItemGroup>
-        <PackageReference Include="MongoDB.Driver" Version="2.29.0" />
+        <PackageReference Include="MongoDB.Driver" Version="3.0.0" />
         <ProjectReference Include="..\..\TPP.Persistence.MongoDB\TPP.Persistence.MongoDB.csproj"/>
     </ItemGroup>
 </Project>
