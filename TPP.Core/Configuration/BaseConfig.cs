@@ -50,6 +50,9 @@ public sealed class BaseConfig : ConfigBase, IRootConfig
     public Duration AdvertisePollsInterval { get; init; } = Duration.FromHours(1);
 
     public ImmutableHashSet<TppFeatures> DisabledFeatures { get; init; } = ImmutableHashSet<TppFeatures>.Empty;
+
+    [Description("Donation handling via Streamlabs")]
+    public StreamlabsConfig StreamlabsConfig { get; init; } = new();
 }
 
 /// <summary>
@@ -78,4 +81,10 @@ public sealed class DiscordLoggingConfig : ConfigBase
     public ulong WebhookId { get; init; } = 0L;
     public string WebhookToken { get; init; } = "";
     public LogEventLevel MinLogLevel { get; init; } = LogEventLevel.Warning;
+}
+
+public sealed class StreamlabsConfig : ConfigBase
+{
+    public bool Enabled { get; init; } = false;
+    public string AccessToken { get; init; } = "";
 }
