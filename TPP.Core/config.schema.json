@@ -83,6 +83,24 @@
           ]
         }
       }
+    },
+    "StreamlabsConfig": {
+      "description": "Donation handling via Streamlabs",
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "Enabled": {
+          "type": "boolean"
+        },
+        "AccessToken": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
     }
   },
   "type": "object",
@@ -184,6 +202,9 @@
           "Cosmetics"
         ]
       }
+    },
+    "StreamlabsConfig": {
+      "$ref": "#/definitions/StreamlabsConfig"
     }
   }
 }
