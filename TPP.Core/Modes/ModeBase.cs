@@ -13,6 +13,7 @@ using TPP.Core.Commands.Definitions;
 using TPP.Core.Configuration;
 using TPP.Core.Moderation;
 using TPP.Core.Overlay;
+using TPP.Core.Streamlabs;
 using TPP.Core.Utils;
 using TPP.Inputting;
 using TPP.Model;
@@ -152,6 +153,12 @@ namespace TPP.Core.Modes
                 ? null
                 : new ChattersWorker(loggerFactory, clock,
                     ((TwitchChat)_chats[primaryChat.Name]).TwitchApi, repos.ChattersSnapshotsRepo, primaryChat);
+
+            if (baseConfig.StreamlabsConfig.Enabled)
+            {
+                StreamlabsClient streamlabsClient = new(loggerFactory.CreateLogger<StreamlabsClient>(), baseConfig.StreamlabsConfig.AccessToken);
+                // TODO do something with the client, e.g. open Websocket and add donations refresh worker
+            }
         }
 
         public void InstallAdditionalCommand(Command command)
