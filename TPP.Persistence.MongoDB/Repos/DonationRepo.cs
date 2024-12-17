@@ -35,7 +35,7 @@ public class DonationRepo : IDonationRepo
         await Collection.Find(p => p.DonationId == donationId).FirstOrDefaultAsync();
 
     public async Task<Donation> InsertDonation(
-        int donationId, Instant createdAt, string userName, string? userId, int cents, string message)
+        int donationId, Instant createdAt, string userName, string? userId, int cents, string? message)
     {
         Donation donation = new(
             donationId: donationId,
