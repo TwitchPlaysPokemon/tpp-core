@@ -77,6 +77,8 @@ public class User : PropertyEquatable<User>
     public Instant? TimeoutExpiration { get; init; }
     public bool Banned { get; init; }
 
+    public bool DonorBadge { get; init; }
+
     public User(
         string id,
         string twitchDisplayName,
