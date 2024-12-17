@@ -29,6 +29,8 @@ namespace TPP.Persistence
         public Task<User> SetBanned(User user, bool banned);
         public Task<User> SetTimedOut(User user, Instant? timeoutExpiration);
 
+        public Task<User> SetHasDonorBadge(User user, bool hasDonorBadge);
+
         /// Unselects the specified species as the presented badge if it is the currently equipped species.
         /// Used for resetting the equipped badge after a user lost all of that species' badges.
         /// Returns true if the badge was unequipped, otherwise false.

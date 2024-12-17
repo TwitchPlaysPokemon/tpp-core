@@ -62,6 +62,9 @@ namespace TPP.Persistence.MongoDB.Repos
                 cm.MapProperty(u => u.TimeoutExpiration).SetElementName("timeout_expiration");
                 cm.MapProperty(u => u.Roles).SetElementName("roles")
                     .SetDefaultValue(new HashSet<Role>());
+                cm.MapProperty(u => u.DonorBadge).SetElementName("donor_badge")
+                    .SetDefaultValue(false)
+                    .SetIgnoreIfDefault(true);
             });
         }
 
@@ -274,5 +277,14 @@ namespace TPP.Persistence.MongoDB.Repos
                     .Set(u => u.Banned, false)
                     .Set(u => u.TimeoutExpiration, timeoutExpiration),
                 new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After });
+
+        public async Task<User> SetHasDonorBadge(User user, bool hasDonorBadge) =>
+            await Collection.FindOneAndUpdateAsync(
+                filter: u => u.Id == user.Id,
+                update: hasDonorBadge
+                    ? Builders<User>.Update.Set(u => u.DonorBadge, true)
+                    : Builders<User>.Update.Unset(u => u.DonorBadge),
+                options: new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After, IsUpsert = false })
+            ?? throw new ArgumentException($"user {user} does not exist");
     }
 }
