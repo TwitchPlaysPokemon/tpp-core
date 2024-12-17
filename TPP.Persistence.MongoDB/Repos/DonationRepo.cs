@@ -33,6 +33,14 @@ public class DonationRepo : IDonationRepo
     {
         database.CreateCollectionIfNotExists(CollectionName).Wait();
         Collection = database.GetCollection<Donation>(CollectionName);
+        InitIndexes();
+    }
+
+    private void InitIndexes()
+    {
+        Collection.Indexes.CreateMany([
+            new CreateIndexModel<Donation>(Builders<Donation>.IndexKeys.Ascending(u => u.UserId))
+        ]);
     }
 
     public async Task<Donation?> FindDonation(int donationId) =>
