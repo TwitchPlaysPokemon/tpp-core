@@ -1,6 +1,10 @@
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 using NodaTime;
 using TPP.Model;
 
@@ -35,7 +39,7 @@ public class DonationRepo : IDonationRepo
         await Collection.Find(p => p.DonationId == donationId).FirstOrDefaultAsync();
 
     public async Task<Donation> InsertDonation(
-        int donationId, Instant createdAt, string userName, string? userId, int cents, string? message)
+        int donationId, Instant createdAt, string userName, string? userId, int cents, string? message = null)
     {
         Donation donation = new(
             donationId: donationId,
@@ -48,5 +52,24 @@ public class DonationRepo : IDonationRepo
         await Collection.InsertOneAsync(donation);
 
         return donation;
+    }
+
+    public async Task<IImmutableDictionary<string, long>> GetCentsPerUser(
+        int minTotalCents = 0,
+        ISet<string>? userIdFilter = null)
+    {
+        IQueryable<Donation> query = Collection.AsQueryable()
+            .Where(donation => donation.UserId != null);
+        if (userIdFilter is not null)
+            query = query.Where(donation => userIdFilter.Contains(donation.UserId!));
+        var result = await query.GroupBy(donation => donation.UserId!)
+            .Select(grp => new
+            {
+                UserId = grp.Key,
+                Cents = grp.Sum(c => (long)c.Cents)
+            })
+            .Where(arg => arg.Cents >= minTotalCents)
+            .ToListAsync();
+        return result.ToImmutableDictionary(arg => arg.UserId, arg => arg.Cents);
     }
 }
