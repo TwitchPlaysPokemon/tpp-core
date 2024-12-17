@@ -156,6 +156,11 @@ namespace TPP.Core.Modes
 
             if (baseConfig.StreamlabsConfig.Enabled)
             {
+                IChat chat = _chats.Values.First(); // TODO
+                DonationHandler donationHandler = new(loggerFactory.CreateLogger<DonationHandler>(),
+                    repos.DonationRepo, repos.UserRepo, repos.TokensBank, chat, baseConfig.DonorBadgeCents);
+                // TODO use the handler
+
                 StreamlabsClient streamlabsClient = new(loggerFactory.CreateLogger<StreamlabsClient>(), baseConfig.StreamlabsConfig.AccessToken);
                 // TODO do something with the client, e.g. open Websocket and add donations refresh worker
             }

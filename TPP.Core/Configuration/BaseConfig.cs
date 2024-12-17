@@ -53,6 +53,8 @@ public sealed class BaseConfig : ConfigBase, IRootConfig
 
     [Description("Donation handling via Streamlabs")]
     public StreamlabsConfig StreamlabsConfig { get; init; } = new();
+
+    public int DonorBadgeCents { get; init; } = 20000;
 }
 
 /// <summary>
