@@ -14,5 +14,5 @@ public interface IDonationRepo
         string userName,
         string? userId,
         int cents,
-        string message);
+        string? message);
 }

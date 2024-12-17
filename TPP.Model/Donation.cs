@@ -9,7 +9,7 @@ public class Donation(
     string userName,
     string? userId,
     int cents,
-    string message
+    string? message
 ) : PropertyEquatable<Donation>
 {
     /// <summary>
