@@ -28,6 +28,7 @@ namespace TPP.Persistence
         public const string ManualAdjustment = "manual_adjustment";
         public const string DonationGive = "donation_give";
         public const string DonationReceive = "donation_recieve"; // typo kept for backwards-compatibility for now
+        public const string DonationTokens = "donation_tokens";
         public const string Match = "match";
         public const string Subscription = "subscription";
         public const string SubscriptionGift = "subscription gift";
