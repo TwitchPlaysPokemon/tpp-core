@@ -18,7 +18,8 @@ public sealed class ChattersWorker(
     IClock clock,
     TwitchApi twitchApi,
     IChattersSnapshotsRepo chattersSnapshotsRepo,
-    ConnectionConfig.Twitch chatConfig
+    ConnectionConfig.Twitch chatConfig,
+    IUserRepo userRepo
 ) : IWithLifecycle
 {
     private readonly ILogger<ChattersWorker> _logger = loggerFactory.CreateLogger<ChattersWorker>();
@@ -38,6 +39,14 @@ public sealed class ChattersWorker(
 
                 ImmutableList<string> chatterNames = chatters.Select(c => c.UserLogin).ToImmutableList();
                 ImmutableList<string> chatterIds = chatters.Select(c => c.UserId).ToImmutableList();
+
+                // Record all yet unknown users. Makes other code that retrieves users via chatters easier,
+                // because that code can then rely on all users from the chatters snapshot actually existing in the DB.
+                HashSet<string> knownIds = (await userRepo.FindByIds(chatterIds)).Select(u => u.Id).ToHashSet();
+                HashSet<string> unknownIds = chatterIds.Except(knownIds).ToHashSet();
+                foreach (Chatter newUser in chatters.Where(ch => unknownIds.Contains(ch.UserId)))
+                    await userRepo.RecordUser(new UserInfo(newUser.UserId, newUser.UserName, newUser.UserLogin));
+
                 await chattersSnapshotsRepo.LogChattersSnapshot(
                     chatterNames, chatterIds, chatConfig.Channel, clock.GetCurrentInstant());
             }
@@ -66,7 +75,8 @@ public sealed class ChattersWorker(
             chatters.AddRange(getChattersResponse.Data);
             nextCursor = getChattersResponse.Pagination?.Cursor;
         } while (nextCursor != null);
-        _logger.LogDebug("Retrieved {NumChatters} chatters", chatters.Count);
+        _logger.LogDebug("Retrieved {NumChatters} chatters: {ChatterNames}",
+            chatters.Count, string.Join(", ", chatters.Select(c => c.UserLogin)));
         return chatters;
     }
 }

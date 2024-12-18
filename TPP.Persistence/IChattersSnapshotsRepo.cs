@@ -12,4 +12,6 @@ public interface IChattersSnapshotsRepo
         IImmutableList<string> chatterIds,
         string channel,
         Instant timestamp);
+
+    Task<ChattersSnapshot?> GetRecentChattersSnapshot(Instant from, Instant to);
 }

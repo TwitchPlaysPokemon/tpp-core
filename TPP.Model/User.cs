@@ -76,6 +76,8 @@ public class User : PropertyEquatable<User>
 
     public Instant? TimeoutExpiration { get; init; }
     public bool Banned { get; init; }
+    public bool IsBot { get; init; }
+    public bool IsCaptchaSuspended { get; init; }
 
     public bool DonorBadge { get; init; }
 

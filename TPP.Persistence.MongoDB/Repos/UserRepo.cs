@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using MongoDB.Bson.Serialization;
@@ -59,6 +60,8 @@ namespace TPP.Persistence.MongoDB.Repos
                 cm.MapProperty(u => u.LoyaltyLeague).SetElementName("loyalty_tier");
                 cm.MapProperty(u => u.SubscriptionUpdatedAt).SetElementName("subscription_updated_at");
                 cm.MapProperty(u => u.Banned).SetElementName("banned");
+                cm.MapProperty(u => u.IsBot).SetElementName("is_bot");
+                cm.MapProperty(u => u.IsCaptchaSuspended).SetElementName("captcha_suspended");
                 cm.MapProperty(u => u.TimeoutExpiration).SetElementName("timeout_expiration");
                 cm.MapProperty(u => u.Roles).SetElementName("roles")
                     .SetDefaultValue(new HashSet<Role>());
@@ -193,6 +196,12 @@ namespace TPP.Persistence.MongoDB.Repos
 
         public async Task<User?> FindById(string userId) =>
             await Collection.Find(u => u.Id == userId).FirstOrDefaultAsync();
+
+        public async Task<List<User>> FindByIds(IReadOnlyList<string> userIds) =>
+            await Collection.Find(u => userIds.Contains(u.Id)).ToListAsync();
+
+        public async Task<List<User>> FindByIdsEligibleForHandouts(IReadOnlyList<string> userIds) =>
+            await Collection.Find(u => userIds.Contains(u.Id) && !u.Banned && !u.IsBot && !u.IsCaptchaSuspended).ToListAsync();
 
         public async Task<User?> FindByDisplayName(string displayName) =>
             await Collection.Find(u => u.TwitchDisplayName == displayName).SortByDescending(u => u.LastActiveAt).FirstOrDefaultAsync();

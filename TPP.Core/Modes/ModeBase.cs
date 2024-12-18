@@ -153,7 +153,8 @@ namespace TPP.Core.Modes
             _chattersWorker = primaryChat == null
                 ? null
                 : new ChattersWorker(loggerFactory, clock,
-                    ((TwitchChat)_chats[primaryChat.Name]).TwitchApi, repos.ChattersSnapshotsRepo, primaryChat);
+                    ((TwitchChat)_chats[primaryChat.Name]).TwitchApi, repos.ChattersSnapshotsRepo, primaryChat,
+                    repos.UserRepo);
 
             StreamlabsConfig streamlabsConfig = baseConfig.StreamlabsConfig;
             if (streamlabsConfig.Enabled)
@@ -169,7 +170,7 @@ namespace TPP.Core.Modes
                         _logger.LogWarning("Multiple chats configured, using {Chat} for donation token whispers", chatName);
                     DonationHandler donationHandler = new(loggerFactory.CreateLogger<DonationHandler>(),
                         repos.DonationRepo, repos.UserRepo, repos.TokensBank, chat, overlayConnection,
-                        baseConfig.DonorBadgeCents);
+                        repos.ChattersSnapshotsRepo, baseConfig.DonorBadgeCents);
                     StreamlabsClient streamlabsClient = new(loggerFactory.CreateLogger<StreamlabsClient>(),
                         streamlabsConfig.AccessToken);
                     _donationsWorker = new DonationsWorker(loggerFactory, streamlabsConfig.PollingInterval,
