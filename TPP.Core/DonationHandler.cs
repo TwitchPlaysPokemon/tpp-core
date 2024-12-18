@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
@@ -58,7 +59,7 @@ public class DonationHandler(
             message: donation.Message
         );
 
-        DonationTokens tokens = GetDonationTokens(donor, donation.Id, cents);
+        DonationTokens tokens = await GetDonationTokens(donation.Id, donation.CreatedAt, cents);
         if (donor != null)
         {
             await UpdateHasDonationBadge(donor);
@@ -82,12 +83,18 @@ public class DonationHandler(
         public int Total() => Base + Bonus;
     }
 
-    private DonationTokens GetDonationTokens(User? user, int donationId, int cents)
+    /// Calculated a donation's reward tokens, which consists of some base tokens per cents,
+    /// plus bonus tokens obtained from donation record breaks.
+    /// Assumes the donation has already been persisted.
+    private async Task<DonationTokens> GetDonationTokens(int donationId, Instant createdAt, int cents)
     {
         const int centsPerToken = 50;
 
         int baseTokens = cents / centsPerToken;
-        int bonusTokens = 0; // TODO determine bonus tokens (record breaks)
+        int bonusTokens =
+            (await donationRepo.GetRecordDonations(createdAt))
+            .Where(kvp => kvp.Value.DonationId == donationId)
+            .Sum(kvp => kvp.Key.TokenWinning);
 
         return new DonationTokens(baseTokens, bonusTokens);
     }

@@ -39,6 +39,7 @@ public class DonationRepo : IDonationRepo
     private void InitIndexes()
     {
         Collection.Indexes.CreateMany([
+            new CreateIndexModel<Donation>(Builders<Donation>.IndexKeys.Ascending(u => u.CreatedAt)),
             new CreateIndexModel<Donation>(Builders<Donation>.IndexKeys.Ascending(u => u.UserId))
         ]);
     }
@@ -79,5 +80,21 @@ public class DonationRepo : IDonationRepo
             .Where(arg => arg.Cents >= minTotalCents)
             .ToListAsync();
         return result.ToImmutableDictionary(arg => arg.UserId, arg => arg.Cents);
+    }
+
+    public async Task<SortedDictionary<DonationRecordBreakType, Donation>> GetRecordDonations(Instant now)
+    {
+        var result = new SortedDictionary<DonationRecordBreakType, Donation>();
+        foreach (DonationRecordBreakType donationRecordBreakType in DonationRecordBreaks.Types)
+        {
+            Instant cutoff = now - donationRecordBreakType.Duration;
+            Donation? recordDonation = await Collection.AsQueryable()
+                .Where(donation => donation.CreatedAt > cutoff)
+                .OrderByDescending(donation => donation.Cents).ThenBy(donation => donation.CreatedAt)
+                .FirstOrDefaultAsync();
+            if (recordDonation != null)
+                result.Add(donationRecordBreakType, recordDonation);
+        }
+        return result;
     }
 }

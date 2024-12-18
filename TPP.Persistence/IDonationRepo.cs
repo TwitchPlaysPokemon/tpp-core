@@ -25,4 +25,6 @@ public interface IDonationRepo
     public Task<IImmutableDictionary<string, long>> GetCentsPerUser(
         int minTotalCents = 0,
         ISet<string>? userIdFilter = null);
+
+    public Task<SortedDictionary<DonationRecordBreakType, Donation>> GetRecordDonations(Instant now);
 }
