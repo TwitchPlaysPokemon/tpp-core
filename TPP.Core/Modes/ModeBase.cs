@@ -158,7 +158,8 @@ namespace TPP.Core.Modes
             {
                 IChat chat = _chats.Values.First(); // TODO
                 DonationHandler donationHandler = new(loggerFactory.CreateLogger<DonationHandler>(),
-                    repos.DonationRepo, repos.UserRepo, repos.TokensBank, chat, baseConfig.DonorBadgeCents);
+                    repos.DonationRepo, repos.UserRepo, repos.TokensBank, chat, overlayConnection,
+                    baseConfig.DonorBadgeCents);
                 // TODO use the handler
 
                 StreamlabsClient streamlabsClient = new(loggerFactory.CreateLogger<StreamlabsClient>(), baseConfig.StreamlabsConfig.AccessToken);
