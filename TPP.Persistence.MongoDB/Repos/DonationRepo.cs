@@ -44,11 +44,11 @@ public class DonationRepo : IDonationRepo
         ]);
     }
 
-    public async Task<Donation?> FindDonation(int donationId) =>
+    public async Task<Donation?> FindDonation(long donationId) =>
         await Collection.Find(p => p.DonationId == donationId).FirstOrDefaultAsync();
 
     public async Task<Donation> InsertDonation(
-        int donationId, Instant createdAt, string userName, string? userId, int cents, string? message = null)
+        long donationId, Instant createdAt, string userName, string? userId, int cents, string? message = null)
     {
         Donation donation = new(
             donationId: donationId,

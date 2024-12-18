@@ -8,10 +8,10 @@ namespace TPP.Persistence;
 
 public interface IDonationRepo
 {
-    public Task<Donation?> FindDonation(int donationId);
+    public Task<Donation?> FindDonation(long donationId);
 
     public Task<Donation> InsertDonation(
-        int donationId,
+        long donationId,
         Instant createdAt,
         string userName,
         string? userId,

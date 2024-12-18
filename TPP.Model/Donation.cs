@@ -4,7 +4,7 @@ using TPP.Common;
 namespace TPP.Model;
 
 public class Donation(
-    int donationId,
+    long donationId,
     Instant createdAt,
     string userName,
     string? userId,
@@ -16,7 +16,7 @@ public class Donation(
     /// Numeric unique donation ID, externally provided by the donation processor (e.g. StreamLabs).
     /// NOTE: This is an int because StreamLabs' donation IDs happen to be numeric. It should really be a string.
     /// </summary>
-    public int DonationId { get; init; } = donationId;
+    public long DonationId { get; init; } = donationId;
     protected override object EqualityId => DonationId;
 
     /// <summary>
