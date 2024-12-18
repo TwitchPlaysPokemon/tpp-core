@@ -47,6 +47,9 @@ public class DonationRepo : IDonationRepo
     public async Task<Donation?> FindDonation(long donationId) =>
         await Collection.Find(p => p.DonationId == donationId).FirstOrDefaultAsync();
 
+    public async Task<Donation?> GetMostRecentDonation() =>
+        await Collection.AsQueryable().OrderByDescending(u => u.CreatedAt).FirstOrDefaultAsync();
+
     public async Task<Donation> InsertDonation(
         long donationId, Instant createdAt, string userName, string? userId, int cents, string? message = null)
     {

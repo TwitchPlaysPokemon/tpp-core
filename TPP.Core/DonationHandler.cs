@@ -9,6 +9,7 @@ using NodaTime;
 using TPP.Core.Chat;
 using TPP.Core.Overlay;
 using TPP.Core.Overlay.Events;
+using TPP.Core.Streamlabs;
 using TPP.Model;
 using TPP.Persistence;
 
@@ -29,7 +30,17 @@ public class DonationHandler(
         string Username,
         decimal Amount,
         string Currency,
-        string? Message);
+        string? Message)
+    {
+        public static NewDonation FromStreamlabs(StreamlabsClient.Donation donation) => new(
+            Id: donation.DonationId,
+            CreatedAt: donation.CreatedAt,
+            Username: donation.Name,
+            Amount: donation.Amount,
+            Currency: donation.Currency,
+            Message: donation.Message
+        );
+    }
 
     public async Task Process(NewDonation donation)
     {

@@ -40,6 +40,7 @@ namespace TPP.Core.Modes
         private readonly IClock _clock;
         private readonly ProcessMessage _processMessage;
         private readonly ChattersWorker? _chattersWorker;
+        private readonly DonationsWorker? _donationsWorker;
 
         /// Processes a message that wasn't already processed by the mode base,
         /// and returns whether the message was actively processed.
@@ -154,16 +155,17 @@ namespace TPP.Core.Modes
                 : new ChattersWorker(loggerFactory, clock,
                     ((TwitchChat)_chats[primaryChat.Name]).TwitchApi, repos.ChattersSnapshotsRepo, primaryChat);
 
-            if (baseConfig.StreamlabsConfig.Enabled)
+            StreamlabsConfig streamlabsConfig = baseConfig.StreamlabsConfig;
+            if (streamlabsConfig.Enabled)
             {
                 IChat chat = _chats.Values.First(); // TODO
                 DonationHandler donationHandler = new(loggerFactory.CreateLogger<DonationHandler>(),
                     repos.DonationRepo, repos.UserRepo, repos.TokensBank, chat, overlayConnection,
                     baseConfig.DonorBadgeCents);
-                // TODO use the handler
-
-                StreamlabsClient streamlabsClient = new(loggerFactory.CreateLogger<StreamlabsClient>(), baseConfig.StreamlabsConfig.AccessToken);
-                // TODO do something with the client, e.g. open Websocket and add donations refresh worker
+                StreamlabsClient streamlabsClient = new(loggerFactory.CreateLogger<StreamlabsClient>(),
+                    streamlabsConfig.AccessToken);
+                _donationsWorker = new DonationsWorker(loggerFactory, streamlabsConfig.PollingInterval,
+                    streamlabsClient, repos.DonationRepo, donationHandler);
             }
         }
 
@@ -262,6 +264,8 @@ namespace TPP.Core.Modes
                 tasks.Add(_sendOutQueuedMessagesWorker.Start(cancellationToken));
             if (_chattersWorker != null)
                 tasks.Add(_chattersWorker.Start(cancellationToken));
+            if (_donationsWorker != null)
+                tasks.Add(_donationsWorker.Start(cancellationToken));
             await TaskUtils.WhenAllFastExit(tasks);
 
             foreach (IChat chat in _chats.Values)
