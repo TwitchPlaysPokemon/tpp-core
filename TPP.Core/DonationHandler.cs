@@ -24,7 +24,7 @@ public class DonationHandler(
     int donorBadgeCents)
 {
     public record NewDonation(
-        int Id,
+        long Id,
         Instant CreatedAt,
         string Username,
         decimal Amount,
@@ -104,7 +104,7 @@ public class DonationHandler(
     }
 
     /// Assumes the donation has already been persisted.
-    private async Task<ImmutableSortedSet<DonationRecordBreakType>> GetRecordBreaks(int donationId, Instant createdAt)
+    private async Task<ImmutableSortedSet<DonationRecordBreakType>> GetRecordBreaks(long donationId, Instant createdAt)
     {
         return (await donationRepo.GetRecordDonations(createdAt))
             .Where(kvp => kvp.Value.DonationId == donationId)
@@ -124,7 +124,7 @@ public class DonationHandler(
         return new DonationTokens(baseTokens, bonusTokens);
     }
 
-    private async Task GivenTokensToDonorAndNotifyThem(User user, int donationId, DonationTokens tokens)
+    private async Task GivenTokensToDonorAndNotifyThem(User user, long donationId, DonationTokens tokens)
     {
         var additionalData = new Dictionary<string, object?>
         {

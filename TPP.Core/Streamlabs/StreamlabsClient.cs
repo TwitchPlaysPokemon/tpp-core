@@ -74,8 +74,8 @@ public class StreamlabsClient
     /// <returns></returns>
     public async Task<List<Donation>> GetDonations(
         int? limit = null,
-        int? before = null,
-        int? after = null,
+        long? before = null,
+        long? after = null,
         string? currency = null,
         bool? verified = null)
     {
