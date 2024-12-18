@@ -10,6 +10,7 @@ public interface IDonationRepo
 {
     public Task<Donation?> FindDonation(long donationId);
 
+    public Task<Donation?> GetMostRecentDonation();
     public Task<Donation> InsertDonation(
         long donationId,
         Instant createdAt,

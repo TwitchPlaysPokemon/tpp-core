@@ -99,6 +99,9 @@
             "string",
             "null"
           ]
+        },
+        "PollingInterval": {
+          "type": "string"
         }
       }
     }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using System.ComponentModel;
 using NodaTime;
@@ -89,4 +90,5 @@ public sealed class StreamlabsConfig : ConfigBase
 {
     public bool Enabled { get; init; } = false;
     public string AccessToken { get; init; } = "";
+    public TimeSpan PollingInterval { get; init; } = TimeSpan.FromMinutes(1);
 }
