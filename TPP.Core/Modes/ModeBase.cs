@@ -158,14 +158,23 @@ namespace TPP.Core.Modes
             StreamlabsConfig streamlabsConfig = baseConfig.StreamlabsConfig;
             if (streamlabsConfig.Enabled)
             {
-                IChat chat = _chats.Values.First(); // TODO
-                DonationHandler donationHandler = new(loggerFactory.CreateLogger<DonationHandler>(),
-                    repos.DonationRepo, repos.UserRepo, repos.TokensBank, chat, overlayConnection,
-                    baseConfig.DonorBadgeCents);
-                StreamlabsClient streamlabsClient = new(loggerFactory.CreateLogger<StreamlabsClient>(),
-                    streamlabsConfig.AccessToken);
-                _donationsWorker = new DonationsWorker(loggerFactory, streamlabsConfig.PollingInterval,
-                    streamlabsClient, repos.DonationRepo, donationHandler);
+                if (!_chats.Any())
+                {
+                    _logger.LogError("Cannot set up streamlabs because no chat is configured!");
+                }
+                else
+                {
+                    (string chatName, IChat chat) = _chats.First();
+                    if (_chats.Count > 1)
+                        _logger.LogWarning("Multiple chats configured, using {Chat} for donation token whispers", chatName);
+                    DonationHandler donationHandler = new(loggerFactory.CreateLogger<DonationHandler>(),
+                        repos.DonationRepo, repos.UserRepo, repos.TokensBank, chat, overlayConnection,
+                        baseConfig.DonorBadgeCents);
+                    StreamlabsClient streamlabsClient = new(loggerFactory.CreateLogger<StreamlabsClient>(),
+                        streamlabsConfig.AccessToken);
+                    _donationsWorker = new DonationsWorker(loggerFactory, streamlabsConfig.PollingInterval,
+                        streamlabsClient, repos.DonationRepo, donationHandler);
+                }
             }
         }
 
