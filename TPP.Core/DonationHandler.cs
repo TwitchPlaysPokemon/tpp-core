@@ -12,6 +12,7 @@ using TPP.Core.Overlay.Events;
 using TPP.Core.Streamlabs;
 using TPP.Model;
 using TPP.Persistence;
+using static TPP.Common.Utils.StringExtensions;
 
 namespace TPP.Core;
 
@@ -22,6 +23,7 @@ public class DonationHandler(
     IBank<User> tokensBank,
     IMessageSender messageSender,
     OverlayConnection overlayConnection,
+    IChattersSnapshotsRepo chattersSnapshotsRepo,
     int donorBadgeCents)
 {
     public record NewDonation(
@@ -82,7 +84,7 @@ public class DonationHandler(
             await UpdateHasDonationBadge(donor);
             await GivenTokensToDonorAndNotifyThem(donor, donation.Id, tokens);
         }
-        // TODO randomly distribute donation tokens
+        await RandomlyDistributeTokens(donation.CreatedAt, donation.Id, donation.Username, tokens.Total());
         await overlayConnection.Send(new NewDonationEvent
         {
             // We used to look up emotes using the internal Emote Service, but this small feature (emotes in donations)
@@ -150,5 +152,40 @@ public class DonationHandler(
             ? $"You got T{tokens.Base} + T{tokens.Bonus} from record breaks for your donation!"
             : $"You got T{tokens.Base} for your donation!";
         await messageSender.SendWhisper(user, message);
+    }
+
+    private async Task RandomlyDistributeTokens(Instant createdAt, long donationId, string donorName, int tokens)
+    {
+        ChattersSnapshot? snapshot = await chattersSnapshotsRepo.GetRecentChattersSnapshot(
+            from: createdAt.Minus(Duration.FromMinutes(10)),
+            to: createdAt);
+        IReadOnlyList<string> candidateIds = snapshot?.ChatterIds ?? [];
+        logger.LogDebug("Token distribution candidates before eligibility filter: {Candidates}", candidateIds);
+        List<User> eligibleUsers = await userRepo.FindByIdsEligibleForHandouts(candidateIds);
+        if (eligibleUsers.Count == 0)
+        {
+            logger.LogWarning("Aborting distribution of {NumTokens} random tokens due to lack of candidates", tokens);
+            return;
+        }
+
+        Random rng = new();
+        Dictionary<User, int> winners = Enumerable
+            .Range(0, tokens)
+            .Select(_ => eligibleUsers[rng.Next(eligibleUsers.Count)])
+            .GroupBy(user => user)
+            .ToDictionary(grp => grp.Key, grp => grp.Count());
+        logger.LogInformation("Some users won tokens from a random donation distribution: {UsersToTokens}",
+            string.Join(", ", winners.Select(kvp => $"{kvp.Key}: {kvp.Value}")));
+        foreach ((User recipient, int winnerTokens) in winners)
+            await GivenTokensToRandomRecipientAndNotifyThem(recipient, donorName, donationId, winnerTokens);
+    }
+
+    private async Task GivenTokensToRandomRecipientAndNotifyThem(
+        User recipient, string donorName, long donationId, int tokens)
+    {
+        var transaction = new Transaction<User>(recipient, tokens, TransactionType.DonationRandomlyDistributedTokens,
+            new Dictionary<string, object?> { ["donation"] = donationId });
+        await tokensBank.PerformTransaction(transaction);
+        await messageSender.SendWhisper(recipient, $"You won T{tokens} from {donorName.Genitive()} donation!");
     }
 }

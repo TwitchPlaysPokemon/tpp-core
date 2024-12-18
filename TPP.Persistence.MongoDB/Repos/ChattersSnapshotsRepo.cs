@@ -1,8 +1,10 @@
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 using NodaTime;
 using TPP.Model;
 using TPP.Persistence.MongoDB.Serializers;
@@ -54,4 +56,10 @@ public class ChattersSnapshotsRepo : IChattersSnapshotsRepo
         await Collection.InsertOneAsync(item);
         return item;
     }
+
+    public async Task<ChattersSnapshot?> GetRecentChattersSnapshot(Instant from, Instant to) =>
+        await Collection.AsQueryable()
+            .Where(snapshot => snapshot.Timestamp >= from && snapshot.Timestamp <= to)
+            .OrderByDescending(snapshot => snapshot.Timestamp)
+            .FirstOrDefaultAsync();
 }

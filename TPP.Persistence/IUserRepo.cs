@@ -10,6 +10,8 @@ namespace TPP.Persistence
     {
         public Task<User> RecordUser(UserInfo userInfo);
         public Task<User?> FindById(string userId);
+        public Task<List<User>> FindByIds(IReadOnlyList<string> userIds);
+        public Task<List<User>> FindByIdsEligibleForHandouts(IReadOnlyList<string> userIds);
         public Task<User?> FindBySimpleName(string simpleName);
         public Task<User?> FindByDisplayName(string displayName);
         public Task<List<User>> FindAllByPokeyenUnder(long yen);

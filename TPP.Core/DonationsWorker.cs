@@ -29,7 +29,8 @@ public sealed class DonationsWorker(
             try
             {
                 Donation? mostRecentDonation = await donationRepo.GetMostRecentDonation();
-                _logger.LogDebug("Polling for new donations... most recent one is {Donation}", mostRecentDonation);
+                _logger.LogDebug("Polling for new donations... most recent one is {DonationId}",
+                    mostRecentDonation?.DonationId);
                 List<StreamlabsClient.Donation> donations =
                     await streamlabsClient.GetDonations(after: mostRecentDonation?.DonationId, currency: "USD");
                 _logger.LogDebug("Received new donations: {Donations}", string.Join(", ", donations));
