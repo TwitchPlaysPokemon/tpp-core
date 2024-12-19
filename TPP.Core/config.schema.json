@@ -83,6 +83,27 @@
           ]
         }
       }
+    },
+    "StreamlabsConfig": {
+      "description": "Donation handling via Streamlabs",
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "Enabled": {
+          "type": "boolean"
+        },
+        "AccessToken": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "PollingInterval": {
+          "type": "string"
+        }
+      }
     }
   },
   "type": "object",
@@ -184,6 +205,15 @@
           "Cosmetics"
         ]
       }
+    },
+    "StreamlabsConfig": {
+      "$ref": "#/definitions/StreamlabsConfig"
+    },
+    "CentsPerToken": {
+      "type": "integer"
+    },
+    "DonorBadgeCents": {
+      "type": "integer"
     }
   }
 }

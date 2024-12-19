@@ -13,6 +13,7 @@ using TPP.Common;
 using TPP.Common.Utils;
 using TPP.Core.Overlay;
 using TPP.Core.Overlay.Events;
+using TPP.Core.Overlay.Events.Common;
 using TPP.Core.Utils;
 using TPP.Persistence;
 using TPP.Twitch.EventSub;
