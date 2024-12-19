@@ -170,7 +170,8 @@ namespace TPP.Core.Modes
                         _logger.LogWarning("Multiple chats configured, using {Chat} for donation token whispers", chatName);
                     DonationHandler donationHandler = new(loggerFactory.CreateLogger<DonationHandler>(),
                         repos.DonationRepo, repos.UserRepo, repos.TokensBank, chat, overlayConnection,
-                        repos.ChattersSnapshotsRepo, baseConfig.DonorBadgeCents);
+                        repos.ChattersSnapshotsRepo,
+                        centsPerToken: baseConfig.CentsPerToken, donorBadgeCents: baseConfig.DonorBadgeCents);
                     StreamlabsClient streamlabsClient = new(loggerFactory.CreateLogger<StreamlabsClient>(),
                         streamlabsConfig.AccessToken);
                     _donationsWorker = new DonationsWorker(loggerFactory, streamlabsConfig.PollingInterval,

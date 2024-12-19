@@ -209,6 +209,9 @@
     "StreamlabsConfig": {
       "$ref": "#/definitions/StreamlabsConfig"
     },
+    "CentsPerToken": {
+      "type": "integer"
+    },
     "DonorBadgeCents": {
       "type": "integer"
     }

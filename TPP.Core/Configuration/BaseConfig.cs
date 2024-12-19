@@ -55,6 +55,9 @@ public sealed class BaseConfig : ConfigBase, IRootConfig
     [Description("Donation handling via Streamlabs")]
     public StreamlabsConfig StreamlabsConfig { get; init; } = new();
 
+    /// How many cents donated give you 1 token. Smaller number = more tokens per money
+    public int CentsPerToken { get; init; } = 50;
+    /// How many cents donated total before a user gets the donor badge
     public int DonorBadgeCents { get; init; } = 20000;
 }
 

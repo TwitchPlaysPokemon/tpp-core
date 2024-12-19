@@ -24,6 +24,7 @@ public class DonationHandler(
     IMessageSender messageSender,
     OverlayConnection overlayConnection,
     IChattersSnapshotsRepo chattersSnapshotsRepo,
+    int centsPerToken,
     int donorBadgeCents)
 {
     public record NewDonation(
@@ -129,8 +130,6 @@ public class DonationHandler(
     /// plus bonus tokens obtained from donation record breaks.
     private DonationTokens GetDonationTokens(int cents, ISet<DonationRecordBreakType> recordBreaks)
     {
-        const int centsPerToken = 50;
-
         int baseTokens = cents / centsPerToken;
         int bonusTokens = recordBreaks.Sum(recordBreakType => recordBreakType.TokenWinning);
 
