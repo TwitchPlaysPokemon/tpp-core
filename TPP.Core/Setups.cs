@@ -130,6 +130,7 @@ public static class Setups
             new StaticResponseCommands().Commands,
             new MiscCommands(SystemClock.Instance).Commands,
             new UserCommands(databases.UserRepo).Commands,
+            new DonationCommands(databases.DonationRepo, SystemClock.Instance).Commands,
             new TransmuteCommands(transmuter).Commands,
             new JoinChatCommands(databases.CoStreamChannelsRepo).Commands,
             new OperatorCommands(
