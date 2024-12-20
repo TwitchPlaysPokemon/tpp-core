@@ -13,8 +13,8 @@ using TPP.Common;
 using TPP.Common.Utils;
 using TPP.Core.Overlay;
 using TPP.Core.Overlay.Events;
-using TPP.Core.Overlay.Events.Common;
 using TPP.Core.Utils;
+using TPP.Model;
 using TPP.Persistence;
 using TPP.Twitch.EventSub;
 using TPP.Twitch.EventSub.Notifications;
@@ -508,7 +508,7 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
         await _overlayConnection.Send(new NewSubscriber
         {
             User = subscriptionInfo.Subscriber,
-            Emotes = subscriptionInfo.Emotes.Select(EmoteInfo.FromOccurence).ToImmutableList(),
+            Emotes = subscriptionInfo.Emotes.Select(e => EmoteInfo.FromIdAndCode(e.Id, e.Code)).ToImmutableList(),
             SubMessage = subscriptionInfo.Message,
             ShareSub = true,
         }, CancellationToken.None);
@@ -546,7 +546,7 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
         await _overlayConnection.Send(new NewSubscriber
         {
             User = subscriptionInfo.Subscriber,
-            Emotes = subscriptionInfo.Emotes.Select(EmoteInfo.FromOccurence).ToImmutableList(),
+            Emotes = subscriptionInfo.Emotes.Select(e => EmoteInfo.FromIdAndCode(e.Id, e.Code)).ToImmutableList(),
             SubMessage = subscriptionInfo.Message,
             ShareSub = true,
         }, CancellationToken.None);
