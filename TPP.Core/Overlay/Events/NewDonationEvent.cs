@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using TPP.Core.Overlay.Events.Common;
+using TPP.Model;
 
 namespace TPP.Core.Overlay.Events;
 

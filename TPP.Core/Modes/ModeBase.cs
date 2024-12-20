@@ -40,6 +40,7 @@ namespace TPP.Core.Modes
         private readonly IClock _clock;
         private readonly ProcessMessage _processMessage;
         private readonly ChattersWorker? _chattersWorker;
+        private readonly TwitchEmotesLookup? _emotesWorker;
         private readonly DonationsWorker? _donationsWorker;
 
         /// Processes a message that wasn't already processed by the mode base,
@@ -141,20 +142,35 @@ namespace TPP.Core.Modes
                 }
             }
 
+            // chatters worker
             List<ConnectionConfig.Twitch> chatsWithChattersWorker = baseConfig.Chat.Connections
                 .OfType<ConnectionConfig.Twitch>()
                 .Where(con => con.GetChattersInterval != null)
                 .ToList();
-            ConnectionConfig.Twitch? primaryChat = chatsWithChattersWorker.FirstOrDefault();
+            ConnectionConfig.Twitch? primaryChattersChat = chatsWithChattersWorker.FirstOrDefault();
             if (chatsWithChattersWorker.Count > 1)
                 _logger.LogWarning("More than one twitch chat have GetChattersInterval configured: {ChatNames}. " +
                                    "Using only the first one ('{ChosenChat}') for the chatters worker",
-                    string.Join(", ", chatsWithChattersWorker.Select(c => c.Name)), primaryChat?.Name);
-            _chattersWorker = primaryChat == null
+                    string.Join(", ", chatsWithChattersWorker.Select(c => c.Name)), primaryChattersChat?.Name);
+            _chattersWorker = primaryChattersChat == null
                 ? null
-                : new ChattersWorker(loggerFactory, clock,
-                    ((TwitchChat)_chats[primaryChat.Name]).TwitchApi, repos.ChattersSnapshotsRepo, primaryChat,
-                    repos.UserRepo);
+                : new ChattersWorker(loggerFactory, clock, ((TwitchChat)_chats[primaryChattersChat.Name]).TwitchApi,
+                    repos.ChattersSnapshotsRepo, primaryChattersChat, repos.UserRepo);
+
+            // emotes lookup worker
+            List<ConnectionConfig.Twitch> chatsWithEmotesWorker = baseConfig.Chat.Connections
+                .OfType<ConnectionConfig.Twitch>()
+                .Where(con => con.GetEmotesInterval != null)
+                .ToList();
+            ConnectionConfig.Twitch? primaryEmotesChat = chatsWithEmotesWorker.FirstOrDefault();
+            if (chatsWithEmotesWorker.Count > 1)
+                _logger.LogWarning("More than one twitch chat have GetEmotesInterval configured: {ChatNames}. " +
+                                   "Only retrieving global and that channel's ('{ChosenChat}') sub emotes.",
+                    string.Join(", ", chatsWithEmotesWorker.Select(c => c.Name)), primaryEmotesChat?.Name);
+            _emotesWorker = primaryEmotesChat == null
+                ? null
+                : new TwitchEmotesLookup(loggerFactory, ((TwitchChat)_chats[primaryEmotesChat.Name]).TwitchApi,
+                    primaryEmotesChat);
 
             StreamlabsConfig streamlabsConfig = baseConfig.StreamlabsConfig;
             if (streamlabsConfig.Enabled)
@@ -170,7 +186,7 @@ namespace TPP.Core.Modes
                         _logger.LogWarning("Multiple chats configured, using {Chat} for donation token whispers", chatName);
                     DonationHandler donationHandler = new(loggerFactory.CreateLogger<DonationHandler>(),
                         repos.DonationRepo, repos.UserRepo, repos.TokensBank, chat, overlayConnection,
-                        repos.ChattersSnapshotsRepo,
+                        repos.ChattersSnapshotsRepo, _emotesWorker,
                         centsPerToken: baseConfig.CentsPerToken, donorBadgeCents: baseConfig.DonorBadgeCents);
                     StreamlabsClient streamlabsClient = new(loggerFactory.CreateLogger<StreamlabsClient>(),
                         streamlabsConfig.AccessToken);
@@ -275,6 +291,8 @@ namespace TPP.Core.Modes
                 tasks.Add(_sendOutQueuedMessagesWorker.Start(cancellationToken));
             if (_chattersWorker != null)
                 tasks.Add(_chattersWorker.Start(cancellationToken));
+            if (_emotesWorker != null)
+                tasks.Add(_emotesWorker.Start(cancellationToken));
             if (_donationsWorker != null)
                 tasks.Add(_donationsWorker.Start(cancellationToken));
             await TaskUtils.WhenAllFastExit(tasks);

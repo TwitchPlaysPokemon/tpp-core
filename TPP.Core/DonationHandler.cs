@@ -24,6 +24,7 @@ public class DonationHandler(
     IMessageSender messageSender,
     OverlayConnection overlayConnection,
     IChattersSnapshotsRepo chattersSnapshotsRepo,
+    TwitchEmotesLookup? twitchEmotesLookup,
     int centsPerToken,
     int donorBadgeCents)
 {
@@ -88,9 +89,7 @@ public class DonationHandler(
         await RandomlyDistributeTokens(donation.CreatedAt, donation.Id, donation.Username, tokens.Total());
         await overlayConnection.Send(new NewDonationEvent
         {
-            // We used to look up emotes using the internal Emote Service, but this small feature (emotes in donations)
-            // was the only thing remaining using the Emote Service, so it's not worth it.
-            Emotes = [],
+            Emotes = twitchEmotesLookup?.FindEmotesInText(donation.Message ?? "") ?? [],
             RecordDonations = new Dictionary<int, List<string>>
             {
                 [cents] = recordBreaks.Select(recordBreak => recordBreak.Name).ToList()

@@ -11,6 +11,8 @@ using TwitchLib.Api.Auth;
 using TwitchLib.Api.Core.Enums;
 using TwitchLib.Api.Core.Exceptions;
 using TwitchLib.Api.Helix.Models.Chat.ChatSettings;
+using TwitchLib.Api.Helix.Models.Chat.Emotes.GetChannelEmotes;
+using TwitchLib.Api.Helix.Models.Chat.Emotes.GetGlobalEmotes;
 using TwitchLib.Api.Helix.Models.Chat.GetChatters;
 using TwitchLib.Api.Helix.Models.EventSub;
 using TwitchLib.Api.Helix.Models.Moderation.BanUser;
@@ -96,6 +98,10 @@ public class TwitchApi(
                 replyParentMessageId: replyParentMessageId));
     public Task SendWhisperAsync(string fromUserId, string toUserId, string message, bool newRecipient) =>
         RetryingBot(api => api.Helix.Whispers.SendWhisperAsync(fromUserId, toUserId, message, newRecipient));
+    public Task<GetGlobalEmotesResponse> GetGlobalEmotes() =>
+        RetryingBot(api => api.Helix.Chat.GetGlobalEmotesAsync());
+    public Task<GetChannelEmotesResponse> GetChannelEmotes(string broadcasterId) =>
+        RetryingBot(api => api.Helix.Chat.GetChannelEmotesAsync(broadcasterId));
 
     // Users
     public Task<GetUsersResponse> GetUsersAsync(List<string> ids) =>
