@@ -69,6 +69,7 @@ public abstract class ConnectionConfig : ConfigBase
         public CaseInsensitiveImmutableHashSet SuppressionOverrides { get; init; } = new([]);
 
         public Duration? GetChattersInterval { get; init; } = Duration.FromMinutes(5);
+        public Duration? GetEmotesInterval { get; init; } = Duration.FromHours(1);
     }
 
     public sealed class Simulation : ConnectionConfig

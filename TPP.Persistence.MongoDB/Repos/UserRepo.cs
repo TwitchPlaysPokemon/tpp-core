@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using MongoDB.Bson.Serialization;
@@ -59,9 +60,14 @@ namespace TPP.Persistence.MongoDB.Repos
                 cm.MapProperty(u => u.LoyaltyLeague).SetElementName("loyalty_tier");
                 cm.MapProperty(u => u.SubscriptionUpdatedAt).SetElementName("subscription_updated_at");
                 cm.MapProperty(u => u.Banned).SetElementName("banned");
+                cm.MapProperty(u => u.IsBot).SetElementName("is_bot");
+                cm.MapProperty(u => u.IsCaptchaSuspended).SetElementName("captcha_suspended");
                 cm.MapProperty(u => u.TimeoutExpiration).SetElementName("timeout_expiration");
                 cm.MapProperty(u => u.Roles).SetElementName("roles")
                     .SetDefaultValue(new HashSet<Role>());
+                cm.MapProperty(u => u.DonorBadge).SetElementName("donor_badge")
+                    .SetDefaultValue(false)
+                    .SetIgnoreIfDefault(true);
             });
         }
 
@@ -191,6 +197,12 @@ namespace TPP.Persistence.MongoDB.Repos
         public async Task<User?> FindById(string userId) =>
             await Collection.Find(u => u.Id == userId).FirstOrDefaultAsync();
 
+        public async Task<List<User>> FindByIds(IReadOnlyList<string> userIds) =>
+            await Collection.Find(u => userIds.Contains(u.Id)).ToListAsync();
+
+        public async Task<List<User>> FindByIdsEligibleForHandouts(IReadOnlyList<string> userIds) =>
+            await Collection.Find(u => userIds.Contains(u.Id) && !u.Banned && !u.IsBot && !u.IsCaptchaSuspended).ToListAsync();
+
         public async Task<User?> FindByDisplayName(string displayName) =>
             await Collection.Find(u => u.TwitchDisplayName == displayName).SortByDescending(u => u.LastActiveAt).FirstOrDefaultAsync();
 
@@ -274,5 +286,14 @@ namespace TPP.Persistence.MongoDB.Repos
                     .Set(u => u.Banned, false)
                     .Set(u => u.TimeoutExpiration, timeoutExpiration),
                 new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After });
+
+        public async Task<User> SetHasDonorBadge(User user, bool hasDonorBadge) =>
+            await Collection.FindOneAndUpdateAsync(
+                filter: u => u.Id == user.Id,
+                update: hasDonorBadge
+                    ? Builders<User>.Update.Set(u => u.DonorBadge, true)
+                    : Builders<User>.Update.Unset(u => u.DonorBadge),
+                options: new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After, IsUpsert = false })
+            ?? throw new ArgumentException($"user {user} does not exist");
     }
 }

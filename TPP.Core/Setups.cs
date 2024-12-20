@@ -130,6 +130,7 @@ public static class Setups
             new StaticResponseCommands().Commands,
             new MiscCommands(SystemClock.Instance).Commands,
             new UserCommands(databases.UserRepo).Commands,
+            new DonationCommands(databases.DonationRepo, SystemClock.Instance).Commands,
             new TransmuteCommands(transmuter).Commands,
             new JoinChatCommands(databases.CoStreamChannelsRepo).Commands,
             new OperatorCommands(
@@ -200,7 +201,8 @@ public static class Setups
         KeyValueStore KeyValueStore,
         ITransmutationLogRepo TransmutationLogRepo,
         IChattersSnapshotsRepo ChattersSnapshotsRepo,
-        ICoStreamChannelsRepo CoStreamChannelsRepo
+        ICoStreamChannelsRepo CoStreamChannelsRepo,
+        IDonationRepo DonationRepo
     );
 
     public static Databases SetUpRepositories(ILoggerFactory loggerFactory, ILogger logger, BaseConfig baseConfig)
@@ -263,7 +265,8 @@ public static class Setups
             KeyValueStore: new KeyValueStore(mongoDatabase),
             TransmutationLogRepo: new TransmutationLogRepo(mongoDatabase),
             ChattersSnapshotsRepo: new ChattersSnapshotsRepo(mongoDatabase),
-            CoStreamChannelsRepo: new CoStreamChannelsRepo(mongoDatabase)
+            CoStreamChannelsRepo: new CoStreamChannelsRepo(mongoDatabase),
+            DonationRepo: new DonationRepo(mongoDatabase)
         );
     }
 
