@@ -37,11 +37,7 @@ public sealed class SendOutQueuedMessagesWorker : IWithLifecycle
     {
         Instant olderThan = _clock.GetCurrentInstant() - Duration.FromMinutes(5);
         await _incomingMessagequeueRepo.Prune(olderThan);
-        try
-        {
-            await _incomingMessagequeueRepo.ForEachAsync(ProcessOnce, cancellationToken);
-        }
-        catch (OperationCanceledException) { }
+        await _incomingMessagequeueRepo.ForEachAsync(ProcessOnce, cancellationToken);
     }
 
     private async Task ProcessOnce(IncomingMessagequeueItem item)

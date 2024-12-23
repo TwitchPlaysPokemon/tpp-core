@@ -252,8 +252,7 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
                 await Leave(channelId);
             }
 
-            try { await Task.Delay(delay, cancellationToken); }
-            catch (OperationCanceledException) { break; }
+            await Task.Delay(delay, cancellationToken);
         }
     }
 

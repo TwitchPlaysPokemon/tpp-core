@@ -32,10 +32,9 @@ namespace TPP.Core
 
         public async Task Start(CancellationToken cancellationToken)
         {
-            try { await Task.Delay(_interval.ToTimeSpan(), cancellationToken); }
-            catch (OperationCanceledException) { return; }
-            while (!cancellationToken.IsCancellationRequested)
+            do
             {
+                await Task.Delay(_interval.ToTimeSpan(), cancellationToken);
                 try
                 {
                     await DoLoop();
@@ -44,9 +43,7 @@ namespace TPP.Core
                 {
                     _logger.LogError(ex, "Failed to advertise polls");
                 }
-                try { await Task.Delay(_interval.ToTimeSpan(), cancellationToken); }
-                catch (OperationCanceledException) { break; }
-            }
+            } while (!cancellationToken.IsCancellationRequested);
         }
 
         private async Task DoLoop()

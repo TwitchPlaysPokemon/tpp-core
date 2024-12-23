@@ -49,16 +49,11 @@ namespace TPP.Core.Chat
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                string line;
-                try
-                {
-                    // Put Console.In.ReadLineAsync onto the thread pool, because Console.In's TextReader#ReadLineAsync
-                    // surprisingly actually runs synchronous, and we do not want to block the async runtime.
-                    string? maybeLine = await Task.Run(async () => await Console.In.ReadLineAsync(cancellationToken));
-                    if (maybeLine == null) break;
-                    line = maybeLine;
-                }
-                catch (OperationCanceledException) { break; }
+                // Put Console.In.ReadLineAsync onto the thread pool, because Console.In's TextReader#ReadLineAsync
+                // surprisingly actually runs synchronous, and we do not want to block the async runtime.
+                string? maybeLine = await Task.Run(async () => await Console.In.ReadLineAsync(cancellationToken));
+                if (maybeLine == null) break;
+                string line = maybeLine;
                 string username = _config.Username;
                 if (line.StartsWith('#'))
                 {

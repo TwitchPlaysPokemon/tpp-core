@@ -20,7 +20,7 @@ public interface IWithLifecycle
     /// This typically starts some sort of long-running task that gets cancelled on shutdown.
     /// The task should only fail for critical failures that would justify an application shutdown,
     /// and otherwise handle any errors internally, e.g. by just logging.
-    /// It should also not throw a <see cref="OperationCanceledException"/> when being cancelled.
+    /// It may throw a <see cref="OperationCanceledException"/> when cancelled, or finish successfully.
     /// </summary>
     /// <param name="cancellationToken">The token to stop this feature, e.g. on shutdown.</param>
     /// <returns>A task that typically keeps running until cancelled.

@@ -102,8 +102,7 @@ public class EventSubClient
                 break;
             }
         }
-        if (cancellationToken.IsCancellationRequested)
-            throw new TaskCanceledException();
+        cancellationToken.ThrowIfCancellationRequested();
 
         ms.Seek(0, SeekOrigin.Begin);
         string json = await new StreamReader(ms, Utf8NoBom).ReadToEndAsync(cancellationToken);
