@@ -210,6 +210,9 @@ Options:
                 Console.CancelKeyPress += Abort; // CTRL-C / SIGINT
                 modeTask.Wait();
             }
+            catch (AggregateException ex) when (ex.InnerException is OperationCanceledException)
+            {
+            }
             catch (Exception ex)
             {
                 logger.LogCritical(ex, "uncaught exception! TPP is crashing now, goodbye");

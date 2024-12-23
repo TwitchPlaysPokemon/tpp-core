@@ -55,11 +55,7 @@ namespace TPP.Core.Chat
                     numInputsSentSinceStart++;
                 }
 
-                try
-                {
-                    await Task.Delay(TimeSpan.FromMilliseconds(random.Next(10, 100)), cancellationToken);
-                }
-                catch (OperationCanceledException) { break; }
+                await Task.Delay(TimeSpan.FromMilliseconds(random.Next(10, 100)), cancellationToken);
             }
         }
 

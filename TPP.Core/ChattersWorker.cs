@@ -27,15 +27,12 @@ public sealed class ChattersWorker(
 
     public async Task Start(CancellationToken cancellationToken)
     {
-        try { await Task.Delay(_delay, cancellationToken); }
-        catch (OperationCanceledException) { return; }
-        while (!cancellationToken.IsCancellationRequested)
+        do
         {
+            await Task.Delay(_delay, cancellationToken);
             try
             {
-                List<Chatter> chatters;
-                try { chatters = await GetChatters(cancellationToken); }
-                catch(OperationCanceledException) { break; }
+                List<Chatter> chatters = await GetChatters(cancellationToken);
 
                 ImmutableList<string> chatterNames = chatters.Select(c => c.UserLogin).ToImmutableList();
                 ImmutableList<string> chatterIds = chatters.Select(c => c.UserId).ToImmutableList();
@@ -54,10 +51,7 @@ public sealed class ChattersWorker(
             {
                 _logger.LogError(e, "Failed retrieving chatters list");
             }
-
-            try { await Task.Delay(_delay, cancellationToken); }
-            catch (OperationCanceledException) { break; }
-        }
+        } while (!cancellationToken.IsCancellationRequested);
     }
 
     private async Task<List<Chatter>> GetChatters(CancellationToken cancellationToken)

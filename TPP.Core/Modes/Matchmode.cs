@@ -60,8 +60,7 @@ public sealed class Matchmode : IWithLifecycle
         {
             while (!cancellationToken.IsCancellationRequested && !_stopToken.IsCancellationRequested())
             {
-                try { await Loop(cancellationToken); }
-                catch (OperationCanceledException) { break; }
+                await Loop(cancellationToken);
             }
             if (!cancellationToken.IsCancellationRequested)
                 // We reached here through the stop token. Need to shut down the rest using the regular stop token now.
