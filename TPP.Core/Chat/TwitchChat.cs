@@ -74,8 +74,14 @@ namespace TPP.Core.Chat
 
         public async Task Start(CancellationToken cancellationToken)
         {
-            foreach (string problem in await TwitchApi.DetectProblems(_botUsername, _channelName))
-                _logger.LogWarning("TwitchAPI problem detected: {Problem}", problem);
+            // Purposefully don't await this task, as that would slow down the boot.
+            // This check is also performed on deployments (see usages of DetectProblems),
+            // so the execution here practically never finds any issues and we can be optimistic.
+            Task _ = TwitchApi.DetectProblems(_botUsername, _channelName).ContinueWith(async foundProblemsTask =>
+            {
+                foreach (string problem in await foundProblemsTask)
+                    _logger.LogWarning("TwitchAPI problem detected: {Problem}", problem);
+            }, cancellationToken);
 
             List<Task> tasks = [];
             tasks.Add(TwitchEventSubChat.Start(cancellationToken));
