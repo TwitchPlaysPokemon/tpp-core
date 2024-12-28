@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
+using NodaTime.Extensions;
 using TPP.Common;
 using TPP.Common.Utils;
 using TPP.Core.Overlay;
@@ -157,6 +158,10 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
             }
         }
         _logger.LogDebug("Finished setting up chat bot EventSub subscriptions");
+        Duration elapsedSinceStartup = SystemClock.Instance.GetCurrentInstant()
+                                       - Process.GetCurrentProcess().StartTime.ToUniversalTime().ToInstant();
+        _logger.LogInformation("Time from startup to finished chat bot initialization: {StartupMillis:F0}ms",
+            elapsedSinceStartup.TotalMilliseconds);
     }
 
     private async Task SetUpChannelSubscriptions(Session session)
