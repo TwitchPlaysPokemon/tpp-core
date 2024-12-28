@@ -10,11 +10,11 @@ using TPP.Persistence.MongoDB.Serializers;
 
 namespace TPP.Persistence.MongoDB.Repos
 {
-    public class SubscriptionLogRepo : ISubscriptionLogRepo
+    public class SubscriptionLogRepo(IMongoDatabase database) : ISubscriptionLogRepo, IAsyncInitRepo
     {
         public const string CollectionName = "subscriptionlog";
 
-        public readonly IMongoCollection<SubscriptionLog> Collection;
+        public readonly IMongoCollection<SubscriptionLog> Collection = database.GetCollection<SubscriptionLog>(CollectionName);
 
         static SubscriptionLogRepo()
         {
@@ -42,10 +42,9 @@ namespace TPP.Persistence.MongoDB.Repos
             });
         }
 
-        public SubscriptionLogRepo(IMongoDatabase database)
+        public async Task InitializeAsync()
         {
-            database.CreateCollectionIfNotExists(CollectionName).Wait();
-            Collection = database.GetCollection<SubscriptionLog>(CollectionName);
+            await database.CreateCollectionIfNotExists(CollectionName);
         }
 
         public async Task<SubscriptionLog> LogSubscription(

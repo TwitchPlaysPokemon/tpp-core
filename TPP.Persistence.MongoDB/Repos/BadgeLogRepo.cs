@@ -22,11 +22,11 @@ namespace TPP.Persistence.MongoDB.Repos
             IClientSessionHandle? session = null);
     }
 
-    public class BadgeLogRepo : IMongoBadgeLogRepo
+    public class BadgeLogRepo(IMongoDatabase database) : IMongoBadgeLogRepo, IAsyncInitRepo
     {
         public const string CollectionName = "badgelog";
 
-        public readonly IMongoCollection<BadgeLog> Collection;
+        public readonly IMongoCollection<BadgeLog> Collection = database.GetCollection<BadgeLog>(CollectionName);
 
         static BadgeLogRepo()
         {
@@ -44,10 +44,9 @@ namespace TPP.Persistence.MongoDB.Repos
             });
         }
 
-        public BadgeLogRepo(IMongoDatabase database)
+        public async Task InitializeAsync()
         {
-            database.CreateCollectionIfNotExists(CollectionName).Wait();
-            Collection = database.GetCollection<BadgeLog>(CollectionName);
+            await database.CreateCollectionIfNotExists(CollectionName);
         }
 
         public async Task<BadgeLog> LogWithSession(

@@ -203,7 +203,14 @@ public static class Setups
         IChattersSnapshotsRepo ChattersSnapshotsRepo,
         ICoStreamChannelsRepo CoStreamChannelsRepo,
         IDonationRepo DonationRepo
-    );
+    )
+    {
+        public IEnumerable<IAsyncInitRepo> GetAsyncInitRepos() => GetType()
+            .GetProperties()
+            .Select(p => p.GetValue(this)!)
+            .OfType<IAsyncInitRepo>()
+            .ToList();
+    }
 
     public static Databases SetUpRepositories(ILoggerFactory loggerFactory, ILogger logger, BaseConfig baseConfig)
     {
@@ -219,7 +226,7 @@ public static class Setups
             startingTokens: baseConfig.StartingTokens,
             defaultOperators: baseConfig.Chat.DefaultOperatorNames,
             clock: clock);
-        IMongoBadgeLogRepo badgeLogRepo = new BadgeLogRepo(mongoDatabase);
+        var badgeLogRepo = new BadgeLogRepo(mongoDatabase);
         BadgeRepo badgeRepo = new(mongoDatabase, badgeLogRepo, clock);
         badgeRepo.UserLostBadgeSpecies += (_, args) => TaskToVoidSafely(logger, () =>
             userRepo.UnselectBadgeIfSpeciesSelected(args.UserId, args.Species));
@@ -239,7 +246,7 @@ public static class Setups
             clock: clock);
         tokenBank.AddReservedMoneyChecker(
             new PersistedReservedMoneyCheckers(mongoDatabase).AllDatabaseReservedTokens);
-        return new Databases
+        var databases = new Databases
         (
             UserRepo: userRepo,
             BadgeRepo: badgeRepo,
@@ -268,6 +275,10 @@ public static class Setups
             CoStreamChannelsRepo: new CoStreamChannelsRepo(mongoDatabase),
             DonationRepo: new DonationRepo(mongoDatabase)
         );
+        IEnumerable<IAsyncInitRepo> asyncInitRepos = databases.GetAsyncInitRepos()
+            .Concat([badgeLogRepo]);
+        Task.WhenAll(asyncInitRepos.Distinct().Select(r => r.InitializeAsync())).Wait();
+        return databases;
     }
 
     public static (WebsocketBroadcastServer, OverlayConnection) SetUpOverlayServer(
@@ -362,7 +373,8 @@ public static class Setups
                         new Regex("(?<=!?)" + Regex.Escape(alias.Alias), RegexOptions.IgnoreCase)
                             .Replace(ctx.Message.MessageText, aliasReplacement, 1);
                     string ircTextWithAliasResolved =
-                        new Regex("(?<=.*? (?:PRIVMSG|WHISPER) .*? :!?)" + Regex.Escape(alias.Alias), RegexOptions.IgnoreCase)
+                        new Regex("(?<=.*? (?:PRIVMSG|WHISPER) .*? :!?)" + Regex.Escape(alias.Alias),
+                                RegexOptions.IgnoreCase)
                             .Replace(ctx.Message.RawIrcMessage, aliasReplacement, 1);
 
                     var messageWithAliasResolved = new Message(

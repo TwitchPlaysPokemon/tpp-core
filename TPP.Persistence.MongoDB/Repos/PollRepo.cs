@@ -9,13 +9,11 @@ using static System.Linq.Enumerable;
 
 namespace TPP.Persistence.MongoDB.Repos
 {
-    public class PollRepo : IPollRepo
+    public class PollRepo(IMongoDatabase database, IClock clock) : IPollRepo, IAsyncInitRepo
     {
         private const string CollectionName = "polls";
 
-        public readonly IMongoCollection<Poll> Collection;
-
-        private readonly IClock _clock;
+        public readonly IMongoCollection<Poll> Collection = database.GetCollection<Poll>(CollectionName);
 
         static PollRepo()
         {
@@ -39,21 +37,13 @@ namespace TPP.Persistence.MongoDB.Repos
             });
         }
 
-        public PollRepo(IMongoDatabase database, IClock clock)
+        public async Task InitializeAsync()
         {
-            database.CreateCollectionIfNotExists(CollectionName).Wait();
-            Collection = database.GetCollection<Poll>(CollectionName);
-            _clock = clock;
-            InitIndexes();
-        }
-
-        private void InitIndexes()
-        {
-            Collection.Indexes.CreateMany(new[]
-            {
+            await database.CreateCollectionIfNotExists(CollectionName);
+            await Collection.Indexes.CreateManyAsync([
                 new CreateIndexModel<Poll>(Builders<Poll>.IndexKeys.Ascending(u => u.PollCode)),
-                new CreateIndexModel<Poll>(Builders<Poll>.IndexKeys.Ascending(u => u.CreatedAt)),
-            });
+                new CreateIndexModel<Poll>(Builders<Poll>.IndexKeys.Ascending(u => u.CreatedAt))
+            ]);
         }
 
         public async Task<Poll> CreatePoll(
@@ -72,7 +62,7 @@ namespace TPP.Persistence.MongoDB.Repos
                 pollTitle: pollTitle,
                 voters: new List<string>(),
                 pollOptions: pollOptionsObjects,
-                _clock.GetCurrentInstant(),
+                clock.GetCurrentInstant(),
                 multiChoice: multiChoice,
                 alive: true,
                 allowChangeVote: allowChangeVote

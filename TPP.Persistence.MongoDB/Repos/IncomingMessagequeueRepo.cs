@@ -11,13 +11,12 @@ using TPP.Persistence.MongoDB.Serializers;
 
 namespace TPP.Persistence.MongoDB.Repos;
 
-public class IncomingMessagequeueRepo : IIncomingMessagequeueRepo
+public class IncomingMessagequeueRepo(IMongoDatabase database, ILogger<IncomingMessagequeueRepo> logger)
+    : IIncomingMessagequeueRepo, IAsyncInitRepo
 {
     public const string CollectionName = "messagequeue_in";
 
-    public readonly IMongoCollection<IncomingMessagequeueItem> Collection;
-
-    private readonly ILogger<IncomingMessagequeueRepo> _logger;
+    public readonly IMongoCollection<IncomingMessagequeueItem> Collection = database.GetCollection<IncomingMessagequeueItem>(CollectionName);
 
     static IncomingMessagequeueRepo()
     {
@@ -34,11 +33,9 @@ public class IncomingMessagequeueRepo : IIncomingMessagequeueRepo
         });
     }
 
-    public IncomingMessagequeueRepo(IMongoDatabase database, ILogger<IncomingMessagequeueRepo> logger)
+    public async Task InitializeAsync()
     {
-        _logger = logger;
-        database.CreateCollectionIfNotExists(CollectionName).Wait();
-        Collection = database.GetCollection<IncomingMessagequeueItem>(CollectionName);
+        await database.CreateCollectionIfNotExists(CollectionName);
     }
 
     public async Task Prune(Instant olderThan)
@@ -67,7 +64,7 @@ public class IncomingMessagequeueRepo : IIncomingMessagequeueRepo
             }
             else
             {
-                _logger.LogError(
+                logger.LogError(
                     "Unexpected change stream event of type '{EventType}' on collection {Collection}: {Event}",
                     change.OperationDescription, CollectionName, change.ToString());
             }

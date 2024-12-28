@@ -6,18 +6,10 @@ using TPP.Model;
 
 namespace TPP.Persistence.MongoDB.Repos;
 
-public class InputSidePicksRepo : IInputSidePicksRepo
+public class InputSidePicksRepo(IMongoDatabase database, IClock clock) : IInputSidePicksRepo, IAsyncInitRepo
 {
     private const string CollectionName = "inputsidepicks";
-    private readonly IMongoCollection<SidePick> _collection;
-    private readonly IClock _clock;
-
-    public InputSidePicksRepo(IMongoDatabase database, IClock clock)
-    {
-        database.CreateCollectionIfNotExists(CollectionName).Wait();
-        _collection = database.GetCollection<SidePick>(CollectionName);
-        _clock = clock;
-    }
+    private readonly IMongoCollection<SidePick> _collection = database.GetCollection<SidePick>(CollectionName);
 
     static InputSidePicksRepo()
     {
@@ -29,12 +21,17 @@ public class InputSidePicksRepo : IInputSidePicksRepo
         });
     }
 
+    public async Task InitializeAsync()
+    {
+        await database.CreateCollectionIfNotExists(CollectionName);
+    }
+
     public async Task SetSide(string userId, string? side) =>
         await _collection.FindOneAndUpdateAsync(
             Builders<SidePick>.Filter.Eq(pick => pick.UserId, userId),
             Builders<SidePick>.Update
                 .Set(pick => pick.Side, side)
-                .Set(pick => pick.PickedAt, _clock.GetCurrentInstant()),
+                .Set(pick => pick.PickedAt, clock.GetCurrentInstant()),
             new FindOneAndUpdateOptions<SidePick> { IsUpsert = true });
 
     public async Task<SidePick?> GetSidePick(string userId) =>

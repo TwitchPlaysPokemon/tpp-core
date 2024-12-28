@@ -7,11 +7,11 @@ using TPP.Model;
 
 namespace TPP.Persistence.MongoDB.Repos;
 
-public class ResponseCommandRepo : IResponseCommandRepo
+public class ResponseCommandRepo(IMongoDatabase database) : IResponseCommandRepo, IAsyncInitRepo
 {
     public const string CollectionName = "response_commands";
 
-    public readonly IMongoCollection<ResponseCommand> Collection;
+    public readonly IMongoCollection<ResponseCommand> Collection = database.GetCollection<ResponseCommand>(CollectionName);
 
     public event EventHandler<ResponseCommand>? CommandInserted;
     public event EventHandler<string>? CommandRemoved;
@@ -25,10 +25,9 @@ public class ResponseCommandRepo : IResponseCommandRepo
         });
     }
 
-    public ResponseCommandRepo(IMongoDatabase database)
+    public async Task InitializeAsync()
     {
-        database.CreateCollectionIfNotExists(CollectionName).Wait();
-        Collection = database.GetCollection<ResponseCommand>(CollectionName);
+        await database.CreateCollectionIfNotExists(CollectionName);
     }
 
     public async Task<IImmutableList<ResponseCommand>> GetCommands() =>

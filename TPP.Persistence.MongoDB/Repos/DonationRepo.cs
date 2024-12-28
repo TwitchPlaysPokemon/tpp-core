@@ -10,11 +10,9 @@ using TPP.Model;
 
 namespace TPP.Persistence.MongoDB.Repos;
 
-public class DonationRepo : IDonationRepo
+public class DonationRepo(IMongoDatabase database) : IDonationRepo, IAsyncInitRepo
 {
     private const string CollectionName = "donations";
-
-    public readonly IMongoCollection<Donation> Collection;
 
     static DonationRepo()
     {
@@ -29,16 +27,12 @@ public class DonationRepo : IDonationRepo
         });
     }
 
-    public DonationRepo(IMongoDatabase database)
-    {
-        database.CreateCollectionIfNotExists(CollectionName).Wait();
-        Collection = database.GetCollection<Donation>(CollectionName);
-        InitIndexes();
-    }
+    public readonly IMongoCollection<Donation> Collection = database.GetCollection<Donation>(CollectionName);
 
-    private void InitIndexes()
+    public async Task InitializeAsync()
     {
-        Collection.Indexes.CreateMany([
+        await database.CreateCollectionIfNotExists(CollectionName);
+        await Collection.Indexes.CreateManyAsync([
             new CreateIndexModel<Donation>(Builders<Donation>.IndexKeys.Ascending(u => u.CreatedAt)),
             new CreateIndexModel<Donation>(Builders<Donation>.IndexKeys.Ascending(u => u.UserId))
         ]);

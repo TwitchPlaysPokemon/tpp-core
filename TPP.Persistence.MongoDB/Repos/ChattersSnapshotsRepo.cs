@@ -11,11 +11,11 @@ using TPP.Persistence.MongoDB.Serializers;
 
 namespace TPP.Persistence.MongoDB.Repos;
 
-public class ChattersSnapshotsRepo : IChattersSnapshotsRepo
+public class ChattersSnapshotsRepo(IMongoDatabase database) : IChattersSnapshotsRepo, IAsyncInitRepo
 {
     public const string CollectionName = "chatters_snapshots";
 
-    public readonly IMongoCollection<ChattersSnapshot> Collection;
+    public readonly IMongoCollection<ChattersSnapshot> Collection = database.GetCollection<ChattersSnapshot>(CollectionName);
 
     static ChattersSnapshotsRepo()
     {
@@ -31,19 +31,12 @@ public class ChattersSnapshotsRepo : IChattersSnapshotsRepo
         });
     }
 
-    public ChattersSnapshotsRepo(IMongoDatabase database)
+    public async Task InitializeAsync()
     {
-        database.CreateCollectionIfNotExists(CollectionName).Wait();
-        Collection = database.GetCollection<ChattersSnapshot>(CollectionName);
-        InitIndexes();
-    }
-
-    private void InitIndexes()
-    {
-        Collection.Indexes.CreateMany(new[]
-        {
+        await database.CreateCollectionIfNotExists(CollectionName);
+        await Collection.Indexes.CreateManyAsync([
             new CreateIndexModel<ChattersSnapshot>(Builders<ChattersSnapshot>.IndexKeys.Ascending(u => u.Timestamp))
-        });
+        ]);
     }
 
     public async Task<ChattersSnapshot> LogChattersSnapshot(
