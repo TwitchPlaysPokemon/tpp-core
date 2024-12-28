@@ -13,8 +13,9 @@ using TPP.Persistence.MongoDB.Serializers;
 
 namespace TPP.Persistence.MongoDB.Repos
 {
-    public class Bank<T> : ReserveCheckersBank<T>
+    public class Bank<T> : ReserveCheckersBank<T>, IAsyncInitRepo
     {
+        private readonly IMongoDatabase _database;
         private readonly IMongoCollection<TransactionLog> _transactionLogCollection;
         private readonly IMongoCollection<T> _currencyCollection;
         private readonly IMongoClient _mongoClient;
@@ -24,6 +25,8 @@ namespace TPP.Persistence.MongoDB.Repos
         private readonly Func<T, string> _idFieldAccessor;
         private readonly Action<T, long> _currencyFieldSetter;
         private readonly IClock _clock;
+        private readonly string _transactionLogCollectionName;
+        private readonly string _currencyCollectionName;
 
         static Bank()
         {
@@ -50,8 +53,9 @@ namespace TPP.Persistence.MongoDB.Repos
             Expression<Func<T, string>> idField,
             IClock clock)
         {
-            database.CreateCollectionIfNotExists(transactionLogCollectionName).Wait();
-            database.CreateCollectionIfNotExists(currencyCollectionName).Wait();
+            _database = database;
+            _transactionLogCollectionName = transactionLogCollectionName;
+            _currencyCollectionName = currencyCollectionName;
             _transactionLogCollection = database.GetCollection<TransactionLog>(transactionLogCollectionName);
             _currencyCollection = database.GetCollection<T>(currencyCollectionName);
             _mongoClient = _currencyCollection.Database.Client;
@@ -67,16 +71,15 @@ namespace TPP.Persistence.MongoDB.Repos
                     Expression.Assign(_currencyField.Body, balanceParameter),
                     _currencyField.Parameters.First(), balanceParameter)
                 .Compile();
-
-            InitIndexes();
         }
 
-        private void InitIndexes()
+        public async Task InitializeAsync()
         {
-            _transactionLogCollection.Indexes.CreateMany(new[]
-            {
-                new CreateIndexModel<TransactionLog>(Builders<TransactionLog>.IndexKeys.Ascending(u => u.UserId)),
-            });
+            await _database.CreateCollectionIfNotExists(_transactionLogCollectionName);
+            await _database.CreateCollectionIfNotExists(_currencyCollectionName);
+            await _transactionLogCollection.Indexes.CreateManyAsync([
+                new CreateIndexModel<TransactionLog>(Builders<TransactionLog>.IndexKeys.Ascending(u => u.UserId))
+            ]);
         }
 
         private Expression<Func<T, bool>> GetUserIdFilter(string val)

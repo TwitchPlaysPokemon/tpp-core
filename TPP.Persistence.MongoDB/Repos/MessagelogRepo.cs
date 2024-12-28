@@ -8,11 +8,11 @@ using TPP.Persistence.MongoDB.Serializers;
 
 namespace TPP.Persistence.MongoDB.Repos
 {
-    public class MessagelogRepo : IMessagelogRepo
+    public class MessagelogRepo(IMongoDatabase database) : IMessagelogRepo, IAsyncInitRepo
     {
         public const string CollectionName = "messagelog";
 
-        public readonly IMongoCollection<Messagelog> Collection;
+        public readonly IMongoCollection<Messagelog> Collection = database.GetCollection<Messagelog>(CollectionName);
 
         static MessagelogRepo()
         {
@@ -28,10 +28,9 @@ namespace TPP.Persistence.MongoDB.Repos
             });
         }
 
-        public MessagelogRepo(IMongoDatabase database)
+        public async Task InitializeAsync()
         {
-            database.CreateCollectionIfNotExists(CollectionName).Wait();
-            Collection = database.GetCollection<Messagelog>(CollectionName);
+            await database.CreateCollectionIfNotExists(CollectionName);
         }
 
         public async Task<Messagelog> LogChat(string userId, string ircLine, string message, Instant timestamp)

@@ -12,16 +12,18 @@ using TPP.Model;
 
 namespace TPP.Persistence.MongoDB.Repos
 {
-    public class UserRepo : IUserRepo
+    public class UserRepo(
+        IMongoDatabase database,
+        long startingPokeyen,
+        long startingTokens,
+        IImmutableList<string> defaultOperators,
+        IClock clock
+    ) : IUserRepo
     {
         public const string CollectionName = "users";
 
-        public readonly IMongoCollection<User> Collection;
-
-        private readonly long _startingPokeyen;
-        private readonly long _startingTokens;
-        private readonly ImmutableHashSet<string> _defaultOperators;
-        private readonly IClock _clock;
+        public readonly IMongoCollection<User> Collection = database.GetCollection<User>(CollectionName);
+        private readonly ImmutableHashSet<string> _defaultOperators = defaultOperators.ToImmutableHashSet();
 
         static UserRepo()
         {
@@ -71,24 +73,23 @@ namespace TPP.Persistence.MongoDB.Repos
             });
         }
 
-        public UserRepo(
-            IMongoDatabase database, long startingPokeyen, long startingTokens, IImmutableList<string> defaultOperators,
-            IClock clock)
+        public async Task InitializeAsync(IMongoDatabase database)
         {
-            database.CreateCollectionIfNotExists(CollectionName).Wait();
-            Collection = database.GetCollection<User>(CollectionName);
-            _startingPokeyen = startingPokeyen;
-            _startingTokens = startingTokens;
-            _defaultOperators = defaultOperators.ToImmutableHashSet();
-            _clock = clock;
-            InitIndexes();
+            await database.CreateCollectionIfNotExists(CollectionName);
+            await Collection.Indexes.CreateManyAsync([
+                new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.SimpleName)),
+                new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.TwitchDisplayName)),
+                new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.Pokeyen)),
+                new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.Tokens)),
+                new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.Roles))
+            ]);
 
-            foreach (string name in _defaultOperators)
+            await Task.WhenAll(_defaultOperators.Select(async name =>
             {
-                User? user = FindBySimpleName(name.ToLower()).Result;
+                User? user = await FindBySimpleName(name.ToLower());
                 if (user != null)
-                    SetRoles(user, new HashSet<Role> { Role.Operator });
-            }
+                    await SetRoles(user, [Role.Operator]);
+            }));
             // TODO currently pokeyen are not nullable in the user object, but in the current database some are.
             // There has been an unfinished discussion on whether nullable pokeyen are desired, e.g. to better represent
             // a balance reset, where each user with "null" would get the default amount on first load for example.
@@ -100,21 +101,9 @@ namespace TPP.Persistence.MongoDB.Repos
             // );
         }
 
-        private void InitIndexes()
-        {
-            Collection.Indexes.CreateMany(new[]
-            {
-                new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.SimpleName)),
-                new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.TwitchDisplayName)),
-                new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.Pokeyen)),
-                new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.Tokens)),
-                new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.Roles)),
-            });
-        }
-
         public async Task<User> RecordUser(UserInfo userInfo)
         {
-            Instant updatedAt = userInfo.UpdatedAt ?? _clock.GetCurrentInstant();
+            Instant updatedAt = userInfo.UpdatedAt ?? clock.GetCurrentInstant();
             UpdateDefinition<User> update = Builders<User>.Update
                 .Set(u => u.TwitchDisplayName, userInfo.TwitchDisplayName)
                 .Set(u => u.SimpleName, userInfo.SimpleName)
@@ -172,9 +161,9 @@ namespace TPP.Persistence.MongoDB.Repos
                 firstActiveAt: updatedAt,
                 lastActiveAt: updatedAt,
                 lastMessageAt: userInfo.FromMessage ? updatedAt : null,
-                pokeyen: _startingPokeyen,
-                tokens: _startingTokens,
-                roles: _defaultOperators.Contains(userInfo.SimpleName) ? new HashSet<Role> { Role.Operator } : null
+                pokeyen: startingPokeyen,
+                tokens: startingTokens,
+                roles: _defaultOperators.Contains(userInfo.SimpleName) ? [Role.Operator] : null
             );
             try
             {

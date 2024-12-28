@@ -13,13 +13,13 @@ namespace TPP.Persistence.MongoDB.Repos
 {
     internal record LinkedAccount(string Id, HashSet<string> UserIds);
 
-    public class LinkedAccountRepo : ILinkedAccountRepo
+    public class LinkedAccountRepo(IMongoDatabase database, IMongoCollection<User> userCollection)
+        : ILinkedAccountRepo, IAsyncInitRepo
     {
         private const string CollectionName = "linked_accounts";
         private const string UserIdsMemberName = "user_ids";
 
-        private readonly IMongoCollection<LinkedAccount> _collection;
-        private readonly IMongoCollection<User> _userCollection;
+        private readonly IMongoCollection<LinkedAccount> _collection = database.GetCollection<LinkedAccount>(CollectionName);
 
         static LinkedAccountRepo()
         {
@@ -32,11 +32,9 @@ namespace TPP.Persistence.MongoDB.Repos
             });
         }
 
-        public LinkedAccountRepo(IMongoDatabase database, IMongoCollection<User> userCollection)
+        public async Task InitializeAsync()
         {
-            database.CreateCollectionIfNotExists(CollectionName).Wait();
-            _collection = database.GetCollection<LinkedAccount>(CollectionName);
-            _userCollection = userCollection;
+            await database.CreateCollectionIfNotExists(CollectionName);
         }
 
         public async Task<IImmutableSet<User>> FindLinkedUsers(string userId) =>
@@ -44,7 +42,7 @@ namespace TPP.Persistence.MongoDB.Repos
                 .Match(links => links.UserIds.Contains(userId))
                 .Unwind(l => l.UserIds)
                 .Lookup<BsonDocument, User, BsonDocument>(
-                    foreignCollection: _userCollection,
+                    foreignCollection: userCollection,
                     localField: bson => bson[UserIdsMemberName],
                     foreignField: user => user.Id,
                     @as: bson => bson["user_obj"])

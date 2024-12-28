@@ -9,11 +9,11 @@ using TPP.Persistence.MongoDB.Serializers;
 
 namespace TPP.Persistence.MongoDB.Repos
 {
-    public class CommandLogger : ICommandLogger
+    public class CommandLogger(IMongoDatabase database, IClock clock) : ICommandLogger, IAsyncInitRepo
     {
         private const string CollectionName = "commandlog";
 
-        public readonly IMongoCollection<CommandLog> Collection;
+        public readonly IMongoCollection<CommandLog> Collection = database.GetCollection<CommandLog>(CollectionName);
 
         static CommandLogger()
         {
@@ -30,19 +30,15 @@ namespace TPP.Persistence.MongoDB.Repos
             });
         }
 
-        private readonly IClock _clock;
-
-        public CommandLogger(IMongoDatabase database, IClock clock)
+        public async Task InitializeAsync()
         {
-            database.CreateCollectionIfNotExists(CollectionName).Wait();
-            Collection = database.GetCollection<CommandLog>(CollectionName);
-            _clock = clock;
+            await database.CreateCollectionIfNotExists(CollectionName);
         }
 
         public async Task<CommandLog> Log(string userId, string command, IImmutableList<string> args, string? response)
         {
             var log = new CommandLog(
-                string.Empty, userId, command, args, _clock.GetCurrentInstant(), response);
+                string.Empty, userId, command, args, clock.GetCurrentInstant(), response);
             await Collection.InsertOneAsync(log);
             return log;
         }

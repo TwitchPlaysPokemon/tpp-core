@@ -4,16 +4,15 @@ using MongoDB.Driver;
 
 namespace TPP.Persistence.MongoDB.Repos
 {
-    public class KeyValueStore : IKeyValueStore
+    public class KeyValueStore(IMongoDatabase database) : IKeyValueStore, IAsyncInitRepo
     {
         private const string CollectionName = "misc";
 
-        public readonly IMongoCollection<BsonDocument> Collection;
+        public readonly IMongoCollection<BsonDocument> Collection = database.GetCollection<BsonDocument>(CollectionName);
 
-        public KeyValueStore(IMongoDatabase database)
+        public async Task InitializeAsync()
         {
-            database.CreateCollectionIfNotExists(CollectionName).Wait();
-            Collection = database.GetCollection<BsonDocument>(CollectionName);
+            await database.CreateCollectionIfNotExists(CollectionName);
         }
 
         public async Task<T?> Get<T>(string key) =>

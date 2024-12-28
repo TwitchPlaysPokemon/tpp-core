@@ -16,11 +16,12 @@ using TPP.Persistence.MongoDB.Serializers;
 
 namespace TPP.Persistence.MongoDB.Repos;
 
-public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo
+public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
 {
     private const string CollectionName = "badges";
     private const string CollectionNameStats = "badgestats";
 
+    private readonly IMongoDatabase _database;
     public readonly IMongoCollection<Badge> Collection;
     public readonly IMongoCollection<BadgeStat> CollectionStats;
     private readonly IMongoBadgeLogRepo _badgeLogRepo;
@@ -83,24 +84,23 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo
         Instant? lastRarityUpdate = null,
         Duration? rarityCalculationTransition = null)
     {
-        database.CreateCollectionIfNotExists(CollectionName).Wait();
+        _database = database;
         Collection = database.GetCollection<Badge>(CollectionName);
         CollectionStats = database.GetCollection<BadgeStat>(CollectionNameStats);
         _badgeLogRepo = badgeLogRepo;
         _clock = clock;
         _lastRarityUpdate = lastRarityUpdate ?? _whenGen2WasAddedToPinball;
         _rarityCalculationTransition = rarityCalculationTransition ?? Duration.FromDays(90);
-        InitIndexes();
     }
 
-    private void InitIndexes()
+    public async Task InitializeAsync()
     {
-        Collection.Indexes.CreateMany(new[]
-        {
+        await _database.CreateCollectionIfNotExists(CollectionName);
+        await Collection.Indexes.CreateManyAsync([
             new CreateIndexModel<Badge>(Builders<Badge>.IndexKeys.Ascending(u => u.UserId)),
             new CreateIndexModel<Badge>(Builders<Badge>.IndexKeys.Ascending(u => u.Species)),
-            new CreateIndexModel<Badge>(Builders<Badge>.IndexKeys.Ascending(u => u.CreatedAt)),
-        });
+            new CreateIndexModel<Badge>(Builders<Badge>.IndexKeys.Ascending(u => u.CreatedAt))
+        ]);
     }
 
     public async Task<Badge> AddBadge(

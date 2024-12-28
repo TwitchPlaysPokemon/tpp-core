@@ -4,22 +4,20 @@ using MongoDB.Driver;
 
 namespace TPP.Persistence.MongoDB.Repos;
 
-public class RunCounterRepo : IRunCounterRepo
+public class RunCounterRepo(IMongoDatabase database) : IRunCounterRepo, IAsyncInitRepo
 {
     private const string RunSpecificCounterCollectionName = "button_presses";
     private const string GlobalCounterCollectionName = "misc";
     private const string GlobalButtonPressesCollId = "button_presses";
     private const string ButtonPressesFieldName = "presses";
 
-    public readonly IMongoCollection<BsonDocument> RunSpecificCounterCollection;
-    public readonly IMongoCollection<BsonDocument> GlobalCounterCollection;
+    public readonly IMongoCollection<BsonDocument> RunSpecificCounterCollection = database.GetCollection<BsonDocument>(RunSpecificCounterCollectionName);
+    public readonly IMongoCollection<BsonDocument> GlobalCounterCollection = database.GetCollection<BsonDocument>(GlobalCounterCollectionName);
 
-    public RunCounterRepo(IMongoDatabase database)
+    public async Task InitializeAsync()
     {
-        database.CreateCollectionIfNotExists(RunSpecificCounterCollectionName).Wait();
-        database.CreateCollectionIfNotExists(GlobalCounterCollectionName).Wait();
-        RunSpecificCounterCollection = database.GetCollection<BsonDocument>(RunSpecificCounterCollectionName);
-        GlobalCounterCollection = database.GetCollection<BsonDocument>(GlobalCounterCollectionName);
+        await database.CreateCollectionIfNotExists(RunSpecificCounterCollectionName);
+        await database.CreateCollectionIfNotExists(GlobalCounterCollectionName);
     }
 
     public async Task<long> Increment(int? runNumber, int incrementBy = 1)

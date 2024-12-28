@@ -9,11 +9,11 @@ using TPP.Persistence.MongoDB.Serializers;
 
 namespace TPP.Persistence.MongoDB.Repos;
 
-public class InputLogRepo : IInputLogRepo
+public class InputLogRepo(IMongoDatabase database) : IInputLogRepo, IAsyncInitRepo
 {
     private const string CollectionName = "inputlog";
 
-    public readonly IMongoCollection<InputLog> Collection;
+    public readonly IMongoCollection<InputLog> Collection = database.GetCollection<InputLog>(CollectionName);
 
     static InputLogRepo()
     {
@@ -28,14 +28,12 @@ public class InputLogRepo : IInputLogRepo
         });
     }
 
-    public InputLogRepo(IMongoDatabase database)
+    public async Task InitializeAsync()
     {
-        database.CreateCollectionIfNotExists(CollectionName).Wait();
-        Collection = database.GetCollection<InputLog>(CollectionName);
-        Collection.Indexes.CreateMany(new[]
-        {
-            new CreateIndexModel<InputLog>(Builders<InputLog>.IndexKeys.Ascending(u => u.Timestamp)),
-        });
+        await database.CreateCollectionIfNotExists(CollectionName);
+        await Collection.Indexes.CreateManyAsync([
+            new CreateIndexModel<InputLog>(Builders<InputLog>.IndexKeys.Ascending(u => u.Timestamp))
+        ]);
     }
 
     public async Task<InputLog> LogInput(string userId, string message, Instant timestamp)

@@ -9,11 +9,11 @@ using TPP.Persistence.MongoDB.Serializers;
 
 namespace TPP.Persistence.MongoDB.Repos;
 
-public class TransmutationLogRepo : ITransmutationLogRepo
+public class TransmutationLogRepo(IMongoDatabase database) : ITransmutationLogRepo, IAsyncInitRepo
 {
     public const string CollectionName = "transmutationlog";
 
-    public readonly IMongoCollection<TransmutationLog> Collection;
+    public readonly IMongoCollection<TransmutationLog> Collection = database.GetCollection<TransmutationLog>(CollectionName);
 
     static TransmutationLogRepo()
     {
@@ -32,10 +32,9 @@ public class TransmutationLogRepo : ITransmutationLogRepo
         });
     }
 
-    public TransmutationLogRepo(IMongoDatabase database)
+    public async Task InitializeAsync()
     {
-        database.CreateCollectionIfNotExists(CollectionName).Wait();
-        Collection = database.GetCollection<TransmutationLog>(CollectionName);
+        await database.CreateCollectionIfNotExists(CollectionName);
     }
 
     public async Task<TransmutationLog> Log(

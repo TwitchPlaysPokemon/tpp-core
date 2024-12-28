@@ -9,11 +9,11 @@ using TPP.Persistence.MongoDB.Serializers;
 
 namespace TPP.Persistence.MongoDB.Repos;
 
-public class ModbotLogRepo : IModbotLogRepo
+public class ModbotLogRepo(IMongoDatabase database) : IModbotLogRepo, IAsyncInitRepo
 {
     private const string CollectionName = "modlog";
 
-    public readonly IMongoCollection<ModbotLog> Collection;
+    public readonly IMongoCollection<ModbotLog> Collection = database.GetCollection<ModbotLog>(CollectionName);
 
     static ModbotLogRepo()
     {
@@ -29,20 +29,13 @@ public class ModbotLogRepo : IModbotLogRepo
         });
     }
 
-    public ModbotLogRepo(IMongoDatabase database)
+    public async Task InitializeAsync()
     {
-        database.CreateCollectionIfNotExists(CollectionName).Wait();
-        Collection = database.GetCollection<ModbotLog>(CollectionName);
-        InitIndexes();
-    }
-
-    private void InitIndexes()
-    {
-        Collection.Indexes.CreateMany(new[]
-        {
+        await database.CreateCollectionIfNotExists(CollectionName);
+        await Collection.Indexes.CreateManyAsync([
             new CreateIndexModel<ModbotLog>(Builders<ModbotLog>.IndexKeys.Ascending(u => u.UserId)),
-            new CreateIndexModel<ModbotLog>(Builders<ModbotLog>.IndexKeys.Descending(u => u.Timestamp)),
-        });
+            new CreateIndexModel<ModbotLog>(Builders<ModbotLog>.IndexKeys.Descending(u => u.Timestamp))
+        ]);
     }
 
     public async Task<ModbotLog> LogAction(User user, string reason, string rule, Instant timestamp)
@@ -59,11 +52,11 @@ public class ModbotLogRepo : IModbotLogRepo
     }
 }
 
-public class BanLogRepo : IBanLogRepo
+public class BanLogRepo(IMongoDatabase database) : IBanLogRepo, IAsyncInitRepo
 {
     private const string CollectionName = "banlog";
 
-    public readonly IMongoCollection<BanLog> Collection;
+    public readonly IMongoCollection<BanLog> Collection = database.GetCollection<BanLog>(CollectionName);
 
     static BanLogRepo()
     {
@@ -80,20 +73,13 @@ public class BanLogRepo : IBanLogRepo
         });
     }
 
-    public BanLogRepo(IMongoDatabase database)
+    public async Task InitializeAsync()
     {
-        database.CreateCollectionIfNotExists(CollectionName).Wait();
-        Collection = database.GetCollection<BanLog>(CollectionName);
-        InitIndexes();
-    }
-
-    private void InitIndexes()
-    {
-        Collection.Indexes.CreateMany(new[]
-        {
+        await database.CreateCollectionIfNotExists(CollectionName);
+        await Collection.Indexes.CreateManyAsync([
             new CreateIndexModel<BanLog>(Builders<BanLog>.IndexKeys.Ascending(u => u.UserId)),
-            new CreateIndexModel<BanLog>(Builders<BanLog>.IndexKeys.Descending(u => u.Timestamp)),
-        });
+            new CreateIndexModel<BanLog>(Builders<BanLog>.IndexKeys.Descending(u => u.Timestamp))
+        ]);
     }
 
     public async Task<BanLog> LogBan(string userId, string type, string reason, string? issuerUserId, Instant timestamp)
@@ -110,11 +96,11 @@ public class BanLogRepo : IBanLogRepo
         .FirstOrDefaultAsync();
 }
 
-public class TimeoutLogRepo : ITimeoutLogRepo
+public class TimeoutLogRepo(IMongoDatabase database) : ITimeoutLogRepo, IAsyncInitRepo
 {
     private const string CollectionName = "timeoutlog";
 
-    public readonly IMongoCollection<TimeoutLog> Collection;
+    public readonly IMongoCollection<TimeoutLog> Collection = database.GetCollection<TimeoutLog>(CollectionName);
 
     static TimeoutLogRepo()
     {
@@ -133,20 +119,13 @@ public class TimeoutLogRepo : ITimeoutLogRepo
         });
     }
 
-    public TimeoutLogRepo(IMongoDatabase database)
+    public async Task InitializeAsync()
     {
-        database.CreateCollectionIfNotExists(CollectionName).Wait();
-        Collection = database.GetCollection<TimeoutLog>(CollectionName);
-        InitIndexes();
-    }
-
-    private void InitIndexes()
-    {
-        Collection.Indexes.CreateMany(new[]
-        {
+        await database.CreateCollectionIfNotExists(CollectionName);
+        await Collection.Indexes.CreateManyAsync([
             new CreateIndexModel<TimeoutLog>(Builders<TimeoutLog>.IndexKeys.Ascending(u => u.UserId)),
-            new CreateIndexModel<TimeoutLog>(Builders<TimeoutLog>.IndexKeys.Descending(u => u.Timestamp)),
-        });
+            new CreateIndexModel<TimeoutLog>(Builders<TimeoutLog>.IndexKeys.Descending(u => u.Timestamp))
+        ]);
     }
 
     public async Task<TimeoutLog> LogTimeout(
