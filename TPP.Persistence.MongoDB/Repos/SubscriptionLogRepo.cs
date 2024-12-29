@@ -10,7 +10,7 @@ using TPP.Persistence.MongoDB.Serializers;
 
 namespace TPP.Persistence.MongoDB.Repos;
 
-public class SubscriptionLogRepo(IMongoDatabase database) : ISubscriptionLogRepo, IAsyncInitRepo
+public class SubscriptionLogRepo(IMongoDatabase database) : ISubscriptionLogRepo
 {
     public const string CollectionName = "subscriptionlog";
 
@@ -40,11 +40,6 @@ public class SubscriptionLogRepo(IMongoDatabase database) : ISubscriptionLogRepo
             cm.MapProperty(i => i.SubPlan).SetElementName("plan");
             cm.MapProperty(i => i.SubPlanName).SetElementName("plan_name");
         });
-    }
-
-    public async Task InitializeAsync()
-    {
-        await database.CreateCollectionIfNotExists(CollectionName);
     }
 
     public async Task<SubscriptionLog> LogSubscription(

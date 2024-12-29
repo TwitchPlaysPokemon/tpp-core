@@ -31,7 +31,6 @@ public class ModbotLogRepo(IMongoDatabase database) : IModbotLogRepo, IAsyncInit
 
     public async Task InitializeAsync()
     {
-        await database.CreateCollectionIfNotExists(CollectionName);
         await Collection.Indexes.CreateManyAsync([
             new CreateIndexModel<ModbotLog>(Builders<ModbotLog>.IndexKeys.Ascending(u => u.UserId)),
             new CreateIndexModel<ModbotLog>(Builders<ModbotLog>.IndexKeys.Descending(u => u.Timestamp))
@@ -75,7 +74,6 @@ public class BanLogRepo(IMongoDatabase database) : IBanLogRepo, IAsyncInitRepo
 
     public async Task InitializeAsync()
     {
-        await database.CreateCollectionIfNotExists(CollectionName);
         await Collection.Indexes.CreateManyAsync([
             new CreateIndexModel<BanLog>(Builders<BanLog>.IndexKeys.Ascending(u => u.UserId)),
             new CreateIndexModel<BanLog>(Builders<BanLog>.IndexKeys.Descending(u => u.Timestamp))
@@ -121,7 +119,6 @@ public class TimeoutLogRepo(IMongoDatabase database) : ITimeoutLogRepo, IAsyncIn
 
     public async Task InitializeAsync()
     {
-        await database.CreateCollectionIfNotExists(CollectionName);
         await Collection.Indexes.CreateManyAsync([
             new CreateIndexModel<TimeoutLog>(Builders<TimeoutLog>.IndexKeys.Ascending(u => u.UserId)),
             new CreateIndexModel<TimeoutLog>(Builders<TimeoutLog>.IndexKeys.Descending(u => u.Timestamp))

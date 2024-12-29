@@ -33,7 +33,6 @@ public class ChattersSnapshotsRepo(IMongoDatabase database) : IChattersSnapshots
 
     public async Task InitializeAsync()
     {
-        await database.CreateCollectionIfNotExists(CollectionName);
         await Collection.Indexes.CreateManyAsync([
             new CreateIndexModel<ChattersSnapshot>(Builders<ChattersSnapshot>.IndexKeys.Ascending(u => u.Timestamp))
         ]);

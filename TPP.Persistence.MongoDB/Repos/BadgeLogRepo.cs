@@ -22,7 +22,7 @@ public interface IMongoBadgeLogRepo : IBadgeLogRepo
         IClientSessionHandle? session = null);
 }
 
-public class BadgeLogRepo(IMongoDatabase database) : IMongoBadgeLogRepo, IAsyncInitRepo
+public class BadgeLogRepo(IMongoDatabase database) : IMongoBadgeLogRepo
 {
     public const string CollectionName = "badgelog";
 
@@ -42,11 +42,6 @@ public class BadgeLogRepo(IMongoDatabase database) : IMongoBadgeLogRepo, IAsyncI
             cm.MapProperty(b => b.Timestamp).SetElementName("ts");
             cm.MapExtraElementsProperty(b => b.AdditionalData);
         });
-    }
-
-    public async Task InitializeAsync()
-    {
-        await database.CreateCollectionIfNotExists(CollectionName);
     }
 
     public async Task<BadgeLog> LogWithSession(

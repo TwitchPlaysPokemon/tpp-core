@@ -95,7 +95,6 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
 
     public async Task InitializeAsync()
     {
-        await _database.CreateCollectionIfNotExists(CollectionName);
         await Collection.Indexes.CreateManyAsync([
             new CreateIndexModel<Badge>(Builders<Badge>.IndexKeys.Ascending(u => u.UserId)),
             new CreateIndexModel<Badge>(Builders<Badge>.IndexKeys.Ascending(u => u.Species)),

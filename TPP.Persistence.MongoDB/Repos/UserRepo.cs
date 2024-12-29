@@ -75,7 +75,6 @@ public class UserRepo(
 
     public async Task InitializeAsync(IMongoDatabase database)
     {
-        await database.CreateCollectionIfNotExists(CollectionName);
         await Collection.Indexes.CreateManyAsync([
             new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.SimpleName)),
             new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.TwitchDisplayName)),

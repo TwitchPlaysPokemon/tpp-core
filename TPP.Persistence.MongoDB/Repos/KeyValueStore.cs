@@ -4,16 +4,11 @@ using MongoDB.Driver;
 
 namespace TPP.Persistence.MongoDB.Repos;
 
-public class KeyValueStore(IMongoDatabase database) : IKeyValueStore, IAsyncInitRepo
+public class KeyValueStore(IMongoDatabase database) : IKeyValueStore
 {
     private const string CollectionName = "misc";
 
     public readonly IMongoCollection<BsonDocument> Collection = database.GetCollection<BsonDocument>(CollectionName);
-
-    public async Task InitializeAsync()
-    {
-        await database.CreateCollectionIfNotExists(CollectionName);
-    }
 
     public async Task<T?> Get<T>(string key) =>
         await Collection.Find(doc => doc["_id"] == key).As<T>().FirstOrDefaultAsync();

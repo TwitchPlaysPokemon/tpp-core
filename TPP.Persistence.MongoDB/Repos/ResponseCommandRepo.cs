@@ -7,7 +7,7 @@ using TPP.Model;
 
 namespace TPP.Persistence.MongoDB.Repos;
 
-public class ResponseCommandRepo(IMongoDatabase database) : IResponseCommandRepo, IAsyncInitRepo
+public class ResponseCommandRepo(IMongoDatabase database) : IResponseCommandRepo
 {
     public const string CollectionName = "response_commands";
 
@@ -23,11 +23,6 @@ public class ResponseCommandRepo(IMongoDatabase database) : IResponseCommandRepo
             cm.MapIdProperty(i => i.Command);
             cm.MapProperty(i => i.Response).SetElementName("response");
         });
-    }
-
-    public async Task InitializeAsync()
-    {
-        await database.CreateCollectionIfNotExists(CollectionName);
     }
 
     public async Task<IImmutableList<ResponseCommand>> GetCommands() =>

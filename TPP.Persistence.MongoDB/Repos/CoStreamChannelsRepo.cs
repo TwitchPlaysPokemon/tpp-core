@@ -7,18 +7,13 @@ using NodaTime;
 
 namespace TPP.Persistence.MongoDB.Repos;
 
-public class CoStreamChannelsRepo(IMongoDatabase database) : ICoStreamChannelsRepo, IAsyncInitRepo
+public class CoStreamChannelsRepo(IMongoDatabase database) : ICoStreamChannelsRepo
 {
     private const string CollectionName = "costream_channels";
     private const string LogCollectionName = "costream_channels_log";
 
     public readonly IMongoCollection<BsonDocument> Collection = database.GetCollection<BsonDocument>(CollectionName);
     public readonly IMongoCollection<BsonDocument> LogCollection = database.GetCollection<BsonDocument>(LogCollectionName);
-
-    public async Task InitializeAsync()
-    {
-        await database.CreateCollectionIfNotExists(CollectionName);
-    }
 
     public Task<bool> IsJoined(string channelId) =>
         Collection.Find(doc => doc["_id"] == channelId).AnyAsync();
