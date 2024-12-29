@@ -13,8 +13,7 @@ namespace TPP.Persistence.MongoDB.Repos;
 
 internal record LinkedAccount(string Id, HashSet<string> UserIds);
 
-public class LinkedAccountRepo(IMongoDatabase database, IMongoCollection<User> userCollection)
-    : ILinkedAccountRepo, IAsyncInitRepo
+public class LinkedAccountRepo(IMongoDatabase database, IMongoCollection<User> userCollection) : ILinkedAccountRepo
 {
     private const string CollectionName = "linked_accounts";
     private const string UserIdsMemberName = "user_ids";
@@ -30,11 +29,6 @@ public class LinkedAccountRepo(IMongoDatabase database, IMongoCollection<User> u
                 .SetSerializer(ObjectIdAsStringSerializer.Instance);
             cm.MapProperty(b => b.UserIds).SetElementName(UserIdsMemberName);
         });
-    }
-
-    public async Task InitializeAsync()
-    {
-        await database.CreateCollectionIfNotExists(CollectionName);
     }
 
     public async Task<IImmutableSet<User>> FindLinkedUsers(string userId) =>

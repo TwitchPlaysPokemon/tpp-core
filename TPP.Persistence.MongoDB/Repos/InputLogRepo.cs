@@ -30,7 +30,6 @@ public class InputLogRepo(IMongoDatabase database) : IInputLogRepo, IAsyncInitRe
 
     public async Task InitializeAsync()
     {
-        await database.CreateCollectionIfNotExists(CollectionName);
         await Collection.Indexes.CreateManyAsync([
             new CreateIndexModel<InputLog>(Builders<InputLog>.IndexKeys.Ascending(u => u.Timestamp))
         ]);

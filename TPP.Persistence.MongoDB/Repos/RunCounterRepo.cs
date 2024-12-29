@@ -4,7 +4,7 @@ using MongoDB.Driver;
 
 namespace TPP.Persistence.MongoDB.Repos;
 
-public class RunCounterRepo(IMongoDatabase database) : IRunCounterRepo, IAsyncInitRepo
+public class RunCounterRepo(IMongoDatabase database) : IRunCounterRepo
 {
     private const string RunSpecificCounterCollectionName = "button_presses";
     private const string GlobalCounterCollectionName = "misc";
@@ -13,12 +13,6 @@ public class RunCounterRepo(IMongoDatabase database) : IRunCounterRepo, IAsyncIn
 
     public readonly IMongoCollection<BsonDocument> RunSpecificCounterCollection = database.GetCollection<BsonDocument>(RunSpecificCounterCollectionName);
     public readonly IMongoCollection<BsonDocument> GlobalCounterCollection = database.GetCollection<BsonDocument>(GlobalCounterCollectionName);
-
-    public async Task InitializeAsync()
-    {
-        await database.CreateCollectionIfNotExists(RunSpecificCounterCollectionName);
-        await database.CreateCollectionIfNotExists(GlobalCounterCollectionName);
-    }
 
     public async Task<long> Increment(int? runNumber, int incrementBy = 1)
     {

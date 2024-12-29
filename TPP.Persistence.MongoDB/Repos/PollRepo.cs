@@ -39,7 +39,6 @@ public class PollRepo(IMongoDatabase database, IClock clock) : IPollRepo, IAsync
 
     public async Task InitializeAsync()
     {
-        await database.CreateCollectionIfNotExists(CollectionName);
         await Collection.Indexes.CreateManyAsync([
             new CreateIndexModel<Poll>(Builders<Poll>.IndexKeys.Ascending(u => u.PollCode)),
             new CreateIndexModel<Poll>(Builders<Poll>.IndexKeys.Ascending(u => u.CreatedAt))

@@ -7,7 +7,7 @@ using TPP.Persistence.MongoDB.Serializers;
 
 namespace TPP.Persistence.MongoDB.Repos;
 
-public class OutgoingMessagequeueRepo(IMongoDatabase database) : IOutgoingMessagequeueRepo, IAsyncInitRepo
+public class OutgoingMessagequeueRepo(IMongoDatabase database) : IOutgoingMessagequeueRepo
 {
     public const string CollectionName = "messagequeue";
 
@@ -22,11 +22,6 @@ public class OutgoingMessagequeueRepo(IMongoDatabase database) : IOutgoingMessag
                 .SetSerializer(ObjectIdAsStringSerializer.Instance);
             cm.MapProperty(i => i.IrcLine).SetElementName("ircline");
         });
-    }
-
-    public async Task InitializeAsync()
-    {
-        await database.CreateCollectionIfNotExists(CollectionName);
     }
 
     public async Task<OutgoingMessagequeueItem> EnqueueMessage(string ircLine)

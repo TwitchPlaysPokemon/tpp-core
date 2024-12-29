@@ -6,7 +6,7 @@ using TPP.Model;
 
 namespace TPP.Persistence.MongoDB.Repos;
 
-public class InputSidePicksRepo(IMongoDatabase database, IClock clock) : IInputSidePicksRepo, IAsyncInitRepo
+public class InputSidePicksRepo(IMongoDatabase database, IClock clock) : IInputSidePicksRepo
 {
     private const string CollectionName = "inputsidepicks";
     private readonly IMongoCollection<SidePick> _collection = database.GetCollection<SidePick>(CollectionName);
@@ -19,11 +19,6 @@ public class InputSidePicksRepo(IMongoDatabase database, IClock clock) : IInputS
             cm.MapProperty(p => p.Side).SetElementName("side");
             cm.MapProperty(p => p.PickedAt).SetElementName("picked_at");
         });
-    }
-
-    public async Task InitializeAsync()
-    {
-        await database.CreateCollectionIfNotExists(CollectionName);
     }
 
     public async Task SetSide(string userId, string? side) =>

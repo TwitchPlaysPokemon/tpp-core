@@ -31,7 +31,6 @@ public class DonationRepo(IMongoDatabase database) : IDonationRepo, IAsyncInitRe
 
     public async Task InitializeAsync()
     {
-        await database.CreateCollectionIfNotExists(CollectionName);
         await Collection.Indexes.CreateManyAsync([
             new CreateIndexModel<Donation>(Builders<Donation>.IndexKeys.Ascending(u => u.CreatedAt)),
             new CreateIndexModel<Donation>(Builders<Donation>.IndexKeys.Ascending(u => u.UserId))

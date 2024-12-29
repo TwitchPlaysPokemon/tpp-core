@@ -7,7 +7,7 @@ using TPP.Model;
 
 namespace TPP.Persistence.MongoDB.Repos;
 
-public class CommandAliasRepo(IMongoDatabase database) : ICommandAliasRepo, IAsyncInitRepo
+public class CommandAliasRepo(IMongoDatabase database) : ICommandAliasRepo
 {
     public const string CollectionName = "command_aliases";
 
@@ -25,11 +25,6 @@ public class CommandAliasRepo(IMongoDatabase database) : ICommandAliasRepo, IAsy
             cm.MapProperty(i => i.FixedArgs).SetElementName("fixed_arguments")
                 .SetDefaultValue(Array.Empty<string>());
         });
-    }
-
-    public async Task InitializeAsync()
-    {
-        await database.CreateCollectionIfNotExists(CollectionName);
     }
 
     public async Task<IImmutableList<CommandAlias>> GetAliases() =>

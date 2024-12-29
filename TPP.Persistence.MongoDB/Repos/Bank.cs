@@ -75,8 +75,6 @@ public class Bank<T> : ReserveCheckersBank<T>, IAsyncInitRepo
 
     public async Task InitializeAsync()
     {
-        await _database.CreateCollectionIfNotExists(_transactionLogCollectionName);
-        await _database.CreateCollectionIfNotExists(_currencyCollectionName);
         await _transactionLogCollection.Indexes.CreateManyAsync([
             new CreateIndexModel<TransactionLog>(Builders<TransactionLog>.IndexKeys.Ascending(u => u.UserId))
         ]);

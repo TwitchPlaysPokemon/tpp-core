@@ -12,7 +12,7 @@ using TPP.Persistence.MongoDB.Serializers;
 namespace TPP.Persistence.MongoDB.Repos;
 
 public class IncomingMessagequeueRepo(IMongoDatabase database, ILogger<IncomingMessagequeueRepo> logger)
-    : IIncomingMessagequeueRepo, IAsyncInitRepo
+    : IIncomingMessagequeueRepo
 {
     public const string CollectionName = "messagequeue_in";
 
@@ -31,11 +31,6 @@ public class IncomingMessagequeueRepo(IMongoDatabase database, ILogger<IncomingM
             cm.MapProperty(i => i.QueuedAt).SetElementName("queued_at")
                 .SetDefaultValue(Instant.MinValue);
         });
-    }
-
-    public async Task InitializeAsync()
-    {
-        await database.CreateCollectionIfNotExists(CollectionName);
     }
 
     public async Task Prune(Instant olderThan)

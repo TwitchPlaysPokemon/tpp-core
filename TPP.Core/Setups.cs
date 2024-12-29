@@ -275,8 +275,7 @@ public static class Setups
             CoStreamChannelsRepo: new CoStreamChannelsRepo(mongoDatabase),
             DonationRepo: new DonationRepo(mongoDatabase)
         );
-        IEnumerable<IAsyncInitRepo> asyncInitRepos = databases.GetAsyncInitRepos()
-            .Concat([badgeLogRepo]);
+        IEnumerable<IAsyncInitRepo> asyncInitRepos = databases.GetAsyncInitRepos();
         Task.WhenAll(asyncInitRepos.Distinct().Select(r => r.InitializeAsync())).Wait();
         return databases;
     }
