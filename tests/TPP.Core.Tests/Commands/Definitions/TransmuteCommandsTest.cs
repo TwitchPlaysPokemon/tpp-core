@@ -54,7 +54,8 @@ public class TransmuteCommandsTest
             .Returns(new Badge("badge1", user.Id, species, Badge.BadgeSource.Transmutation,
                 Instant.FromUnixTimeSeconds(0)));
 
-        TransmuteCommands transmuteCommands = new(transmuter, transmutationCooldown: Duration.Zero);
+        TransmuteCommands transmuteCommands = new(transmuter,
+            transmutationCooldown: Duration.Zero, messageDelay: Duration.Zero);
         {
             CommandResult result = await transmuteCommands.Transmute(new CommandContext(MockMessage(user),
                 ImmutableList.Create("T1", "mon", "mon", "mon"), _argsParser));
