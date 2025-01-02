@@ -65,7 +65,7 @@ public static class Parsing
             // closed set, simulating a sum type.
         }
 
-        public sealed record Ok(IMessage Message) : ParseResult;
+        public sealed record Ok(IMessage Message, string OriginalJson) : ParseResult;
         public sealed record InvalidMessage(string Error) : ParseResult;
         public sealed record UnknownMessageType(string MessageType) : ParseResult;
         public sealed record UnknownSubscriptionType(string SubscriptionType) : ParseResult;
@@ -92,16 +92,18 @@ public static class Parsing
                     return new ParseResult.InvalidMessage("no valid subscription type, must be not-null string");
                 if (!SubscriptionTypes.TryGetValue(subTypeStr, out Type? subType))
                     return new ParseResult.UnknownSubscriptionType(subTypeStr);
-                var subMessage = JsonSerializer.Deserialize(json, subType, SerializerOptions) as INotification;
-                return new ParseResult.Ok(subMessage ?? throw new ArgumentException(
-                    $"subscription type {subType} unexpectedly null or not of type {typeof(INotification)}"));
+                var subMessage = JsonSerializer.Deserialize(json, subType, SerializerOptions) as INotification
+                                 ?? throw new ArgumentException(
+                                     $"subscription type {subType} unexpectedly null or not of type {typeof(INotification)}");
+                return new ParseResult.Ok(subMessage, OriginalJson: json);
             }
 
             if (!MessageTypes.TryGetValue(messageTypeStr, out Type? messageType))
                 return new ParseResult.UnknownMessageType(messageTypeStr);
-            var message = JsonSerializer.Deserialize(json, messageType, SerializerOptions) as IMessage;
-            return new ParseResult.Ok(message ?? throw new ArgumentException(
-                $"subscription type {messageType} unexpectedly null or not of type {typeof(IMessage)}"));
+            var message = JsonSerializer.Deserialize(json, messageType, SerializerOptions) as IMessage
+                          ?? throw new ArgumentException(
+                              $"subscription type {messageType} unexpectedly null or not of type {typeof(IMessage)}");
+            return new ParseResult.Ok(message, OriginalJson: json);
         }
         catch (JsonException ex)
         {

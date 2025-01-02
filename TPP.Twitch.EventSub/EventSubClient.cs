@@ -39,7 +39,8 @@ public class EventSubClient
         public sealed record WebsocketClosed(int CloseStatus, string? CloseStatusDescription) : DisconnectReason;
     }
 
-    public event EventHandler<INotification>? NotificationReceived;
+    public record NotificationEventArgs(INotification Notification, string OriginalJson);
+    public event EventHandler<NotificationEventArgs>? NotificationReceived;
     public event EventHandler<Revocation>? RevocationReceived;
     public event EventHandler<SessionWelcome>? Connected;
 
@@ -174,7 +175,7 @@ public class EventSubClient
             if (messageResult is not ReadMessageResponse.Ok(var parseResult))
                 throw new ArgumentOutOfRangeException(nameof(messageResult));
 
-            if (parseResult is not ParseResult.Ok(var message))
+            if (parseResult is not ParseResult.Ok(var message, var originalJson))
             {
                 if (parseResult is ParseResult.InvalidMessage(var error))
                     _logger.LogError("A message was skipped because it failed to parse: {Error}", error);
@@ -229,7 +230,7 @@ public class EventSubClient
             }
             else if (message is INotification notification)
             {
-                NotificationReceived?.Invoke(this, notification);
+                NotificationReceived?.Invoke(this, new NotificationEventArgs(notification, originalJson));
             }
             else if (message is SessionReconnect reconnect)
             {
@@ -268,14 +269,14 @@ public class EventSubClient
         ReadMessageResponse firstReceivedWebsocketMessage = await ReadMessage(newWebSocket, cancellationToken);
         if (firstReceivedWebsocketMessage is not ReadMessageResponse.Ok(var firstReceivedMessage))
             throw new IOException("Unexpectedly lost connection on new connection after changeover");
-        if (firstReceivedMessage is ParseResult.Ok(SessionWelcome welcomeOnNewWebsocket))
+        if (firstReceivedMessage is ParseResult.Ok(SessionWelcome welcomeOnNewWebsocket, _))
         {
             // Small delay so it's unlikely we drop already in-flight messages from the old websocket.
             // Tradeoff is that we delay new messages for up to this amount after a reconnect.
             //await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
             return new WebsocketChangeover(newWebSocket, welcomeOnNewWebsocket);
         }
-        else if (firstReceivedMessage is ParseResult.Ok(var anyOtherMessage))
+        else if (firstReceivedMessage is ParseResult.Ok(var anyOtherMessage, _))
         {
             throw new ProtocolViolationException(
                 $"Expected first message on reconnect websocket to be {SessionWelcome.MessageType}, " +

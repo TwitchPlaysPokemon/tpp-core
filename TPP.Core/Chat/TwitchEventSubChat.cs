@@ -90,9 +90,14 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
             _logger.LogError("received revocation for {SubscriptionType}: {Data}",
                 revocation.Metadata.SubscriptionType,
                 JsonSerializer.Serialize(revocation.Payload.Subscription.Condition));
-        _clientChatBot.NotificationReceived += (_, notification) =>
+        _clientChatBot.NotificationReceived += (_, notificationArgs) =>
             TaskToVoidSafely(_logger, async () =>
             {
+                (INotification? notification, string originalJson) = notificationArgs;
+                _logger.LogTrace("received chat EventSub notification of type {Type}, " +
+                                 "payload: {Payload}, original json: {OriginalJson}",
+                    notification.Metadata.SubscriptionType, notification.Payload, originalJson);
+
                 if (notification is ChannelChatMessage chatMessage)
                     await MessageReceived(chatMessage);
                 else if (notification is UserWhisperMessage whisperMessage)
@@ -103,11 +108,13 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
                     _logger.LogWarning("received unhandled bot EventSub notification of type {Type}, payload: {Payload}",
                         notification.Metadata.SubscriptionType, notification.Payload);
             });
-        _clientChannel.NotificationReceived += (_, notification) =>
+        _clientChannel.NotificationReceived += (_, notificationArgs) =>
             TaskToVoidSafely(_logger, async () =>
             {
-                _logger.LogDebug("received channel EventSub notification of noteworthy type {Type}, payload: {Payload}",
-                    notification.Metadata.SubscriptionType, notification.Payload);
+                (INotification? notification, string originalJson) = notificationArgs;
+                _logger.LogDebug("received channel EventSub notification of noteworthy type {Type}, " +
+                                 "payload: {Payload}, original json: {OriginalJson}",
+                    notification.Metadata.SubscriptionType, notification.Payload, originalJson);
 
                 if (notification is ChannelSubscribe channelSubscribe)
                     await ChannelSubscribeReceived(channelSubscribe); // new subscriptions only
