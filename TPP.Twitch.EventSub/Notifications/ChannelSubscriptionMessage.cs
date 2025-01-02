@@ -51,6 +51,13 @@ public class ChannelSubscriptionMessage(NotificationMetadata metadata, Notificat
                 : other.Emotes != null && Emotes.SequenceEqual(other.Emotes));
         }
         public override int GetHashCode() => Text?.GetHashCode() ?? 0;
+
+        // default ToString of arrays is useless :( I don't want "Emote[]", I want the actual emotes!
+        public override string ToString()
+        {
+            return $"Message {{ {nameof(Text)} = <{Text}>, {nameof(Emotes)} = [ "
+                   + string.Join(", ", (Emotes ?? []).Select(x => x.ToString())) + " ] }";
+        }
     }
 
     /// <summary>
