@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -525,6 +526,22 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
         }, CancellationToken.None);
     }
 
+    private static readonly Encoding Utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+
+    /// Parsing the emotes of the message sadly is not trivial, see <see cref="ChannelSubscriptionMessage.Emote"/>.
+    /// Of course, we currently don't even need the indices and could just look up an emote's code by its ID using the
+    /// Twitch API (maybe we don't even need the emote code in the webapp?), but this saves us roundtrips to Twitch.
+    public static ImmutableList<EmoteOccurrence> ParseEmotes(ChannelSubscriptionMessage.Emote[] emotes, string text)
+    {
+        byte[] messageBytes = Utf8NoBom.GetBytes(text);
+        return emotes.Select(emote =>
+        {
+            int endExclusive = emote.End + 1;
+            string emoteCode = Utf8NoBom.GetString(messageBytes[emote.Begin..endExclusive]);
+            return new EmoteOccurrence(emote.Id, emoteCode);
+        }).ToImmutableList();
+    }
+
     private async Task ChannelSubscriptionMessageReceived(ChannelSubscriptionMessage channelSubscriptionMessage)
     {
         ChannelSubscriptionMessage.Event evt = channelSubscriptionMessage.Payload.Event;
@@ -544,9 +561,9 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
             SubscriptionAt: channelSubscriptionMessage.Metadata.MessageTimestamp,
             IsGift: false, // Resubscriptions are never gifts. Gifts are always "new" subscriptions, not continuations
             Message: evt.Message?.Text,
-            Emotes: (evt.Message?.Emotes ?? []).Select(e => new EmoteOccurrence(
-                    e.Id, evt.Message!.Text!.Substring(e.Begin, e.End - e.Begin), e.Begin, e.End))
-                .ToImmutableList()
+            Emotes: evt.Message?.Emotes is { Length: > 0 }
+                ? ParseEmotes(evt.Message.Emotes, evt.Message.Text!)
+                : []
         );
         ISubscriptionProcessor.SubResult subResult = await _subscriptionProcessor.ProcessSubscription(
             subscriptionInfo);

@@ -27,6 +27,19 @@ public class ChannelSubscriptionMessage(NotificationMetadata metadata, Notificat
     /// <param name="Begin">The index of where the Emote starts in the text.</param>
     /// <param name="End">The index of where the Emote ends in the text.</param>
     /// <param name="Id">The emote ID.</param>
+    /// Some additional gotchas that are not mentioned in the official documentation:
+    /// - The positions are counted in what appears to be UTF-8 bytes
+    /// - The begin is 0-based and inclusive (unsurprising), but the end is also inclusive (kinda surprising).
+    /// An experiment showed that this string:
+    /// <code>test Kappa 🌿 BabyRage 🐍 PogChamp 🎅🏿 RaccAttack ♥ PraiseIt 12345678901234567890</code>
+    /// resulted in these emote indices:
+    /// <code>
+    /// {"begin": 5, "end": 9, "id": "25"},
+    /// {"begin": 16, "end": 23, "id": "22639"},
+    /// {"begin": 30, "end": 37, "id": "305954156"},
+    /// {"begin": 48, "end": 57, "id": "114870"},
+    /// {"begin": 63, "end": 70, "id": "38586"}
+    /// </code>
     public record Emote(
         int Begin,
         int End,

@@ -9,10 +9,13 @@ using NodaTime;
 using TPP.Common;
 using TPP.Model;
 using TPP.Persistence;
+using TPP.Twitch.EventSub.Notifications;
 
 namespace TPP.Core
 {
-    public record EmoteOccurrence(string Id, string Code, int StartIndex, int EndIndex);
+    /// This used to also include <c>int StartIndex</c> and <c>int EndIndex</c>, but since those were unused and how
+    /// to count was ambiguous (see <see cref="ChannelSubscriptionMessage.Emote"/>), they were removed.
+    public record EmoteOccurrence(string Id, string Code);
 
     /// <summary>
     /// Information on a user subscription directly (not via a gift).
