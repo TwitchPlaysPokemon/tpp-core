@@ -21,7 +21,6 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
     private const string CollectionName = "badges";
     private const string CollectionNameStats = "badgestats";
 
-    private readonly IMongoDatabase _database;
     public readonly IMongoCollection<Badge> Collection;
     public readonly IMongoCollection<BadgeStat> CollectionStats;
     private readonly IMongoBadgeLogRepo _badgeLogRepo;
@@ -84,7 +83,6 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
         Instant? lastRarityUpdate = null,
         Duration? rarityCalculationTransition = null)
     {
-        _database = database;
         Collection = database.GetCollection<Badge>(CollectionName);
         CollectionStats = database.GetCollection<BadgeStat>(CollectionNameStats);
         _badgeLogRepo = badgeLogRepo;
