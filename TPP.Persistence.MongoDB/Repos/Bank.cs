@@ -25,8 +25,6 @@ public class Bank<T> : ReserveCheckersBank<T>, IAsyncInitRepo
     private readonly Func<T, string> _idFieldAccessor;
     private readonly Action<T, long> _currencyFieldSetter;
     private readonly IClock _clock;
-    private readonly string _transactionLogCollectionName;
-    private readonly string _currencyCollectionName;
 
     static Bank()
     {
@@ -53,9 +51,6 @@ public class Bank<T> : ReserveCheckersBank<T>, IAsyncInitRepo
         Expression<Func<T, string>> idField,
         IClock clock)
     {
-        _database = database;
-        _transactionLogCollectionName = transactionLogCollectionName;
-        _currencyCollectionName = currencyCollectionName;
         _transactionLogCollection = database.GetCollection<TransactionLog>(transactionLogCollectionName);
         _currencyCollection = database.GetCollection<T>(currencyCollectionName);
         _mongoClient = _currencyCollection.Database.Client;
