@@ -197,7 +197,7 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
 
                 foreach (Badge badge in badges)
                     await _badgeLogRepo.LogWithSession(
-                        badge.Id, reason, recipientUserId, now, additionalData, txSession);
+                        badge.Id, reason, recipientUserId, badge.UserId, now, additionalData, txSession);
                 return (object?)null;
             });
         }

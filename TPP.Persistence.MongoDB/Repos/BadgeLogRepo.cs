@@ -17,7 +17,7 @@ namespace TPP.Persistence.MongoDB.Repos;
 public interface IMongoBadgeLogRepo : IBadgeLogRepo
 {
     Task<BadgeLog> LogWithSession(
-        string badgeId, string badgeLogType, string? userId, Instant timestamp,
+        string badgeId, string badgeLogType, string? userId, string? oldUserId, Instant timestamp,
         IDictionary<string, object?>? additionalData = null,
         IClientSessionHandle? session = null);
 }
@@ -39,17 +39,18 @@ public class BadgeLogRepo(IMongoDatabase database) : IMongoBadgeLogRepo
                 .SetSerializer(ObjectIdAsStringSerializer.Instance);
             cm.MapProperty(b => b.BadgeLogType).SetElementName("event");
             cm.MapProperty(b => b.UserId).SetElementName("user");
+            cm.MapProperty(b => b.OldUserId).SetElementName("old_user");
             cm.MapProperty(b => b.Timestamp).SetElementName("ts");
             cm.MapExtraElementsProperty(b => b.AdditionalData);
         });
     }
 
     public async Task<BadgeLog> LogWithSession(
-        string badgeId, string badgeLogType, string? userId, Instant timestamp,
+        string badgeId, string badgeLogType, string? userId, string? oldUserId, Instant timestamp,
         IDictionary<string, object?>? additionalData = null,
         IClientSessionHandle? session = null)
     {
-        var item = new BadgeLog(string.Empty, badgeId, badgeLogType, userId, timestamp,
+        var item = new BadgeLog(string.Empty, badgeId, badgeLogType, userId, oldUserId, timestamp,
             additionalData ?? ImmutableDictionary<string, object?>.Empty);
         if (session != null)
             await Collection.InsertOneAsync(session, item);
@@ -58,7 +59,7 @@ public class BadgeLogRepo(IMongoDatabase database) : IMongoBadgeLogRepo
         return item;
     }
 
-    public Task<BadgeLog> Log(string badgeId, string badgeLogType, string? userId, Instant timestamp,
+    public Task<BadgeLog> Log(string badgeId, string badgeLogType, string? userId, string? oldUserId, Instant timestamp,
         IDictionary<string, object?>? additionalData = null) =>
-        LogWithSession(badgeId, badgeLogType, userId, timestamp, additionalData, session: null);
+        LogWithSession(badgeId, badgeLogType, userId, oldUserId, timestamp, additionalData, session: null);
 }

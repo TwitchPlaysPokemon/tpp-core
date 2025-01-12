@@ -20,6 +20,7 @@ public interface IBadgeLogRepo
         string badgeId,
         string badgeLogType,
         string? userId,
+        string? oldUserId,
         Instant timestamp,
         IDictionary<string, object?>? additionalData = null);
 }

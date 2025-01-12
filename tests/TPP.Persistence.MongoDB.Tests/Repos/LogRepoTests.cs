@@ -54,14 +54,16 @@ public class LogRepoTests : MongoTestBase
         string badgeId = ObjectId.GenerateNewId().ToString();
         const string badgeLogType = "type";
         const string userId = "user";
+        const string oldUserId = "old_user";
         Instant timestamp = Instant.FromUnixTimeSeconds(123);
 
         // persist to db
         IDictionary<string, object?> data = new Dictionary<string, object?> { ["some"] = "data" };
-        BadgeLog written = await repo.Log(badgeId, badgeLogType, userId, timestamp, data);
+        BadgeLog written = await repo.Log(badgeId, badgeLogType, userId, oldUserId, timestamp, data);
         Assert.That(written.BadgeId, Is.EqualTo(badgeId));
         Assert.That(written.BadgeLogType, Is.EqualTo(badgeLogType));
         Assert.That(written.UserId, Is.EqualTo(userId));
+        Assert.That(written.OldUserId, Is.EqualTo(oldUserId));
         Assert.That(written.Timestamp, Is.EqualTo(timestamp));
         Assert.That(written.AdditionalData, Is.EqualTo(data));
         Assert.That(written.Id, Is.Not.Null);
@@ -74,6 +76,7 @@ public class LogRepoTests : MongoTestBase
         Assert.That(read.BadgeId, Is.EqualTo(badgeId));
         Assert.That(read.BadgeLogType, Is.EqualTo(badgeLogType));
         Assert.That(read.UserId, Is.EqualTo(userId));
+        Assert.That(read.OldUserId, Is.EqualTo(oldUserId));
         Assert.That(read.Timestamp, Is.EqualTo(timestamp));
         Assert.That(read.AdditionalData, Is.EqualTo(data));
     }

@@ -6,11 +6,27 @@ using TPP.Common;
 
 namespace TPP.Model;
 
+/// <summary>
+/// All badges are unique objects in the database, and every time some badge mutates, that gets logged.
+/// </summary>
+/// <param name="Id">The log entry's primary key</param>
+/// <param name="BadgeId">The affected badge's primary key</param>
+/// <param name="BadgeLogType">What kind of event happened to the badge.
+/// A non-exhaustive list can be found at TPP.Persistence.BadgeLogType</param>
+/// <param name="UserId">The user ID of the badge's owner. For transfers, this is the recipient.
+/// Can be null in case the badge was consumed, and hence transferred to "noone".</param>
+/// <param name="OldUserId">The user ID of the badge's previous owner, for transfers.
+/// If null, this doesn't necessarily mean that the badge didn't have an owner previously,
+/// but that the previous owner just isn't logged here. There are two typical reasons:
+/// 1) It's not an event that changes ownership, or 2) new core forgot to log this until 2025-01-12.</param>
+/// <param name="Timestamp">When the event happened</param>
+/// <param name="AdditionalData">Any event-type-specific data. Note that </param>
 public sealed record BadgeLog(
     string Id,
     string BadgeId,
     string BadgeLogType,
     string? UserId,
+    string? OldUserId,
     Instant Timestamp,
     IDictionary<string, object?> AdditionalData)
 {
@@ -22,6 +38,7 @@ public sealed record BadgeLog(
                && BadgeId == other.BadgeId
                && BadgeLogType == other.BadgeLogType
                && UserId == other.UserId
+               && OldUserId == other.OldUserId
                && Timestamp.Equals(other.Timestamp)
                && AdditionalData.DictionaryEqual(other.AdditionalData); // <-- Equals() is overridden just for this
     }
@@ -65,10 +82,22 @@ public record Messagelog(
     Instant Timestamp);
 
 public record ModbotLog(string Id, string UserId, string Reason, string Rule, Instant Timestamp);
+
 public record BanLog(
-    string Id, string Type, string UserId, string Reason, string? IssuerUserId, Instant Timestamp);
+    string Id,
+    string Type,
+    string UserId,
+    string Reason,
+    string? IssuerUserId,
+    Instant Timestamp);
+
 public record TimeoutLog(
-    string Id, string Type, string UserId, string Reason, string? IssuerUserId, Instant Timestamp,
+    string Id,
+    string Type,
+    string UserId,
+    string Reason,
+    string? IssuerUserId,
+    Instant Timestamp,
     Duration? Duration);
 
 public record SubscriptionLog(
