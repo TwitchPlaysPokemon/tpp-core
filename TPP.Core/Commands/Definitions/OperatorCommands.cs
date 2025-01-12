@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using NodaTime;
 using TPP.ArgsParsing.Types;
 using TPP.Common;
 using TPP.Core.Chat;
@@ -46,7 +47,8 @@ public class OperatorCommands(
     IMessageSender messageSender,
     IBadgeRepo badgeRepo,
     IUserRepo userRepo,
-    IInputSidePicksRepo inputSidePicksRepo)
+    IInputSidePicksRepo inputSidePicksRepo,
+    IClock clock)
     : ICommandCollection
 {
     public IEnumerable<Command> Commands => new[]
@@ -99,6 +101,12 @@ public class OperatorCommands(
         {
             Aliases = ["clearallsidepicks"],
             Description = "Clear every user's input side pick."
+        },
+        new Command("tokentransactions", GetTokenTransactions)
+        {
+            Aliases = ["tokenlogs"],
+            Description = "Gets a user's most recent token transactions, or around a given time if specified. " +
+                          "Arguments: <user> <utcdatetime>(Optional)"
         },
     }.Select(cmd => cmd.WithOperatorsOnly());
 
@@ -312,5 +320,19 @@ public class OperatorCommands(
     {
         await inputSidePicksRepo.ClearAll();
         return new CommandResult { Response = "All side picks cleared." };
+    }
+
+    private async Task<CommandResult> GetTokenTransactions(CommandContext context)
+    {
+        (User user, Optional<Instant> atOpt) = await context.ParseArgs<User, Optional<Instant>>();
+        Instant at = atOpt.OrElse(clock.GetCurrentInstant());
+        const int num = 6;
+        List<TransactionLog> transactions = await tokensBank.FindTransactions(user, at, num);
+        return new CommandResult
+        {
+            Response = $"{num} transactions of {user.Name} closest to {at}: "
+                       + string.Join(", ", transactions
+                           .Select(tx => $"{tx.Type}@{tx.CreatedAt}: {tx.OldBalance}→{tx.NewBalance} ({(tx.Change >= 0 ? "+" : "")}{tx.Change})"))
+        };
     }
 }

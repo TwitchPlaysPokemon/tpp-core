@@ -106,7 +106,8 @@ public static class Setups
         IExecutor? executor,
         IImmutableSet<PkmnSpecies> knownSpecies,
         ITransmuter transmuter,
-        ICommandHandler commandHandler)
+        ICommandHandler commandHandler,
+        IClock clock)
     {
         var commandProcessor = new CommandProcessor(
             loggerFactory.CreateLogger<CommandProcessor>(),
@@ -135,7 +136,8 @@ public static class Setups
             new JoinChatCommands(databases.CoStreamChannelsRepo).Commands,
             new OperatorCommands(
                 stopToken, muteInputsToken, databases.PokeyenBank, databases.TokensBank,
-                messageSender: messageSender, databases.BadgeRepo, databases.UserRepo, databases.InputSidePicksRepo
+                messageSender: messageSender, databases.BadgeRepo, databases.UserRepo, databases.InputSidePicksRepo,
+                clock
             ).Commands,
             new ModeratorCommands(
                 chatModeChanger, databases.LinkedAccountRepo, databases.ResponseCommandRepo, databases.CommandAliasRepo
