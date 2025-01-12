@@ -44,7 +44,7 @@ namespace TPP.Core.Chat
             ILogger<TwitchChatQueue> logger,
             string senderUserId,
             TwitchApi twitchApi,
-            int maxQueueLength = 100,
+            int maxQueueLength = 1000,
             Duration? sleepDuration = null)
         {
             _logger = logger;
