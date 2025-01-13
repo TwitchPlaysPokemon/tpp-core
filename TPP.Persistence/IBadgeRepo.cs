@@ -46,6 +46,7 @@ namespace TPP.Persistence
         public Task<Badge> AddBadge(
             string? userId, PkmnSpecies species, Badge.BadgeSource source, Instant? createdAt = null);
         public Task<IImmutableList<Badge>> FindByUser(string? userId);
+        public Task<IImmutableList<Badge>> FindByUserAtTime(string userId, Instant timestamp);
         public Task<IImmutableList<string>> FindOwnerIdsForSpecies(PkmnSpecies species);
         public Task<IImmutableList<Badge>> FindByUserAndSpecies(string? userId, PkmnSpecies species, int? limit = null);
         public Task<long> CountByUserAndSpecies(string? userId, PkmnSpecies species);

@@ -9,7 +9,7 @@ using TPP.Persistence.MongoDB.Serializers;
 
 namespace TPP.Persistence.MongoDB.Repos;
 
-public class TransmutationLogRepo(IMongoDatabase database) : ITransmutationLogRepo
+public class TransmutationLogRepo(IMongoDatabase database) : ITransmutationLogRepo, IAsyncInitRepo
 {
     public const string CollectionName = "transmutationlog";
 
@@ -30,6 +30,13 @@ public class TransmutationLogRepo(IMongoDatabase database) : ITransmutationLogRe
             cm.MapProperty(b => b.OutputBadge).SetElementName("output_badge")
                 .SetSerializer(ObjectIdAsStringSerializer.Instance);
         });
+    }
+
+    public async Task InitializeAsync()
+    {
+        await Collection.Indexes.CreateManyAsync([
+            new CreateIndexModel<TransmutationLog>(Builders<TransmutationLog>.IndexKeys.Ascending(u => u.InputBadges)),
+        ]);
     }
 
     public async Task<TransmutationLog> Log(

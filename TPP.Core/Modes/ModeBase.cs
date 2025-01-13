@@ -86,7 +86,7 @@ namespace TPP.Core.Modes
                 c => Setups.SetUpCommandProcessor(loggerFactory, baseConfig, argsParser, repos, stopToken,
                     muteInputsToken, messageSender: c,
                     chatModeChanger: c as IChatModeChanger, executor: c as IExecutor,
-                    pokedexData.KnownSpecies, transmuter, this));
+                    pokedexData.KnownSpecies, transmuter, this, clock));
 
             _outgoingMessagequeueRepo = repos.OutgoingMessagequeueRepo;
             _messagelogRepo = repos.MessagelogRepo;

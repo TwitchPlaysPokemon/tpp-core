@@ -21,9 +21,9 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
     private const string CollectionName = "badges";
     private const string CollectionNameStats = "badgestats";
 
-    private readonly IMongoDatabase _database;
     public readonly IMongoCollection<Badge> Collection;
     public readonly IMongoCollection<BadgeStat> CollectionStats;
+    public readonly IMongoCollection<BadgeLog> CollectionLog;
     private readonly IMongoBadgeLogRepo _badgeLogRepo;
     private readonly IClock _clock;
 
@@ -75,6 +75,19 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
             cm.MapProperty(b => b.RarityCountGenerated).SetElementName("rarity_count_generated");
             cm.MapProperty(b => b.Rarity).SetElementName("rarity");
         });
+        BsonClassMap.RegisterClassMap<BadgeLog>(cm =>
+        {
+            cm.MapIdProperty(b => b.Id)
+                .SetIdGenerator(StringObjectIdGenerator.Instance)
+                .SetSerializer(ObjectIdAsStringSerializer.Instance);
+            cm.MapProperty(b => b.BadgeId).SetElementName("badge")
+                .SetSerializer(ObjectIdAsStringSerializer.Instance);
+            cm.MapProperty(b => b.BadgeLogType).SetElementName("event");
+            cm.MapProperty(b => b.UserId).SetElementName("user");
+            cm.MapProperty(b => b.OldUserId).SetElementName("old_user");
+            cm.MapProperty(b => b.Timestamp).SetElementName("ts");
+            cm.MapExtraElementsProperty(b => b.AdditionalData);
+        });
     }
 
     public BadgeRepo(
@@ -84,9 +97,9 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
         Instant? lastRarityUpdate = null,
         Duration? rarityCalculationTransition = null)
     {
-        _database = database;
         Collection = database.GetCollection<Badge>(CollectionName);
         CollectionStats = database.GetCollection<BadgeStat>(CollectionNameStats);
+        CollectionLog = database.GetCollection<BadgeLog>(BadgeLogRepo.CollectionName);
         _badgeLogRepo = badgeLogRepo;
         _clock = clock;
         _lastRarityUpdate = lastRarityUpdate ?? _whenGen2WasAddedToPinball;
@@ -119,6 +132,35 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
 
     public async Task<IImmutableList<Badge>> FindByUser(string? userId) =>
         (await Collection.Find(b => b.UserId == userId).ToListAsync()).ToImmutableList();
+
+    public async Task<IImmutableList<Badge>> FindByUserAtTime(string userId, Instant timestamp)
+    {
+        List<string> badgeIdsPreviouslyOwnedAndThenTransferred = await (
+            from log in CollectionLog.AsQueryable()
+            where log.Timestamp >= timestamp && log.OldUserId != null
+            orderby log.Timestamp
+            group log by log.BadgeId
+            into grp
+            where grp.First().OldUserId == userId
+            select grp.First().BadgeId
+        ).ToListAsync();
+
+        List<string> badgeIdsCurrentlyOwnedAndNeverTransferred = await (
+            from badge in Collection.AsQueryable()
+            where badge.UserId == userId
+            join log in CollectionLog on badge.Id equals log.BadgeId into logJoined
+            where !logJoined.Any(log => log.OldUserId != null && log.Timestamp >= timestamp)
+            select logJoined.First().BadgeId
+        ).ToListAsync();
+
+        List<Badge> badges = await Collection.AsQueryable()
+            .Where(badge => badgeIdsPreviouslyOwnedAndThenTransferred.Contains(badge.Id) ||
+                            badgeIdsCurrentlyOwnedAndNeverTransferred.Contains(badge.Id))
+            .Where(badge => badge.CreatedAt <= timestamp)
+            .ToListAsync();
+
+        return badges.ToImmutableList();
+    }
 
     public async Task<IImmutableList<string>> FindOwnerIdsForSpecies(PkmnSpecies species) =>
         (await Collection.AsQueryable()
@@ -199,7 +241,7 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
 
                 foreach (Badge badge in badges)
                     await _badgeLogRepo.LogWithSession(
-                        badge.Id, reason, recipientUserId, now, additionalData, txSession);
+                        badge.Id, reason, recipientUserId, badge.UserId, now, additionalData, txSession);
                 return (object?)null;
             });
         }

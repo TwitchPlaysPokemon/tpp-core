@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using NodaTime;
 using TPP.Common;
 using TPP.Model;
 
@@ -175,6 +176,8 @@ namespace TPP.Persistence
         public Task<TransactionLog> PerformTransaction(
             Transaction<T> transaction,
             CancellationToken token = default);
+
+        public Task<List<TransactionLog>> FindTransactions(User user, Instant at, int limit);
     }
 
     /// <summary>
@@ -207,5 +210,7 @@ namespace TPP.Persistence
             Transaction<T> transaction,
             CancellationToken token = default) =>
             (await PerformTransactions(new[] { transaction }, token)).First();
+
+        public abstract Task<List<TransactionLog>> FindTransactions(User user, Instant at, int limit);
     }
 }

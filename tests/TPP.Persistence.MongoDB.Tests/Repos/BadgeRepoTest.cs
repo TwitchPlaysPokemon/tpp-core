@@ -225,7 +225,8 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
                 await badgeRepo.TransferBadges(ImmutableList.Create(badge), "recipient", "reason", data);
 
                 await mongoBadgeLogRepoMock.Received(1).LogWithSession(
-                        badge.Id, "reason", "recipient", timestamp, data, Arg.Any<IClientSessionHandle>());
+                        badgeId: badge.Id, badgeLogType: "reason", userId: "recipient", oldUserId: "user",
+                        timestamp, data, Arg.Any<IClientSessionHandle>());
             }
 
             [Test]
