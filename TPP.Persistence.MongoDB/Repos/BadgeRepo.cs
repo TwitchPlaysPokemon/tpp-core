@@ -75,6 +75,19 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
             cm.MapProperty(b => b.RarityCountGenerated).SetElementName("rarity_count_generated");
             cm.MapProperty(b => b.Rarity).SetElementName("rarity");
         });
+        BsonClassMap.RegisterClassMap<BadgeLog>(cm =>
+        {
+            cm.MapIdProperty(b => b.Id)
+                .SetIdGenerator(StringObjectIdGenerator.Instance)
+                .SetSerializer(ObjectIdAsStringSerializer.Instance);
+            cm.MapProperty(b => b.BadgeId).SetElementName("badge")
+                .SetSerializer(ObjectIdAsStringSerializer.Instance);
+            cm.MapProperty(b => b.BadgeLogType).SetElementName("event");
+            cm.MapProperty(b => b.UserId).SetElementName("user");
+            cm.MapProperty(b => b.OldUserId).SetElementName("old_user");
+            cm.MapProperty(b => b.Timestamp).SetElementName("ts");
+            cm.MapExtraElementsProperty(b => b.AdditionalData);
+        });
     }
 
     public BadgeRepo(

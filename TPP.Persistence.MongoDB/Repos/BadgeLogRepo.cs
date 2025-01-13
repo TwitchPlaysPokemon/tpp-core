@@ -4,12 +4,9 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using MongoDB.Bson.Serialization;
-using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Driver;
 using NodaTime;
 using TPP.Model;
-using TPP.Persistence.MongoDB.Serializers;
 
 namespace TPP.Persistence.MongoDB.Repos;
 
@@ -104,19 +101,8 @@ public class BadgeLogRepo(IMongoDatabase database, ILogger<BadgeLogRepo> logger)
 
     static BadgeLogRepo()
     {
-        BsonClassMap.RegisterClassMap<BadgeLog>(cm =>
-        {
-            cm.MapIdProperty(b => b.Id)
-                .SetIdGenerator(StringObjectIdGenerator.Instance)
-                .SetSerializer(ObjectIdAsStringSerializer.Instance);
-            cm.MapProperty(b => b.BadgeId).SetElementName("badge")
-                .SetSerializer(ObjectIdAsStringSerializer.Instance);
-            cm.MapProperty(b => b.BadgeLogType).SetElementName("event");
-            cm.MapProperty(b => b.UserId).SetElementName("user");
-            cm.MapProperty(b => b.OldUserId).SetElementName("old_user");
-            cm.MapProperty(b => b.Timestamp).SetElementName("ts");
-            cm.MapExtraElementsProperty(b => b.AdditionalData);
-        });
+        // class mapping happens in BadgeRepo, because it already references this class and otherwise we get:
+        // System.ArgumentException : An item with the same key has already been added. Key: TPP.Model.BadgeLog
     }
 
     public async Task<BadgeLog> LogWithSession(

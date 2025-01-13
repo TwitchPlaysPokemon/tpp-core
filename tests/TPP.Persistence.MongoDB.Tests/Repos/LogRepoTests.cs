@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging.Abstractions;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using NodaTime;
@@ -50,7 +51,7 @@ public class LogRepoTests : MongoTestBase
     [Test]
     public async Task BadgeLogRepo()
     {
-        BadgeLogRepo repo = new(CreateTemporaryDatabase());
+        BadgeLogRepo repo = new(CreateTemporaryDatabase(), NullLogger<BadgeLogRepo>.Instance);
         string badgeId = ObjectId.GenerateNewId().ToString();
         const string badgeLogType = "type";
         const string userId = "user";
