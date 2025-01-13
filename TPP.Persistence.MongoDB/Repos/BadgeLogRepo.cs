@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Driver;
@@ -22,11 +25,68 @@ public interface IMongoBadgeLogRepo : IBadgeLogRepo
         IClientSessionHandle? session = null);
 }
 
-public class BadgeLogRepo(IMongoDatabase database) : IMongoBadgeLogRepo
+public class BadgeLogRepo(IMongoDatabase database, ILogger<BadgeLogRepo> logger) : IMongoBadgeLogRepo, IAsyncInitRepo
 {
     public const string CollectionName = "badgelog";
+    /// Any badge logs before this date (commit 0ff8dd7f in old core) didn't track the "old user" field,
+    /// so they cannot reliably be used to track ownership of badges.
+    /// Retroactively fixing this information is complicated, as the best thing I could think of is manually
+    /// correlating the badge logs with command logs.
+    public static readonly Instant CorrectOwnershipTrackingSince = Instant.FromUtc(2016, 12, 4, 0, 0);
 
     public readonly IMongoCollection<BadgeLog> Collection = database.GetCollection<BadgeLog>(CollectionName);
+
+    public async Task InitializeAsync()
+    {
+        await Collection.Indexes.CreateManyAsync([
+            new CreateIndexModel<BadgeLog>(Builders<BadgeLog>.IndexKeys.Ascending(u => u.UserId)),
+            new CreateIndexModel<BadgeLog>(Builders<BadgeLog>.IndexKeys.Ascending(u => u.OldUserId)),
+            new CreateIndexModel<BadgeLog>(Builders<BadgeLog>.IndexKeys.Ascending(u => u.Timestamp)),
+            new CreateIndexModel<BadgeLog>(Builders<BadgeLog>.IndexKeys.Ascending(u => u.BadgeId)),
+        ]);
+
+        Task _ = Task.Run(async () =>
+        {
+            // Fixing the logs for "purchase", "gift" and "gift_remote" is easier done manually with these queries:
+            // db.getCollection('badgelog').updateMany({event: "gift", old_user: null}, [{$set: {old_user: "$gifter"}}])
+            // db.getCollection('badgelog').updateMany({event: "gift_remote", old_user: null}, [{$set: {old_user: "$gifter"}}])
+            // db.getCollection('badgelog').updateMany({event: "purchase", old_user: null}, [{$set: {old_user: "$seller"}}])
+
+            // For transmutations, I couldn't figure out a query, so it's done in code:
+            // Look up the transmutation log closest to the badge log, and get the user from there.
+            // Don't try to repair anything before transmutations actually logged anything.
+            List<BadgeLog> corrupted = await Collection
+                .Find(log => log.BadgeLogType == BadgeLogType.Transmutation
+                             && log.OldUserId == null
+                             && log.Timestamp >= CorrectOwnershipTrackingSince)
+                .ToListAsync();
+            if (corrupted.Count == 0)
+                return;
+            logger.LogWarning("Found {Num} transmutation badge logs without 'old_user' field, trying to repair... " +
+                              "this warning only appears at boot and should eventually vanish", corrupted.Count);
+            var transmutationLogs = database.GetCollection<TransmutationLog>(TransmutationLogRepo.CollectionName);
+            int counter = 0;
+            foreach (BadgeLog badgeLog in corrupted)
+            {
+                List<TransmutationLog> lol = await transmutationLogs
+                    .Find(tl => tl.InputBadges.Contains(badgeLog.BadgeId))
+                    .ToListAsync();
+                TransmutationLog? transmutationLog = lol
+                    .OrderBy(tl => Math.Abs((tl.Timestamp - badgeLog.Timestamp).TotalMilliseconds))
+                    .FirstOrDefault();
+                if (transmutationLog == null)
+                {
+                    logger.LogError("Could not find transmutation log for badge log {BadgeLog}", badgeLog);
+                    continue;
+                }
+                await Collection.UpdateOneAsync(log => log.Id == badgeLog.Id,
+                    Builders<BadgeLog>.Update.Set(l => l.OldUserId, transmutationLog.UserId));
+                counter++;
+                if (counter % 100 == 0)
+                    logger.LogInformation("Repaired {Counter}/{Total} transmute badge logs", counter, corrupted.Count);
+            }
+        });
+    }
 
     static BadgeLogRepo()
     {

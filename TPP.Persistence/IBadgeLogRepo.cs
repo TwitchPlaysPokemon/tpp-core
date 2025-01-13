@@ -10,6 +10,13 @@ public static class BadgeLogType
     public const string TransferGift = "gift";
     public const string TransferGiftRemote = "gift_remote";
     public const string Transmutation = "transmutation";
+    public const string TransmutationRollback = "transmutation_rollback";
+    public const string ManualTransfer = "manual_transfer";
+    public const string ManualRemoval = "manual_removal";
+    public const string Breaking = "breaking";
+    public const string TransferAssets = "transferassets";
+    public const string Liquidation = "liquidation";
+    public const string Purchase = "purchase";
 
     // collect all the types being used here instead of scattering string literals across the codebase
 }

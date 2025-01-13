@@ -18,7 +18,10 @@ namespace TPP.Model;
 /// <param name="OldUserId">The user ID of the badge's previous owner, for transfers.
 /// If null, this doesn't necessarily mean that the badge didn't have an owner previously,
 /// but that the previous owner just isn't logged here. There are two typical reasons:
-/// 1) It's not an event that changes ownership, or 2) new core forgot to log this until 2025-01-12.</param>
+/// 1) It's not an event that changes ownership, or
+/// 2) it wasn't logged at all before 2016-12-03 (see also BadgeLogRepo.CorrectOwnershipTrackingSince)
+/// But it _can_ mean that there was no previous owner, e.g. for transmutation_rollback.
+/// </param>
 /// <param name="Timestamp">When the event happened</param>
 /// <param name="AdditionalData">Any event-type-specific data. Note that </param>
 public sealed record BadgeLog(

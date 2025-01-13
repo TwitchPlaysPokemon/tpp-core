@@ -183,6 +183,7 @@ public static class Setups
         IUserRepo UserRepo,
         IPollRepo PollRepo,
         IBadgeRepo BadgeRepo,
+        IBadgeLogRepo BadgeLogRepo,
         IBadgeStatsRepo BadgeStatsRepo,
         IBank<User> PokeyenBank,
         IBank<User> TokensBank,
@@ -228,7 +229,7 @@ public static class Setups
             startingTokens: baseConfig.StartingTokens,
             defaultOperators: baseConfig.Chat.DefaultOperatorNames,
             clock: clock);
-        var badgeLogRepo = new BadgeLogRepo(mongoDatabase);
+        var badgeLogRepo = new BadgeLogRepo(mongoDatabase, loggerFactory.CreateLogger<BadgeLogRepo>());
         BadgeRepo badgeRepo = new(mongoDatabase, badgeLogRepo, clock);
         badgeRepo.UserLostBadgeSpecies += (_, args) => TaskToVoidSafely(logger, () =>
             userRepo.UnselectBadgeIfSpeciesSelected(args.UserId, args.Species));
@@ -252,6 +253,7 @@ public static class Setups
         (
             UserRepo: userRepo,
             BadgeRepo: badgeRepo,
+            BadgeLogRepo: badgeLogRepo,
             BadgeStatsRepo: badgeRepo,
             PollRepo: new PollRepo(mongoDatabase, clock),
             PokeyenBank: pokeyenBank,

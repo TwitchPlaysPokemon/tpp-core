@@ -8,7 +8,7 @@ namespace TPP.Persistence.MongoDB.Serializers
     /// <summary>
     /// A serializer for representing a list of Ids as <see cref="ObjectId"/> in the database but as <see cref="string"/> in code.
     /// </summary>
-    public class ObjectIdListAsStringSerializer : SerializerBase<IReadOnlyList<string>>
+    public class ObjectIdListAsStringSerializer : SerializerBase<IReadOnlyList<string>>, IBsonArraySerializer
     {
         public static readonly ObjectIdListAsStringSerializer Instance = new();
 
@@ -28,6 +28,15 @@ namespace TPP.Persistence.MongoDB.Serializers
             foreach (string value in values)
                 context.Writer.WriteObjectId(ObjectId.Parse(value));
             context.Writer.WriteEndArray();
+        }
+
+        public bool TryGetItemSerializationInfo(out BsonSerializationInfo serializationInfo)
+        {
+            serializationInfo = new BsonSerializationInfo(
+                null,
+                ObjectIdAsStringSerializer.Instance,
+                ObjectIdAsStringSerializer.Instance.ValueType);
+            return true;
         }
     }
 }
