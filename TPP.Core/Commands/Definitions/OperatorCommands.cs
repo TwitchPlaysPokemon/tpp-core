@@ -10,6 +10,7 @@ using TPP.Core.Chat;
 using TPP.Inputting;
 using TPP.Model;
 using TPP.Persistence;
+using TPP.Persistence.MongoDB.Repos;
 
 namespace TPP.Core.Commands.Definitions;
 
@@ -108,6 +109,7 @@ public class OperatorCommands(
             Description = "Gets a user's most recent token transactions, or around a given time if specified. " +
                           "Arguments: <user> <utcdatetime>(Optional)"
         },
+        new Command("badgesattime", GetBadgesAtTime),
     }.Select(cmd => cmd.WithOperatorsOnly());
 
     private Task<CommandResult> Stop(CommandContext context)
@@ -333,6 +335,29 @@ public class OperatorCommands(
             Response = $"{num} transactions of {user.Name} closest to {at}: "
                        + string.Join(", ", transactions
                            .Select(tx => $"{tx.Type}@{tx.CreatedAt}: {tx.OldBalance}→{tx.NewBalance} ({(tx.Change >= 0 ? "+" : "")}{tx.Change})"))
+        };
+    }
+
+    private async Task<CommandResult> GetBadgesAtTime(CommandContext context)
+    {
+        (User user, Instant at) = await context.ParseArgs<User, Instant>();
+
+        if (at < BadgeLogRepo.CorrectOwnershipTrackingSince)
+            return new CommandResult
+            {
+                Response =
+                    $"This command currently does not work for timestamps before {BadgeLogRepo.CorrectOwnershipTrackingSince}"
+            };
+
+        ImmutableSortedDictionary<PkmnSpecies, int> countPerSpecies =
+            (await badgeRepo.FindByUserAtTime(user.Id, at))
+            .GroupBy(b => b.Species)
+            .ToImmutableSortedDictionary(b => b.Key, b => b.Count());
+
+        return new CommandResult
+        {
+            Response = $"Badges of {user.Name} at {at}: " +
+                       string.Join(", ", countPerSpecies.Select(kvp => $"{kvp.Value}x {kvp.Key}"))
         };
     }
 }

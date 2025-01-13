@@ -23,6 +23,7 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
 
     public readonly IMongoCollection<Badge> Collection;
     public readonly IMongoCollection<BadgeStat> CollectionStats;
+    public readonly IMongoCollection<BadgeLog> CollectionLog;
     private readonly IMongoBadgeLogRepo _badgeLogRepo;
     private readonly IClock _clock;
 
@@ -85,6 +86,7 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
     {
         Collection = database.GetCollection<Badge>(CollectionName);
         CollectionStats = database.GetCollection<BadgeStat>(CollectionNameStats);
+        CollectionLog = database.GetCollection<BadgeLog>(BadgeLogRepo.CollectionName);
         _badgeLogRepo = badgeLogRepo;
         _clock = clock;
         _lastRarityUpdate = lastRarityUpdate ?? _whenGen2WasAddedToPinball;
@@ -117,6 +119,35 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
 
     public async Task<IImmutableList<Badge>> FindByUser(string? userId) =>
         (await Collection.Find(b => b.UserId == userId).ToListAsync()).ToImmutableList();
+
+    public async Task<IImmutableList<Badge>> FindByUserAtTime(string userId, Instant timestamp)
+    {
+        List<string> badgeIdsPreviouslyOwnedAndThenTransferred = await (
+            from log in CollectionLog.AsQueryable()
+            where log.Timestamp >= timestamp && log.OldUserId != null
+            orderby log.Timestamp
+            group log by log.BadgeId
+            into grp
+            where grp.First().OldUserId == userId
+            select grp.First().BadgeId
+        ).ToListAsync();
+
+        List<string> badgeIdsCurrentlyOwnedAndNeverTransferred = await (
+            from badge in Collection.AsQueryable()
+            where badge.UserId == userId
+            join log in CollectionLog on badge.Id equals log.BadgeId into logJoined
+            where !logJoined.Any(log => log.OldUserId != null && log.Timestamp >= timestamp)
+            select logJoined.First().BadgeId
+        ).ToListAsync();
+
+        List<Badge> badges = await Collection.AsQueryable()
+            .Where(badge => badgeIdsPreviouslyOwnedAndThenTransferred.Contains(badge.Id) ||
+                            badgeIdsCurrentlyOwnedAndNeverTransferred.Contains(badge.Id))
+            .Where(badge => badge.CreatedAt <= timestamp)
+            .ToListAsync();
+
+        return badges.ToImmutableList();
+    }
 
     public async Task<IImmutableList<string>> FindOwnerIdsForSpecies(PkmnSpecies species) =>
         (await Collection.AsQueryable()
