@@ -74,13 +74,27 @@ public class BadgeLogRepo(IMongoDatabase database, ILogger<BadgeLogRepo> logger)
                 TransmutationLog? transmutationLog = lol
                     .OrderBy(tl => Math.Abs((tl.Timestamp - badgeLog.Timestamp).TotalMilliseconds))
                     .FirstOrDefault();
+                string userId;
                 if (transmutationLog == null)
                 {
-                    logger.LogError("Could not find transmutation log for badge log {BadgeLog}", badgeLog);
-                    continue;
+                    if (badgeLog.Id is "6504cc48b85ef5f2c2c54fe3" or "6504cc48b85ef5f2c2c54fe4" or "6504cc48b85ef5f2c2c54fe5")
+                    {
+                        // For these the transmutation is missing bc of a MongoWriteConcernException at 2023-09-15.
+                        // See https://discord.com/channels/333356453928894466/579758730418192399/1152355105102905424
+                        userId = "627143068";
+                    }
+                    else
+                    {
+                        logger.LogError("Could not find transmutation log for badge log {BadgeLog}", badgeLog);
+                        continue;
+                    }
+                }
+                else
+                {
+                    userId = transmutationLog.UserId;
                 }
                 await Collection.UpdateOneAsync(log => log.Id == badgeLog.Id,
-                    Builders<BadgeLog>.Update.Set(l => l.OldUserId, transmutationLog.UserId));
+                    Builders<BadgeLog>.Update.Set(l => l.OldUserId, userId));
                 counter++;
                 if (counter % 100 == 0)
                     logger.LogInformation("Repaired {Counter}/{Total} transmute badge logs", counter, corrupted.Count);
