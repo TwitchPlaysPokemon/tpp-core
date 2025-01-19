@@ -106,7 +106,8 @@ public static class Setups
         IExecutor? executor,
         IImmutableSet<PkmnSpecies> knownSpecies,
         ITransmuter transmuter,
-        ICommandHandler commandHandler)
+        ICommandHandler commandHandler,
+        IClock clock)
     {
         var commandProcessor = new CommandProcessor(
             loggerFactory.CreateLogger<CommandProcessor>(),
@@ -135,7 +136,8 @@ public static class Setups
             new JoinChatCommands(databases.CoStreamChannelsRepo).Commands,
             new OperatorCommands(
                 stopToken, muteInputsToken, databases.PokeyenBank, databases.TokensBank,
-                messageSender: messageSender, databases.BadgeRepo, databases.UserRepo, databases.InputSidePicksRepo
+                messageSender: messageSender, databases.BadgeRepo, databases.UserRepo, databases.InputSidePicksRepo,
+                clock
             ).Commands,
             new ModeratorCommands(
                 chatModeChanger, databases.LinkedAccountRepo, databases.ResponseCommandRepo, databases.CommandAliasRepo
@@ -181,6 +183,7 @@ public static class Setups
         IUserRepo UserRepo,
         IPollRepo PollRepo,
         IBadgeRepo BadgeRepo,
+        IBadgeLogRepo BadgeLogRepo,
         IBadgeStatsRepo BadgeStatsRepo,
         IBank<User> PokeyenBank,
         IBank<User> TokensBank,
@@ -226,7 +229,7 @@ public static class Setups
             startingTokens: baseConfig.StartingTokens,
             defaultOperators: baseConfig.Chat.DefaultOperatorNames,
             clock: clock);
-        var badgeLogRepo = new BadgeLogRepo(mongoDatabase);
+        var badgeLogRepo = new BadgeLogRepo(mongoDatabase, loggerFactory.CreateLogger<BadgeLogRepo>());
         BadgeRepo badgeRepo = new(mongoDatabase, badgeLogRepo, clock);
         badgeRepo.UserLostBadgeSpecies += (_, args) => TaskToVoidSafely(logger, () =>
             userRepo.UnselectBadgeIfSpeciesSelected(args.UserId, args.Species));
@@ -250,6 +253,7 @@ public static class Setups
         (
             UserRepo: userRepo,
             BadgeRepo: badgeRepo,
+            BadgeLogRepo: badgeLogRepo,
             BadgeStatsRepo: badgeRepo,
             PollRepo: new PollRepo(mongoDatabase, clock),
             PokeyenBank: pokeyenBank,

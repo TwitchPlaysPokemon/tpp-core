@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 using NodaTime;
 using TPP.Model;
 using TPP.Persistence.MongoDB.Serializers;
@@ -15,7 +16,6 @@ namespace TPP.Persistence.MongoDB.Repos;
 
 public class Bank<T> : ReserveCheckersBank<T>, IAsyncInitRepo
 {
-    private readonly IMongoDatabase _database;
     private readonly IMongoCollection<TransactionLog> _transactionLogCollection;
     private readonly IMongoCollection<T> _currencyCollection;
     private readonly IMongoClient _mongoClient;
@@ -25,8 +25,6 @@ public class Bank<T> : ReserveCheckersBank<T>, IAsyncInitRepo
     private readonly Func<T, string> _idFieldAccessor;
     private readonly Action<T, long> _currencyFieldSetter;
     private readonly IClock _clock;
-    private readonly string _transactionLogCollectionName;
-    private readonly string _currencyCollectionName;
 
     static Bank()
     {
@@ -53,9 +51,6 @@ public class Bank<T> : ReserveCheckersBank<T>, IAsyncInitRepo
         Expression<Func<T, string>> idField,
         IClock clock)
     {
-        _database = database;
-        _transactionLogCollectionName = transactionLogCollectionName;
-        _currencyCollectionName = currencyCollectionName;
         _transactionLogCollection = database.GetCollection<TransactionLog>(transactionLogCollectionName);
         _currencyCollection = database.GetCollection<T>(currencyCollectionName);
         _mongoClient = _currencyCollection.Database.Client;
@@ -76,7 +71,8 @@ public class Bank<T> : ReserveCheckersBank<T>, IAsyncInitRepo
     public async Task InitializeAsync()
     {
         await _transactionLogCollection.Indexes.CreateManyAsync([
-            new CreateIndexModel<TransactionLog>(Builders<TransactionLog>.IndexKeys.Ascending(u => u.UserId))
+            new CreateIndexModel<TransactionLog>(Builders<TransactionLog>.IndexKeys.Ascending(u => u.UserId)),
+            new CreateIndexModel<TransactionLog>(Builders<TransactionLog>.IndexKeys.Ascending(u => u.UserId).Ascending(u => u.CreatedAt))
         ]);
     }
 
@@ -159,5 +155,26 @@ public class Bank<T> : ReserveCheckersBank<T>, IAsyncInitRepo
         await session.CommitTransactionAsync(token);
         adjustBalanceActions.ForEach(action => action());
         return transactionLogEntries;
+    }
+
+    public override async Task<List<TransactionLog>> FindTransactions(User user, Instant at, int limit)
+    {
+        List<TransactionLog> older = await _transactionLogCollection.AsQueryable()
+            .Where(log => log.UserId == user.Id)
+            .Where(log => log.CreatedAt < at)
+            .OrderByDescending(log => log.CreatedAt)
+            .Take(limit)
+            .ToListAsync();
+        List<TransactionLog> newer = await _transactionLogCollection.AsQueryable()
+            .Where(log => log.UserId == user.Id)
+            .Where(log => log.CreatedAt >= at)
+            .OrderBy(log => log.CreatedAt)
+            .Take(limit)
+            .ToListAsync();
+        return older.Concat(newer)
+            .OrderBy(log => Math.Abs((at - log.CreatedAt).TotalMilliseconds))
+            .Take(limit)
+            .OrderBy(log => log.CreatedAt)
+            .ToList();
     }
 }
