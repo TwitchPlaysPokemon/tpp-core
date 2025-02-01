@@ -9,7 +9,7 @@
 		<PackageReference Include="docopt.net" Version="0.8.1" />
 		<PackageReference Include="JsonNet.ContractResolvers" Version="2.0.0" />
 		<PackageReference Include="JsonSubTypes" Version="2.0.1" />
-		<PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="Newtonsoft.Json.Schema" Version="4.0.1" />
