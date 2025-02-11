@@ -100,7 +100,8 @@ namespace TPP.Common
             [91] = "Super Gauntlet Scarlet/Violet",
             [92] = "Super Gauntlet Legends: Arceus",
             [93] = "Multiworld Emerald",
-            [94] = "Rocket Edition"
+            [94] = "Rocket Edition",
+            [95] = "Anniversary KEP"
         };
 
         public static string FormatEmblem(int emblemNum)
