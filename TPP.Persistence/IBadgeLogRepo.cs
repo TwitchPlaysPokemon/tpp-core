@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 using NodaTime;
 using TPP.Model;
@@ -30,4 +31,9 @@ public interface IBadgeLogRepo
         string? oldUserId,
         Instant timestamp,
         IDictionary<string, object?>? additionalData = null);
+
+    /// Searches the badge logs to find IDs of badges that a user had at a given point in time. Note that because the
+    /// badge log does not know when a badge was created, this _may_ include badge IDs of badges that got created after
+    /// the given timestamp, so filtering on 'badge.CreatedAt &lt;= timestamp' still needs to be performed afterward.
+    public Task<IImmutableSet<string>> FindBadgeIdsByUserAtTime(string userId, Instant timestamp);
 }

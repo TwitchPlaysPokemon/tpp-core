@@ -4,9 +4,13 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 using NodaTime;
 using TPP.Model;
+using TPP.Persistence.MongoDB.Serializers;
 
 namespace TPP.Persistence.MongoDB.Repos;
 
@@ -101,8 +105,19 @@ public class BadgeLogRepo(IMongoDatabase database, ILogger<BadgeLogRepo> logger)
 
     static BadgeLogRepo()
     {
-        // class mapping happens in BadgeRepo, because it already references this class and otherwise we get:
-        // System.ArgumentException : An item with the same key has already been added. Key: TPP.Model.BadgeLog
+        BsonClassMap.RegisterClassMap<BadgeLog>(cm =>
+        {
+            cm.MapIdProperty(b => b.Id)
+                .SetIdGenerator(StringObjectIdGenerator.Instance)
+                .SetSerializer(ObjectIdAsStringSerializer.Instance);
+            cm.MapProperty(b => b.BadgeId).SetElementName("badge")
+                .SetSerializer(ObjectIdAsStringSerializer.Instance);
+            cm.MapProperty(b => b.BadgeLogType).SetElementName("event");
+            cm.MapProperty(b => b.UserId).SetElementName("user");
+            cm.MapProperty(b => b.OldUserId).SetElementName("old_user");
+            cm.MapProperty(b => b.Timestamp).SetElementName("ts");
+            cm.MapExtraElementsProperty(b => b.AdditionalData);
+        });
     }
 
     public async Task<BadgeLog> LogWithSession(
@@ -117,6 +132,31 @@ public class BadgeLogRepo(IMongoDatabase database, ILogger<BadgeLogRepo> logger)
         else
             await Collection.InsertOneAsync(item);
         return item;
+    }
+
+    public async Task<IImmutableSet<string>> FindBadgeIdsByUserAtTime(string userId, Instant timestamp)
+    {
+        List<string> badgeIdsPreviouslyOwnedAndThenTransferred = await (
+            from log in Collection.AsQueryable()
+            where log.Timestamp >= timestamp && log.OldUserId != null
+            orderby log.Timestamp
+            group log by log.BadgeId
+            into grp
+            where grp.First().OldUserId == userId
+            select grp.First().BadgeId
+        ).ToListAsync();
+
+        List<string> badgeIdsMaybeCurrentlyOwnedAndNeverTransferred = await (
+            from badge in Collection.AsQueryable()
+            where badge.UserId == userId
+            join log in Collection on badge.Id equals log.BadgeId into logJoined
+            where !logJoined.Any(log => log.OldUserId != null && log.Timestamp >= timestamp)
+            select logJoined.First().BadgeId
+        ).ToListAsync();
+
+        return badgeIdsPreviouslyOwnedAndThenTransferred
+            .Concat(badgeIdsMaybeCurrentlyOwnedAndNeverTransferred)
+            .ToImmutableHashSet();
     }
 
     public Task<BadgeLog> Log(string badgeId, string badgeLogType, string? userId, string? oldUserId, Instant timestamp,
