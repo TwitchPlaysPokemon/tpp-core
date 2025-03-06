@@ -142,12 +142,14 @@ namespace TPP.Core.Chat
                         "New Recipient: {NewRecipient}, Response: '{Response}'. Whisper: '{Message}'",
                         whisper.Receiver, whisper.NewRecipient, response, whisper.Message);
                 }
-                else if (e.HttpResponse.StatusCode == HttpStatusCode.NotFound && whisper.NewRecipient)
+                else if (e.HttpResponse.StatusCode == HttpStatusCode.NotFound)
                 {
                     // We used to frequently get the error "404 - The recipient is not a valid user" for new users.
                     // My best guess is that those are new (spam?) accounts that quickly get deleted,
                     // so when we try to whisper them about e.g. pinball badges they won, they are already gone.
                     // To avoid log spam, just ignore any 404 errors of new users.
+                    // A sample where this also occurred for an old user confirmed that the respective user is banned,
+                    // so we just ignore 404 errors altogether as there's nothing we can do.
                     _logger.LogDebug(e,
                         "Ignoring 404 whisper failure to {Receiver}. " +
                         "New Recipient: {NewRecipient}, Response: '{Response}'. Whisper: '{Message}'",
