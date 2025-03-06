@@ -26,15 +26,24 @@ public class EventSubClient
     private readonly ILogger<EventSubClient> _logger;
     private readonly IClock _clock;
     private readonly Uri _uri;
-    private int? _keepaliveTimeSeconds;
-    private Duration KeepaliveDuration => Duration.FromSeconds(_keepaliveTimeSeconds ?? 600);
+    private int _keepaliveTimeSeconds;
+    private int KeepaliveTimeSeconds
+    {
+        get => _keepaliveTimeSeconds;
+        set
+        {
+            if (_keepaliveTimeSeconds == value) return;
+            _logger.LogDebug("WS keepalive timeout is now {KeepaliveSeconds}s", value); // to debug ws disconnects
+            _keepaliveTimeSeconds = value;
+        }
+    }
 
     private readonly TtlSet<string> _seenMessageIDs;
 
     public record DisconnectReason
     {
         private DisconnectReason() { } // simulate a sum type with a closed hierarchy
-        public sealed record KeepaliveTimeout(Duration Timeout) : DisconnectReason;
+        public sealed record KeepaliveTimeout(int KeepaliveTimeSeconds) : DisconnectReason;
         public sealed record ConnectionClosed : DisconnectReason;
         public sealed record WebsocketClosed(int CloseStatus, string? CloseStatusDescription) : DisconnectReason;
     }
@@ -48,7 +57,9 @@ public class EventSubClient
         ILoggerFactory loggerFactory,
         IClock clock,
         string url = "wss://eventsub.wss.twitch.tv/ws",
-        int? keepaliveTimeSeconds = null)
+        // More pings = lower chance for our socket to get randomly killed by something between us and Twitch servers.
+        // We want robustness by default, so let's choose 10s: the lowest interval Twitch allows.
+        int keepaliveTimeSeconds = 10)
     {
         _logger = loggerFactory.CreateLogger<EventSubClient>();
         if (keepaliveTimeSeconds is < 10 or > 600)
@@ -56,10 +67,8 @@ public class EventSubClient
                 "Twitch only allows keepalive timeouts between 10 and 600 seconds", nameof(keepaliveTimeSeconds));
 
         _clock = clock;
-        _uri = keepaliveTimeSeconds == null
-            ? new Uri(url)
-            : new Uri(url + "?keepalive_timeout_seconds=" + keepaliveTimeSeconds);
-        _keepaliveTimeSeconds = keepaliveTimeSeconds;
+        _uri = new Uri(url + "?keepalive_timeout_seconds=" + keepaliveTimeSeconds);
+        KeepaliveTimeSeconds = keepaliveTimeSeconds;
         _seenMessageIDs = new TtlSet<string>(MaxMessageAge, _clock);
     }
 
@@ -133,8 +142,7 @@ public class EventSubClient
         Task<WebsocketChangeover> changeoverTask = NoChangeoverTask;
 
         using var webSocketBox = new WebSocketBox();
-        if (_keepaliveTimeSeconds != null)
-            webSocketBox.WebSocket.Options.KeepAliveInterval = TimeSpan.FromSeconds(_keepaliveTimeSeconds.Value);
+        webSocketBox.WebSocket.Options.KeepAliveInterval = TimeSpan.FromSeconds(KeepaliveTimeSeconds);
         await webSocketBox.WebSocket.ConnectAsync(_uri, cancellationToken);
         Instant lastMessageTimestamp = _clock.GetCurrentInstant(); // treat a fresh connection as a received message
         while (!cancellationToken.IsCancellationRequested)
@@ -142,7 +150,7 @@ public class EventSubClient
             // Don't pass the cancellation token here. Instead, once cancelled we perform a graceful websocket closure.
             // Otherwise the websocket would be immediately put in an aborted state, but we're not in that of a hurry.
             Task<ReadMessageResponse> readTask = ReadMessage(webSocketBox.WebSocket, CancellationToken.None);
-            Instant assumeDeadAt = lastMessageTimestamp + KeepaliveDuration + KeepAliveGrace;
+            Instant assumeDeadAt = lastMessageTimestamp + Duration.FromSeconds(KeepaliveTimeSeconds) + KeepAliveGrace;
             Instant now = _clock.GetCurrentInstant();
             Task timeoutTask = assumeDeadAt < now
                 ? Task.CompletedTask
@@ -154,7 +162,8 @@ public class EventSubClient
             {
                 WebsocketChangeover changeover = await changeoverTask;
                 _logger.LogDebug("Finished WebSocket Changeover, welcome message: {Welcome}", changeover.Welcome);
-                _keepaliveTimeSeconds = changeover.Welcome.Payload.Session.KeepaliveTimeoutSeconds;
+                Session welcomeSession = changeover.Welcome.Payload.Session;
+                KeepaliveTimeSeconds = welcomeSession.KeepaliveTimeoutSeconds!.Value; // always set for Welcome messages
                 lastMessageTimestamp = changeover.Welcome.Metadata.MessageTimestamp;
                 changeoverTask = NoChangeoverTask;
                 ClientWebSocket oldWebsocket = webSocketBox.SwapWith(changeover.NewWebSocket);
@@ -166,7 +175,7 @@ public class EventSubClient
                 // Regarding "Keepalive message", Twitch recommends:
                 // If your client doesn't receive an event or keepalive message for longer than keepalive_timeout_seconds,
                 // you should assume the connection is lost and reconnect to the server and resubscribe to the events.
-                return new DisconnectReason.KeepaliveTimeout(KeepaliveDuration);
+                return new DisconnectReason.KeepaliveTimeout(KeepaliveTimeSeconds);
             ReadMessageResponse messageResult = await readTask;
             if (messageResult is ReadMessageResponse.ConnectionClosed)
                 return new DisconnectReason.ConnectionClosed();
@@ -219,7 +228,8 @@ public class EventSubClient
                     throw new ProtocolViolationException(
                         $"Unexpected received a second welcome message on websocket: {message}");
                 welcomeReceived = true;
-                _keepaliveTimeSeconds = welcome.Payload.Session.KeepaliveTimeoutSeconds;
+                Session welcomeSession = welcome.Payload.Session;
+                KeepaliveTimeSeconds = welcomeSession.KeepaliveTimeoutSeconds!.Value; // always set for Welcome messages
                 Connected?.Invoke(this, welcome);
             }
             else if (!welcomeReceived)
