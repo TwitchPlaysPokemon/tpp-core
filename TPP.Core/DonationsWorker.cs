@@ -18,12 +18,13 @@ public sealed class DonationsWorker(
     DonationHandler donationHandler
 ) : IWithLifecycle
 {
-    private readonly ILogger<ChattersWorker> _logger = loggerFactory.CreateLogger<ChattersWorker>();
+    private readonly ILogger<DonationsWorker> _logger = loggerFactory.CreateLogger<DonationsWorker>();
 
     public async Task Start(CancellationToken cancellationToken)
     {
         try { await Task.Delay(pollingInterval, cancellationToken); }
         catch (OperationCanceledException) { return; }
+        int failureCount = 0;
         while (!cancellationToken.IsCancellationRequested)
         {
             try
@@ -36,10 +37,15 @@ public sealed class DonationsWorker(
                 _logger.LogDebug("Received new donations: {Donations}", string.Join(", ", donations));
                 foreach (var donation in donations.OrderBy(d => d.CreatedAt)) // process in chronological order
                     await donationHandler.Process(DonationHandler.NewDonation.FromStreamlabs(donation));
+                failureCount = 0;
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Failed polling for new donations");
+                failureCount += 1;
+                // We don't care about transient failures. Until it keeps failing, stick to debug logging.
+                _logger.LogDebug(e, "Failed polling for new donations (failure count {FailureCount})", failureCount);
+                if (failureCount >= 3)
+                    _logger.LogError(e, "Failed polling for new donations");
             }
 
             try { await Task.Delay(pollingInterval, cancellationToken); }
