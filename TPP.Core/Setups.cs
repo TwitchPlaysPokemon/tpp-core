@@ -77,6 +77,7 @@ public static class Setups
             .Where(s => s.GetGeneration()
                 is Generation.Gen1 or Generation.Gen2 or Generation.Gen3 or Generation.Gen4
                 or Generation.Gen5 or Generation.Gen6 or Generation.Gen7 or Generation.Gen8
+                or Generation.Gen9
             )
             .ToImmutableSortedSet();
         ITransmutationCalculator transmutationCalculator = new TransmutationCalculator(
