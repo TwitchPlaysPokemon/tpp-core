@@ -42,6 +42,7 @@ namespace TPP.Core.Modes
         private readonly ChattersWorker? _chattersWorker;
         private readonly TwitchEmotesLookup? _emotesWorker;
         private readonly DonationsWorker? _donationsWorker;
+        private readonly BadgeStatsRefreshWorker? _badgeStatsRefreshWorker;
 
         /// Processes a message that wasn't already processed by the mode base,
         /// and returns whether the message was actively processed.
@@ -194,6 +195,8 @@ namespace TPP.Core.Modes
                         streamlabsClient, repos.DonationRepo, donationHandler);
                 }
             }
+
+            _badgeStatsRefreshWorker = new BadgeStatsRefreshWorker(repos.BadgeRepo, repos.BadgeStatsRepo);
         }
 
         public void InstallAdditionalCommand(Command command)
@@ -295,6 +298,8 @@ namespace TPP.Core.Modes
                 tasks.Add(_emotesWorker.Start(cancellationToken));
             if (_donationsWorker != null)
                 tasks.Add(_donationsWorker.Start(cancellationToken));
+            if (_badgeStatsRefreshWorker != null)
+                tasks.Add(_badgeStatsRefreshWorker.Start(cancellationToken));
             await TaskUtils.WhenAllFastExit(tasks);
 
             foreach (IChat chat in _chats.Values)
