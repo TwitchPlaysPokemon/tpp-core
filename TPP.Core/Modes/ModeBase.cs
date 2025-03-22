@@ -196,7 +196,7 @@ namespace TPP.Core.Modes
                 }
             }
 
-            _badgeStatsRefreshWorker = new BadgeStatsRefreshWorker(repos.BadgeRepo, repos.BadgeStatsRepo);
+            _badgeStatsRefreshWorker = new BadgeStatsRefreshWorker(repos.BadgeRepo);
         }
 
         public void InstallAdditionalCommand(Command command)
