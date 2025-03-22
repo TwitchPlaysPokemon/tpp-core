@@ -111,10 +111,6 @@ Options:
         var config = (ConfigBase?)JsonConvert.DeserializeObject(json, type, ConfigSerializerSettings);
         if (config == null) throw new ArgumentException("config must not be null");
         ConfigUtils.WriteUnrecognizedConfigsToStderr(config);
-        if (config is BaseConfig { LogPath: null })
-        {
-            Console.Error.WriteLine("no logging path is configured, logs will only be printed to console");
-        }
         return config;
     }
 
@@ -147,6 +143,10 @@ Options:
                     outputTemplate: "{Timestamp:o} [{Level:u3}] {Message}{NewLine}{Exception}",
                     minimumLevel: minLogLevel,
                     levelOverrides: levelOverrides);
+            }
+            else
+            {
+                Console.Error.WriteLine("no logging path is configured, logs will only be printed to console");
             }
             if (baseConfig.DiscordLoggingConfig != null)
             {
