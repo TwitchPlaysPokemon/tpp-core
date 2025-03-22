@@ -13,6 +13,7 @@ using NodaTime;
 using TPP.Common;
 using TPP.Model;
 using TPP.Persistence.MongoDB.Serializers;
+using static MongoDB.Driver.ChangeStreamOperationType;
 
 namespace TPP.Persistence.MongoDB.Repos;
 
@@ -41,11 +42,6 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
     /// Because the rarity value is used to determine transmutation results, but transmuting directly changes
     /// how many of a species' badges exist, this is a relatively small percentage to dampen the feedback loop.
     public const double CountExistingFactor = 0.2;
-
-    // Always refresh stats after a fresh boot.
-    private bool _doFullStatsRefresh = true;
-    // Defer refreshing stats until absolutely necessary. This allows for refreshes to be batched up.
-    private readonly HashSet<PkmnSpecies> _speciesWithOutdatedStats = new();
 
     static BadgeRepo()
     {
@@ -111,7 +107,6 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
             createdAt: createdAt ?? _clock.GetCurrentInstant()
         );
         await Collection.InsertOneAsync(badge);
-        _speciesWithOutdatedStats.Add(species);
         return badge;
     }
 
@@ -194,15 +189,12 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
         Instant now = _clock.GetCurrentInstant();
 
         List<Badge> updatedBadges = new();
-        HashSet<PkmnSpecies> subjectToStatChanges = new();
         using (IClientSessionHandle sessionOuter = await Collection.Database.Client.StartSessionAsync())
         {
             await sessionOuter.WithTransactionAsync(async (txSession, txToken) =>
             {
                 foreach (Badge badge in badges)
                 {
-                    if ((badge.UserId == null) ^ (recipientUserId == null))
-                        subjectToStatChanges.Add(badge.Species);
                     Badge updatedBadge = await TransferBadge(badge, recipientUserId, txSession, txToken);
                     Debug.Assert(badge.Id == updatedBadge.Id);
                     updatedBadges.Add(updatedBadge);
@@ -214,8 +206,6 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
                 return (object?)null;
             });
         }
-        foreach (PkmnSpecies species in subjectToStatChanges)
-            _speciesWithOutdatedStats.Add(species);
 
         foreach (var tpl in badges.Select(b => (b.UserId, b.Species)).Distinct())
         {
@@ -224,6 +214,34 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
                 UserLostBadgeSpecies?.Invoke(this, new UserLostBadgeSpeciesEventArgs(previousOwnerUserId, species));
         }
         return updatedBadges.ToImmutableList();
+    }
+
+    public async Task WatchBadgeUpdates(
+        CancellationToken cancellationToken,
+        Func<IEnumerable<IBadgeRepo.Update>, Task> processBatch)
+    {
+        var options = new ChangeStreamOptions
+        {
+            // make sure we get 'FullDocumentBeforeChange' (except for Inserts) and 'FullDocument' (except for Deletes)
+            FullDocument = ChangeStreamFullDocumentOption.UpdateLookup,
+            FullDocumentBeforeChange = ChangeStreamFullDocumentBeforeChangeOption.WhenAvailable
+        };
+        IChangeStreamCursor<ChangeStreamDocument<Badge>> cursor = await Collection
+            .WatchAsync(cancellationToken: cancellationToken, options: options);
+        while (await cursor.MoveNextAsync(cancellationToken))
+        {
+            IEnumerable<IBadgeRepo.Update> updates = cursor.Current
+                .Where(change => change.OperationType is Insert or Update or Replace or Delete)
+                .Select(change => change switch
+                {
+                    { OperationType: Insert, FullDocument: var doc } => new IBadgeRepo.Update(null, doc),
+                    { OperationType: Delete, FullDocumentBeforeChange: var doc } => new IBadgeRepo.Update(doc, null),
+                    { OperationType: Update or Replace, FullDocumentBeforeChange: var before, FullDocument: var after }
+                        => new IBadgeRepo.Update(before, after),
+                    _ => throw new ArgumentException($"Unknown operation type {change.OperationType}")
+                });
+            await processBatch(updates);
+        }
     }
 
     public async Task RenewBadgeStats(IImmutableSet<PkmnSpecies>? onlyTheseSpecies = null)
@@ -277,18 +295,6 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
 
     public async Task<ImmutableSortedDictionary<PkmnSpecies, BadgeStat>> GetBadgeStats()
     {
-        if (_doFullStatsRefresh)
-        {
-            _speciesWithOutdatedStats.Clear();
-            _doFullStatsRefresh = false;
-            await RenewBadgeStats();
-        }
-        else if (_speciesWithOutdatedStats.Any())
-        {
-            IImmutableSet<PkmnSpecies> needToUpdate = _speciesWithOutdatedStats.ToImmutableHashSet();
-            _speciesWithOutdatedStats.Clear();
-            await RenewBadgeStats(needToUpdate);
-        }
         List<BadgeStat> badgeStats = await CollectionStats
             .Find(FilterDefinition<BadgeStat>.Empty)
             .ToListAsync();
@@ -297,17 +303,6 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
 
     public async Task<BadgeStat?> GetBadgeStatsForSpecies(PkmnSpecies species)
     {
-        if (_doFullStatsRefresh)
-        {
-            _speciesWithOutdatedStats.Clear();
-            _doFullStatsRefresh = false;
-            await RenewBadgeStats();
-        }
-        else if (_speciesWithOutdatedStats.Contains(species))
-        {
-            _speciesWithOutdatedStats.Remove(species);
-            await RenewBadgeStats(ImmutableHashSet.Create(species));
-        }
         return await CollectionStats
             .Find(stat => stat.Species == species)
             .SingleOrDefaultAsync();

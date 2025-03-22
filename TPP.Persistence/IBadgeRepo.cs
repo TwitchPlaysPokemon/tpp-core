@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Threading;
 using System.Threading.Tasks;
 using NodaTime;
 using TPP.Common;
@@ -58,5 +59,8 @@ namespace TPP.Persistence
         public Task<IImmutableList<Badge>> TransferBadges(
             IImmutableList<Badge> badges, string? recipientUserId, string reason,
             IDictionary<string, object?> additionalData);
+
+        record Update(Badge? Before, Badge? After);
+        Task WatchBadgeUpdates(CancellationToken cancellationToken, Func<IEnumerable<Update>, Task> processBatch);
     }
 }
