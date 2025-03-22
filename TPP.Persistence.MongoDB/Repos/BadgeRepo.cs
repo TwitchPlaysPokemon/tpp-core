@@ -216,31 +216,38 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
         return updatedBadges.ToImmutableList();
     }
 
-    public async Task WatchBadgeUpdates(
-        CancellationToken cancellationToken,
-        Func<IEnumerable<IBadgeRepo.Update>, Task> processBatch)
+    public async Task WatchAndHandleBadgeStatUpdates(CancellationToken cancellationToken)
     {
-        var options = new ChangeStreamOptions
-        {
-            // make sure we get 'FullDocumentBeforeChange' (except for Inserts) and 'FullDocument' (except for Deletes)
-            FullDocument = ChangeStreamFullDocumentOption.UpdateLookup,
-            FullDocumentBeforeChange = ChangeStreamFullDocumentBeforeChangeOption.WhenAvailable
-        };
         IChangeStreamCursor<ChangeStreamDocument<Badge>> cursor = await Collection
-            .WatchAsync(cancellationToken: cancellationToken, options: options);
+            .WatchAsync(cancellationToken: cancellationToken, options: new ChangeStreamOptions
+            {
+                FullDocument = ChangeStreamFullDocumentOption.UpdateLookup,
+                FullDocumentBeforeChange = ChangeStreamFullDocumentBeforeChangeOption.WhenAvailable
+            });
         while (await cursor.MoveNextAsync(cancellationToken))
         {
-            IEnumerable<IBadgeRepo.Update> updates = cursor.Current
+            ImmutableHashSet<PkmnSpecies> dirtySpecies = cursor.Current
                 .Where(change => change.OperationType is Insert or Update or Replace or Delete)
-                .Select(change => change switch
+                .Where(change => change switch
                 {
-                    { OperationType: Insert, FullDocument: var doc } => new IBadgeRepo.Update(null, doc),
-                    { OperationType: Delete, FullDocumentBeforeChange: var doc } => new IBadgeRepo.Update(doc, null),
+                    { OperationType: Insert, FullDocument.UserId: not null } => true,
+                    { OperationType: Delete, FullDocumentBeforeChange.UserId: not null } => true,
                     { OperationType: Update or Replace, FullDocumentBeforeChange: var before, FullDocument: var after }
-                        => new IBadgeRepo.Update(before, after),
-                    _ => throw new ArgumentException($"Unknown operation type {change.OperationType}")
-                });
-            await processBatch(updates);
+                        => (before.UserId is null) != (after.UserId is null) || // consumed or consumption undone
+                           (before.UserId is not null && before.Species != after.Species), // changed species
+                    _ => false
+                })
+                .SelectMany(change => change switch
+                {
+                    { OperationType: Insert, FullDocument: var doc } => [doc.Species],
+                    { OperationType: Delete, FullDocumentBeforeChange: var doc } => [doc.Species],
+                    { OperationType: Update or Replace, FullDocumentBeforeChange: var before, FullDocument: var after }
+                        => [before.Species, after.Species],
+                    _ => Array.Empty<PkmnSpecies>() // unreachable, filtered out above
+                })
+                .ToImmutableHashSet();
+            if (!dirtySpecies.IsEmpty)
+                await RenewBadgeStats(dirtySpecies);
         }
     }
 

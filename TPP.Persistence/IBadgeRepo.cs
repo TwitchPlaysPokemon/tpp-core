@@ -44,6 +44,7 @@ namespace TPP.Persistence
 
     public interface IBadgeRepo
     {
+        public Task RenewBadgeStats(IImmutableSet<PkmnSpecies>? onlyTheseSpecies = null);
         public Task<Badge> AddBadge(
             string? userId, PkmnSpecies species, Badge.BadgeSource source, Instant? createdAt = null);
         public Task<IImmutableList<Badge>> FindByUser(string? userId);
@@ -60,7 +61,6 @@ namespace TPP.Persistence
             IImmutableList<Badge> badges, string? recipientUserId, string reason,
             IDictionary<string, object?> additionalData);
 
-        record Update(Badge? Before, Badge? After);
-        Task WatchBadgeUpdates(CancellationToken cancellationToken, Func<IEnumerable<Update>, Task> processBatch);
+        Task WatchAndHandleBadgeStatUpdates(CancellationToken cancellationToken);
     }
 }
