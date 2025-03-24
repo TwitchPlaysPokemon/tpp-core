@@ -231,7 +231,7 @@ public static class Setups
             defaultOperators: baseConfig.Chat.DefaultOperatorNames,
             clock: clock);
         var badgeLogRepo = new BadgeLogRepo(mongoDatabase, loggerFactory.CreateLogger<BadgeLogRepo>());
-        BadgeRepo badgeRepo = new(mongoDatabase, badgeLogRepo, clock);
+        BadgeRepo badgeRepo = new(mongoDatabase, loggerFactory.CreateLogger<BadgeRepo>(), badgeLogRepo, clock);
         badgeRepo.UserLostBadgeSpecies += (_, args) => TaskToVoidSafely(logger, () =>
             userRepo.UnselectBadgeIfSpeciesSelected(args.UserId, args.Species));
         IBank<User> pokeyenBank = new Bank<User>(
