@@ -94,6 +94,13 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
             new CreateIndexModel<Badge>(Builders<Badge>.IndexKeys.Ascending(u => u.Species)),
             new CreateIndexModel<Badge>(Builders<Badge>.IndexKeys.Ascending(u => u.CreatedAt))
         ]);
+        // we're watching a change stream and need to know the previous data on deletes and updates to recalc stats,
+        // or more precisely to determine whether it's necessary to recalc stats
+        await Collection.Database.RunCommandAsync<BsonDocument>(new BsonDocument
+        {
+            { "collMod", CollectionName },
+            { "changeStreamPreAndPostImages", new BsonDocument { { "enabled", true } } }
+        });
     }
 
     public async Task<Badge> AddBadge(
@@ -221,8 +228,8 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
         IChangeStreamCursor<ChangeStreamDocument<Badge>> cursor = await Collection
             .WatchAsync(cancellationToken: cancellationToken, options: new ChangeStreamOptions
             {
-                FullDocument = ChangeStreamFullDocumentOption.UpdateLookup,
-                FullDocumentBeforeChange = ChangeStreamFullDocumentBeforeChangeOption.WhenAvailable
+                FullDocument = ChangeStreamFullDocumentOption.Required,
+                FullDocumentBeforeChange = ChangeStreamFullDocumentBeforeChangeOption.Required
             });
         while (await cursor.MoveNextAsync(cancellationToken))
         {
