@@ -5,6 +5,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Driver;
@@ -17,25 +19,25 @@ using static MongoDB.Driver.ChangeStreamOperationType;
 
 namespace TPP.Persistence.MongoDB.Repos;
 
-public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
+public class BadgeRepo(
+    IMongoDatabase database,
+    ILogger<BadgeRepo> logger,
+    IMongoBadgeLogRepo badgeLogRepo,
+    IClock clock,
+    Duration? rarityCalculationTransition = null)
+    : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
 {
     private const string CollectionName = "badges";
     private const string CollectionNameStats = "badgestats";
 
-    public readonly IMongoCollection<Badge> Collection;
-    public readonly IMongoCollection<BadgeStat> CollectionStats;
-    private readonly IMongoBadgeLogRepo _badgeLogRepo;
-    private readonly IClock _clock;
+    public readonly IMongoCollection<Badge> Collection = database.GetCollection<Badge>(CollectionName);
+    public readonly IMongoCollection<BadgeStat> CollectionStats = database.GetCollection<BadgeStat>(CollectionNameStats);
 
-    /// Instant at which some update was deployed that is expected to majorly disrupt badge rarities,
-    /// e.g. if a whole new generation was added to pinball.
-    private readonly Instant _lastRarityUpdate;
-
-    /// Minimum amount of time that must pass before a badge that was created before the last rarity update
-    /// gets ignored for rarity calculations. This is necessary to have a smooth rarity transition period.
-    private readonly Duration _rarityCalculationTransition;
-
-    private readonly Instant _whenGen2WasAddedToPinball = Instant.FromUtc(2018, 3, 28, 12, 00);
+    /// Pinball drops enough badges that a somewhat small time-span is already statistically significant.
+    /// Also, if Pinball ever gets tweaked and natural drop chances change, ignoring old badges gradually
+    /// transitions to the new rarities.
+    /// Added benefit: Recalculating a badge's rarity is faster on the DB.
+    private readonly Duration _rarityCalculationTransition = rarityCalculationTransition ?? Duration.FromDays(365 * 3);
 
     /// Ratio at which badges from all sources are included in the rarity calculation,
     /// as opposed to only badges from "natural" generation sources (pinball).
@@ -72,21 +74,6 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
         });
     }
 
-    public BadgeRepo(
-        IMongoDatabase database,
-        IMongoBadgeLogRepo badgeLogRepo,
-        IClock clock,
-        Instant? lastRarityUpdate = null,
-        Duration? rarityCalculationTransition = null)
-    {
-        Collection = database.GetCollection<Badge>(CollectionName);
-        CollectionStats = database.GetCollection<BadgeStat>(CollectionNameStats);
-        _badgeLogRepo = badgeLogRepo;
-        _clock = clock;
-        _lastRarityUpdate = lastRarityUpdate ?? _whenGen2WasAddedToPinball;
-        _rarityCalculationTransition = rarityCalculationTransition ?? Duration.FromDays(90);
-    }
-
     public async Task InitializeAsync()
     {
         await Collection.Indexes.CreateManyAsync([
@@ -111,7 +98,7 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
             userId: userId,
             species: species,
             source: source,
-            createdAt: createdAt ?? _clock.GetCurrentInstant()
+            createdAt: createdAt ?? clock.GetCurrentInstant()
         );
         await Collection.InsertOneAsync(badge);
         return badge;
@@ -122,7 +109,7 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
 
     public async Task<IImmutableList<Badge>> FindByUserAtTime(string userId, Instant timestamp)
     {
-        IImmutableSet<string> badgeIds = await _badgeLogRepo.FindBadgeIdsByUserAtTime(userId, timestamp);
+        IImmutableSet<string> badgeIds = await badgeLogRepo.FindBadgeIdsByUserAtTime(userId, timestamp);
 
         List<Badge> badges = await Collection.AsQueryable()
             .Where(badge => badgeIds.Contains(badge.Id))
@@ -193,7 +180,7 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
         IImmutableList<Badge> badges, string? recipientUserId, string reason,
         IDictionary<string, object?> additionalData)
     {
-        Instant now = _clock.GetCurrentInstant();
+        Instant now = clock.GetCurrentInstant();
 
         List<Badge> updatedBadges = new();
         using (IClientSessionHandle sessionOuter = await Collection.Database.Client.StartSessionAsync())
@@ -208,7 +195,7 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
                 }
 
                 foreach (Badge badge in badges)
-                    await _badgeLogRepo.LogWithSession(
+                    await badgeLogRepo.LogWithSession(
                         badge.Id, reason, recipientUserId, badge.UserId, now, additionalData, txSession);
                 return (object?)null;
             });
@@ -223,6 +210,22 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
         return updatedBadges.ToImmutableList();
     }
 
+    private static IEnumerable<PkmnSpecies> GetRarityAffectingSpeciesFromChange(ChangeStreamDocument<Badge> c)
+    {
+        if (c is { OperationType: Insert, FullDocument: var inserted })
+            yield return inserted.Species;
+        if (c is { OperationType: Delete, FullDocumentBeforeChange: var deleted })
+            yield return deleted.Species;
+        if (c is { OperationType: Update or Replace, FullDocumentBeforeChange: var before, FullDocument: var after } &&
+            ((before.UserId is null) != (after.UserId is null) || // consumed or consumption undone
+             before.Species != after.Species || // changed species (shouldn't usually happen)
+             before.CreatedAt != after.CreatedAt)) // creation date changed (shouldn't usually happen)
+        {
+            yield return before.Species;
+            yield return after.Species;
+        }
+    }
+
     public async Task WatchAndHandleBadgeStatUpdates(CancellationToken cancellationToken)
     {
         IChangeStreamCursor<ChangeStreamDocument<Badge>> cursor = await Collection
@@ -234,24 +237,7 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
         while (await cursor.MoveNextAsync(cancellationToken))
         {
             ImmutableHashSet<PkmnSpecies> dirtySpecies = cursor.Current
-                .Where(change => change.OperationType is Insert or Update or Replace or Delete)
-                .Where(change => change switch
-                {
-                    { OperationType: Insert, FullDocument.UserId: not null } => true,
-                    { OperationType: Delete, FullDocumentBeforeChange.UserId: not null } => true,
-                    { OperationType: Update or Replace, FullDocumentBeforeChange: var before, FullDocument: var after }
-                        => (before.UserId is null) != (after.UserId is null) || // consumed or consumption undone
-                           (before.UserId is not null && before.Species != after.Species), // changed species
-                    _ => false
-                })
-                .SelectMany(change => change switch
-                {
-                    { OperationType: Insert, FullDocument: var doc } => [doc.Species],
-                    { OperationType: Delete, FullDocumentBeforeChange: var doc } => [doc.Species],
-                    { OperationType: Update or Replace, FullDocumentBeforeChange: var before, FullDocument: var after }
-                        => [before.Species, after.Species],
-                    _ => Array.Empty<PkmnSpecies>() // unreachable, filtered out above
-                })
+                .SelectMany(GetRarityAffectingSpeciesFromChange)
                 .ToImmutableHashSet();
             if (!dirtySpecies.IsEmpty)
                 await RenewBadgeStats(dirtySpecies);
@@ -260,8 +246,9 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
 
     public async Task RenewBadgeStats(IImmutableSet<PkmnSpecies>? onlyTheseSpecies = null)
     {
-        Instant now = _clock.GetCurrentInstant();
-        Instant startTime = Instant.Min(_lastRarityUpdate, now - _rarityCalculationTransition);
+        var stopwatch = Stopwatch.StartNew();
+        Instant now = clock.GetCurrentInstant();
+        Instant startTime = now - _rarityCalculationTransition;
 
         IAggregateFluent<Badge> pipeline = Collection.Aggregate(new AggregateOptions { AllowDiskUse = true });
         if (onlyTheseSpecies != null)
@@ -279,16 +266,16 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
             .SortBy(stat => stat.Species)
             .ToListAsync();
 
-        long totalGenerated = await Collection.CountDocumentsAsync(b =>
+        long rarityTotalGenerated = await Collection.CountDocumentsAsync(b =>
             b.Source == Badge.BadgeSource.Pinball && b.CreatedAt >= startTime);
-        long totalExisting = await Collection.CountDocumentsAsync(b =>
+        long rarityTotalExisting = await Collection.CountDocumentsAsync(b =>
             b.UserId != null && b.CreatedAt >= startTime);
 
         if (stats.Count == 0) return;
         await CollectionStats.BulkWriteAsync(stats.Select(stat =>
             {
-                double rarityGenerated = stat.RarityCountGenerated / (double)totalGenerated;
-                double rarityExisting = stat.RarityCount / (double)totalExisting;
+                double rarityGenerated = stat.RarityCountGenerated / (double)rarityTotalGenerated;
+                double rarityExisting = stat.RarityCount / (double)rarityTotalExisting;
                 double rarity = rarityGenerated * (1 - CountExistingFactor) + rarityExisting * CountExistingFactor;
                 BadgeStat statEntity = new(
                     Species: stat.Species,
@@ -305,6 +292,11 @@ public class BadgeRepo : IBadgeRepo, IBadgeStatsRepo, IAsyncInitRepo
                 };
             }),
             new BulkWriteOptions { IsOrdered = false });
+        if (onlyTheseSpecies != null)
+            logger.LogDebug("Recalculated badge stats in {Elapsed}ms for these species: {Species}",
+                stopwatch.ElapsedMilliseconds, string.Join(',', onlyTheseSpecies));
+        else
+            logger.LogDebug("Recalculated badge stats in {Elapsed}ms for all species", stopwatch.ElapsedMilliseconds);
     }
 
     public async Task<ImmutableSortedDictionary<PkmnSpecies, BadgeStat>> GetBadgeStats()

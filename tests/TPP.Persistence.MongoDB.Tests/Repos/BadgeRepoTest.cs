@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging.Abstractions;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using NodaTime;
@@ -15,8 +16,8 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
     [Parallelizable(ParallelScope.All)]
     public class BadgeRepoTest : MongoTestBase
     {
-        public BadgeRepo CreateBadgeRepo() =>
-            new BadgeRepo(CreateTemporaryDatabase(), Substitute.For<IMongoBadgeLogRepo>(), Substitute.For<IClock>());
+        private BadgeRepo CreateBadgeRepo() => new(CreateTemporaryDatabase(), NullLogger<BadgeRepo>.Instance,
+            Substitute.For<IMongoBadgeLogRepo>(), Substitute.For<IClock>());
 
         [Test]
         public async Task insert_then_read_are_equal()
@@ -39,8 +40,8 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             var clockMock = Substitute.For<IClock>();
             Instant createdAt = Instant.FromUnixTimeSeconds(123);
             clockMock.GetCurrentInstant().Returns(createdAt);
-            IBadgeRepo badgeRepo = new BadgeRepo(
-                CreateTemporaryDatabase(), Substitute.For<IMongoBadgeLogRepo>(), clockMock);
+            IBadgeRepo badgeRepo = new BadgeRepo(CreateTemporaryDatabase(),
+                NullLogger<BadgeRepo>.Instance, Substitute.For<IMongoBadgeLogRepo>(), clockMock);
 
             Badge badge = await badgeRepo.AddBadge(null, PkmnSpecies.OfId("16"), Badge.BadgeSource.ManualCreation);
             Assert.That(badge.CreatedAt, Is.EqualTo(createdAt));
@@ -169,8 +170,8 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             [Test]
             public async Task returns_updated_badge_object()
             {
-                IBadgeRepo badgeRepo = new BadgeRepo(
-                    CreateTemporaryDatabase(), Substitute.For<IMongoBadgeLogRepo>(), Substitute.For<IClock>());
+                IBadgeRepo badgeRepo = new BadgeRepo(CreateTemporaryDatabase(),
+                    NullLogger<BadgeRepo>.Instance, Substitute.For<IMongoBadgeLogRepo>(), Substitute.For<IClock>());
                 Badge badge = await badgeRepo.AddBadge(
                     "user", PkmnSpecies.OfId("1"), Badge.BadgeSource.ManualCreation);
 
@@ -188,7 +189,8 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             [Test]
             public async Task unmarks_as_selling()
             {
-                BadgeRepo badgeRepo = new(CreateTemporaryDatabase(), Substitute.For<IMongoBadgeLogRepo>(), Substitute.For<IClock>());
+                BadgeRepo badgeRepo = new(CreateTemporaryDatabase(), NullLogger<BadgeRepo>.Instance,
+                    Substitute.For<IMongoBadgeLogRepo>(), Substitute.For<IClock>());
                 Badge badge = await badgeRepo.AddBadge(
                     "user", PkmnSpecies.OfId("1"), Badge.BadgeSource.ManualCreation);
                 await badgeRepo.Collection.UpdateOneAsync(
@@ -214,7 +216,8 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             {
                 var clockMock = Substitute.For<IClock>();
                 var mongoBadgeLogRepoMock = Substitute.For<IMongoBadgeLogRepo>();
-                BadgeRepo badgeRepo = new(CreateTemporaryDatabase(), mongoBadgeLogRepoMock, clockMock);
+                BadgeRepo badgeRepo = new(CreateTemporaryDatabase(),
+                    NullLogger<BadgeRepo>.Instance, mongoBadgeLogRepoMock, clockMock);
                 Badge badge = await badgeRepo.AddBadge(
                     "user", PkmnSpecies.OfId("1"), Badge.BadgeSource.ManualCreation);
 
@@ -225,15 +228,16 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
                 await badgeRepo.TransferBadges(ImmutableList.Create(badge), "recipient", "reason", data);
 
                 await mongoBadgeLogRepoMock.Received(1).LogWithSession(
-                        badgeId: badge.Id, badgeLogType: "reason", userId: "recipient", oldUserId: "user",
-                        timestamp, data, Arg.Any<IClientSessionHandle>());
+                    badgeId: badge.Id, badgeLogType: "reason", userId: "recipient", oldUserId: "user",
+                    timestamp, data, Arg.Any<IClientSessionHandle>());
             }
 
             [Test]
             public async Task triggers_species_lost_event()
             {
                 var mongoBadgeLogRepoMock = Substitute.For<IMongoBadgeLogRepo>();
-                BadgeRepo badgeRepo = new(CreateTemporaryDatabase(), mongoBadgeLogRepoMock, Substitute.For<IClock>());
+                BadgeRepo badgeRepo = new(CreateTemporaryDatabase(),
+                    NullLogger<BadgeRepo>.Instance, mongoBadgeLogRepoMock, Substitute.For<IClock>());
                 PkmnSpecies species = PkmnSpecies.OfId("1");
                 Badge badge1 = await badgeRepo.AddBadge("user", species, Badge.BadgeSource.ManualCreation);
                 Badge badge2 = await badgeRepo.AddBadge("user", species, Badge.BadgeSource.ManualCreation);
@@ -257,7 +261,8 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             public async Task aborts_all_transfers_if_one_fails()
             {
                 var mongoBadgeLogRepoMock = Substitute.For<IMongoBadgeLogRepo>();
-                BadgeRepo badgeRepo = new(CreateTemporaryDatabase(), mongoBadgeLogRepoMock, Substitute.For<IClock>());
+                BadgeRepo badgeRepo = new(CreateTemporaryDatabase(),
+                    NullLogger<BadgeRepo>.Instance, mongoBadgeLogRepoMock, Substitute.For<IClock>());
                 PkmnSpecies species = PkmnSpecies.OfId("1");
                 Badge badge1 = await badgeRepo.AddBadge("user", species, Badge.BadgeSource.ManualCreation);
                 Badge badge2 = await badgeRepo.AddBadge("user", species, Badge.BadgeSource.ManualCreation);
@@ -297,8 +302,8 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
                 Instant tNow = Instant.FromUnixTimeSeconds(10);
                 clockMock.GetCurrentInstant().Returns(tNow);
 
-                BadgeRepo badgeRepo = new(CreateTemporaryDatabase(), Substitute.For<IMongoBadgeLogRepo>(),
-                    clockMock, lastRarityUpdate: tUpdate, rarityCalculationTransition: transition);
+                BadgeRepo badgeRepo = new(CreateTemporaryDatabase(), NullLogger<BadgeRepo>.Instance,
+                    Substitute.For<IMongoBadgeLogRepo>(), clockMock, rarityCalculationTransition: transition);
 
                 PkmnSpecies species = PkmnSpecies.OfId("1-testlapsed");
                 await badgeRepo.AddBadge("user", species, Badge.BadgeSource.Pinball, tBeforeUpdateLapsed);
@@ -317,8 +322,8 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             [Test]
             public async Task ignore_destroyed_for_regular_count()
             {
-                BadgeRepo badgeRepo = new(CreateTemporaryDatabase(), Substitute.For<IMongoBadgeLogRepo>(),
-                    Substitute.For<IClock>());
+                BadgeRepo badgeRepo = new(CreateTemporaryDatabase(), NullLogger<BadgeRepo>.Instance,
+                    Substitute.For<IMongoBadgeLogRepo>(), Substitute.For<IClock>());
 
                 PkmnSpecies species = PkmnSpecies.OfId("1-testdestroyed");
                 await badgeRepo.AddBadge("user", species, Badge.BadgeSource.Pinball);
@@ -336,8 +341,8 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             [Test]
             public async Task ignore_unnatural_sources_for_generated_count()
             {
-                BadgeRepo badgeRepo = new BadgeRepo(CreateTemporaryDatabase(), Substitute.For<IMongoBadgeLogRepo>(),
-                    Substitute.For<IClock>());
+                BadgeRepo badgeRepo = new BadgeRepo(CreateTemporaryDatabase(), NullLogger<BadgeRepo>.Instance,
+                    Substitute.For<IMongoBadgeLogRepo>(), Substitute.For<IClock>());
 
                 PkmnSpecies species = PkmnSpecies.OfId("1-testunnatural");
                 await badgeRepo.AddBadge("user", species, Badge.BadgeSource.Pinball);
@@ -355,8 +360,8 @@ namespace TPP.Persistence.MongoDB.Tests.Repos
             [Test]
             public async Task incorporate_source_and_existence_in_rarity()
             {
-                BadgeRepo badgeRepo = new(CreateTemporaryDatabase(), Substitute.For<IMongoBadgeLogRepo>(),
-                    Substitute.For<IClock>());
+                BadgeRepo badgeRepo = new(CreateTemporaryDatabase(), NullLogger<BadgeRepo>.Instance,
+                    Substitute.For<IMongoBadgeLogRepo>(), Substitute.For<IClock>());
 
                 PkmnSpecies species1 = PkmnSpecies.OfId("1-testrarity");
                 PkmnSpecies species2 = PkmnSpecies.OfId("2-testrarity");
