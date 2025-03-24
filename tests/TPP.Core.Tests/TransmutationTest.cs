@@ -18,12 +18,12 @@ public class TransmutationCalculatorTest
     /// <summary>
     /// Performs a number of transmutations with a fixed-seed RNG and some semi-bogus rarities,
     /// just to make sure it doesn't crash and produces no obvious garbage data.
-    /// Also this test might be able to detect subtle but unintended changes in behaviour.
+    /// Also, this test might be able to detect subtle but unintended changes in behaviour.
     /// </summary>
     [Test]
     public void TestSomeTransmutationCalculations()
     {
-        const int numTransmutations = 100;
+        const int numTransmutations = 1000;
         PkmnSpecies speciesCommon = PkmnSpecies.RegisterName("1", "common");
         PkmnSpecies speciesUncommon1 = PkmnSpecies.RegisterName("2", "uncommon1");
         PkmnSpecies speciesUncommon2 = PkmnSpecies.RegisterName("3", "uncommon2");
@@ -56,15 +56,15 @@ public class TransmutationCalculatorTest
         Assert.That(result.Keys, Is.EqualTo(new[] { speciesUncommon1, speciesUncommon2, speciesRare }));
         // these need to be adjusted when the RNG changes,
         // or the algorithm has changes in behaviour that are manually verified to be okay
-        Assert.That(result[speciesUncommon1], Is.EqualTo(40));
-        Assert.That(result[speciesUncommon2], Is.EqualTo(54));
-        Assert.That(result[speciesRare], Is.EqualTo(6));
+        Assert.That(result[speciesUncommon1], Is.EqualTo(468));
+        Assert.That(result[speciesUncommon2], Is.EqualTo(480));
+        Assert.That(result[speciesRare], Is.EqualTo(52));
     }
 
     [Test]
     public void TestCannotTransmuteNonExistingBadge()
     {
-        const int numTransmutations = 100;
+        const int numTransmutations = 1000;
         PkmnSpecies speciesUncommon = PkmnSpecies.RegisterName("1", "uncommon");
         PkmnSpecies speciesRare = PkmnSpecies.RegisterName("2", "rare");
         PkmnSpecies speciesNonExisting = PkmnSpecies.RegisterName("3", "non-existing");
@@ -78,7 +78,7 @@ public class TransmutationCalculatorTest
         }.ToImmutableSortedDictionary();
         badgeStatsRepoMock.GetBadgeStats().Returns(badgeStats);
 
-        var random = new Random(numTransmutations);
+        var random = new Random();
         ITransmutationCalculator transmutationCalculator = new TransmutationCalculator(
             badgeStatsRepoMock,
             badgeStats.Keys.ToImmutableSortedSet(),
