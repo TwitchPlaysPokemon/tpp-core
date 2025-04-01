@@ -7,39 +7,28 @@ using TPP.Persistence;
 
 namespace TPP.Core.Commands.Definitions;
 
-public class CurrencyCommands : ICommandCollection
+public class CurrencyCommands(
+    IBank<User> pokeyenBank,
+    IBank<User> tokenBank,
+    IMessageSender messageSender
+) : ICommandCollection
 {
-    public IEnumerable<Command> Commands => new[]
-    {
-        new Command("balance", CheckBalance)
+    public IEnumerable<Command> Commands =>
+    [
+        new("balance", CheckBalance)
         {
-            Aliases = new[] { "pokeyen", "tokens", "currency", "money", "rank" },
+            Aliases = ["pokeyen", "tokens", "currency", "money", "rank"],
             Description = "Show a user's pokeyen and tokens. Argument: <username> (optional)"
         },
-        new Command("highscore", CheckHighScore)
+        new("highscore", CheckHighScore)
         {
             Description = "Show a user's pokeyen high score for this season. Argument: <username> (optional)"
         },
-        new Command("donate", Donate)
+        new("gifttokens", Donate)
         {
-            Aliases = new[] { "gifttokens" },
             Description = "Donate another user tokens. Arguments: <user to donate to> <amount of tokens>"
-        },
-    };
-
-    private readonly IBank<User> _pokeyenBank;
-    private readonly IBank<User> _tokenBank;
-    private readonly IMessageSender _messageSender;
-
-    public CurrencyCommands(
-        IBank<User> pokeyenBank,
-        IBank<User> tokenBank,
-        IMessageSender messageSender)
-    {
-        _pokeyenBank = pokeyenBank;
-        _tokenBank = tokenBank;
-        _messageSender = messageSender;
-    }
+        }
+    ];
 
     public async Task<CommandResult> CheckBalance(CommandContext context)
     {
@@ -48,10 +37,10 @@ public class CurrencyCommands : ICommandCollection
         User user = isSelf ? context.Message.User : optionalUser.Value;
         // Only differentiate between available and reserved money for self.
         // For others, just report their total as available and ignore reserved.
-        long availablePokeyen = isSelf ? await _pokeyenBank.GetAvailableMoney(user) : user.Pokeyen;
-        long reservedPokeyen = isSelf ? await _pokeyenBank.GetReservedMoney(user) : 0;
-        long availableTokens = isSelf ? await _tokenBank.GetAvailableMoney(user) : user.Tokens;
-        long reservedTokens = isSelf ? await _tokenBank.GetReservedMoney(user) : 0;
+        long availablePokeyen = isSelf ? await pokeyenBank.GetAvailableMoney(user) : user.Pokeyen;
+        long reservedPokeyen = isSelf ? await pokeyenBank.GetReservedMoney(user) : 0;
+        long availableTokens = isSelf ? await tokenBank.GetAvailableMoney(user) : user.Tokens;
+        long reservedTokens = isSelf ? await tokenBank.GetReservedMoney(user) : 0;
 
         string reservedPokeyenMessage = reservedPokeyen > 0 ? $" (P{reservedPokeyen} reserved)" : "";
         string reservedTokensMessage = reservedTokens > 0 ? $" (T{reservedTokens} reserved)" : "";
@@ -94,21 +83,20 @@ public class CurrencyCommands : ICommandCollection
         if (tokens <= 0)
             return new CommandResult { Response = "You must donate at least T1." };
 
-        long availableTokens = await _tokenBank.GetAvailableMoney(gifter);
+        long availableTokens = await tokenBank.GetAvailableMoney(gifter);
         if (availableTokens < tokens)
             return new CommandResult
             {
                 Response = $"You are trying to donate T{tokens} but you only have T{availableTokens}."
             };
 
-        await _tokenBank.PerformTransactions(new[]
-        {
+        await tokenBank.PerformTransactions([
             new Transaction<User>(gifter, -tokens, TransactionType.DonationGive),
             new Transaction<User>(recipient, tokens, TransactionType.DonationReceive)
-        });
+        ]);
 
-        await _messageSender.SendWhisper(recipient, $"You have been donated T{tokens} from {gifter.Name}!");
-        await _messageSender.SendMessage($"{gifter.Name} has donated T{tokens} to @{recipient.Name}!");
+        await messageSender.SendWhisper(recipient, $"You have been donated T{tokens} from {gifter.Name}!");
+        await messageSender.SendMessage($"{gifter.Name} has donated T{tokens} to @{recipient.Name}!");
         return new CommandResult
         {
             Response = $"You successfully donated T{tokens} to @{recipient.Name}!",

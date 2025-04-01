@@ -71,8 +71,6 @@ namespace TPP.Core.Commands.Definitions
             ["removebadge"] = "Operators only: Remove a badge from a user's inventory. Arguments: <username> <Pokémon>",
             ["transferbadge"] = "Operators only: Move a badge from one user to another. Arguments: <Pokémon> <username to take from> <username to give to>",
             ["forceacceptbadge"] = "Operators only: Add a copy of every Gen 1 badge to your account. For debugging.",
-            ["forcetransmuteupgrade"] = "Operators only: Add a new gen to transmute. Deprecated.",
-            ["transmuteraritytest"] = "Operators only: Test transmute rarity differences. Argument: <rarity>",
             ["createitem"] = "Operators only: Give a user some number of items. Arguments: <username> <itemname> <number of items> <itemdata>(optional)",
             ["togglemarket"] = "Operators only: Close or reopen the item market.",
             ["giveavataritem"] = "Operators only: Give avatar clothing options to a user. Arguments: <user name> <avatar style id> <clothing category> <item id>.",
