@@ -33,6 +33,11 @@ public class BadgeRepo(
     public readonly IMongoCollection<Badge> Collection = database.GetCollection<Badge>(CollectionName);
     public readonly IMongoCollection<BadgeStat> CollectionStats = database.GetCollection<BadgeStat>(CollectionNameStats);
 
+    private static readonly Instant WhenGen2WasAddedToPinball = Instant.FromUtc(2018, 3, 28, 12, 00);
+    /// Instant at which some update was deployed that is expected to majorly disrupt badge rarities,
+    /// e.g. if a whole new generation was added to pinball.
+    private static readonly Instant LastRarityUpdate = WhenGen2WasAddedToPinball;
+
     /// Pinball drops enough badges that a somewhat small time-span is already statistically significant.
     /// Also, if Pinball ever gets tweaked and natural drop chances change, ignoring old badges gradually
     /// transitions to the new rarities.
@@ -248,7 +253,7 @@ public class BadgeRepo(
     {
         var stopwatch = Stopwatch.StartNew();
         Instant now = clock.GetCurrentInstant();
-        Instant startTime = now - _rarityCalculationTransition;
+        Instant startTime = Instant.Min(LastRarityUpdate, now - _rarityCalculationTransition);
 
         IAggregateFluent<Badge> pipeline = Collection.Aggregate(new AggregateOptions { AllowDiskUse = true });
         if (onlyTheseSpecies != null)
