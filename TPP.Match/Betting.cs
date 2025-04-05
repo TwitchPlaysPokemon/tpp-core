@@ -31,18 +31,11 @@ public record PlaceBetFailure
     public sealed record BetTooHigh(long MaxBet) : PlaceBetFailure;
 }
 
-public class BetPlacedEventArgs<TUser> : EventArgs
+public class BetPlacedEventArgs<TUser>(TUser user, Side side, long amount) : EventArgs
 {
-    public TUser User { get; }
-    public Side Side { get; }
-    public long Amount { get; }
-
-    public BetPlacedEventArgs(TUser user, Side side, long amount)
-    {
-        User = user;
-        Side = side;
-        Amount = amount;
-    }
+    public TUser User { get; } = user;
+    public Side Side { get; } = side;
+    public long Amount { get; } = amount;
 }
 
 /// <summary>

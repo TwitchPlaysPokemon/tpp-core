@@ -8,7 +8,7 @@ using TPP.Persistence;
 
 namespace TPP.Core.Commands.Definitions;
 
-class ManagePollCommands : ICommandCollection
+class ManagePollCommands(IPollRepo pollRepo) : ICommandCollection
 {
     public IEnumerable<Command> Commands => new[]
     {
@@ -25,13 +25,6 @@ class ManagePollCommands : ICommandCollection
             Description = "End a poll. Arguments: <PollCode>"
         },
     }.Select(cmd => cmd.WithModeratorsOnly());
-
-    private readonly IPollRepo _pollRepo;
-
-    public ManagePollCommands(IPollRepo pollRepo)
-    {
-        _pollRepo = pollRepo;
-    }
 
     private static string UnderscoresToSpaces(string str)
     {
@@ -53,10 +46,10 @@ class ManagePollCommands : ICommandCollection
         if (options.Count < 2) return new CommandResult { Response = "must specify at least 2 options" };
         pollName = UnderscoresToSpaces(pollName);
 
-        if (await _pollRepo.FindPoll(pollCode) != null)
+        if (await pollRepo.FindPoll(pollCode) != null)
             return new CommandResult { Response = $"A poll with the code '{pollCode}' already exists." };
 
-        await _pollRepo.CreatePoll(pollCode, pollName, multiChoice, allowChangeVote, options);
+        await pollRepo.CreatePoll(pollCode, pollName, multiChoice, allowChangeVote, options);
         return new CommandResult
         {
             Response =
@@ -69,7 +62,7 @@ class ManagePollCommands : ICommandCollection
     private async Task<CommandResult> ClosePoll(CommandContext context)
     {
         string pollCode = await context.ParseArgs<string>();
-        bool? wasAlive = await _pollRepo.SetAlive(pollCode, false);
+        bool? wasAlive = await pollRepo.SetAlive(pollCode, false);
         string response = wasAlive switch
         {
             true => $"The poll '{pollCode}' has been closed.",

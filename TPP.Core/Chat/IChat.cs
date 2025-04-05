@@ -5,10 +5,9 @@ using TPP.Model;
 
 namespace TPP.Core.Chat;
 
-public class MessageEventArgs : EventArgs
+public class MessageEventArgs(Message message) : EventArgs
 {
-    public Message Message { get; }
-    public MessageEventArgs(Message message) => Message = message;
+    public Message Message { get; } = message;
 }
 
 public interface IMessageSender

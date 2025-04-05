@@ -13,15 +13,8 @@ namespace TPP.ArgsParsing.TypeParsers;
 /// but returns an empty instance of <see cref="Optional{T}"/> if parsing failed, instead of failing itself.
 /// If parsing succeeded, the result is also wrapped inside a <see cref="Optional{T}"/>.
 /// </summary>
-public class OptionalParser : IArgumentParser<Optional>
+public class OptionalParser(ArgsParser argsParser) : IArgumentParser<Optional>
 {
-    private readonly ArgsParser _argsParser;
-
-    public OptionalParser(ArgsParser argsParser)
-    {
-        _argsParser = argsParser;
-    }
-
     public async Task<ArgsParseResult<Optional>> Parse(
         IImmutableList<string> args,
         Type[] genericTypes)
@@ -43,7 +36,7 @@ public class OptionalParser : IArgumentParser<Optional>
             var optional = (Optional)constructor.Invoke(new object?[] { false, null });
             return ArgsParseResult<Optional>.Success(optional, args);
         }
-        ArgsParseResult<List<object>> parseResult = await _argsParser.ParseRaw(args, genericTypes);
+        ArgsParseResult<List<object>> parseResult = await argsParser.ParseRaw(args, genericTypes);
         if (parseResult.SuccessResult != null)
         {
             Success<List<object>> success = parseResult.SuccessResult.Value;

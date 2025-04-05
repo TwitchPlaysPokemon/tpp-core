@@ -11,25 +11,16 @@ using TPP.Persistence;
 namespace TPP.Core.Chat;
 
 /// Simulates incoming chat activity
-public sealed class SimulationChat : IChat
+public sealed class SimulationChat(
+    string name,
+    ILoggerFactory loggerFactory,
+    ConnectionConfig.Simulation config,
+    IUserRepo userRepo)
+    : IChat
 {
-    private readonly ILogger<SimulationChat> _logger;
-    private readonly ConnectionConfig.Simulation _config;
-    private readonly IUserRepo _userRepo;
+    private readonly ILogger<SimulationChat> _logger = loggerFactory.CreateLogger<SimulationChat>();
 
-    public SimulationChat(
-        string name,
-        ILoggerFactory loggerFactory,
-        ConnectionConfig.Simulation config,
-        IUserRepo userRepo)
-    {
-        Name = name;
-        _logger = loggerFactory.CreateLogger<SimulationChat>();
-        _config = config;
-        _userRepo = userRepo;
-    }
-
-    public string Name { get; }
+    public string Name { get; } = name;
     public event EventHandler<MessageEventArgs>? IncomingMessage;
 
     public async Task Start(CancellationToken cancellationToken)
@@ -39,11 +30,11 @@ public sealed class SimulationChat : IChat
         long numInputsSentSinceStart = 0;
         while (!cancellationToken.IsCancellationRequested)
         {
-            double targetNumInputs = _config.InputsPerSecond * timeSinceStart.Elapsed.TotalSeconds;
+            double targetNumInputs = config.InputsPerSecond * timeSinceStart.Elapsed.TotalSeconds;
             while (numInputsSentSinceStart < targetNumInputs)
             {
                 string name = Path.GetRandomFileName();
-                User user = await _userRepo.RecordUser(
+                User user = await userRepo.RecordUser(
                     new UserInfo("simulation-" + name.ToLower(), name, name.ToLower()));
                 Message message = new(
                     user,

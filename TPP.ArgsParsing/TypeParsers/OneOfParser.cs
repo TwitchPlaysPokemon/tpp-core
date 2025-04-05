@@ -16,15 +16,8 @@ namespace TPP.ArgsParsing.TypeParsers;
 /// <c>"123"</c> and <c>"foo"</c>, and fill in the first or second item respectively.
 /// In case of multiple possible matches, the first match gets returned.
 /// </summary>
-public class OneOfParser : IArgumentParser<OneOf>
+public class OneOfParser(ArgsParser argsParser) : IArgumentParser<OneOf>
 {
-    private readonly ArgsParser _argsParser;
-
-    public OneOfParser(ArgsParser argsParser)
-    {
-        _argsParser = argsParser;
-    }
-
     public async Task<ArgsParseResult<OneOf>> Parse(
         IImmutableList<string> args,
         Type[] genericTypes)
@@ -33,7 +26,7 @@ public class OneOfParser : IArgumentParser<OneOf>
         for (int i = 0; i < genericTypes.Length; i++)
         {
             Type nestedType = genericTypes[i];
-            ArgsParseResult<List<object>> parseResult = await _argsParser.ParseRaw(args, new[] { nestedType });
+            ArgsParseResult<List<object>> parseResult = await argsParser.ParseRaw(args, new[] { nestedType });
             if (parseResult.SuccessResult == null)
             {
                 Debug.Assert(parseResult.Failures.Any());

@@ -9,31 +9,20 @@ using TPP.Model;
 
 namespace TPP.Persistence;
 
-public class UserLostBadgeSpeciesEventArgs : EventArgs
+public class UserLostBadgeSpeciesEventArgs(string userId, PkmnSpecies species) : EventArgs
 {
-    public string UserId { get; }
-    public PkmnSpecies Species { get; }
-
-    public UserLostBadgeSpeciesEventArgs(string userId, PkmnSpecies species)
-    {
-        UserId = userId;
-        Species = species;
-    }
+    public string UserId { get; } = userId;
+    public PkmnSpecies Species { get; } = species;
 }
 
 /// <summary>
 /// Exception thrown when a badge related operation failed because the badge did not exist for a user.
 /// </summary>
-public class OwnedBadgeNotFoundException : Exception
+public class OwnedBadgeNotFoundException(Badge badge) : Exception(
+    $"Badge '{badge}' was not found for user {badge.UserId}. " +
+    "It's possible the badge object is stale due to a concurrent modification.")
 {
-    public Badge Badge { get; }
-
-    public OwnedBadgeNotFoundException(Badge badge) :
-        base($"Badge '{badge}' was not found for user {badge.UserId}. " +
-             "It's possible the badge object is stale due to a concurrent modification.")
-    {
-        Badge = badge;
-    }
+    public Badge Badge { get; } = badge;
 }
 
 public interface IBadgeStatsRepo

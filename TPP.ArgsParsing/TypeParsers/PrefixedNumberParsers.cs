@@ -78,30 +78,10 @@ public class PrefixedNumberParser<T> : IArgumentParser<T> where T : ImplicitNumb
     }
 }
 
-public class PokeyenParser : PrefixedNumberParser<Pokeyen>
-{
-    public PokeyenParser() : base("P")
-    {
-    }
-}
+public class PokeyenParser() : PrefixedNumberParser<Pokeyen>("P");
 
-public class TokensParser : PrefixedNumberParser<Tokens>
-{
-    public TokensParser() : base("T")
-    {
-    }
-}
+public class TokensParser() : PrefixedNumberParser<Tokens>("T");
 
-public class SignedPokeyenParser : PrefixedNumberParser<SignedPokeyen>
-{
-    public SignedPokeyenParser() : base("P", minValue: int.MinValue)
-    {
-    }
-}
+public class SignedPokeyenParser() : PrefixedNumberParser<SignedPokeyen>("P", minValue: int.MinValue);
 
-public class SignedTokensParser : PrefixedNumberParser<SignedTokens>
-{
-    public SignedTokensParser() : base("T", minValue: int.MinValue)
-    {
-    }
-}
+public class SignedTokensParser() : PrefixedNumberParser<SignedTokens>("T", minValue: int.MinValue);

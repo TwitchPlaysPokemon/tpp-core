@@ -12,9 +12,9 @@ namespace TPP.ArgsParsing;
 /// The <see cref="Failures"/> property contains all failures,
 /// and the exception message gets constructed from the most relevant ones.
 /// </summary>
-public class ArgsParseFailure : ArgumentException
+public class ArgsParseFailure(IImmutableList<Failure> failures) : ArgumentException(FailuresToFailureString(failures))
 {
-    public IImmutableList<Failure> Failures { get; }
+    public IImmutableList<Failure> Failures { get; } = failures;
 
     private static string FailuresToFailureString(IImmutableList<Failure> failures)
     {
@@ -24,10 +24,5 @@ public class ArgsParseFailure : ArgumentException
             .Select(f => f.Error)
             .Distinct();
         return string.Join(", or ", relevantFailureTexts);
-    }
-
-    public ArgsParseFailure(IImmutableList<Failure> failures) : base(FailuresToFailureString(failures))
-    {
-        Failures = failures;
     }
 }

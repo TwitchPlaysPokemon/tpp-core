@@ -11,15 +11,13 @@ using TPP.Persistence;
 
 namespace TPP.Core.Tests.Moderation;
 
-internal class GivePointsRule : IModerationRule
+internal class GivePointsRule(int points) : IModerationRule
 {
     public string Id => "test-give-points";
-    private readonly int _points;
     private int _rollingCount = 1;
-    public GivePointsRule(int points) => _points = points;
 
     public RuleResult Check(Message message) =>
-        new RuleResult.GivePoints(_points, $"points for testing #{_rollingCount++}");
+        new RuleResult.GivePoints(points, $"points for testing #{_rollingCount++}");
 }
 
 public class ModeratorTest

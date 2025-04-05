@@ -8,23 +8,14 @@ namespace TPP.Core.Moderation;
 
 internal record GivenPoints(int Points, string Reason, Instant GivenAt);
 
-public class PointStore
+public class PointStore(IClock clock, float decayPerSecond)
 {
-    private readonly IClock _clock;
-    private readonly float _decayPerSecond;
-    private readonly List<GivenPoints> _points;
-
-    public PointStore(IClock clock, float decayPerSecond)
-    {
-        _clock = clock;
-        _decayPerSecond = decayPerSecond;
-        _points = new List<GivenPoints>();
-    }
+    private readonly List<GivenPoints> _points = new();
 
     public void AddPoints(int points, string reason)
     {
         PruneDecayed();
-        _points.Add(new GivenPoints(points, reason, _clock.GetCurrentInstant()));
+        _points.Add(new GivenPoints(points, reason, clock.GetCurrentInstant()));
     }
 
     public bool IsEmpty()
@@ -37,9 +28,9 @@ public class PointStore
     {
         if (_points.Count == 0) return 0;
 
-        Instant now = _clock.GetCurrentInstant();
+        Instant now = clock.GetCurrentInstant();
         Instant decayingSince = _points[0].GivenAt;
-        double pointsDecayed = (now - decayingSince).TotalSeconds * _decayPerSecond;
+        double pointsDecayed = (now - decayingSince).TotalSeconds * decayPerSecond;
         int pointsMaybeNegative = (int)(_points.Sum(p => p.Points) - pointsDecayed);
         return Math.Max(0, pointsMaybeNegative);
     }

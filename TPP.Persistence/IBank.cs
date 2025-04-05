@@ -13,14 +13,9 @@ namespace TPP.Persistence;
 /// <summary>
 /// Exception thrown when a user related operation failed because the user did not exist.
 /// </summary>
-public class UserNotFoundException<T> : Exception
+public class UserNotFoundException<T>(T user) : Exception($"User '{user}' was not found")
 {
-    public T User { get; }
-
-    public UserNotFoundException(T user) : base($"User '{user}' was not found")
-    {
-        User = user;
-    }
+    public T User { get; } = user;
 }
 
 public static class TransactionType

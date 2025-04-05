@@ -7,28 +7,19 @@ namespace TPP.Common.Utils;
 
 /// A queue, but with a time to live.
 /// Items are automatically removed after the ttl and cannot be dequeued manually.
-public class TtlQueue<T> : IReadOnlyCollection<T>
+public class TtlQueue<T>(Duration ttl, IClock clock) : IReadOnlyCollection<T>
 {
-    private readonly Duration _ttl;
-    private readonly IClock _clock;
-    private readonly Queue<(Instant, T)> _queue;
-
-    public TtlQueue(Duration ttl, IClock clock)
-    {
-        _ttl = ttl;
-        _clock = clock;
-        _queue = new Queue<(Instant, T)>();
-    }
+    private readonly Queue<(Instant, T)> _queue = new();
 
     private void Purge()
     {
-        Instant limit = _clock.GetCurrentInstant() - _ttl;
+        Instant limit = clock.GetCurrentInstant() - ttl;
         while (_queue.Count > 0 && _queue.Peek().Item1 < limit) _queue.Dequeue();
     }
 
     public void Enqueue(T item)
     {
-        _queue.Enqueue((_clock.GetCurrentInstant(), item));
+        _queue.Enqueue((clock.GetCurrentInstant(), item));
     }
 
     public IEnumerator<T> GetEnumerator()

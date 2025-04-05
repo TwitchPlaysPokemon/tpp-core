@@ -19,10 +19,9 @@ public class ManyOf
 /// Using this type has some restrictions. See <see cref="ManyOfParser"/> for details.
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public class ManyOf<T> : ManyOf
+public class ManyOf<T>(IEnumerable<object> values) : ManyOf
 {
-    public ImmutableList<T> Values { get; }
-    public ManyOf(IEnumerable<object> values) => Values = values.Cast<T>().ToImmutableList();
+    public ImmutableList<T> Values { get; } = values.Cast<T>().ToImmutableList();
 
     public static implicit operator ImmutableList<T>(ManyOf<T> manyOf) => manyOf.Values;
 }

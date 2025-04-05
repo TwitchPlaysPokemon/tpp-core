@@ -17,31 +17,18 @@ internal class DatabaseLockEntry
     public Instant RefreshedAt { get; init; }
 }
 
-internal sealed class ProxyAsyncDisposable : IAsyncDisposable
+internal sealed class ProxyAsyncDisposable(Func<ValueTask> dispose) : IAsyncDisposable
 {
-    private readonly Func<ValueTask> _dispose;
-    public ProxyAsyncDisposable(Func<ValueTask> dispose) => _dispose = dispose;
-    public ValueTask DisposeAsync() => _dispose();
+    public ValueTask DisposeAsync() => dispose();
 }
 
-public sealed class DatabaseLock
+public sealed class DatabaseLock(
+    ILogger<DatabaseLock> logger,
+    IClock clock,
+    IKeyValueStore keyValueStore)
 {
     private static readonly Duration TimeoutDuration = Duration.FromSeconds(10);
     private static readonly Duration RefreshInterval = Duration.FromSeconds(2);
-
-    private readonly ILogger<DatabaseLock> _logger;
-    private readonly IClock _clock;
-    private readonly IKeyValueStore _keyValueStore;
-
-    public DatabaseLock(
-        ILogger<DatabaseLock> logger,
-        IClock clock,
-        IKeyValueStore keyValueStore)
-    {
-        _logger = logger;
-        _clock = clock;
-        _keyValueStore = keyValueStore;
-    }
 
     public async Task<IAsyncDisposable> Acquire()
     {
@@ -68,15 +55,15 @@ public sealed class DatabaseLock
     {
         while (true)
         {
-            DatabaseLockEntry? updateToken = await _keyValueStore.Get<DatabaseLockEntry>(DatabaseLockEntry.KeyValueId);
-            Instant now = _clock.GetCurrentInstant();
+            DatabaseLockEntry? updateToken = await keyValueStore.Get<DatabaseLockEntry>(DatabaseLockEntry.KeyValueId);
+            Instant now = clock.GetCurrentInstant();
             if (updateToken == null || updateToken.RefreshedAt + TimeoutDuration <= now)
             {
                 await SetRefreshTokenInDatabase();
                 return;
             }
             Duration expiresIn = updateToken.RefreshedAt + TimeoutDuration - now;
-            _logger.LogWarning("Database lock is still being held! " +
+            logger.LogWarning("Database lock is still being held! " +
                                "Only once instance of dualcore mode may run at a time. " +
                                "Trying again in {Seconds:#.#} seconds", expiresIn.TotalSeconds);
             await Task.Delay(expiresIn.ToTimeSpan());
@@ -84,9 +71,9 @@ public sealed class DatabaseLock
     }
 
     private async Task SetRefreshTokenInDatabase() =>
-        await _keyValueStore.Set(DatabaseLockEntry.KeyValueId,
-            new DatabaseLockEntry { RefreshedAt = _clock.GetCurrentInstant() });
+        await keyValueStore.Set(DatabaseLockEntry.KeyValueId,
+            new DatabaseLockEntry { RefreshedAt = clock.GetCurrentInstant() });
 
     private async Task ReleaseLockInDatabase() =>
-        await _keyValueStore.Delete<DatabaseLockEntry>(DatabaseLockEntry.KeyValueId);
+        await keyValueStore.Delete<DatabaseLockEntry>(DatabaseLockEntry.KeyValueId);
 }

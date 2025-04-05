@@ -20,20 +20,14 @@ public abstract class RuleResult
     {
     }
 
-    public sealed class GivePoints : RuleResult
+    public sealed class GivePoints(int points, string reason) : RuleResult
     {
-        public int Points { get; }
-        public string Reason { get; }
-        public GivePoints(int points, string reason)
-        {
-            Points = points;
-            Reason = reason;
-        }
+        public int Points { get; } = points;
+        public string Reason { get; } = reason;
     }
 
-    public sealed class Timeout : RuleResult
+    public sealed class Timeout(string message) : RuleResult
     {
-        public string Message { get; }
-        public Timeout(string message) => Message = message;
+        public string Message { get; } = message;
     }
 }

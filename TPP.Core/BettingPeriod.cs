@@ -29,25 +29,18 @@ public interface IBettingPeriod<T> where T : notnull
     Task<Dictionary<T, long>> Resolve(int matchId, MatchResult result, CancellationToken cancellationToken);
 }
 
-public sealed class BettingPeriod<T> : IBettingPeriod<T> where T : notnull
+public sealed class BettingPeriod<T>(IBank<T> bank, IBettingShop<T> bettingShop) : IBettingPeriod<T>
+    where T : notnull
 {
-    private readonly IBank<T> _bank;
-
     public bool IsBettingOpen { get; private set; } = false;
-    public IBettingShop<T> BettingShop { get; }
-
-    public BettingPeriod(IBank<T> bank, IBettingShop<T> bettingShop)
-    {
-        _bank = bank;
-        BettingShop = bettingShop;
-    }
+    public IBettingShop<T> BettingShop { get; } = bettingShop;
 
     private Task<long> BettingChecker(T user) =>
         Task.FromResult(BettingShop.GetBetsForUser(user).Sum(kvp => kvp.Value));
 
     public void Start()
     {
-        _bank.AddReservedMoneyChecker(BettingChecker);
+        bank.AddReservedMoneyChecker(BettingChecker);
         IsBettingOpen = true;
     }
 
@@ -87,8 +80,8 @@ public sealed class BettingPeriod<T> : IBettingPeriod<T> where T : notnull
             ))
             .ToList();
         if (transactions.Count > 0)
-            await _bank.PerformTransactions(transactions, cancellationToken);
-        _bank.RemoveReservedMoneyChecker(BettingChecker);
+            await bank.PerformTransactions(transactions, cancellationToken);
+        bank.RemoveReservedMoneyChecker(BettingChecker);
 
         return changes;
     }

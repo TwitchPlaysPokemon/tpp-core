@@ -6,14 +6,10 @@ using System.Threading.Tasks;
 
 namespace TPP.ArgsParsing;
 
-public class MissingParserException : ArgumentException
+public class MissingParserException(Type typeWithoutParser)
+    : ArgumentException($"No parser found for type {typeWithoutParser}")
 {
-    public Type TypeWithoutParser { get; }
-
-    public MissingParserException(Type typeWithoutParser) : base($"No parser found for type {typeWithoutParser}")
-    {
-        TypeWithoutParser = typeWithoutParser;
-    }
+    public Type TypeWithoutParser { get; } = typeWithoutParser;
 }
 
 /// <summary>

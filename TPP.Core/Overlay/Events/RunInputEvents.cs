@@ -78,19 +78,17 @@ public sealed class AnarchyInputStart : IOverlayEvent
 }
 
 [DataContract]
-public sealed class AnarchyInputStop : IOverlayEvent
+public sealed class AnarchyInputStop(long inputId) : IOverlayEvent
 {
     public string OverlayEventType => "anarchy_input_stop";
 
-    [DataMember(Name = "id")] public long InputId { get; set; }
-    public AnarchyInputStop(long inputId) => InputId = inputId;
+    [DataMember(Name = "id")] public long InputId { get; set; } = inputId;
 }
 
 [DataContract]
-public sealed class ButtonPressUpdate : IOverlayEvent
+public sealed class ButtonPressUpdate(long numTotalButtonPresses) : IOverlayEvent
 {
     public string OverlayEventType => "button_press_update";
 
-    [DataMember(Name = "presses")] public long NumTotalButtonPresses { get; set; }
-    public ButtonPressUpdate(long numTotalButtonPresses) => NumTotalButtonPresses = numTotalButtonPresses;
+    [DataMember(Name = "presses")] public long NumTotalButtonPresses { get; set; } = numTotalButtonPresses;
 }

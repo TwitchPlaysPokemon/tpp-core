@@ -4,20 +4,16 @@ namespace TPP.Inputting.Inputs;
 /// A touchscreen input is an input in the form of <c>x,y</c>, e.g. <c>120,215</c>,
 /// with <c>x</c> and <c>y</c> being within 0 (inclusive) and the specified max width/height (exclusive).
 /// </summary>
-public class TouchscreenInput : Input
+public class TouchscreenInput(
+    string displayedText,
+    string buttonName,
+    string originalText,
+    uint x,
+    uint y)
+    : Input(displayedText, buttonName, originalText)
 {
-    public uint X { get; }
-    public uint Y { get; }
-
-    public TouchscreenInput(
-        string displayedText,
-        string buttonName,
-        string originalText,
-        uint x, uint y) : base(displayedText, buttonName, originalText)
-    {
-        X = x;
-        Y = y;
-    }
+    public uint X { get; } = x;
+    public uint Y { get; } = y;
 
     public override string ToInputString() => X + "," + Y;
 

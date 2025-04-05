@@ -17,57 +17,32 @@ public interface IModerator
     Task<bool> Check(Message message);
 }
 
-public class Moderator : IModerator
+public class Moderator(
+    ILogger<Moderator> logger,
+    IExecutor executor,
+    IImmutableList<IModerationRule> rules,
+    IModbotLogRepo modbotLogRepo,
+    IClock clock,
+    int freeTimeouts = 2,
+    float pointsDecayPerSecond = 1f,
+    int minPoints = 20,
+    int pointsForTimeout = 300,
+    int pointsForDelete = 200)
+    : IModerator
 {
-    private readonly ILogger<Moderator> _logger;
-    private readonly IExecutor _executor;
-    private readonly IImmutableList<IModerationRule> _rules;
-    private readonly IModbotLogRepo _modbotLogRepo;
-    private readonly IClock _clock;
-
     private static readonly Duration RecentTimeoutsLimit = Duration.FromDays(7);
     private static readonly Duration InitialTimeoutDuration = Duration.FromMinutes(2);
     // twitch does not allow timeouts beyond 2 weeks
     private static readonly Duration MaxTimeoutDuration = Duration.FromDays(14) - Duration.FromSeconds(1);
 
-    private readonly int _freeTimeouts;
-    private readonly float _pointsDecayPerSecond;
-    private readonly int _minPoints;
-    private readonly int _pointsForTimeout;
-    private readonly int _pointsForDelete;
-
     private readonly Dictionary<User, PointStore> _pointsPerUser = new();
-
-    public Moderator(
-        ILogger<Moderator> logger,
-        IExecutor executor,
-        IImmutableList<IModerationRule> rules,
-        IModbotLogRepo modbotLogRepo,
-        IClock clock,
-        int freeTimeouts = 2,
-        float pointsDecayPerSecond = 1f,
-        int minPoints = 20,
-        int pointsForTimeout = 300,
-        int pointsForDelete = 200)
-    {
-        _logger = logger;
-        _executor = executor;
-        _modbotLogRepo = modbotLogRepo;
-        _clock = clock;
-        _rules = rules;
-        _freeTimeouts = freeTimeouts;
-        _pointsDecayPerSecond = pointsDecayPerSecond;
-        _minPoints = minPoints;
-        _pointsForTimeout = pointsForTimeout;
-        _pointsForDelete = pointsForDelete;
-    }
 
     private RuleResult ApplyPoints(User user, int points, string reason)
     {
-        if (points < _minPoints)
+        if (points < minPoints)
         {
-            _logger.LogDebug($"Ignoring {points} being issued to {user} for reason '{reason}', " +
-                             $"because the minimum amount of issuable points is {_minPoints}.");
+            logger.LogDebug($"Ignoring {points} being issued to {user} for reason '{reason}', " +
+                             $"because the minimum amount of issuable points is {minPoints}.");
             return new RuleResult.Nothing();
         }
 
@@ -80,16 +55,16 @@ public class Moderator : IModerator
 
         if (!_pointsPerUser.TryGetValue(user, out PointStore? store))
         {
-            store = new PointStore(_clock, _pointsDecayPerSecond);
+            store = new PointStore(clock, pointsDecayPerSecond);
             _pointsPerUser[user] = store;
         }
 
         store.AddPoints(points, reason);
         int currentPoints = store.GetCurrentPoints();
-        _logger.LogDebug($"Issued {points} points to {user} for reason '{reason}', " +
+        logger.LogDebug($"Issued {points} points to {user} for reason '{reason}', " +
                          $"which now has {currentPoints} total.");
 
-        if (currentPoints >= _pointsForTimeout)
+        if (currentPoints >= pointsForTimeout)
         {
             IImmutableList<PointStore.Violation> violations = store.GetTopViolations();
             _pointsPerUser.Remove(user);
@@ -101,7 +76,7 @@ public class Moderator : IModerator
                 topReasons = violations[0].Reason;
             return new RuleResult.Timeout(topReasons);
         }
-        else if (currentPoints >= _pointsForDelete)
+        else if (currentPoints >= pointsForDelete)
         {
             return new RuleResult.DeleteMessage();
         }
@@ -126,10 +101,10 @@ public class Moderator : IModerator
                 timeoutAndRule = (resultTimeout, rule);
             else if (result is RuleResult.Nothing) { }
             else
-                _logger.LogWarning($"unhandled moderator rule result type '{result.GetType()}'");
+                logger.LogWarning($"unhandled moderator rule result type '{result.GetType()}'");
         }
 
-        foreach (IModerationRule? rule in _rules)
+        foreach (IModerationRule? rule in rules)
         {
             RuleResult result = rule.Check(message);
             ProcessResult(result, rule);
@@ -145,17 +120,17 @@ public class Moderator : IModerator
         {
             (RuleResult.Timeout timeout, IModerationRule rule) = timeoutAndRule.Value;
             Duration timeoutDuration = await CalculateTimeoutDuration(message.User);
-            await _executor.Timeout(message.User, timeout.Message, timeoutDuration);
-            await _modbotLogRepo.LogAction(message.User, timeout.Message, rule.Id, _clock.GetCurrentInstant());
+            await executor.Timeout(message.User, timeout.Message, timeoutDuration);
+            await modbotLogRepo.LogAction(message.User, timeout.Message, rule.Id, clock.GetCurrentInstant());
             return false;
         }
         else if (deleteMessage)
         {
             if (message.Details.MessageId != null)
-                await _executor.DeleteMessage(message.Details.MessageId);
+                await executor.DeleteMessage(message.Details.MessageId);
             else
                 // Regular messages should always have an id. Whispers don't, but shouldn't be checked by modbot.
-                _logger.LogWarning($"Modbot cannot delete message because it's missing a message id: {message}");
+                logger.LogWarning($"Modbot cannot delete message because it's missing a message id: {message}");
             return false;
         }
         return true;
@@ -163,11 +138,11 @@ public class Moderator : IModerator
 
     private async Task<Duration> CalculateTimeoutDuration(User user)
     {
-        Instant cutoff = _clock.GetCurrentInstant() - RecentTimeoutsLimit;
-        long recentBans = await _modbotLogRepo.CountRecentBans(user, cutoff);
+        Instant cutoff = clock.GetCurrentInstant() - RecentTimeoutsLimit;
+        long recentBans = await modbotLogRepo.CountRecentBans(user, cutoff);
 
         Duration duration = InitialTimeoutDuration;
-        long increases = Math.Max(0, recentBans - _freeTimeouts);
+        long increases = Math.Max(0, recentBans - freeTimeouts);
         duration *= increases + 1;
         if (duration > MaxTimeoutDuration) duration = MaxTimeoutDuration;
 

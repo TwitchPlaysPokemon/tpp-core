@@ -27,35 +27,20 @@ public interface IInputFeed
 
 public record QueueTransitionInputs(string? QueueEmpty, string? QueueNoLongerEmpty);
 
-public sealed class AnarchyInputFeed : IInputFeed
+public sealed class AnarchyInputFeed(
+    OverlayConnection overlayConnection,
+    IInputHoldTiming inputHoldTiming,
+    IInputMapper inputMapper,
+    InputBufferQueue<QueuedInput> inputBufferQueue,
+    float fps,
+    QueueTransitionInputs queueTransitionInputs)
+    : IInputFeed
 {
     // TODO: is it okay this triggers overlay events by itself? Maybe use events and hook up from the outside.
-    private readonly OverlayConnection _overlayConnection;
-    private readonly IInputHoldTiming _inputHoldTiming;
-    private readonly IInputMapper _inputMapper;
-    private readonly InputBufferQueue<QueuedInput> _inputBufferQueue;
-    private readonly float _fps;
 
     private static long _prevInputId = 0;
     private InputMap? _activeInput = null;
     private bool _wasQueueEmptyLastPoll = true; // treat a fresh start as "paused"
-    private readonly QueueTransitionInputs _queueTransitionInputs;
-
-    public AnarchyInputFeed(
-        OverlayConnection overlayConnection,
-        IInputHoldTiming inputHoldTiming,
-        IInputMapper inputMapper,
-        InputBufferQueue<QueuedInput> inputBufferQueue,
-        float fps,
-        QueueTransitionInputs queueTransitionInputs)
-    {
-        _overlayConnection = overlayConnection;
-        _inputHoldTiming = inputHoldTiming;
-        _inputMapper = inputMapper;
-        _inputBufferQueue = inputBufferQueue;
-        _fps = fps;
-        _queueTransitionInputs = queueTransitionInputs;
-    }
 
     public async Task Enqueue(InputSet inputSet, User user, string? channel, string? channelImageUrl)
     {
@@ -63,9 +48,9 @@ public sealed class AnarchyInputFeed : IInputFeed
         if (inputId <= _prevInputId) inputId = _prevInputId + 1;
         _prevInputId = inputId;
         QueuedInput queuedInput = new(inputId, inputSet);
-        bool enqueued = _inputBufferQueue.Enqueue(queuedInput);
+        bool enqueued = inputBufferQueue.Enqueue(queuedInput);
         if (enqueued)
-            await _overlayConnection.Send(
+            await overlayConnection.Send(
                 new NewAnarchyInput(queuedInput.InputId, queuedInput.InputSet, user, channel, channelImageUrl),
                 CancellationToken.None);
     }
@@ -98,13 +83,13 @@ public sealed class AnarchyInputFeed : IInputFeed
             return getResultForEndpoint(_activeInput);
 
         InputMap inputMap;
-        bool queueEmpty = _inputBufferQueue.IsEmpty;
+        bool queueEmpty = inputBufferQueue.IsEmpty;
         if (queueEmpty)
         {
-            if (!_wasQueueEmptyLastPoll && _queueTransitionInputs.QueueEmpty != null)
+            if (!_wasQueueEmptyLastPoll && queueTransitionInputs.QueueEmpty != null)
             {
-                inputMap = _inputMapper.Map(_inputHoldTiming.TimeInput(EmptyInputSet, PauseInputDuration));
-                inputMap[_queueTransitionInputs.QueueEmpty] = true;
+                inputMap = inputMapper.Map(inputHoldTiming.TimeInput(EmptyInputSet, PauseInputDuration));
+                inputMap[queueTransitionInputs.QueueEmpty] = true;
                 _activeInput = inputMap;
             }
             else
@@ -115,24 +100,24 @@ public sealed class AnarchyInputFeed : IInputFeed
         }
         else
         {
-            if (_wasQueueEmptyLastPoll && _queueTransitionInputs.QueueNoLongerEmpty != null)
+            if (_wasQueueEmptyLastPoll && queueTransitionInputs.QueueNoLongerEmpty != null)
             {
-                inputMap = _inputMapper.Map(_inputHoldTiming.TimeInput(EmptyInputSet, UnpauseInputDuration));
-                inputMap[_queueTransitionInputs.QueueNoLongerEmpty] = true;
+                inputMap = inputMapper.Map(inputHoldTiming.TimeInput(EmptyInputSet, UnpauseInputDuration));
+                inputMap[queueTransitionInputs.QueueNoLongerEmpty] = true;
                 _activeInput = inputMap;
             }
             else
             {
-                (QueuedInput queuedInput, float duration) = _inputBufferQueue.Dequeue();
+                (QueuedInput queuedInput, float duration) = inputBufferQueue.Dequeue();
                 duration = (float)(Math.Round(duration * 60f) / 60f);
-                TimedInputSet timedInputSet = _inputHoldTiming.TimeInput(queuedInput.InputSet, duration);
-                inputMap = _inputMapper.Map(timedInputSet);
+                TimedInputSet timedInputSet = inputHoldTiming.TimeInput(queuedInput.InputSet, duration);
+                inputMap = inputMapper.Map(timedInputSet);
                 inputMap["Input_Id"] = queuedInput.InputId; // So client can reject duplicate inputs
 
-                await _overlayConnection.Send(new AnarchyInputStart(queuedInput.InputId, timedInputSet, _fps),
+                await overlayConnection.Send(new AnarchyInputStart(queuedInput.InputId, timedInputSet, fps),
                     CancellationToken.None);
                 Task _ = Task.Delay(TimeSpan.FromSeconds(timedInputSet.HoldDuration))
-                    .ContinueWith(async _ => await _overlayConnection.Send(
+                    .ContinueWith(async _ => await overlayConnection.Send(
                         new AnarchyInputStop(queuedInput.InputId), CancellationToken.None));
                 _activeInput = inputMap;
             }

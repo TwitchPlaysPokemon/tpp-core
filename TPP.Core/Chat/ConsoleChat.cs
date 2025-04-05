@@ -11,23 +11,14 @@ using TPP.Persistence;
 namespace TPP.Core.Chat;
 
 /// Simulates a chat using stdin and stdout
-public sealed class ConsoleChat : IChat
+public sealed class ConsoleChat(
+    string name,
+    ILoggerFactory loggerFactory,
+    ConnectionConfig.Console config,
+    IUserRepo userRepo)
+    : IChat
 {
-    private readonly ILogger<ConsoleChat> _logger;
-    private readonly ConnectionConfig.Console _config;
-    private readonly IUserRepo _userRepo;
-
-    public ConsoleChat(
-        string name,
-        ILoggerFactory loggerFactory,
-        ConnectionConfig.Console config,
-        IUserRepo userRepo)
-    {
-        Name = name;
-        _logger = loggerFactory.CreateLogger<ConsoleChat>();
-        _config = config;
-        _userRepo = userRepo;
-    }
+    private readonly ILogger<ConsoleChat> _logger = loggerFactory.CreateLogger<ConsoleChat>();
 
     public Task SendMessage(string? message, Message? responseTo = null)
     {
@@ -42,7 +33,7 @@ public sealed class ConsoleChat : IChat
         return Task.CompletedTask;
     }
 
-    public string Name { get; }
+    public string Name { get; } = name;
     public event EventHandler<MessageEventArgs>? IncomingMessage;
 
     private async Task ReadInput(CancellationToken cancellationToken)
@@ -54,7 +45,7 @@ public sealed class ConsoleChat : IChat
             string? maybeLine = await Task.Run(async () => await Console.In.ReadLineAsync(cancellationToken));
             if (maybeLine == null) break;
             string line = maybeLine;
-            string username = _config.Username;
+            string username = config.Username;
             if (line.StartsWith('#'))
             {
                 string[] split = line.Split(' ', count: 2);
@@ -74,8 +65,8 @@ public sealed class ConsoleChat : IChat
             // an existing user and it creates a new user with the same name instead, breaking the expectation that
             // usernames are unique.
             string userId = "console-" + simpleName;
-            User user = await _userRepo.FindBySimpleName(simpleName)
-                        ?? await _userRepo.RecordUser(new UserInfo(userId, username, simpleName));
+            User user = await userRepo.FindBySimpleName(simpleName)
+                        ?? await userRepo.RecordUser(new UserInfo(userId, username, simpleName));
             long nowTs = SystemClock.Instance.GetCurrentInstant().ToUnixTimeSeconds();
             // Providing a fake irc line makes dualcore mode work.
             // Otherwise old core couldn't parse any of these messages.
@@ -90,7 +81,7 @@ public sealed class ConsoleChat : IChat
 
     public async Task Start(CancellationToken cancellationToken)
     {
-        Console.Out.WriteLine($"Chatting via console is now enabled. You are known as '{_config.Username}'.");
+        Console.Out.WriteLine($"Chatting via console is now enabled. You are known as '{config.Username}'.");
         Console.Out.WriteLine(
             "Prefixing a message with '#username ' will post as a different user, e.g. '#someone !help'");
         Console.Out.WriteLine("Prefixing a message with '>' will make it a whisper, e.g. '>balance'");

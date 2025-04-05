@@ -9,7 +9,7 @@ using TPP.Persistence;
 
 namespace TPP.Core.Commands.Definitions;
 
-public class PollCommands : ICommandCollection
+public class PollCommands(IPollRepo pollRepo) : ICommandCollection
 {
     private const string PollCommandName = "poll";
 
@@ -33,13 +33,6 @@ public class PollCommands : ICommandCollection
         },
     };
 
-    private readonly IPollRepo _pollRepo;
-
-    public PollCommands(IPollRepo pollRepo)
-    {
-        _pollRepo = pollRepo;
-    }
-
     public async Task<CommandResult> Vote(CommandContext context)
     {
         //Use poll code and option to vote.
@@ -51,7 +44,7 @@ public class PollCommands : ICommandCollection
         (string pollCode, ManyOf<string> voteStrs) = await context.ParseArgs<string, ManyOf<string>>();
         ImmutableList<string> votes = voteStrs.Values;
 
-        Poll? poll = await _pollRepo.FindPoll(pollCode);
+        Poll? poll = await pollRepo.FindPoll(pollCode);
         if (poll == null)
             return new CommandResult { Response = $"No poll with the code '{pollCode}' was found." };
 
@@ -68,7 +61,7 @@ public class PollCommands : ICommandCollection
             selectedOptions.Add(option.Id);
         }
 
-        VoteFailure? failure = await _pollRepo.Vote(
+        VoteFailure? failure = await pollRepo.Vote(
             pollCode, context.Message.User.Id, selectedOptions.ToImmutableList());
         return new CommandResult
         {
@@ -106,7 +99,7 @@ public class PollCommands : ICommandCollection
     public async Task<CommandResult> Poll(CommandContext context)
     {
         string pollCode = await context.ParseArgs<string>();
-        Poll? poll = await _pollRepo.FindPoll(pollCode);
+        Poll? poll = await pollRepo.FindPoll(pollCode);
         if (poll == null)
             return new CommandResult { Response = $"No poll with the code '{pollCode}' was found." };
         return new CommandResult { Response = FormatSinglePollAdvertisement(poll) };
@@ -120,7 +113,7 @@ public class PollCommands : ICommandCollection
 
     private async Task<CommandResult> Polls(CommandContext context)
     {
-        IImmutableList<Poll> polls = await _pollRepo.FindPolls(onlyActive: true);
+        IImmutableList<Poll> polls = await pollRepo.FindPolls(onlyActive: true);
         return new CommandResult { Response = FormatPollsAdvertisement(polls) };
     }
 }

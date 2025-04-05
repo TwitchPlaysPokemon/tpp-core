@@ -7,28 +7,21 @@ namespace TPP.Inputting.Inputs;
 /// Multiple inputs may be bundled together in a <see cref="InputSet"/>.
 /// Inputs get defined and parsed by <see cref="IInputDefinition"/>s.
 /// </summary>
-public class Input
+public class Input(string displayedText, string buttonName, string originalText)
 {
     /// <summary>
     /// The input's representational display text.
     /// </summary>
-    public string DisplayedText { get; }
+    public string DisplayedText { get; } = displayedText;
     /// <summary>
     /// The name of the input/button being triggered.
     /// Conceptually, a touchscreen is also one big button.
     /// </summary>
-    public string ButtonName { get; }
+    public string ButtonName { get; } = buttonName;
     /// <summary>
     /// The original text this input was parsed from.
     /// </summary>
-    public string OriginalText { get; }
-
-    public Input(string displayedText, string buttonName, string originalText)
-    {
-        DisplayedText = displayedText;
-        ButtonName = buttonName;
-        OriginalText = originalText;
-    }
+    public string OriginalText { get; } = originalText;
 
     public virtual string ToInputString() => ButtonName;
 

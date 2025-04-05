@@ -9,24 +9,15 @@ public interface ICommandResponder
     public Task ProcessResponse(Message message, CommandResult result);
 }
 
-public class CommandResponder : ICommandResponder
+public class CommandResponder(IMessageSender messageSender, int whisperIfLongThreshold = 100)
+    : ICommandResponder
 {
-    private readonly IMessageSender _messageSender;
-    private readonly int _whisperIfLongThreshold;
-
-    public CommandResponder(
-        IMessageSender messageSender, int whisperIfLongThreshold = 100)
-    {
-        _messageSender = messageSender;
-        _whisperIfLongThreshold = whisperIfLongThreshold;
-    }
-
     public async Task ProcessResponse(Message message, CommandResult result)
     {
         if (result.Response == null) return;
         Task RespondViaChat(string? customMessage = null) =>
-            _messageSender.SendMessage(customMessage ?? result.Response, responseTo: message);
-        Task RespondViaWhisper() => _messageSender.SendWhisper(message.User, result.Response);
+            messageSender.SendMessage(customMessage ?? result.Response, responseTo: message);
+        Task RespondViaWhisper() => messageSender.SendWhisper(message.User, result.Response);
         switch (result.ResponseTarget)
         {
             case ResponseTarget.Source:
@@ -44,7 +35,7 @@ public class CommandResponder : ICommandResponder
             case ResponseTarget.WhisperIfLong:
                 if (message.MessageSource is not MessageSource.Whisper)
                 {
-                    if (result.Response.Length > _whisperIfLongThreshold)
+                    if (result.Response.Length > whisperIfLongThreshold)
                     {
                         await RespondViaChat(customMessage: "The reply has been whispered to you.");
                         await RespondViaWhisper();

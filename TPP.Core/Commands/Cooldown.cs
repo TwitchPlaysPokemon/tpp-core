@@ -5,41 +5,26 @@ using TPP.Model;
 
 namespace TPP.Core.Commands;
 
-public class GlobalCooldown
+public class GlobalCooldown(IClock clock, Duration duration)
 {
-    private readonly IClock _clock;
-    private readonly Duration _duration;
     private Instant _lastExecution = Instant.MinValue;
-
-    public GlobalCooldown(IClock clock, Duration duration)
-    {
-        _clock = clock;
-        _duration = duration;
-    }
 
     /// Checks whether the cooldown has lapsed.
     /// If so, returns true and resets the cooldown.
     public bool CheckLapsedThenReset()
     {
-        Instant now = _clock.GetCurrentInstant();
-        bool isOnCooldown = _lastExecution + _duration > now;
+        Instant now = clock.GetCurrentInstant();
+        bool isOnCooldown = _lastExecution + duration > now;
         if (isOnCooldown) return false;
         _lastExecution = now;
         return true;
     }
 }
 
-public class PerUserCooldown
+public class PerUserCooldown(IClock clock, Duration duration)
 {
-    private readonly IClock _clock;
-    public Duration Duration { get; }
+    public Duration Duration { get; } = duration;
     private Dictionary<User, Instant> _lastExecutions = new Dictionary<User, Instant>();
-
-    public PerUserCooldown(IClock clock, Duration duration)
-    {
-        _clock = clock;
-        Duration = duration;
-    }
 
     private void PruneLapsed(Instant now)
     {
@@ -51,21 +36,21 @@ public class PerUserCooldown
     /// Checks whether the cooldown has lapsed.
     public bool CheckLapsed(User user)
     {
-        PruneLapsed(_clock.GetCurrentInstant());
+        PruneLapsed(clock.GetCurrentInstant());
         return !_lastExecutions.ContainsKey(user);
     }
 
     /// Resets the cooldown.
     public void Reset(User user)
     {
-        _lastExecutions[user] = _clock.GetCurrentInstant();
+        _lastExecutions[user] = clock.GetCurrentInstant();
     }
 
     /// Checks whether the cooldown has lapsed.
     /// If so, returns true and resets the cooldown.
     public bool CheckLapsedThenReset(User user)
     {
-        Instant now = _clock.GetCurrentInstant();
+        Instant now = clock.GetCurrentInstant();
         PruneLapsed(now);
         bool isOnCooldown = _lastExecutions.ContainsKey(user);
         if (isOnCooldown) return false;

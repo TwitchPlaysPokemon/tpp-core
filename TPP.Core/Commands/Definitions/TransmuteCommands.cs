@@ -9,14 +9,19 @@ using TPP.Model;
 
 namespace TPP.Core.Commands.Definitions;
 
-public class TransmuteCommands : ICommandCollection
+public class TransmuteCommands(
+    ITransmuter transmuter,
+    Duration? transmutationCooldown = null,
+    Duration? messageDelay = null)
+    : ICommandCollection
 {
     private const int DefaultTransmutationCooldownSeconds = 30;
     private const int DefaultMessageDelaySeconds = 15;
 
-    private readonly ITransmuter _transmuter;
-    private readonly PerUserCooldown _cooldown;
-    private readonly Duration _messageDelay;
+    private readonly PerUserCooldown _cooldown = new(
+        SystemClock.Instance,
+        transmutationCooldown ?? Duration.FromSeconds(DefaultTransmutationCooldownSeconds));
+    private readonly Duration _messageDelay = messageDelay ?? Duration.FromSeconds(DefaultMessageDelaySeconds);
 
     public IEnumerable<Command> Commands => new[]
     {
@@ -26,18 +31,6 @@ public class TransmuteCommands : ICommandCollection
                           "Arguments: <several Pokemon>(at least 3) t1"
         },
     };
-
-    public TransmuteCommands(
-        ITransmuter transmuter,
-        Duration? transmutationCooldown = null,
-        Duration? messageDelay = null)
-    {
-        _transmuter = transmuter;
-        _cooldown = new PerUserCooldown(
-            SystemClock.Instance,
-            transmutationCooldown ?? Duration.FromSeconds(DefaultTransmutationCooldownSeconds));
-        _messageDelay = messageDelay ?? Duration.FromSeconds(DefaultMessageDelaySeconds);
-    }
 
     public async Task<CommandResult> Transmute(CommandContext context)
     {
@@ -59,7 +52,7 @@ public class TransmuteCommands : ICommandCollection
         Badge resultBadge;
         try
         {
-            resultBadge = await _transmuter.Transmute(context.Message.User, tokensArg.Value.Number, speciesList);
+            resultBadge = await transmuter.Transmute(context.Message.User, tokensArg.Value.Number, speciesList);
         }
         catch (TransmuteException ex)
         {

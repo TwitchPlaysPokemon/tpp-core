@@ -8,7 +8,7 @@ using TPP.Persistence;
 
 namespace TPP.Core.Commands.Definitions;
 
-public class UserCommands : ICommandCollection
+public class UserCommands(IUserRepo userRepo) : ICommandCollection
 {
     public IEnumerable<Command> Commands => new[]
     {
@@ -33,13 +33,6 @@ public class UserCommands : ICommandCollection
         new Command("moderators", Mods) { Aliases = new[] { "mods" }, Description = "Alias for '!list moderator'" }.WithGlobalCooldown(Duration.FromSeconds(30)),
     };
 
-    private readonly IUserRepo _userRepo;
-
-    public UserCommands(IUserRepo userRepo)
-    {
-        _userRepo = userRepo;
-    }
-
     public async Task<CommandResult> SetDisplayName(CommandContext context)
     {
         User user = context.Message.User;
@@ -59,14 +52,14 @@ public class UserCommands : ICommandCollection
                 Response = "your new display name may only differ from your login name in capitalization"
             };
         }
-        await _userRepo.SetDisplayName(user, newName);
+        await userRepo.SetDisplayName(user, newName);
         return new CommandResult { Response = $"your display name has been updated to '{newName}'" };
     }
 
     public async Task<CommandResult> List(CommandContext context)
     {
         Role role = await context.ParseArgs<Role>();
-        List<User> users = await _userRepo.FindAllByRole(role);
+        List<User> users = await userRepo.FindAllByRole(role);
 
         return new CommandResult
         {

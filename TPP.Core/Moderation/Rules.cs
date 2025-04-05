@@ -39,7 +39,7 @@ public class BannedUrlsRule : IModerationRule
 
 /// Fairly new users are not allowed to post links in chat.
 /// This is mostly effective against spambots.
-public class NewUserLinkRule : IModerationRule
+public class NewUserLinkRule(IClock clock) : IModerationRule
 {
     public string Id => "new-user-link";
     private static readonly Regex UrllikeRegex =
@@ -47,13 +47,9 @@ public class NewUserLinkRule : IModerationRule
 
     private static readonly Duration MinAgeForLinkPosting = Duration.FromHours(48);
 
-    private readonly IClock _clock;
-
-    public NewUserLinkRule(IClock clock) => _clock = clock;
-
     public RuleResult Check(Message message)
     {
-        Duration knownFor = _clock.GetCurrentInstant() - message.User.FirstActiveAt;
+        Duration knownFor = clock.GetCurrentInstant() - message.User.FirstActiveAt;
         if (knownFor < MinAgeForLinkPosting && UrllikeRegex.IsMatch(message.MessageText))
             return new RuleResult.Timeout("account too new to TPP for posting links");
         return new RuleResult.Nothing();
@@ -61,18 +57,9 @@ public class NewUserLinkRule : IModerationRule
 }
 
 /// Excessive amounts of picture-like symbols accumulate points.
-public class EmoteRule : IModerationRule
+public class EmoteRule(int freeEmotes = 2, double powerOfEmotes = 3) : IModerationRule
 {
     public string Id => "emote";
-
-    private readonly int _freeEmotes;
-    private readonly double _powerOfEmotes;
-
-    public EmoteRule(int freeEmotes = 2, double powerOfEmotes = 3)
-    {
-        _freeEmotes = freeEmotes;
-        _powerOfEmotes = powerOfEmotes;
-    }
 
     /// <summary>
     /// This regex was generated using <a href="https://github.com/Felk/UnicodeEmojiRegex">UnicodeEmojiRegex</a>.
@@ -86,11 +73,11 @@ public class EmoteRule : IModerationRule
     {
         int numEmotes = message.Details.Emotes.Count;
         int numEmojis = EmojiRegex.Matches(message.MessageText).Count;
-        int numActionable = numEmotes + numEmojis - _freeEmotes;
+        int numActionable = numEmotes + numEmojis - freeEmotes;
         if (numActionable > 0)
         {
             return new RuleResult.GivePoints(
-                (int)Math.Pow(numActionable, _powerOfEmotes),
+                (int)Math.Pow(numActionable, powerOfEmotes),
                 "excessive usage of emotes/emojis");
         }
         return new RuleResult.Nothing();
@@ -140,40 +127,27 @@ public class CopypastaRule : IModerationRule
 }
 
 /// Copypastaing your own messages times you out.
-public class PersonalRepetitionRule : IModerationRule
+public class PersonalRepetitionRule(
+    IClock clock,
+    Duration? recentMessagesTtl = null,
+    int minSingleWordMessageLength = 25,
+    int minNumWords = 3,
+    double minSimilarity = 0.75)
+    : IModerationRule
 {
     public string Id => "personal_repetition";
 
     private static readonly NormalizedLevenshtein NormLevenshtein = new();
     private static readonly Duration PruneInterval = Duration.FromMinutes(5);
 
-    private readonly IClock _clock;
-    private readonly Duration _ttl;
-    private readonly int _minSingleWordMessageLength;
-    private readonly int _minNumWords;
-    private readonly double _minSimilarity;
+    private readonly Duration _ttl = recentMessagesTtl ?? Duration.FromMinutes(2);
 
-    private Dictionary<User, TtlQueue<string>> _recentMessagesPerUser;
+    private Dictionary<User, TtlQueue<string>> _recentMessagesPerUser = new();
     private Instant _prevPruneTime = Instant.MinValue;
-
-    public PersonalRepetitionRule(
-        IClock clock,
-        Duration? recentMessagesTtl = null,
-        int minSingleWordMessageLength = 25,
-        int minNumWords = 3,
-        double minSimilarity = 0.75)
-    {
-        _clock = clock;
-        _ttl = recentMessagesTtl ?? Duration.FromMinutes(2);
-        _recentMessagesPerUser = new Dictionary<User, TtlQueue<string>>();
-        _minSingleWordMessageLength = minSingleWordMessageLength;
-        _minNumWords = minNumWords;
-        _minSimilarity = minSimilarity;
-    }
 
     private void PruneIfLapsed()
     {
-        Instant now = _clock.GetCurrentInstant();
+        Instant now = clock.GetCurrentInstant();
         if (_prevPruneTime + PruneInterval > now) return;
         _prevPruneTime = now;
         _recentMessagesPerUser = _recentMessagesPerUser
@@ -186,14 +160,14 @@ public class PersonalRepetitionRule : IModerationRule
         if (message.StartsWith('!'))
             // need to tolerate repetitious commands to avoid excessive false positives
             return 0;
-        bool isApplicable = message.Length >= _minSingleWordMessageLength ||
-                            message.Count(c => c == ' ') >= _minNumWords - 1;
+        bool isApplicable = message.Length >= minSingleWordMessageLength ||
+                            message.Count(c => c == ' ') >= minNumWords - 1;
         if (!isApplicable)
             return 0;
         if (!_recentMessagesPerUser.ContainsKey(user))
-            _recentMessagesPerUser[user] = new TtlQueue<string>(_ttl, _clock);
+            _recentMessagesPerUser[user] = new TtlQueue<string>(_ttl, clock);
         int numRepetitions = _recentMessagesPerUser[user]
-            .Count(m => NormLevenshtein.Similarity(m, message) > _minSimilarity);
+            .Count(m => NormLevenshtein.Similarity(m, message) > minSimilarity);
         _recentMessagesPerUser[user].Enqueue(message);
         PruneIfLapsed();
         return numRepetitions;
@@ -210,27 +184,19 @@ public class PersonalRepetitionRule : IModerationRule
 
 /// Excessive amounts of symbols that are typically rare in regular text accumulate points.
 /// This detects e.g. zalgo or ascii-art
-public class UnicodeCharacterCategoryRule : IModerationRule
+public class UnicodeCharacterCategoryRule(
+    int pointsPerBadChar = 2,
+    double minBadness = 0.3,
+    int minMessageLength = 60)
+    : IModerationRule
 {
     public string Id => "unicode-char-category";
 
-    private readonly float _pointsPerBadChar;
-    private readonly double _minBadness;
-    private readonly int _minMessageLength;
-
-    public UnicodeCharacterCategoryRule(
-        int pointsPerBadChar = 2,
-        double minBadness = 0.3,
-        int minMessageLength = 60)
-    {
-        _pointsPerBadChar = pointsPerBadChar;
-        _minBadness = minBadness;
-        _minMessageLength = minMessageLength;
-    }
+    private readonly float _pointsPerBadChar = pointsPerBadChar;
 
     public RuleResult Check(Message message)
     {
-        if (message.MessageText.Length < _minMessageLength)
+        if (message.MessageText.Length < minMessageLength)
             return new RuleResult.Nothing();
         int numGood = 0;
         int numBad = 0;
@@ -245,7 +211,7 @@ public class UnicodeCharacterCategoryRule : IModerationRule
         int total = numGood + numBad;
         Debug.Assert(total > 0);
         double badness = numBad / (double)total;
-        if (badness > _minBadness)
+        if (badness > minBadness)
         {
             return new RuleResult.GivePoints(
                 (int)(_pointsPerBadChar * numBad),

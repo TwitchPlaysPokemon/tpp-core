@@ -3,16 +3,13 @@ using System.Threading.Tasks;
 
 namespace TPP.Core.Commands.Definitions;
 
-public class HelpCommand
+public class HelpCommand(CommandProcessor commandProcessor)
 {
     public Command Command => new("help", ctx => Task.FromResult(Execute(ctx)))
     {
         Aliases = new[] { "info" },
         Description = "Get general help, or info on a specific command like: \"!help balance\""
     };
-
-    private readonly CommandProcessor _commandProcessor;
-    public HelpCommand(CommandProcessor commandProcessor) => _commandProcessor = commandProcessor;
 
     private CommandResult Execute(CommandContext context)
     {
@@ -27,7 +24,7 @@ public class HelpCommand
             return new CommandResult { Response = "Commands do not contain spaces. Ex: \"!help selectbadge\"" };
 
         string commandName = context.Args[0];
-        Command? command = _commandProcessor.FindCommand(commandName);
+        Command? command = commandProcessor.FindCommand(commandName);
         if (command != null)
             return new CommandResult { Response = command.Value.Description };
 

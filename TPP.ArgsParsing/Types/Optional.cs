@@ -15,24 +15,17 @@ public class Optional
 /// but instead result in an empty instance of this class.
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public class Optional<T> : Optional
+public class Optional<T>(bool present, T value) : Optional
 {
-    public bool IsPresent { get; }
+    public bool IsPresent { get; } = present;
 
-    private readonly T _value;
     public T Value
     {
         get
         {
             if (!IsPresent) throw new InvalidOperationException("Cannot access the value of an empty Optional.");
-            return _value;
+            return value;
         }
-    }
-
-    public Optional(bool present, T value)
-    {
-        IsPresent = present;
-        _value = value;
     }
 
     public T OrElse(T fallback)

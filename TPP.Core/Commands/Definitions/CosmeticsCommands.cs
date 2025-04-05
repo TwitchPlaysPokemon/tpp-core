@@ -9,7 +9,7 @@ using TPP.Persistence;
 
 namespace TPP.Core.Commands.Definitions;
 
-public class CosmeticsCommands : ICommandCollection
+public class CosmeticsCommands(IUserRepo userRepo, IBank<User> tokenBank) : ICommandCollection
 {
     private const string UnlockGlowCommandName = "unlockglow";
 
@@ -45,15 +45,6 @@ public class CosmeticsCommands : ICommandCollection
         },
     };
 
-    private readonly IUserRepo _userRepo;
-    private readonly IBank<User> _tokenBank;
-
-    public CosmeticsCommands(IUserRepo userRepo, IBank<User> tokenBank)
-    {
-        _userRepo = userRepo;
-        _tokenBank = tokenBank;
-    }
-
     public async Task<CommandResult> SetGlow(CommandContext context)
     {
         User user = context.Message.User;
@@ -65,13 +56,13 @@ public class CosmeticsCommands : ICommandCollection
             };
         }
         string color = (await context.ParseArgs<HexColor>()).StringWithoutHash;
-        await _userRepo.SetGlowColor(user, color);
+        await userRepo.SetGlowColor(user, color);
         return new CommandResult { Response = $"glow color set to #{color}" };
     }
 
     public async Task<CommandResult> RemoveGlow(CommandContext context)
     {
-        await _userRepo.SetGlowColor(context.Message.User, null);
+        await userRepo.SetGlowColor(context.Message.User, null);
         return new CommandResult { Response = "your glow color was removed" };
     }
 
@@ -82,12 +73,12 @@ public class CosmeticsCommands : ICommandCollection
         {
             return new CommandResult { Response = "glow color is already unlocked" };
         }
-        if (await _tokenBank.GetAvailableMoney(user) < 1)
+        if (await tokenBank.GetAvailableMoney(user) < 1)
         {
             return new CommandResult { Response = "you don't have T1 to unlock the glow color" };
         }
-        await _tokenBank.PerformTransaction(new Transaction<User>(user, -1, TransactionType.SecondaryColorUnlock));
-        await _userRepo.SetGlowColorUnlocked(user, true);
+        await tokenBank.PerformTransaction(new Transaction<User>(user, -1, TransactionType.SecondaryColorUnlock));
+        await userRepo.SetGlowColorUnlocked(user, true);
         return new CommandResult { Response = "your glow color was unlocked" };
     }
 
@@ -126,7 +117,7 @@ public class CosmeticsCommands : ICommandCollection
         {
             return new CommandResult { Response = "you don't own that participation badge" };
         }
-        await _userRepo.SetSelectedEmblem(user, emblem);
+        await userRepo.SetSelectedEmblem(user, emblem);
         return new CommandResult
         {
             Response = $"color of participation badge {Emblems.FormatEmblem(emblem)} successfully equipped"

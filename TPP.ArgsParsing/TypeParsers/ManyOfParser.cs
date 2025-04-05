@@ -27,15 +27,8 @@ namespace TPP.ArgsParsing.TypeParsers;
 ///   </li>
 /// </ul>
 /// </summary>
-public class ManyOfParser : IArgumentParser<ManyOf>
+public class ManyOfParser(ArgsParser argsParser) : IArgumentParser<ManyOf>
 {
-    private readonly ArgsParser _argsParser;
-
-    public ManyOfParser(ArgsParser argsParser)
-    {
-        _argsParser = argsParser;
-    }
-
     public async Task<ArgsParseResult<ManyOf>> Parse(
         IImmutableList<string> args,
         Type[] genericTypes)
@@ -53,7 +46,7 @@ public class ManyOfParser : IArgumentParser<ManyOf>
         List<Failure> failures = new();
         for (int numArgs = args.Count; numArgs > 0; numArgs--)
         {
-            ArgsParseResult<List<object>> result = await _argsParser
+            ArgsParseResult<List<object>> result = await argsParser
                 .ParseRaw(args, Enumerable.Repeat(listContentType, numArgs));
             failures.AddRange(result.Failures);
             if (result.SuccessResult != null)

@@ -16,15 +16,8 @@ namespace TPP.ArgsParsing.TypeParsers;
 /// <c>{"123", "foo"}</c> and <c>{"foo", "123"}</c>, but not for <c>{"foo", "bar"}</c>.
 /// In case of multiple possible permutations, the first matching permutation gets returned.
 /// </summary>
-public class AnyOrderParser : IArgumentParser<AnyOrder>
+public class AnyOrderParser(ArgsParser argsParser) : IArgumentParser<AnyOrder>
 {
-    private readonly ArgsParser _argsParser;
-
-    public AnyOrderParser(ArgsParser argsParser)
-    {
-        _argsParser = argsParser;
-    }
-
     // https://stackoverflow.com/a/13022090
     private static IEnumerable<IList<T>> Permutations<T>(IList<T> values, int fromInd = 0)
     {
@@ -57,7 +50,7 @@ public class AnyOrderParser : IArgumentParser<AnyOrder>
         ArgsParseResult<AnyOrder>? mostSpecificSuccess = null;
         foreach (IList<int> permutationIndexes in Permutations(Enumerable.Range(0, genericTypes.Length).ToList()))
         {
-            ArgsParseResult<List<object>> parseResult = await _argsParser
+            ArgsParseResult<List<object>> parseResult = await argsParser
                 .ParseRaw(args, permutationIndexes.Select(i => genericTypes[i]));
             if (parseResult.SuccessResult == null)
             {

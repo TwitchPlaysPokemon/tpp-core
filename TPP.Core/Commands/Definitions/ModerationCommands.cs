@@ -13,25 +13,14 @@ using TPP.Persistence;
 
 namespace TPP.Core.Commands.Definitions;
 
-public class ModerationCommands : ICommandCollection
+public class ModerationCommands(
+    ModerationService moderationService,
+    IBanLogRepo banLogRepo,
+    ITimeoutLogRepo timeoutLogRepo,
+    IUserRepo userRepo,
+    IClock clock)
+    : ICommandCollection
 {
-    private readonly ModerationService _moderationService;
-    private readonly IBanLogRepo _banLogRepo;
-    private readonly ITimeoutLogRepo _timeoutLogRepo;
-    private readonly IUserRepo _userRepo;
-    private readonly IClock _clock;
-
-    public ModerationCommands(
-        ModerationService moderationService, IBanLogRepo banLogRepo, ITimeoutLogRepo timeoutLogRepo, IUserRepo userRepo,
-        IClock clock)
-    {
-        _moderationService = moderationService;
-        _banLogRepo = banLogRepo;
-        _timeoutLogRepo = timeoutLogRepo;
-        _userRepo = userRepo;
-        _clock = clock;
-    }
-
     public IEnumerable<Command> Commands => new[]
     {
         new Command("ban", Ban),
@@ -57,7 +46,7 @@ public class ModerationCommands : ICommandCollection
         string reason = ParseReasonArgs(reasonParts);
         return new CommandResult
         {
-            Response = await _moderationService.Ban(context.Message.User, targetUser, reason) switch
+            Response = await moderationService.Ban(context.Message.User, targetUser, reason) switch
             {
                 BanResult.Ok => $"Banned {targetUser.Name}. Reason: {reason}",
                 BanResult.UserIsModOrOp => "User is a moderator or operator, they cannot be banned.",
@@ -72,7 +61,7 @@ public class ModerationCommands : ICommandCollection
         string reason = ParseReasonArgs(reasonParts);
         return new CommandResult
         {
-            Response = await _moderationService.Unban(context.Message.User, targetUser, reason) switch
+            Response = await moderationService.Unban(context.Message.User, targetUser, reason) switch
             {
                 BanResult.Ok => $"Unbanned {targetUser.Name}. Reason: {reason}",
                 BanResult.UserIsModOrOp => "User is a moderator or operator, they cannot be banned.",
@@ -84,10 +73,10 @@ public class ModerationCommands : ICommandCollection
     private async Task<CommandResult> CheckBan(CommandContext context)
     {
         User targetUser = await context.ParseArgs<User>();
-        BanLog? recentLog = await _banLogRepo.FindMostRecent(targetUser.Id);
+        BanLog? recentLog = await banLogRepo.FindMostRecent(targetUser.Id);
         string? issuerName = recentLog?.IssuerUserId == null
             ? "<automated>"
-            : (await _userRepo.FindById(recentLog.IssuerUserId))?.Name;
+            : (await userRepo.FindById(recentLog.IssuerUserId))?.Name;
         string infoText = recentLog == null
             ? "No ban logs available."
             : $"Last action was {recentLog.Type} by {issuerName} " +
@@ -108,7 +97,7 @@ public class ModerationCommands : ICommandCollection
         string reason = ParseReasonArgs(reasonParts);
         return new CommandResult
         {
-            Response = await _moderationService.Timeout(context.Message.User, targetUser, reason, duration) switch
+            Response = await moderationService.Timeout(context.Message.User, targetUser, reason, duration) switch
             {
                 TimeoutResult.Ok =>
                     $"Timed out {targetUser.Name} for {duration.ToTimeSpan().ToHumanReadable()}. Reason: {reason}",
@@ -127,7 +116,7 @@ public class ModerationCommands : ICommandCollection
         string reason = ParseReasonArgs(reasonParts);
         return new CommandResult
         {
-            Response = await _moderationService.Untimeout(context.Message.User, targetUser, reason) switch
+            Response = await moderationService.Untimeout(context.Message.User, targetUser, reason) switch
             {
                 TimeoutResult.Ok => $"Untimed out {targetUser.Name}. Reason: {reason}",
                 TimeoutResult.MustBe2WeeksOrLess => "Twitch timeouts must be 2 weeks or less.",
@@ -143,17 +132,17 @@ public class ModerationCommands : ICommandCollection
         User targetUser = await context.ParseArgs<User>();
         if (targetUser.Banned)
             return new CommandResult { Response = $"{targetUser.Name} is banned. Use `checkban` for more info." };
-        TimeoutLog? recentLog = await _timeoutLogRepo.FindMostRecent(targetUser.Id);
+        TimeoutLog? recentLog = await timeoutLogRepo.FindMostRecent(targetUser.Id);
         string? issuerName = recentLog?.IssuerUserId == null
             ? "<automated>"
-            : (await _userRepo.FindById(recentLog.IssuerUserId))?.Name;
+            : (await userRepo.FindById(recentLog.IssuerUserId))?.Name;
         string infoText = recentLog == null
             ? "No timeout logs available."
             : $"Last action was {recentLog.Type} by {issuerName} " +
               $"at {recentLog.Timestamp} with reason {recentLog.Reason}";
         if (recentLog?.Duration != null) infoText += $" for {recentLog.Duration.Value.ToTimeSpan().ToHumanReadable()}";
         Duration remainingTimeout = targetUser.TimeoutExpiration.HasValue
-            ? targetUser.TimeoutExpiration.Value - _clock.GetCurrentInstant()
+            ? targetUser.TimeoutExpiration.Value - clock.GetCurrentInstant()
             : Duration.Zero;
         return new CommandResult
         {
