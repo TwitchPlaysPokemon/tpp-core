@@ -53,13 +53,13 @@ public class PollRepo(IMongoDatabase database, IClock clock) : IPollRepo, IAsync
             .Select((option, index) => new PollOption(
                 id: index + 1,
                 option: option,
-                voterIds: new List<string>()
+                voterIds: []
             )).ToList();
 
         Poll poll = new(
             pollCode: pollCode,
             pollTitle: pollTitle,
-            voters: new List<string>(),
+            voters: [],
             pollOptions: pollOptionsObjects,
             clock.GetCurrentInstant(),
             multiChoice: multiChoice,

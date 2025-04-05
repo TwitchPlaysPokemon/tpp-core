@@ -11,51 +11,37 @@ namespace TPP.Core.Chat;
 /// <summary>
 /// Sends out messages that the old core queued in the database.
 /// </summary>
-public sealed class SendOutQueuedMessagesWorker : IWithLifecycle
+public sealed class SendOutQueuedMessagesWorker(
+    ILogger<SendOutQueuedMessagesWorker> logger,
+    IIncomingMessagequeueRepo incomingMessagequeueRepo,
+    IUserRepo userRepo,
+    IMessageSender messageSender,
+    IClock clock)
+    : IWithLifecycle
 {
-    private readonly ILogger<SendOutQueuedMessagesWorker> _logger;
-    private readonly IIncomingMessagequeueRepo _incomingMessagequeueRepo;
-    private readonly IUserRepo _userRepo;
-    private readonly IMessageSender _messageSender;
-    private readonly IClock _clock;
-
-    public SendOutQueuedMessagesWorker(
-        ILogger<SendOutQueuedMessagesWorker> logger,
-        IIncomingMessagequeueRepo incomingMessagequeueRepo,
-        IUserRepo userRepo,
-        IMessageSender messageSender,
-        IClock clock)
-    {
-        _logger = logger;
-        _incomingMessagequeueRepo = incomingMessagequeueRepo;
-        _userRepo = userRepo;
-        _messageSender = messageSender;
-        _clock = clock;
-    }
-
     public async Task Start(CancellationToken cancellationToken)
     {
-        Instant olderThan = _clock.GetCurrentInstant() - Duration.FromMinutes(5);
-        await _incomingMessagequeueRepo.Prune(olderThan);
-        await _incomingMessagequeueRepo.ForEachAsync(ProcessOnce, cancellationToken);
+        Instant olderThan = clock.GetCurrentInstant() - Duration.FromMinutes(5);
+        await incomingMessagequeueRepo.Prune(olderThan);
+        await incomingMessagequeueRepo.ForEachAsync(ProcessOnce, cancellationToken);
     }
 
     private async Task ProcessOnce(IncomingMessagequeueItem item)
     {
-        _logger.LogTrace("Received message from queue to send out: {Message}", item);
+        logger.LogTrace("Received message from queue to send out: {Message}", item);
         if (item.MessageType == MessageType.Chat)
         {
-            await _messageSender.SendMessage(item.Message);
+            await messageSender.SendMessage(item.Message);
         }
         else if (item.MessageType == MessageType.Whisper)
         {
-            User? user = await _userRepo.FindById(item.Target);
+            User? user = await userRepo.FindById(item.Target);
             if (user == null)
-                _logger.LogError(
+                logger.LogError(
                     "Cannot send out queued whisper message because User-ID '{UserId}' is unknown: {Message}",
                     item.Target, item);
             else
-                await _messageSender.SendWhisper(user, item.Message);
+                await messageSender.SendWhisper(user, item.Message);
         }
         else
         {

@@ -9,57 +9,47 @@ using TPP.Core.Commands.Definitions;
 using TPP.Model;
 using TPP.Persistence;
 
-namespace TPP.Core
+namespace TPP.Core;
+
+/// <summary>
+/// Advertises polls in chat on an interval.
+/// </summary>
+public sealed class AdvertisePollsWorker(
+    ILogger<AdvertisePollsWorker> logger,
+    Duration interval,
+    IPollRepo pollRepo,
+    IMessageSender messageSender)
+    : IWithLifecycle
 {
-    /// <summary>
-    /// Advertises polls in chat on an interval.
-    /// </summary>
-    public sealed class AdvertisePollsWorker : IWithLifecycle
+    public async Task Start(CancellationToken cancellationToken)
     {
-        private readonly ILogger<AdvertisePollsWorker> _logger;
-        private readonly Duration _interval;
-        private readonly IPollRepo _pollRepo;
-        private readonly IMessageSender _messageSender;
-
-        public AdvertisePollsWorker(ILogger<AdvertisePollsWorker> logger, Duration interval, IPollRepo pollRepo,
-            IMessageSender messageSender)
+        do
         {
-            _logger = logger;
-            _interval = interval;
-            _pollRepo = pollRepo;
-            _messageSender = messageSender;
-        }
-
-        public async Task Start(CancellationToken cancellationToken)
-        {
-            do
+            await Task.Delay(interval.ToTimeSpan(), cancellationToken);
+            try
             {
-                await Task.Delay(_interval.ToTimeSpan(), cancellationToken);
-                try
-                {
-                    await DoLoop();
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to advertise polls");
-                }
-            } while (!cancellationToken.IsCancellationRequested);
-        }
-
-        private async Task DoLoop()
-        {
-            IImmutableList<Poll> polls = await _pollRepo.FindPolls(onlyActive: true);
-            if (polls.Count == 0) return;
-            if (polls.Count == 1)
-            {
-                await _messageSender.SendMessage(
-                    "Please vote in the currently active poll: " +
-                    PollCommands.FormatSinglePollAdvertisement(polls[0]));
+                await DoLoop();
             }
-            else
+            catch (Exception ex)
             {
-                await _messageSender.SendMessage(PollCommands.FormatPollsAdvertisement(polls));
+                logger.LogError(ex, "Failed to advertise polls");
             }
+        } while (!cancellationToken.IsCancellationRequested);
+    }
+
+    private async Task DoLoop()
+    {
+        IImmutableList<Poll> polls = await pollRepo.FindPolls(onlyActive: true);
+        if (polls.Count == 0) return;
+        if (polls.Count == 1)
+        {
+            await messageSender.SendMessage(
+                "Please vote in the currently active poll: " +
+                PollCommands.FormatSinglePollAdvertisement(polls[0]));
+        }
+        else
+        {
+            await messageSender.SendMessage(PollCommands.FormatPollsAdvertisement(polls));
         }
     }
 }

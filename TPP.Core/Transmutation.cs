@@ -11,10 +11,7 @@ using TPP.Persistence.MongoDB.Repos;
 
 namespace TPP.Core;
 
-public class TransmuteException : Exception
-{
-    public TransmuteException(string? message) : base(message) { }
-}
+public class TransmuteException(string? message) : Exception(message);
 
 public interface ITransmutationCalculator
 {
@@ -135,24 +132,17 @@ public class TransmutationCalculator : ITransmutationCalculator
     }
 }
 
-public class TransmuteEventArgs : EventArgs
+public class TransmuteEventArgs(
+    User user,
+    IImmutableList<PkmnSpecies> inputSpecies,
+    PkmnSpecies outputSpecies,
+    IImmutableList<PkmnSpecies> candidates)
+    : EventArgs
 {
-    public User User { get; }
-    public IImmutableList<PkmnSpecies> InputSpecies { get; }
-    public PkmnSpecies OutputSpecies { get; }
-    public IImmutableList<PkmnSpecies> Candidates { get; }
-
-    public TransmuteEventArgs(
-        User user,
-        IImmutableList<PkmnSpecies> inputSpecies,
-        PkmnSpecies outputSpecies,
-        IImmutableList<PkmnSpecies> candidates)
-    {
-        User = user;
-        InputSpecies = inputSpecies;
-        OutputSpecies = outputSpecies;
-        Candidates = candidates;
-    }
+    public User User { get; } = user;
+    public IImmutableList<PkmnSpecies> InputSpecies { get; } = inputSpecies;
+    public PkmnSpecies OutputSpecies { get; } = outputSpecies;
+    public IImmutableList<PkmnSpecies> Candidates { get; } = candidates;
 }
 
 public interface ITransmuter
@@ -165,31 +155,17 @@ public interface ITransmuter
 /// <summary>
 /// Performs actual transmutation: removing the consumed badges, creating the new badge, deducting tokens etc.
 /// </summary>
-public class Transmuter : ITransmuter
+public class Transmuter(
+    IBadgeRepo badgeRepo,
+    ITransmutationCalculator transmutationCalculator,
+    IBank<User> tokenBank,
+    ITransmutationLogRepo transmutationLogRepo,
+    IClock clock)
+    : ITransmuter
 {
     private static readonly Random Random = new();
 
-    private readonly IBadgeRepo _badgeRepo;
-    private readonly ITransmutationCalculator _transmutationCalculator;
-    private readonly IBank<User> _tokenBank;
-    private readonly ITransmutationLogRepo _transmutationLogRepo;
-    private readonly IClock _clock;
-
     public event EventHandler<TransmuteEventArgs>? Transmuted;
-
-    public Transmuter(
-        IBadgeRepo badgeRepo,
-        ITransmutationCalculator transmutationCalculator,
-        IBank<User> tokenBank,
-        ITransmutationLogRepo transmutationLogRepo,
-        IClock clock)
-    {
-        _badgeRepo = badgeRepo;
-        _transmutationCalculator = transmutationCalculator;
-        _tokenBank = tokenBank;
-        _transmutationLogRepo = transmutationLogRepo;
-        _clock = clock;
-    }
 
     public async Task<Badge> Transmute(User user, int tokens, IImmutableList<PkmnSpecies> speciesList)
     {
@@ -199,7 +175,7 @@ public class Transmuter : ITransmuter
         if (speciesList.Count < ITransmutationCalculator.MinTransmuteBadges)
             throw new TransmuteException(
                 $"Must transmute at least {ITransmutationCalculator.MinTransmuteBadges} badges.");
-        if (await _tokenBank.GetAvailableMoney(user) < tokens)
+        if (await tokenBank.GetAvailableMoney(user) < tokens)
             throw new TransmuteException(
                 $"You don't have the T{ITransmutationCalculator.TransmutationCost} required to transmute.");
 
@@ -208,28 +184,28 @@ public class Transmuter : ITransmuter
         {
             PkmnSpecies species = grouping.Key;
             int numRequired = grouping.Count();
-            IImmutableList<Badge> badges = await _badgeRepo
+            IImmutableList<Badge> badges = await badgeRepo
                 .FindByUserAndSpecies(user.Id, species, limit: numRequired);
             if (badges.Count < numRequired)
                 throw new TransmuteException($"You don't have enough {species} badges.");
             inputBadges = inputBadges.Concat(badges).ToImmutableList();
         }
 
-        PkmnSpecies resultSpecies = await _transmutationCalculator.Transmute(speciesList);
+        PkmnSpecies resultSpecies = await transmutationCalculator.Transmute(speciesList);
 
         Dictionary<string, object?> additionalData = new();
-        IImmutableList<Badge> consumedBadges = await _badgeRepo
+        IImmutableList<Badge> consumedBadges = await badgeRepo
             .TransferBadges(inputBadges, recipientUserId: null, BadgeLogType.Transmutation, additionalData);
-        Badge resultBadge = await _badgeRepo.AddBadge(user.Id, resultSpecies, Badge.BadgeSource.Transmutation);
+        Badge resultBadge = await badgeRepo.AddBadge(user.Id, resultSpecies, Badge.BadgeSource.Transmutation);
 
         IImmutableList<string> inputIds = consumedBadges.Select(b => b.Id).ToImmutableList();
-        await _tokenBank.PerformTransaction(new Transaction<User>(user, -tokens,
+        await tokenBank.PerformTransaction(new Transaction<User>(user, -tokens,
             TransactionType.Transmutation, new Dictionary<string, object?>
             {
                 ["input_badges"] = inputIds,
                 ["output_badge"] = resultBadge.Id
             }));
-        await _transmutationLogRepo.Log(user.Id, _clock.GetCurrentInstant(), tokens, inputIds, resultBadge.Id);
+        await transmutationLogRepo.Log(user.Id, clock.GetCurrentInstant(), tokens, inputIds, resultBadge.Id);
 
         await OnTransmuted(user, speciesList, resultSpecies);
         return resultBadge;
@@ -237,9 +213,9 @@ public class Transmuter : ITransmuter
 
     private async Task OnTransmuted(User user, IImmutableList<PkmnSpecies> inputs, PkmnSpecies output)
     {
-        List<PkmnSpecies> candidates = new();
+        List<PkmnSpecies> candidates = [];
         for (int i = 0; i < 5; i++)
-            candidates.Add(await _transmutationCalculator.Transmute(inputs));
+            candidates.Add(await transmutationCalculator.Transmute(inputs));
         candidates.Insert(Random.Next(0, candidates.Count), output);
         var args = new TransmuteEventArgs(user, inputs, output, candidates.ToImmutableList());
         Transmuted?.Invoke(this, args);

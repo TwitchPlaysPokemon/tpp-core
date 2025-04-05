@@ -9,38 +9,21 @@ namespace TPP.Core.Moderation;
 public enum TimeoutResult { Ok, MustBe2WeeksOrLess, UserIsBanned, UserIsModOrOp, NotSupportedInChannel }
 public enum BanResult { Ok, UserIsModOrOp, NotSupportedInChannel }
 public enum ModerationActionType { Ban, Unban, Timeout, Untimeout }
-public class ModerationActionPerformedEventArgs : EventArgs
+public class ModerationActionPerformedEventArgs(User issuerUser, User targetUser, ModerationActionType type)
+    : EventArgs
 {
-    public User IssuerUser { get; }
-    public User TargetUser { get; }
-    public ModerationActionType Type { get; }
-
-    public ModerationActionPerformedEventArgs(User issuerUser, User targetUser, ModerationActionType type)
-    {
-        IssuerUser = issuerUser;
-        TargetUser = targetUser;
-        Type = type;
-    }
+    public User IssuerUser { get; } = issuerUser;
+    public User TargetUser { get; } = targetUser;
+    public ModerationActionType Type { get; } = type;
 }
-public class ModerationService
+public class ModerationService(
+    IClock clock,
+    IExecutor? executor,
+    ITimeoutLogRepo timeoutLogRepo,
+    IBanLogRepo banLogRepo,
+    IUserRepo userRepo)
 {
-    private readonly IClock _clock;
-    private readonly IExecutor? _executor;
-    private readonly ITimeoutLogRepo _timeoutLogRepo;
-    private readonly IBanLogRepo _banLogRepo;
-    private readonly IUserRepo _userRepo;
-
     public event EventHandler<ModerationActionPerformedEventArgs>? ModerationActionPerformed;
-
-    public ModerationService(
-        IClock clock, IExecutor? executor, ITimeoutLogRepo timeoutLogRepo, IBanLogRepo banLogRepo, IUserRepo userRepo)
-    {
-        _clock = clock;
-        _executor = executor;
-        _timeoutLogRepo = timeoutLogRepo;
-        _banLogRepo = banLogRepo;
-        _userRepo = userRepo;
-    }
 
     public Task<BanResult> Ban(User issuerUser, User targetUser, string reason) =>
         BanOrUnban(issuerUser, targetUser, reason, true);
@@ -49,26 +32,26 @@ public class ModerationService
 
     private async Task<BanResult> BanOrUnban(User issuerUser, User targetUser, string reason, bool isBan)
     {
-        if (_executor == null)
+        if (executor == null)
             return BanResult.NotSupportedInChannel;
 
-        if (targetUser.Roles.Overlaps(new[] { Role.Operator, Role.Moderator }))
+        if (targetUser.Roles.Overlaps([Role.Operator, Role.Moderator]))
             return BanResult.UserIsModOrOp;
 
-        Instant now = _clock.GetCurrentInstant();
+        Instant now = clock.GetCurrentInstant();
 
         if (isBan)
-            await _executor.Ban(targetUser, reason);
+            await executor.Ban(targetUser, reason);
         else
-            await _executor.Unban(targetUser, reason);
+            await executor.Unban(targetUser, reason);
 
-        await _banLogRepo.LogBan(
+        await banLogRepo.LogBan(
             targetUser.Id, isBan ? "manual_ban" : "manual_unban", reason,
             issuerUser.Id, now);
-        await _timeoutLogRepo.LogTimeout( // bans/unbans automatically lift timeouts
+        await timeoutLogRepo.LogTimeout( // bans/unbans automatically lift timeouts
             targetUser.Id, isBan ? "untimeout_from_manual_ban" : "untimeout_from_manual_unban", reason,
             issuerUser.Id, now, null);
-        await _userRepo.SetBanned(targetUser, isBan);
+        await userRepo.SetBanned(targetUser, isBan);
 
         ModerationActionPerformed?.Invoke(this, new ModerationActionPerformedEventArgs(
             issuerUser, targetUser, isBan ? ModerationActionType.Ban : ModerationActionType.Unban));
@@ -84,10 +67,10 @@ public class ModerationService
     private async Task<TimeoutResult> TimeoutOrUntimeout(
         User issuerUser, User targetUser, string reason, Duration? duration)
     {
-        if (_executor == null)
+        if (executor == null)
             return TimeoutResult.NotSupportedInChannel;
 
-        if (targetUser.Roles.Overlaps(new[] { Role.Operator, Role.Moderator }))
+        if (targetUser.Roles.Overlaps([Role.Operator, Role.Moderator]))
             return TimeoutResult.UserIsModOrOp;
 
         bool isIssuing = duration != null;
@@ -96,16 +79,16 @@ public class ModerationService
         if (targetUser.Banned)
             return TimeoutResult.UserIsBanned;
 
-        Instant now = _clock.GetCurrentInstant();
+        Instant now = clock.GetCurrentInstant();
 
         if (isIssuing)
-            await _executor.Timeout(targetUser, reason, duration!.Value);
+            await executor.Timeout(targetUser, reason, duration!.Value);
         else
-            await _executor.Unban(targetUser, reason);
-        await _timeoutLogRepo.LogTimeout(
+            await executor.Unban(targetUser, reason);
+        await timeoutLogRepo.LogTimeout(
             targetUser.Id, isIssuing ? "manual_timeout" : "manual_untimeout", reason,
             issuerUser.Id, now, duration);
-        await _userRepo.SetTimedOut(targetUser, duration.HasValue ? now + duration.Value : null);
+        await userRepo.SetTimedOut(targetUser, duration.HasValue ? now + duration.Value : null);
 
         ModerationActionPerformed?.Invoke(this, new ModerationActionPerformedEventArgs(
             issuerUser, targetUser, isIssuing ? ModerationActionType.Timeout : ModerationActionType.Untimeout));

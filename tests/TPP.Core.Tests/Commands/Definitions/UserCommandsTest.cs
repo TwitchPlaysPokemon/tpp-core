@@ -27,7 +27,7 @@ public class UserCommandsTest
         int? pokeyenBetRank = null,
         bool glowColorUnlocked = false,
         SortedSet<int>? emblems = null
-    ) => new User(
+    ) => new(
         id: Guid.NewGuid().ToString(),
         name: name, twitchDisplayName: twitchDisplayName ?? "☺" + name, simpleName: name.ToLower(), color: null,
         firstActiveAt: Instant.FromUnixTimeSeconds(0),
@@ -37,8 +37,8 @@ public class UserCommandsTest
         pokeyenBetRank: pokeyenBetRank, glowColorUnlocked: glowColorUnlocked,
         participationEmblems: emblems);
 
-    private static Message MockMessage(User user, string text = "")
-        => new Message(user, text, new MessageSource.PrimaryChat(), string.Empty);
+    private static Message MockMessage(User user, string text = "") =>
+        new(user, text, new MessageSource.PrimaryChat(), string.Empty);
 
     private IUserRepo _userRepoMock = null!;
     private IBank<User> _pokeyenBankMock = null!;
@@ -234,7 +234,7 @@ public class UserCommandsTest
     [Test]
     public async Task TestCheckEmblems()
     {
-        var user = MockUser(emblems: new SortedSet<int>(new[] { 1, 2, 47 }));
+        var user = MockUser(emblems: new SortedSet<int>([1, 2, 47]));
 
         CommandResult result = await _cosmeticsCommands.CheckEmblems(new CommandContext(MockMessage(user),
             ImmutableList<string>.Empty, _argsParser));
@@ -246,8 +246,8 @@ public class UserCommandsTest
     [Test]
     public async Task TestCheckEmblemsSomeoneElse()
     {
-        var userSelf = MockUser(emblems: new SortedSet<int>(new[] { 3, 4, 9 }));
-        var userOther = MockUser(name: "OtherUser", emblems: new SortedSet<int>(new[] { 1, 2, 47 }));
+        var userSelf = MockUser(emblems: new SortedSet<int>([3, 4, 9]));
+        var userOther = MockUser(name: "OtherUser", emblems: new SortedSet<int>([1, 2, 47]));
         _userRepoMock
             .FindBySimpleName(userOther.SimpleName)
             .Returns(userOther);
@@ -262,7 +262,7 @@ public class UserCommandsTest
     [Test]
     public async Task TestSelectEmblemNotOwned()
     {
-        var user = MockUser(emblems: new SortedSet<int>(new[] { 1, 2, 47 }));
+        var user = MockUser(emblems: new SortedSet<int>([1, 2, 47]));
 
         CommandResult result = await _cosmeticsCommands.SelectEmblem(new CommandContext(MockMessage(user),
             ImmutableList.Create("10"), _argsParser));
@@ -274,7 +274,7 @@ public class UserCommandsTest
     [Test]
     public async Task TestSelectEmblem()
     {
-        var user = MockUser(emblems: new SortedSet<int>(new[] { 1, 2, 47 }));
+        var user = MockUser(emblems: new SortedSet<int>([1, 2, 47]));
 
         CommandResult result = await _cosmeticsCommands.SelectEmblem(new CommandContext(MockMessage(user),
             ImmutableList.Create("2"), _argsParser));
@@ -291,7 +291,7 @@ public class UserCommandsTest
         _userRepoMock.FindBySimpleName(userRecipient.SimpleName)
             .Returns(Task.FromResult((User?)userRecipient));
         _tokenBankMock.GetAvailableMoney(userSelf).Returns(Task.FromResult(1L));
-        List<Transaction<User>> transactions = new();
+        List<Transaction<User>> transactions = [];
         _tokenBankMock.PerformTransactions(
             Arg.Do<IEnumerable<Transaction<User>>>(txs => transactions.AddRange(txs)),
             Arg.Any<CancellationToken>()

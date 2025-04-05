@@ -129,7 +129,7 @@ public class UserRepo(
 
         async Task<User?> UpdateExistingUser()
         {
-            var user = await Collection.FindOneAndUpdateAsync<User>(
+            var user = await Collection.FindOneAndUpdateAsync(
                 filter: u => u.Id == userInfo.Id,
                 update: update,
                 new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After, IsUpsert = false }
@@ -201,7 +201,7 @@ public class UserRepo(
         await Collection.Find(u => u.Roles.Contains(role)).ToListAsync();
 
     private async Task<User> UpdateField<T>(User user, Expression<Func<User, T>> field, T value) =>
-        await Collection.FindOneAndUpdateAsync<User>(
+        await Collection.FindOneAndUpdateAsync(
             filter: u => u.Id == user.Id,
             update: Builders<User>.Update.Set(field, value),
             options: new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After, IsUpsert = false })
@@ -214,7 +214,7 @@ public class UserRepo(
         UpdateField(user, u => u.SelectedParticipationEmblem, emblem);
 
     public async Task<User> GiveEmblem(User user, int emblem) =>
-        await Collection.FindOneAndUpdateAsync<User>(
+        await Collection.FindOneAndUpdateAsync(
             filter: u => u.Id == user.Id,
             update: Builders<User>.Update.AddToSet(u => u.ParticipationEmblems, emblem),
             options: new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After, IsUpsert = false })
@@ -233,7 +233,7 @@ public class UserRepo(
         UpdateField(user, u => u.Roles, newRoles);
 
     public async Task<bool> UnselectBadgeIfSpeciesSelected(string userId, PkmnSpecies species) =>
-        await Collection.FindOneAndUpdateAsync<User>(
+        await Collection.FindOneAndUpdateAsync(
             filter: u => u.Id == userId && u.SelectedBadge == species,
             update: Builders<User>.Update.Set(u => u.SelectedBadge, null),
             options: new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After, IsUpsert = false })
@@ -245,7 +245,7 @@ public class UserRepo(
     public async Task<User> SetSubscriptionInfo(User user,
         int monthsSubscribed, SubscriptionTier tier, int loyaltyLeague, Instant? subscriptionUpdatedAt)
         =>
-            await Collection.FindOneAndUpdateAsync<User>(
+            await Collection.FindOneAndUpdateAsync(
                 filter: u => u.Id == user.Id,
                 update: Builders<User>.Update
                     .Set(u => u.MonthsSubscribed, monthsSubscribed)
@@ -260,7 +260,7 @@ public class UserRepo(
             ?? throw new ArgumentException($"user {user} does not exist");
 
     public async Task<User> SetBanned(User user, bool banned) =>
-        await Collection.FindOneAndUpdateAsync<User>(
+        await Collection.FindOneAndUpdateAsync(
             u => u.Id == user.Id,
             Builders<User>.Update
                 .Set(u => u.Banned, banned)
@@ -268,7 +268,7 @@ public class UserRepo(
             new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After });
 
     public async Task<User> SetTimedOut(User user, Instant? timeoutExpiration) =>
-        await Collection.FindOneAndUpdateAsync<User>(
+        await Collection.FindOneAndUpdateAsync(
             u => u.Id == user.Id,
             Builders<User>.Update
                 .Set(u => u.Banned, false)

@@ -169,7 +169,7 @@ public sealed class Matchmode : IWithLifecycle
         long subscriberMinimumPokeyen = _matchmodeConfig.SubscriberMinimumPokeyen;
 
         List<User> poorUsers = await _userRepo.FindAllByPokeyenUnder(Math.Max(minimumPokeyen, subscriberMinimumPokeyen));
-        List<Transaction<User>> transactions = new();
+        List<Transaction<User>> transactions = [];
         foreach (User user in poorUsers)
         {
             long pokeyen = user.Pokeyen;

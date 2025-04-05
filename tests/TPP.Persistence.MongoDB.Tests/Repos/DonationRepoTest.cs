@@ -55,11 +55,11 @@ public class DonationRepoTest : MongoTestBase
             await repo.GetCentsPerUser(userIdFilter: new HashSet<string> { "user1", "user2" });
         IImmutableDictionary<string, long> centsPerUserMinCents = await repo.GetCentsPerUser(minTotalCents: 100);
 
-        Assert.That(centsPerUserAll.Keys, Is.EquivalentTo(new[] { "user1", "user2", "user3" }));
-        Assert.That(centsPerUserOnlyUser1And2.Keys, Is.EquivalentTo(new[] { "user1", "user2" }));
-        Assert.That(centsPerUserOnlyUser1And2.Values, Is.EquivalentTo(new[] { 50, 100 }));
-        Assert.That(centsPerUserMinCents.Keys, Is.EquivalentTo(new[] { "user2", "user3" }));
-        Assert.That(centsPerUserMinCents.Values, Is.EquivalentTo(new[] { 100, 150 }));
+        Assert.That(centsPerUserAll.Keys, Is.EquivalentTo(["user1", "user2", "user3"]));
+        Assert.That(centsPerUserOnlyUser1And2.Keys, Is.EquivalentTo(["user1", "user2"]));
+        Assert.That(centsPerUserOnlyUser1And2.Values, Is.EquivalentTo([50, 100]));
+        Assert.That(centsPerUserMinCents.Keys, Is.EquivalentTo(["user2", "user3"]));
+        Assert.That(centsPerUserMinCents.Values, Is.EquivalentTo([100, 150]));
 
         Assert.That(centsPerUserAll["user1"], Is.EqualTo(50));
         Assert.That(centsPerUserAll["user2"], Is.EqualTo(100));

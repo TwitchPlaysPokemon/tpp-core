@@ -18,7 +18,7 @@ internal class TimeKeyedCollection<T> : KeyedCollection<T, TimedEntry<T>> where 
 public class TtlSet<T>(Duration ttl, IClock clock) : IReadOnlyCollection<T>
     where T : notnull
 {
-    private readonly TimeKeyedCollection<T> _set = new();
+    private readonly TimeKeyedCollection<T> _set = [];
 
     private void Purge()
     {

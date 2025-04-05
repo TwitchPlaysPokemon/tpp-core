@@ -1,13 +1,12 @@
-namespace TPP.Model
+namespace TPP.Model;
+
+public enum Role
 {
-    public enum Role
-    {
-        Operator,
-        Moderator,
-        Trusted,
-        MusicTeam,
-        Developer,
-        Artist,
-        ModbotExempt,
-    }
+    Operator,
+    Moderator,
+    Trusted,
+    MusicTeam,
+    Developer,
+    Artist,
+    ModbotExempt,
 }

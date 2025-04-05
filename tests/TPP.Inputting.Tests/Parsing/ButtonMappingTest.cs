@@ -8,8 +8,10 @@ using TPP.Core;
 using TPP.Core.Overlay.Events;
 using TPP.Inputting.Inputs;
 using TPP.Inputting.Parsing;
+using TPP.Model;
 
 namespace TPP.Inputting.Tests.Parsing;
+
 public class ButtonMappingTest
 {
     private IInputMapper _inputMapper = new DefaultTppInputMapper();
@@ -37,7 +39,8 @@ public class ButtonMappingTest
         foreach (var button in buttons)
         {
             Assert.That(mappedInputs.ContainsKey(button.name), Is.True, $"Output should contain {button.name}.");
-            Assert.That(mappedInputs[button.name]?.Equals(button.velocity), Is.True, $"{button.name} should have velocity {button.velocity}.");
+            Assert.That(mappedInputs[button.name].Equals(button.velocity), Is.True,
+                $"{button.name} should have velocity {button.velocity}.");
         }
     }
 
@@ -58,7 +61,8 @@ public class ButtonMappingTest
     {
         foreach (string profile in Enum.GetNames<ButtonProfile>())
         {
-            Assert.DoesNotThrow(() => Enum.Parse<ButtonProfile>(profile).ToInputParserBuilder().Build(), $"Button Profile {profile} failed to build.");
+            Assert.DoesNotThrow(() => Enum.Parse<ButtonProfile>(profile).ToInputParserBuilder().Build(),
+                $"Button Profile {profile} failed to build.");
         }
     }
 
@@ -198,9 +202,9 @@ public class ButtonMappingTest
     public void TestDualSNES()
     {
         _inputParser = ButtonProfile.DualSNES.ToInputParserBuilder().Build();
-        if (_inputParser is SidedInputParser and not null)
+        if (_inputParser is SidedInputParser parser)
         {
-            ((SidedInputParser)_inputParser).AllowDirectedInputs = true;
+            parser.AllowDirectedInputs = true;
         }
 
         // good cases
@@ -230,16 +234,16 @@ public class ButtonMappingTest
         var originalMapper = _inputMapper;
         try
         {
-            _inputMapper = new DefaultTppInputMapper(controllerPrefixes: new string[] { "Left ", "Right " });
+            _inputMapper = new DefaultTppInputMapper(controllerPrefixes: ["Left ", "Right "]);
             _inputParser = ButtonProfile.GameBoy.ToInputParserBuilder().Build();
 
             // good cases
             AssertMapped("up", "Left Up");
 
             _inputParser = ButtonProfile.DualGameBoy.ToInputParserBuilder().Build();
-            if (_inputParser is SidedInputParser and not null)
+            if (_inputParser is SidedInputParser parser)
             {
-                ((SidedInputParser)_inputParser).AllowDirectedInputs = true;
+                parser.AllowDirectedInputs = true;
             }
 
             // good cases
@@ -261,33 +265,30 @@ public class ButtonMappingTest
             {
                 var parserBuilder = Enum.Parse<ButtonProfile>(profile).ToInputParserBuilder();
                 _inputParser = parserBuilder.Build();
-                if (_inputParser != null)
+                foreach (string prefix in parserBuilder.PadStickPrefixes)
                 {
-                    foreach (string prefix in parserBuilder.PadStickPrefixes)
-                    {
-                        AssertNotEmptyMap($"{prefix}n", $"{profile} profile has {prefix}up but not {prefix}n");
-                        AssertNotEmptyMap($"{prefix}e", $"{profile} profile has {prefix}right but not {prefix}e");
-                        AssertNotEmptyMap($"{prefix}w", $"{profile} profile has {prefix}left but not {prefix}w");
-                        AssertNotEmptyMap($"{prefix}s", $"{profile} profile has {prefix}down but not {prefix}s");
-                        AssertNotEmptyMap($"{prefix}north", $"{profile} profile has {prefix}up but not {prefix}north");
-                        AssertNotEmptyMap($"{prefix}east", $"{profile} profile has {prefix}right but not {prefix}east");
-                        AssertNotEmptyMap($"{prefix}west", $"{profile} profile has {prefix}left but not {prefix}west");
-                        AssertNotEmptyMap($"{prefix}south", $"{profile} profile has {prefix}down but not {prefix}south");
-                    }
+                    AssertNotEmptyMap($"{prefix}n", $"{profile} profile has {prefix}up but not {prefix}n");
+                    AssertNotEmptyMap($"{prefix}e", $"{profile} profile has {prefix}right but not {prefix}e");
+                    AssertNotEmptyMap($"{prefix}w", $"{profile} profile has {prefix}left but not {prefix}w");
+                    AssertNotEmptyMap($"{prefix}s", $"{profile} profile has {prefix}down but not {prefix}s");
+                    AssertNotEmptyMap($"{prefix}north", $"{profile} profile has {prefix}up but not {prefix}north");
+                    AssertNotEmptyMap($"{prefix}east", $"{profile} profile has {prefix}right but not {prefix}east");
+                    AssertNotEmptyMap($"{prefix}west", $"{profile} profile has {prefix}left but not {prefix}west");
+                    AssertNotEmptyMap($"{prefix}south", $"{profile} profile has {prefix}down but not {prefix}south");
                 }
             }
         });
     }
 
-    private static Model.User MockUser(
-    string name = "user",
-    int pokeyen = 0,
-    int tokens = 0,
-    string? twitchDisplayName = null,
-    int? pokeyenBetRank = null,
-    bool glowColorUnlocked = false,
-    SortedSet<int>? emblems = null
-    ) => new Model.User(
+    private static User MockUser(
+        string name = "user",
+        int pokeyen = 0,
+        int tokens = 0,
+        string? twitchDisplayName = null,
+        int? pokeyenBetRank = null,
+        bool glowColorUnlocked = false,
+        SortedSet<int>? emblems = null
+    ) => new(
         id: Guid.NewGuid().ToString(),
         name: name, twitchDisplayName: twitchDisplayName ?? "☺" + name, simpleName: name.ToLower(), color: null,
         firstActiveAt: Instant.FromUnixTimeSeconds(0),
@@ -305,9 +306,12 @@ public class ButtonMappingTest
         var buttonsOnly = new NewAnarchyInput(1, ParseInput("a"), MockUser(), null, null);
         var touch = new NewAnarchyInput(1, ParseInput("20,40"), MockUser(), null, null);
         var drag = new NewAnarchyInput(1, ParseInput("20,40>50,60"), MockUser(), null, null);
-        Assert.That(buttonsOnly.X == null && buttonsOnly.Y == null && buttonsOnly.X2 == null && buttonsOnly.Y2 == null, "Buttons should create no touchscreen coordinates");
-        Assert.That(touch.X == 20 && touch.Y == 40 && touch.X2 == null && touch.Y2 == null, "Touchscreen coordinates should be mapped to x,y properties");
-        Assert.That(drag.X == 20 && drag.Y == 40 && drag.X2 == 50 && drag.Y2 == 60, "Drag coordinates should be mapped to x,y,x2,y2 properties");
+        Assert.That(buttonsOnly.X == null && buttonsOnly.Y == null && buttonsOnly.X2 == null && buttonsOnly.Y2 == null,
+            "Buttons should create no touchscreen coordinates");
+        Assert.That(touch is { X: 20, Y: 40, X2: null, Y2: null },
+            "Touchscreen coordinates should be mapped to x,y properties");
+        Assert.That(drag is { X: 20, Y: 40, X2: 50, Y2: 60 },
+            "Drag coordinates should be mapped to x,y,x2,y2 properties");
     }
 
     [Test]
@@ -318,10 +322,15 @@ public class ButtonMappingTest
         var fullThrow = new NewAnarchyInput(1, ParseInput("ln"), MockUser(), null, null);
         var halfThrow = new NewAnarchyInput(1, ParseInput("ln.5"), MockUser(), null, null);
         var buttonPress = new NewAnarchyInput(1, ParseInput("a"), MockUser(), null, null);
-        Assert.That(fullThrow.ButtonSetLabels.SequenceEqual(["lup"]) && fullThrow.ButtonSetVelocities.SequenceEqual([1f]), "Full throw should have a velocity of 1");
-        Assert.That(halfThrow.ButtonSetLabels.SequenceEqual(["lup"]) && halfThrow.ButtonSetVelocities.SequenceEqual([0.5f]), "Half throw should have a velocity of 0.5");
-        Assert.That(buttonPress.ButtonSetLabels.SequenceEqual(["a"]) && buttonPress.ButtonSetVelocities.SequenceEqual([1f]), "Non-analog should have a velocity of 1");
-
+        Assert.That(
+            fullThrow.ButtonSetLabels.SequenceEqual(["lup"]) && fullThrow.ButtonSetVelocities.SequenceEqual([1f]),
+            "Full throw should have a velocity of 1");
+        Assert.That(
+            halfThrow.ButtonSetLabels.SequenceEqual(["lup"]) && halfThrow.ButtonSetVelocities.SequenceEqual([0.5f]),
+            "Half throw should have a velocity of 0.5");
+        Assert.That(
+            buttonPress.ButtonSetLabels.SequenceEqual(["a"]) && buttonPress.ButtonSetVelocities.SequenceEqual([1f]),
+            "Non-analog should have a velocity of 1");
     }
 
     [Test]
@@ -333,20 +342,17 @@ public class ButtonMappingTest
             {
                 var parserBuilder = Enum.Parse<ButtonProfile>(profile).ToInputParserBuilder();
                 _inputParser = parserBuilder.Build();
-                if (_inputParser != null)
+                foreach (string prefix in parserBuilder.PadStickPrefixes)
                 {
-                    foreach (string prefix in parserBuilder.PadStickPrefixes)
+                    var northEast = new NewAnarchyInput(1, ParseInput($"{prefix}north+{prefix}e"), MockUser(), null, null);
+                    var southWest = new NewAnarchyInput(1, ParseInput($"{prefix}s+{prefix}west"), MockUser(), null, null);
+                    if (northEast.ButtonSet.Any() && southWest.ButtonSet.Any())
                     {
-                        var northEast = new NewAnarchyInput(1, ParseInput($"{prefix}north+{prefix}e"), MockUser(), null, null);
-                        var southWest = new NewAnarchyInput(1, ParseInput($"{prefix}s+{prefix}west"), MockUser(), null, null);
-                        if (northEast.ButtonSet.Any() && southWest.ButtonSet.Any())
-                        {
-                            Assert.That(northEast.ButtonSetLabels.Any(b => b.ToLower() == $"{prefix}up")
-                                && northEast.ButtonSetLabels.Any(b => b.ToLower() == $"{prefix}right")
-                                && southWest.ButtonSetLabels.Any(b => b.ToLower() == $"{prefix}down")
-                                && southWest.ButtonSetLabels.Any(b => b.ToLower() == $"{prefix}left"),
-                                $"NSEW labels with '{prefix}' prefix aren't converted to {prefix}up {prefix}down {prefix}right {prefix}left for {profile} profile");
-                        }
+                        Assert.That(northEast.ButtonSetLabels.Any(b => b.ToLower() == $"{prefix}up")
+                                    && northEast.ButtonSetLabels.Any(b => b.ToLower() == $"{prefix}right")
+                                    && southWest.ButtonSetLabels.Any(b => b.ToLower() == $"{prefix}down")
+                                    && southWest.ButtonSetLabels.Any(b => b.ToLower() == $"{prefix}left"),
+                            $"NSEW labels with '{prefix}' prefix aren't converted to {prefix}up {prefix}down {prefix}right {prefix}left for {profile} profile");
                     }
                 }
             }

@@ -42,7 +42,7 @@ Options:
 ";
 
     // null for no mode-specific config
-    private static readonly Dictionary<string, IRootConfig?> DefaultConfigs = new Dictionary<string, IRootConfig?>
+    private static readonly Dictionary<string, IRootConfig?> DefaultConfigs = new()
     {
         ["run"] = new RunmodeConfig(),
         ["match"] = new MatchmodeConfig(),
@@ -89,7 +89,7 @@ Options:
         else if (args["regenjsonschemas"].IsTrue) RegenerateJsonSchema();
     }
 
-    private static readonly JsonSerializerSettings ConfigSerializerSettings = new JsonSerializerSettings
+    private static readonly JsonSerializerSettings ConfigSerializerSettings = new()
     {
         ContractResolver = new PrivateSetterContractResolver(),
         Converters = { new StringEnumConverter() },
@@ -156,8 +156,7 @@ Options:
                     .MinimumLevel.Is(baseConfig.DiscordLoggingConfig.MinLogLevel)
                     .Filter.ByExcluding(logEvent =>
                     {
-                        string? context = (logEvent.Properties["SourceContext"] as ScalarValue)?.Value as string;
-                        if (context == null)
+                        if ((logEvent.Properties["SourceContext"] as ScalarValue)?.Value is not string context)
                             return false;
                         foreach ((string loggerPrefix, LogLevel logLevel) in levelOverrides)
                             if (context.StartsWith(loggerPrefix) && logEvent.Level < logLevel.ToSerilogLogLevel())

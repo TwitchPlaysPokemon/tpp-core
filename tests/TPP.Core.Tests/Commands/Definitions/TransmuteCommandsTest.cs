@@ -16,7 +16,7 @@ namespace TPP.Core.Tests.Commands.Definitions;
 
 public class TransmuteCommandsTest
 {
-    private static User MockUser(string name, PkmnSpecies? selectedBadge = null) => new User(
+    private static User MockUser(string name, PkmnSpecies? selectedBadge = null) => new(
         id: Guid.NewGuid().ToString(),
         name: name, twitchDisplayName: "☺" + name, simpleName: name.ToLower(), color: null,
         firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
@@ -44,7 +44,7 @@ public class TransmuteCommandsTest
     public async Task TestTransmute()
     {
         PkmnSpecies species = PkmnSpecies.RegisterName("1", "mon");
-        _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
+        _argsParser.AddArgumentParser(new PkmnSpeciesParser([species]));
         User user = MockUser("MockUser");
         _badgeRepoMock.FindByUserAndSpecies(user.Id, species, null)
             .Returns(ImmutableList<Badge>.Empty);

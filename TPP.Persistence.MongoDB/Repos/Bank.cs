@@ -137,7 +137,7 @@ public class Bank<T> : ReserveCheckersBank<T>, IAsyncInitRepo
         IEnumerable<Transaction<T>> transactions,
         CancellationToken token = default)
     {
-        List<Action> adjustBalanceActions = new List<Action>();
+        List<Action> adjustBalanceActions = [];
         using IClientSessionHandle session = await _mongoClient.StartSessionAsync(cancellationToken: token);
         var transactionLogEntries = await session.WithTransactionAsync(async (sessionInner, tokenInner) =>
             {
