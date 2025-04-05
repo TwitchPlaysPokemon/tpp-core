@@ -46,7 +46,7 @@ public class EventSubClient
     {
         private DisconnectReason() { } // simulate a sum type with a closed hierarchy
         public sealed record KeepaliveTimeout(int KeepaliveTimeSeconds) : DisconnectReason;
-        public sealed record ConnectionClosed : DisconnectReason;
+        public sealed record ConnectionClosed(WebSocketException Error) : DisconnectReason;
         public sealed record WebsocketClosed(int CloseStatus, string? CloseStatusDescription) : DisconnectReason;
     }
 
@@ -80,7 +80,7 @@ public class EventSubClient
     {
         private ReadMessageResponse() { } // simulate a sum type with a closed hierarchy
         public sealed record Ok(ParseResult Result) : ReadMessageResponse;
-        public sealed record ConnectionClosed : ReadMessageResponse;
+        public sealed record ConnectionClosed(WebSocketException Error) : ReadMessageResponse;
         public sealed record WebsocketClosed(int CloseStatus, string? CloseStatusDescription) : ReadMessageResponse;
     }
 
@@ -98,7 +98,7 @@ public class EventSubClient
             catch (WebSocketException e) when (e.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
             {
                 // This isn't a nice way to close the connection, but let's treat it as a normal closure for simplicity.
-                return new ReadMessageResponse.ConnectionClosed();
+                return new ReadMessageResponse.ConnectionClosed(e);
             }
             if (result.CloseStatus != null)
             {
@@ -181,8 +181,8 @@ public class EventSubClient
                 // you should assume the connection is lost and reconnect to the server and resubscribe to the events.
                 return new DisconnectReason.KeepaliveTimeout(KeepaliveTimeSeconds);
             ReadMessageResponse messageResult = await readTask;
-            if (messageResult is ReadMessageResponse.ConnectionClosed)
-                return new DisconnectReason.ConnectionClosed();
+            if (messageResult is ReadMessageResponse.ConnectionClosed(var websocketError))
+                return new DisconnectReason.ConnectionClosed(websocketError);
             if (messageResult is ReadMessageResponse.WebsocketClosed closed)
                 return new DisconnectReason.WebsocketClosed(closed.CloseStatus, closed.CloseStatusDescription);
             if (messageResult is not ReadMessageResponse.Ok(var parseResult))
