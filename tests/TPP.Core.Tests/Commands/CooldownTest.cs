@@ -9,7 +9,7 @@ namespace TPP.Core.Tests.Commands;
 
 public class CooldownTest
 {
-    private static User MockUser(string name) => new User(
+    private static User MockUser(string name) => new(
         id: Guid.NewGuid().ToString(),
         name: name, twitchDisplayName: "☺" + name, simpleName: name.ToLower(), color: null,
         firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),

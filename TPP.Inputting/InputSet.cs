@@ -42,7 +42,7 @@ public sealed record TimedInputSet(InputSet InputSet, float HoldDuration, float 
 /// </summary>
 internal class SameOutcomeComparer : IEqualityComparer<Input>
 {
-    public static readonly SameOutcomeComparer Instance = new SameOutcomeComparer();
+    public static readonly SameOutcomeComparer Instance = new();
     public bool Equals(Input? x, Input? y) =>
         (x == null && y == null)
         || (x != null && y != null && x.HasSameOutcomeAs(y));

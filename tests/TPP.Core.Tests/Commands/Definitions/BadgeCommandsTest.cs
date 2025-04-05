@@ -19,7 +19,7 @@ namespace TPP.Core.Tests.Commands.Definitions;
 
 public class BadgeCommandsTest
 {
-    private static User MockUser(string name, PkmnSpecies? selectedBadge = null) => new User(
+    private static User MockUser(string name, PkmnSpecies? selectedBadge = null) => new(
         id: Guid.NewGuid().ToString(),
         name: name, twitchDisplayName: "☺" + name, simpleName: name.ToLower(), color: null,
         firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),

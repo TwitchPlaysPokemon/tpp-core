@@ -17,7 +17,7 @@ public class OverlayConnection
     private readonly Func<object, string> _serializer;
     private readonly ILogger<OverlayConnection> _logger;
 
-    private static readonly JsonSerializerSettings SerializerSettings = new JsonSerializerSettings
+    private static readonly JsonSerializerSettings SerializerSettings = new()
     {
         ContractResolver = new DefaultContractResolver
         {

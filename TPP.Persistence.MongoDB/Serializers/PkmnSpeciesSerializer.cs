@@ -11,7 +11,7 @@ namespace TPP.Persistence.MongoDB.Serializers;
 /// </summary>
 public class PkmnSpeciesSerializer : SerializerBase<PkmnSpecies?>
 {
-    public static readonly PkmnSpeciesSerializer Instance = new PkmnSpeciesSerializer();
+    public static readonly PkmnSpeciesSerializer Instance = new();
 
     public override PkmnSpecies? Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
     {

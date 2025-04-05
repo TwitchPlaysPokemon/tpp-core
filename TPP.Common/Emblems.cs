@@ -5,7 +5,7 @@ namespace TPP.Common;
 
 public static class Emblems
 {
-    private static readonly Dictionary<int, string> RunNames = new Dictionary<int, string>
+    private static readonly Dictionary<int, string> RunNames = new()
     {
         [1] = "Red",
         [2] = "Crystal",

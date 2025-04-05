@@ -133,8 +133,8 @@ public class UserRepoTest : MongoTestBase
         // given
         Instant t1 = Instant.FromUnixTimeSeconds(0);
         Instant t2 = Instant.FromUnixTimeSeconds(1);
-        var userInfoT1 = new UserInfo("123", "X", "x", null, UpdatedAt: t1);
-        var userInfoT2 = new UserInfo("123", "X", "x", null, UpdatedAt: t2);
+        var userInfoT1 = new UserInfo("123", "X", "x", UpdatedAt: t1);
+        var userInfoT2 = new UserInfo("123", "X", "x", UpdatedAt: t2);
 
         // when, then
         User userT1 = await userRepo.RecordUser(userInfoT1);
@@ -155,9 +155,9 @@ public class UserRepoTest : MongoTestBase
         Instant t1 = Instant.FromUnixTimeSeconds(0);
         Instant t2 = Instant.FromUnixTimeSeconds(1);
         Instant t3 = Instant.FromUnixTimeSeconds(2);
-        var userInfoT1 = new UserInfo("123", "X", "x", null, UpdatedAt: t1);
-        var userInfoT2 = new UserInfo("123", "X", "x", null, UpdatedAt: t2, FromMessage: true);
-        var userInfoT3 = new UserInfo("123", "X", "x", null, UpdatedAt: t3);
+        var userInfoT1 = new UserInfo("123", "X", "x", UpdatedAt: t1);
+        var userInfoT2 = new UserInfo("123", "X", "x", UpdatedAt: t2, FromMessage: true);
+        var userInfoT3 = new UserInfo("123", "X", "x", UpdatedAt: t3);
 
         // when, then
         User userT1 = await userRepo.RecordUser(userInfoT1);
@@ -273,7 +273,7 @@ public class UserRepoTest : MongoTestBase
         Assert.That(userFromReading, Is.Not.Null);
         Assert.That(userFromRecording, Is.Not.SameAs(userFromReading!));
         Assert.That(userFromReading!.Pokeyen, Is.EqualTo(pokeyen));
-        Assert.That(userFromReading!.Tokens, Is.EqualTo(tokens));
+        Assert.That(userFromReading.Tokens, Is.EqualTo(tokens));
     }
 
     [Test]

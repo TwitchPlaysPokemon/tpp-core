@@ -23,7 +23,7 @@ public class BettingCommands : ICommandCollection
 
     public IEnumerable<Command> Commands =>
     [
-        new Command("bet", Bet)
+        new("bet", Bet)
         {
             Description = "Chat only: bet on PBR using Pokéyen. Arguments: <team> <amount or percent>"
         }

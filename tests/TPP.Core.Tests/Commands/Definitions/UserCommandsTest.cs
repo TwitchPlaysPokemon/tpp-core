@@ -27,7 +27,7 @@ public class UserCommandsTest
         int? pokeyenBetRank = null,
         bool glowColorUnlocked = false,
         SortedSet<int>? emblems = null
-    ) => new User(
+    ) => new(
         id: Guid.NewGuid().ToString(),
         name: name, twitchDisplayName: twitchDisplayName ?? "☺" + name, simpleName: name.ToLower(), color: null,
         firstActiveAt: Instant.FromUnixTimeSeconds(0),
@@ -37,8 +37,8 @@ public class UserCommandsTest
         pokeyenBetRank: pokeyenBetRank, glowColorUnlocked: glowColorUnlocked,
         participationEmblems: emblems);
 
-    private static Message MockMessage(User user, string text = "")
-        => new Message(user, text, new MessageSource.PrimaryChat(), string.Empty);
+    private static Message MockMessage(User user, string text = "") =>
+        new(user, text, new MessageSource.PrimaryChat(), string.Empty);
 
     private IUserRepo _userRepoMock = null!;
     private IBank<User> _pokeyenBankMock = null!;

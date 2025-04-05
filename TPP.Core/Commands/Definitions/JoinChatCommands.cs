@@ -10,17 +10,17 @@ public class JoinChatCommands(ICoStreamChannelsRepo coStreamChannelsRepo) : ICom
 {
     public IEnumerable<Command> Commands =>
     [
-        new Command("join", JoinChannel)
+        new("join", JoinChannel)
         {
             Description = "Makes the TPP bot join your channel and consume inputs from there, " +
                           "given the current run supports it. This is for co-streaming TPP. " +
                           "Note that you must be live, and the bot will auto-leave again once you go offline."
         },
-        new Command("leave", LeaveChannel)
+        new("leave", LeaveChannel)
         {
             Description = "If you previously issues a !join command, makes the TPP bot leave your channel again."
         },
-        new Command("costreams", ListCostreams)
+        new("costreams", ListCostreams)
         {
             Aliases = ["costreamers"],
             Description = "Lists all channels that are currently co-streaming TPP."

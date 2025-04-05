@@ -18,7 +18,7 @@ namespace TPP.Core.Tests;
 public class SubscriptionProcessorTest
 {
     private static User MockUser(string name, int monthsSubscribed, SubscriptionTier? subscriptionTier,
-        int loyaltyLeague) => new User(
+        int loyaltyLeague) => new(
         id: Guid.NewGuid().ToString(),
         name: name, twitchDisplayName: "☺" + name, simpleName: name.ToLower(), color: null,
         firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),

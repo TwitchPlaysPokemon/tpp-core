@@ -7,24 +7,10 @@ public class ImplicitNumber
     public override string ToString() => Number.ToString();
 }
 
-public class Pokeyen : ImplicitNumber
-{
-}
-public class Tokens : ImplicitNumber
-{
-}
-public class SignedPokeyen : ImplicitNumber // may be negative
-{
-}
-public class SignedTokens : ImplicitNumber // may be negative
-{
-}
-public class SignedInt : ImplicitNumber // may be negative
-{
-}
-public class NonNegativeInt : ImplicitNumber // is always >= 0
-{
-}
-public class PositiveInt : ImplicitNumber // is always >= 1
-{
-}
+public class Pokeyen : ImplicitNumber;
+public class Tokens : ImplicitNumber;
+public class SignedPokeyen : ImplicitNumber; // may be negative
+public class SignedTokens : ImplicitNumber; // may be negative
+public class SignedInt : ImplicitNumber; // may be negative
+public class NonNegativeInt : ImplicitNumber; // is always >= 0
+public class PositiveInt : ImplicitNumber; // is always >= 1

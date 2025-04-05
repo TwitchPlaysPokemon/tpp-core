@@ -4,9 +4,7 @@ namespace TPP.ArgsParsing.Types;
 /// Non-generic base class used by all of the derived classes.
 /// Do not use this class directly. Instead, use the derived class with the desired amount of generic parameters.
 /// </summary>
-public class AnyOrder
-{
-}
+public class AnyOrder;
 
 /// <summary>
 /// Class encapsulating two values that may be parsed in any order by an <see cref="ArgsParser"/>.

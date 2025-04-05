@@ -6,9 +6,7 @@ namespace TPP.ArgsParsing.Types;
 /// Non-generic base class used by <see cref="Optional{T}"/>.
 /// Do not use this class directly. Instead, use <see cref="Optional{T}"/>.
 /// </summary>
-public class Optional
-{
-}
+public class Optional;
 
 /// <summary>
 /// Class encapsulating that may be absent during parsing and not cause a parse failure,

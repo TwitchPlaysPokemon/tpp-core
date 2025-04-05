@@ -15,18 +15,18 @@ public class CosmeticsCommands(IUserRepo userRepo, IBank<User> tokenBank) : ICom
 
     public IEnumerable<Command> Commands =>
     [
-        new Command("setglow", SetGlow)
+        new("setglow", SetGlow)
         {
             Aliases = ["setsecondarycolor", "setsecondarycolour"],
             Description = "Change the color of the glow around your name as it appears on stream. " +
                           "Argument: #<hexcolor>"
         },
-        new Command("removeglow", RemoveGlow)
+        new("removeglow", RemoveGlow)
         {
             Aliases = ["removesecondarycolor", "removesecondarycolour"],
             Description = "Remove the glow around your name as it appears on stream."
         },
-        new Command(UnlockGlowCommandName, UnlockGlow)
+        new(UnlockGlowCommandName, UnlockGlow)
         {
             Aliases = ["unlocksecondarycolor", "unlocksecondarycolour"],
             Description = "Unlock the ability to change the color of your glow around your name " +
@@ -37,7 +37,7 @@ public class CosmeticsCommands(IUserRepo userRepo, IBank<User> tokenBank) : ICom
             Aliases = ["participation"],
             Description = "Show a user's run participation record. Argument: <username> (optional)"
         }.WithPerUserCooldown(Duration.FromSeconds(3)),
-        new Command("selectemblem", SelectEmblem)
+        new("selectemblem", SelectEmblem)
         {
             Aliases = ["chooseemblem", "selectparticipationbadge", "chooseparticipationbadge"],
             Description = "Select which run's emblem color to show on stream next to your name. " +

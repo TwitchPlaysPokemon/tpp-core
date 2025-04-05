@@ -24,7 +24,7 @@ public class GlobalCooldown(IClock clock, Duration duration)
 public class PerUserCooldown(IClock clock, Duration duration)
 {
     public Duration Duration { get; } = duration;
-    private Dictionary<User, Instant> _lastExecutions = new Dictionary<User, Instant>();
+    private Dictionary<User, Instant> _lastExecutions = new();
 
     private void PruneLapsed(Instant now)
     {

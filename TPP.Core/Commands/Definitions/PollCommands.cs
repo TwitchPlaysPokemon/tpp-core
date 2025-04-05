@@ -15,18 +15,18 @@ public class PollCommands(IPollRepo pollRepo) : ICommandCollection
 
     public IEnumerable<Command> Commands =>
     [
-        new Command("vote", Vote)
+        new("vote", Vote)
         {
             Description =
                 "Vote on a poll. Arguments: <PollCode> <Option1> <OptionX> (optional if multi-choice poll). " +
                 "Note that votes are not anonymous to avoid fraud."
         },
-        new Command(PollCommandName, Poll)
+        new(PollCommandName, Poll)
         {
             Aliases = ["checkpoll"],
             Description = "Check a poll's status and options. Argument: <PollCode>"
         },
-        new Command("polls", Polls)
+        new("polls", Polls)
         {
             Aliases = ["listpolls", "allpolls", "activepolls"],
             Description = "List all currently active polls."

@@ -25,7 +25,7 @@ public class TransmuteCommands(
 
     public IEnumerable<Command> Commands =>
     [
-        new Command("transmute", Transmute)
+        new("transmute", Transmute)
         {
             Description = "Transform 3 or more badges into a (usually) rarer badge. Costs one token. " +
                           "Arguments: <several Pokemon>(at least 3) t1"

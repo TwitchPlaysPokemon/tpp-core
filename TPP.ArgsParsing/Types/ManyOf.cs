@@ -9,9 +9,7 @@ namespace TPP.ArgsParsing.Types;
 /// Non-generic base class used by <see cref="ManyOf{T}"/>.
 /// Do not use this class directly. Instead, use <see cref="ManyOf{T}"/>.
 /// </summary>
-public class ManyOf
-{
-}
+public class ManyOf;
 
 /// <summary>
 /// Class encapsulating a value that may be repeated multiple times.

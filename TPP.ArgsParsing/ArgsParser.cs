@@ -39,7 +39,7 @@ public class MissingParserException(Type typeWithoutParser)
 /// </summary>
 public class ArgsParser
 {
-    private readonly Dictionary<Type, IArgumentParser> _parsers = new Dictionary<Type, IArgumentParser>();
+    private readonly Dictionary<Type, IArgumentParser> _parsers = new();
 
     /// <summary>
     /// Adds an argument parser instance capable of parsing a specific type.

@@ -12,18 +12,18 @@ public class UserCommands(IUserRepo userRepo) : ICommandCollection
 {
     public IEnumerable<Command> Commands =>
     [
-        new Command("displayname", SetDisplayName)
+        new("displayname", SetDisplayName)
         {
             Description = "Set the capitalization of your display name as it appears on stream. " +
                           "Only needed by users with special characters in their display name. " +
                           "Argument: <new name>"
         },
-        new Command("list", List)
+        new("list", List)
         {
             Description = "List all of the people who have a given role. " +
                           "Arguments: <role>"
         },
-        new Command("showroles", ShowRoles)
+        new("showroles", ShowRoles)
         {
             Aliases = ["roles"],
             Description = "Show which roles a user has. " +

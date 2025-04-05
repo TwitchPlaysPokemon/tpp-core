@@ -9,7 +9,7 @@ namespace TPP.Core.Commands.Definitions;
 
 public class EasterEggCommands : ICommandCollection
 {
-    private static readonly Random Random = new Random();
+    private static readonly Random Random = new();
 
     public IEnumerable<Command> Commands => new[]
     {

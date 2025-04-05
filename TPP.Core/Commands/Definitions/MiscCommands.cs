@@ -71,12 +71,12 @@ public class MiscCommands : ICommandCollection
 
     public IEnumerable<Command> Commands =>
     [
-        new Command("unsupported", _ => Task.FromResult(new CommandResult()))
+        new("unsupported", _ => Task.FromResult(new CommandResult()))
         {
             Description = "Prevents stupid loops when a core messages another core",
             Aliases = ["unknown"]
         },
 
-        new Command("uptime", Uptime) { Description = "Shows how long the stream has been up." }
+        new("uptime", Uptime) { Description = "Shows how long the stream has been up." }
     ];
 }

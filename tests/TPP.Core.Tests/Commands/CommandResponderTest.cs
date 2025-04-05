@@ -12,7 +12,7 @@ namespace TPP.Core.Tests.Commands;
 
 public class CommandResponderTest
 {
-    private static User MockUser() => new User(
+    private static User MockUser() => new(
         id: Guid.NewGuid().ToString(),
         name: "User", twitchDisplayName: "☺user", simpleName: "user", color: null,
         firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),

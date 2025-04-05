@@ -7,7 +7,7 @@ namespace TPP.Persistence.MongoDB.Serializers;
 
 public class InstantSerializer : SerializerBase<Instant>
 {
-    public static readonly InstantSerializer Instance = new InstantSerializer();
+    public static readonly InstantSerializer Instance = new();
 
     private InstantSerializer()
     {

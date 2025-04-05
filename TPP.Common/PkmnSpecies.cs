@@ -28,7 +28,7 @@ public sealed class PkmnSpecies : IComparable<PkmnSpecies>
     /// Internal dictionary that keeps track of any existing instances
     /// to ensure only one instance may ever exist per species.
     /// </summary>
-    private static readonly Dictionary<string, PkmnSpecies> Instances = new Dictionary<string, PkmnSpecies>();
+    private static readonly Dictionary<string, PkmnSpecies> Instances = new();
 
     /// <summary>
     /// The species' unique identifier.

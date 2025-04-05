@@ -12,13 +12,9 @@ public abstract class RuleResult
     {
     }
 
-    public sealed class Nothing : RuleResult
-    {
-    }
+    public sealed class Nothing : RuleResult;
 
-    public sealed class DeleteMessage : RuleResult
-    {
-    }
+    public sealed class DeleteMessage : RuleResult;
 
     public sealed class GivePoints(int points, string reason) : RuleResult
     {

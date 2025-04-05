@@ -4,9 +4,7 @@ namespace TPP.ArgsParsing.Types;
 /// Non-generic base class used by all of the derived classes.
 /// Do not use this class directly. Instead, use the derived class with the desired amount of generic parameters.
 /// </summary>
-public class OneOf
-{
-}
+public class OneOf;
 
 /// <summary>
 /// Class encapsulating two optional values of which only one may ever be present.

@@ -30,7 +30,7 @@ public sealed class BaseConfig : ConfigBase, IRootConfig
     public string MongoDbDatabaseName { get; init; } = "tpp3";
     public string MongoDbDatabaseNameMessagelog { get; init; } = "tpp3_messagelog";
 
-    public ChatConfig Chat { get; init; } = new ChatConfig();
+    public ChatConfig Chat { get; init; } = new();
 
     [Description("Amount of pokeyen for brand new users (new entries in the database).")]
     public int StartingPokeyen { get; init; } = 100;

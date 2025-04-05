@@ -19,14 +19,14 @@ public class CommandProcessorTest
     private readonly ILogger<CommandProcessor> _nullLogger = new NullLogger<CommandProcessor>();
     private readonly ICommandLogger _commandLoggerMock = Substitute.For<ICommandLogger>();
     private readonly ImmutableList<string> _noArgs = ImmutableList<string>.Empty;
-    private readonly User _mockUser = new User(
+    private readonly User _mockUser = new(
         id: Guid.NewGuid().ToString(),
         name: "MockUser", twitchDisplayName: "☺MockUser", simpleName: "mockuser", color: null,
         firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
         lastMessageAt: null, pokeyen: 0, tokens: 0);
 
     private Message MockMessage(string text = "")
-        => new Message(_mockUser, text, new MessageSource.PrimaryChat(), string.Empty);
+        => new(_mockUser, text, new MessageSource.PrimaryChat(), string.Empty);
 
     [Test]
     public async Task TestUnknownCommand()

@@ -20,5 +20,5 @@ public readonly struct ButtonInputDefinition(string name, string mapsTo, string 
 
     public string Name => name;
     public string InputRegex => Regex.Escape(name);
-    public Input? Parse(string str) => new Input(_label, mapsTo, str);
+    public Input? Parse(string str) => new(_label, mapsTo, str);
 }

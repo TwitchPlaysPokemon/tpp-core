@@ -20,14 +20,14 @@ namespace TPP.Core.Tests.Commands.Definitions;
 
 public class OperatorCommandsTest
 {
-    private static User MockUser(string name, PkmnSpecies? selectedBadge = null) => new User(
+    private static User MockUser(string name, PkmnSpecies? selectedBadge = null) => new(
         id: Guid.NewGuid().ToString(),
         name: name, twitchDisplayName: "☺" + name, simpleName: name.ToLower(), color: null,
         firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
         lastMessageAt: null, pokeyen: 0, tokens: 0,
         selectedBadge: selectedBadge);
 
-    private static User MockOperator(string name, PkmnSpecies? selectedBadge = null) => new User(
+    private static User MockOperator(string name, PkmnSpecies? selectedBadge = null) => new(
         id: Guid.NewGuid().ToString(),
         name: name, twitchDisplayName: "☺" + name, simpleName: name.ToLower(), color: null,
         firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),

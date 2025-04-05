@@ -13,7 +13,7 @@ namespace TPP.ArgsParsing.TypeParsers;
 /// </summary>
 public class TimeSpanParser : IArgumentParser<TimeSpan>
 {
-    private static readonly Regex Regex = new Regex(
+    private static readonly Regex Regex = new(
         @"^
             (?:(?<weeks>[0-9]+)w)?
             (?:(?<days>[0-9]+)d)?

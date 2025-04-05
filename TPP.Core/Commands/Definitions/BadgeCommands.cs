@@ -36,19 +36,19 @@ public class BadgeCommands : ICommandCollection
             Description = "Show a user's badges. Argument: <Pokemon> (optional) <Username> (optional)"
         }.WithPerUserCooldown(Duration.FromSeconds(3)),
 
-        new Command("unselectbadge", UnselectBadge)
+        new("unselectbadge", UnselectBadge)
         {
             Aliases = ["unchoosebadge", "unequipbadge"],
             Description = "Unequip your displayed badge."
         },
 
-        new Command("selectbadge", SelectBadge)
+        new("selectbadge", SelectBadge)
         {
             Aliases = ["choosebadge", "equipbadge"],
             Description = "Change your displayed badge. Argument: <Pokemon>"
         },
 
-        new Command("checkbadge", CheckBadge)
+        new("checkbadge", CheckBadge)
         {
             Description = "View statistics about a badge. Argument: <Pokemon>"
         },
@@ -59,7 +59,7 @@ public class BadgeCommands : ICommandCollection
             Description = "Show how many different species of badge a user owns. Argument: <username> (optional) <mode> (optional). For more info, type \"!dex modes\""
         }.WithPerUserCooldown(Duration.FromSeconds(3)),
 
-        new Command("giftbadge", GiftBadge)
+        new("giftbadge", GiftBadge)
         {
             Description =
                 "Gift a badge you own to another user with no price. Arguments: <pokemon> <number of badges>(Optional) <username>"
