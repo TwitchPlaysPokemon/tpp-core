@@ -20,7 +20,7 @@ public class AnalogInput : Input
         string originalText,
         float strength) : base(displayedText, buttonName, originalText)
     {
-        if (strength < 0f || strength > 1f)
+        if (strength is < 0f or > 1f)
         {
             throw new ArgumentOutOfRangeException(nameof(strength), strength, "must be between 0 and 1");
         }

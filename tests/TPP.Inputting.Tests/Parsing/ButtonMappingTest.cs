@@ -202,9 +202,9 @@ public class ButtonMappingTest
     public void TestDualSNES()
     {
         _inputParser = ButtonProfile.DualSNES.ToInputParserBuilder().Build();
-        if (_inputParser is SidedInputParser and not null)
+        if (_inputParser is SidedInputParser parser)
         {
-            ((SidedInputParser)_inputParser).AllowDirectedInputs = true;
+            parser.AllowDirectedInputs = true;
         }
 
         // good cases
@@ -241,9 +241,9 @@ public class ButtonMappingTest
             AssertMapped("up", "Left Up");
 
             _inputParser = ButtonProfile.DualGameBoy.ToInputParserBuilder().Build();
-            if (_inputParser is SidedInputParser and not null)
+            if (_inputParser is SidedInputParser parser)
             {
-                ((SidedInputParser)_inputParser).AllowDirectedInputs = true;
+                parser.AllowDirectedInputs = true;
             }
 
             // good cases
@@ -308,9 +308,9 @@ public class ButtonMappingTest
         var drag = new NewAnarchyInput(1, ParseInput("20,40>50,60"), MockUser(), null, null);
         Assert.That(buttonsOnly.X == null && buttonsOnly.Y == null && buttonsOnly.X2 == null && buttonsOnly.Y2 == null,
             "Buttons should create no touchscreen coordinates");
-        Assert.That(touch.X == 20 && touch.Y == 40 && touch.X2 == null && touch.Y2 == null,
+        Assert.That(touch is { X: 20, Y: 40, X2: null, Y2: null },
             "Touchscreen coordinates should be mapped to x,y properties");
-        Assert.That(drag.X == 20 && drag.Y == 40 && drag.X2 == 50 && drag.Y2 == 60,
+        Assert.That(drag is { X: 20, Y: 40, X2: 50, Y2: 60 },
             "Drag coordinates should be mapped to x,y,x2,y2 properties");
     }
 

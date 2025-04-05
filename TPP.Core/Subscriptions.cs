@@ -91,7 +91,7 @@ public class SubscriptionProcessor(
     public async Task<ISubscriptionProcessor.SubResult> ProcessSubscription(SubscriptionInfo subscriptionInfo)
     {
         User user = subscriptionInfo.Subscriber;
-        if (user.MonthsSubscribed > 0 && user.SubscriptionTier == null)
+        if (user is { MonthsSubscribed: > 0, SubscriptionTier: null })
         {
             logger.LogInformation("Subscriber {User} has no subscription tier recorded. Assuming this user was " +
                                   "subscribed before tiers were a thing and is equivalent to Tier 1", user);

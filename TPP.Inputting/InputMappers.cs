@@ -90,7 +90,7 @@ public class DefaultTppInputMapper : IInputMapper
                 inputMap["Touch_Screen_X"] = touch.X;
                 inputMap["Touch_Screen_Y"] = touch.Y;
             }
-            else if (input is SideInput side && side.Side != null)
+            else if (input is SideInput { Side: not null } side)
             {
                 buttonPrefix = side.Side switch
                 {
@@ -98,7 +98,7 @@ public class DefaultTppInputMapper : IInputMapper
                     InputSide.Right => controllerPrefixes.ElementAtOrDefault(1) ?? "P2 ",
                 };
             }
-            else if (input is AnalogInput analog && analog.Strength < 1)
+            else if (input is AnalogInput { Strength: < 1 } analog)
             {
                 inputMap[ToLowerFirstUpper(input.ButtonName)] = analog.Strength > 0 ? analog.Strength : false;
             }

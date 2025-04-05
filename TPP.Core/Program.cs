@@ -156,8 +156,7 @@ Options:
                     .MinimumLevel.Is(baseConfig.DiscordLoggingConfig.MinLogLevel)
                     .Filter.ByExcluding(logEvent =>
                     {
-                        string? context = (logEvent.Properties["SourceContext"] as ScalarValue)?.Value as string;
-                        if (context == null)
+                        if ((logEvent.Properties["SourceContext"] as ScalarValue)?.Value is not string context)
                             return false;
                         foreach ((string loggerPrefix, LogLevel logLevel) in levelOverrides)
                             if (context.StartsWith(loggerPrefix) && logEvent.Level < logLevel.ToSerilogLogLevel())
