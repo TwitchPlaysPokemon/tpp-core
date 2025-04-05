@@ -1,44 +1,32 @@
 namespace TPP.ArgsParsing.Types;
 
 /// <summary>
-/// Non-generic base class used by all of the derived classes.
-/// Do not use this class directly. Instead, use the derived class with the desired amount of generic parameters.
+/// Non-generic base record used by all of the derived records.
+/// Do not use this record directly. Instead, use the derived record with the desired amount of generic parameters.
 /// </summary>
-public class OneOf;
+public record OneOf;
 
 /// <summary>
-/// Class encapsulating two optional values of which only one may ever be present.
+/// Record encapsulating two optional values of which only one may ever be present.
 /// </summary>
-public class OneOf<T1, T2>(Optional<T1> item1, Optional<T2> item2) : OneOf
+public record OneOf<T1, T2>(Optional<T1> Item1, Optional<T2> Item2) : OneOf
 {
-    public Optional<T1> Item1 { get; } = item1;
-    public Optional<T2> Item2 { get; } = item2;
-
     public (Optional<T1>, Optional<T2>) AsTuple() => (Item1, Item2);
 }
 
 /// <summary>
-/// Class encapsulating three optional values of which only one may ever be present.
+/// Record encapsulating three optional values of which only one may ever be present.
 /// </summary>
-public class OneOf<T1, T2, T3>(Optional<T1> item1, Optional<T2> item2, Optional<T3> item3) : OneOf
+public record OneOf<T1, T2, T3>(Optional<T1> Item1, Optional<T2> Item2, Optional<T3> Item3) : OneOf
 {
-    public Optional<T1> Item1 { get; } = item1;
-    public Optional<T2> Item2 { get; } = item2;
-    public Optional<T3> Item3 { get; } = item3;
-
     public (Optional<T1>, Optional<T2>, Optional<T3>) AsTuple() => (Item1, Item2, Item3);
 }
 
 /// <summary>
-/// Class encapsulating four optional values of which only one may ever be present.
+/// Record encapsulating four optional values of which only one may ever be present.
 /// </summary>
-public class OneOf<T1, T2, T3, T4>(Optional<T1> item1, Optional<T2> item2, Optional<T3> item3, Optional<T4> item4)
+public record OneOf<T1, T2, T3, T4>(Optional<T1> Item1, Optional<T2> Item2, Optional<T3> Item3, Optional<T4> Item4)
     : OneOf
 {
-    public Optional<T1> Item1 { get; } = item1;
-    public Optional<T2> Item2 { get; } = item2;
-    public Optional<T3> Item3 { get; } = item3;
-    public Optional<T4> Item4 { get; } = item4;
-
     public (Optional<T1>, Optional<T2>, Optional<T3>, Optional<T4>) AsTuple() => (Item1, Item2, Item3, Item4);
 }

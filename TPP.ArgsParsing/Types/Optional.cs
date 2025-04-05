@@ -3,26 +3,24 @@ using System;
 namespace TPP.ArgsParsing.Types;
 
 /// <summary>
-/// Non-generic base class used by <see cref="Optional{T}"/>.
-/// Do not use this class directly. Instead, use <see cref="Optional{T}"/>.
+/// Non-generic base record used by <see cref="Optional{T}"/>.
+/// Do not use this record directly. Instead, use <see cref="Optional{T}"/>.
 /// </summary>
-public class Optional;
+public record Optional;
 
 /// <summary>
 /// Class encapsulating that may be absent during parsing and not cause a parse failure,
-/// but instead result in an empty instance of this class.
+/// but instead result in an empty instance of this record.
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public class Optional<T>(bool present, T value) : Optional
+public record Optional<T>(bool IsPresent, T MaybeValue) : Optional
 {
-    public bool IsPresent { get; } = present;
-
     public T Value
     {
         get
         {
             if (!IsPresent) throw new InvalidOperationException("Cannot access the value of an empty Optional.");
-            return value;
+            return MaybeValue;
         }
     }
 
