@@ -18,12 +18,13 @@ internal record WebsocketChangeover(ClientWebSocket NewWebSocket, SessionWelcome
 public class EventSubClient
 {
     private static readonly Encoding Utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
-    private static readonly Duration KeepAliveGrace = Duration.FromSeconds(600);
+    private static readonly Duration KeepAliveGrace = Duration.FromSeconds(10);
     private static readonly Duration MaxMessageAge = Duration.FromMinutes(10);
     private static readonly Task<WebsocketChangeover> NoChangeoverTask =
         new TaskCompletionSource<WebsocketChangeover>().Task; // a task that never gets completed
 
     private readonly ILogger<EventSubClient> _logger;
+    private readonly string _logPrefix;
     private readonly IClock _clock;
     private readonly Uri _uri;
     private int _keepaliveTimeSeconds;
@@ -33,7 +34,8 @@ public class EventSubClient
         set
         {
             if (_keepaliveTimeSeconds == value) return;
-            _logger.LogDebug("WS keepalive timeout is now {KeepaliveSeconds}s", value); // to debug ws disconnects
+            _logger.LogDebug(_logPrefix +
+                "WS keepalive timeout is now {KeepaliveSeconds}s", value); // to debug ws disconnects
             _keepaliveTimeSeconds = value;
         }
     }
@@ -56,9 +58,10 @@ public class EventSubClient
     public EventSubClient(
         ILoggerFactory loggerFactory,
         IClock clock,
+        string? name = null,
         string url = "wss://eventsub.wss.twitch.tv/ws",
         // More pings = lower chance for our socket to get randomly killed by something between us and Twitch servers.
-        // We want robustness by default, so let's choose 10s: the lowest interval Twitch allows.
+        // Higher values aren't known to cause any trouble, but let's be safe by default.
         int keepaliveTimeSeconds = 10)
     {
         _logger = loggerFactory.CreateLogger<EventSubClient>();
@@ -66,6 +69,7 @@ public class EventSubClient
             throw new ArgumentException(
                 "Twitch only allows keepalive timeouts between 10 and 600 seconds", nameof(keepaliveTimeSeconds));
 
+        _logPrefix = name != null ? name + ": " : "";
         _clock = clock;
         _uri = new Uri(url + "?keepalive_timeout_seconds=" + keepaliveTimeSeconds);
         KeepaliveTimeSeconds = keepaliveTimeSeconds;
@@ -142,7 +146,6 @@ public class EventSubClient
         Task<WebsocketChangeover> changeoverTask = NoChangeoverTask;
 
         using var webSocketBox = new WebSocketBox();
-        webSocketBox.WebSocket.Options.KeepAliveInterval = TimeSpan.FromSeconds(KeepaliveTimeSeconds);
         await webSocketBox.WebSocket.ConnectAsync(_uri, cancellationToken);
         Instant lastMessageTimestamp = _clock.GetCurrentInstant(); // treat a fresh connection as a received message
         while (!cancellationToken.IsCancellationRequested)
@@ -161,7 +164,8 @@ public class EventSubClient
             if (firstFinishedTask == changeoverTask)
             {
                 WebsocketChangeover changeover = await changeoverTask;
-                _logger.LogDebug("Finished WebSocket Changeover, welcome message: {Welcome}", changeover.Welcome);
+                _logger.LogDebug(_logPrefix +
+                    "Finished WebSocket Changeover, welcome message: {Welcome}", changeover.Welcome);
                 Session welcomeSession = changeover.Welcome.Payload.Session;
                 KeepaliveTimeSeconds = welcomeSession.KeepaliveTimeoutSeconds!.Value; // always set for Welcome messages
                 lastMessageTimestamp = changeover.Welcome.Metadata.MessageTimestamp;
@@ -187,11 +191,13 @@ public class EventSubClient
             if (parseResult is not ParseResult.Ok(var message, var originalJson))
             {
                 if (parseResult is ParseResult.InvalidMessage(var error))
-                    _logger.LogError("A message was skipped because it failed to parse: {Error}", error);
+                    _logger.LogError(_logPrefix + "A message was skipped because it failed to parse: {Error}", error);
                 else if (parseResult is ParseResult.UnknownMessageType(var messageType))
-                    _logger.LogWarning("Unknown message type received and skipped: {MessageType}", messageType);
+                    _logger.LogWarning(_logPrefix +
+                        "Unknown message type received and skipped: {MessageType}", messageType);
                 else if (parseResult is ParseResult.UnknownSubscriptionType(var subType))
-                    _logger.LogWarning("Unknown subscription type received and skipped: {SubscriptionType}", subType);
+                    _logger.LogWarning(_logPrefix +
+                        "Unknown subscription type received and skipped: {SubscriptionType}", subType);
                 else
                     throw new ArgumentOutOfRangeException(nameof(parseResult));
                 continue;
@@ -207,7 +213,7 @@ public class EventSubClient
             {
                 // Regarding "Guarding against replay attacks", Twitch recommends:
                 // Make sure you haven’t seen the ID in the message_id field before.
-                _logger.LogWarning("Dropping duplicate message with ID {Id}, Message: {Message}",
+                _logger.LogWarning(_logPrefix + "Dropping duplicate message with ID {Id}, Message: {Message}",
                     message.Metadata.MessageId, message);
                 continue; // Just drop.
             }
@@ -216,6 +222,7 @@ public class EventSubClient
             if (clientServerTimeShift < -KeepAliveGrace || clientServerTimeShift > KeepAliveGrace)
             {
                 _logger.LogWarning(
+                    _logPrefix +
                     "Client time is {Shift}s ahead of server time: Received message with timestamp {ServerTimestamp}, " +
                     "but client timestamp currently is {ClientTimestamp}. " +
                     "You may want to either increase 'KeepAliveGrace' or fix the clock accuracy.",
@@ -247,7 +254,8 @@ public class EventSubClient
                 var reconnectUri = new Uri(reconnect.Payload.Session
                     .ReconnectUrl ?? throw new ProtocolViolationException(
                     "twitch must provide a reconnect URL in a reconnect message"));
-                _logger.LogDebug("Initiating WebSocket Changeover to new Uri: {ReconnectUri}", reconnectUri);
+                _logger.LogDebug(_logPrefix +
+                   "Initiating WebSocket Changeover to new Uri: {ReconnectUri}", reconnectUri);
                 changeoverTask = PerformChangeover(reconnectUri, cancellationToken);
             }
             else if (message is Revocation revocation)
@@ -261,7 +269,7 @@ public class EventSubClient
             }
             else
             {
-                _logger.LogError("Known message was not handled and skipped: {Message}", message);
+                _logger.LogError(_logPrefix + "Known message was not handled and skipped: {Message}", message);
             }
         }
         if (webSocketBox.WebSocket.State == WebSocketState.Open)

@@ -81,8 +81,8 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
         _coStreamInputsOnlyLive = coStreamInputsOnlyLive;
         _coStreamChannelsRepo = coStreamChannelsRepo;
 
-        _clientChatBot = new EventSubClient(loggerFactory, clock);
-        _clientChannel = new EventSubClient(loggerFactory, clock);
+        _clientChatBot = new EventSubClient(loggerFactory, clock, "chatbot");
+        _clientChannel = new EventSubClient(loggerFactory, clock, "channel");
         _clientChatBot.RevocationReceived += (_, revocation) =>
             _logger.LogError("received revocation for {SubscriptionType}: {Data}",
                 revocation.Metadata.SubscriptionType,
