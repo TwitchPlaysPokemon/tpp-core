@@ -38,12 +38,12 @@ public class ManyOfParser(ArgsParser argsParser) : IArgumentParser<ManyOf>
         Type listContentType = genericTypes[0];
 
         Type manyOfType = typeof(ManyOf<>).MakeGenericType(listContentType);
-        ConstructorInfo? constructor = manyOfType.GetConstructor(new[] { typeof(IEnumerable<object>) });
+        ConstructorInfo? constructor = manyOfType.GetConstructor([typeof(IEnumerable<object>)]);
         if (constructor == null)
             throw new InvalidOperationException(
                 $"{manyOfType} needs a constructor (IEnumerable<object> values).");
 
-        List<Failure> failures = new();
+        List<Failure> failures = [];
         for (int numArgs = args.Count; numArgs > 0; numArgs--)
         {
             ArgsParseResult<List<object>> result = await argsParser
@@ -54,14 +54,14 @@ public class ManyOfParser(ArgsParser argsParser) : IArgumentParser<ManyOf>
                 List<object> contents = result.SuccessResult.Value.Result;
                 return ArgsParseResult<ManyOf>.Success(
                     failures.ToImmutableList(),
-                    (ManyOf)constructor.Invoke(new object[] { contents }),
+                    (ManyOf)constructor.Invoke([contents]),
                     result.SuccessResult.Value.RemainingArgs
                 );
             }
         }
         return ArgsParseResult<ManyOf>.Success(
             failures.ToImmutableList(),
-            (ManyOf)constructor.Invoke(new object?[] { ImmutableList.Create<object>() }),
+            (ManyOf)constructor.Invoke([ImmutableList.Create<object>()]),
             args
         );
     }

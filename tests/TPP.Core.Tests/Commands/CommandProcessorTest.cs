@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -73,7 +72,7 @@ public class CommandProcessorTest
     {
         var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock, new ArgsParser());
         commandProcessor.InstallCommand(new Command("main", CommandUtils.StaticResponse("Hi!"))
-            { Aliases = new[] { "alias1", "alias2" } });
+            { Aliases = ["alias1", "alias2"] });
 
         foreach (string command in ImmutableList.Create("main", "alias1", "ALIAS2"))
         {
@@ -99,9 +98,9 @@ public class CommandProcessorTest
         var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock, new ArgsParser());
 
         commandProcessor.InstallCommand(new Command("a", CommandUtils.StaticResponse("Hi!"))
-            { Aliases = new[] { "x" } });
+            { Aliases = ["x"] });
         ArgumentException ex = Assert.Throws<ArgumentException>(() => commandProcessor
-            .InstallCommand(new Command("b", CommandUtils.StaticResponse("Hi!")) { Aliases = new[] { "X" } }))!;
+            .InstallCommand(new Command("b", CommandUtils.StaticResponse("Hi!")) { Aliases = ["X"] }))!;
         Assert.That(ex.Message, Is.EqualTo("The alias 'x' conflicts with: a(x): <no description>"));
     }
 
@@ -111,9 +110,9 @@ public class CommandProcessorTest
         var commandProcessor = new CommandProcessor(_nullLogger, _commandLoggerMock, new ArgsParser());
 
         commandProcessor.InstallCommand(new Command("a", CommandUtils.StaticResponse("Hi!"))
-            { Aliases = new[] { "b" } });
+            { Aliases = ["b"] });
         ArgumentException ex = Assert.Throws<ArgumentException>(() => commandProcessor
-            .InstallCommand(new Command("b", CommandUtils.StaticResponse("Hi!")) { Aliases = new[] { "x" } }))!;
+            .InstallCommand(new Command("b", CommandUtils.StaticResponse("Hi!")) { Aliases = ["x"] }))!;
         Assert.That(ex.Message, Is.EqualTo("The command name 'b' conflicts with: a(b): <no description>"));
     }
 
@@ -130,7 +129,7 @@ public class CommandProcessorTest
             id: Guid.NewGuid().ToString(),
             name: "operator", twitchDisplayName: "operator", simpleName: "mockoperator", color: null,
             firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
-            lastMessageAt: null, pokeyen: 0, tokens: 0, roles: new HashSet<Role> { Role.Operator });
+            lastMessageAt: null, pokeyen: 0, tokens: 0, roles: [Role.Operator]);
 
         CommandResult? userResult = await commandProcessor.Process("opsonly", _noArgs, new Message(_mockUser, "", new MessageSource.PrimaryChat(), ""));
         Assert.That(userResult?.Response, Is.EqualTo("Only operators can use that command"));

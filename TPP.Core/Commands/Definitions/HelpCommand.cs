@@ -7,7 +7,7 @@ public class HelpCommand(CommandProcessor commandProcessor)
 {
     public Command Command => new("help", ctx => Task.FromResult(Execute(ctx)))
     {
-        Aliases = new[] { "info" },
+        Aliases = ["info"],
         Description = "Get general help, or info on a specific command like: \"!help balance\""
     };
 

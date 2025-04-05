@@ -27,7 +27,7 @@ public class LinkedAccountRepoTest : MongoTestBase
         Assert.That(await linkedAccountRepo.FindLinkedUsers("user2"), Is.Empty);
         // successfully create links
         Assert.That(await linkedAccountRepo.Link(ImmutableHashSet.Create("user1", "user2")), Is.True);
-        List<User> links1And2 = new() { user1, user2 };
+        List<User> links1And2 = [user1, user2];
         Assert.That(await linkedAccountRepo.FindLinkedUsers("user1"), Is.EquivalentTo(links1And2));
         Assert.That(await linkedAccountRepo.FindLinkedUsers("user2"), Is.EquivalentTo(links1And2));
         Assert.That(await linkedAccountRepo.AreLinked("user1", "user2"), Is.True);
@@ -48,7 +48,7 @@ public class LinkedAccountRepoTest : MongoTestBase
         Assert.That(await linkedAccountRepo.AreLinked("user1", "user2"), Is.False);
         // other users linked
         Assert.That(await linkedAccountRepo.Link(ImmutableHashSet.Create("user1", "user3")), Is.True);
-        List<User> links1And3 = new() { user1, user3 };
+        List<User> links1And3 = [user1, user3];
         Assert.That(await linkedAccountRepo.FindLinkedUsers("user1"), Is.EquivalentTo(links1And3));
         Assert.That(await linkedAccountRepo.FindLinkedUsers("user2"), Is.Empty);
         Assert.That(await linkedAccountRepo.AreLinked("user1", "user2"), Is.False);

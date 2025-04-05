@@ -10,7 +10,7 @@ public class KeyCountPrioritizedQueue<K, V>
     where K : notnull
     where V : class
 {
-    private List<(K, V)> _store = new();
+    private List<(K, V)> _store = [];
 
     public int Count
     {

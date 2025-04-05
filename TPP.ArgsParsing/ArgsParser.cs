@@ -88,7 +88,7 @@ public class ArgsParser
             {
                 throw new MissingParserException(typeWithoutParser: type);
             }
-            Type[] genericTypes = type.IsGenericType ? type.GenericTypeArguments : Array.Empty<Type>();
+            Type[] genericTypes = type.IsGenericType ? type.GenericTypeArguments : [];
             ArgsParseResult<object> parseResult;
             try
             {

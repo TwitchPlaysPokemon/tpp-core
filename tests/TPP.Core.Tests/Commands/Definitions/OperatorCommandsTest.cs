@@ -32,7 +32,7 @@ public class OperatorCommandsTest
         name: name, twitchDisplayName: "☺" + name, simpleName: name.ToLower(), color: null,
         firstActiveAt: Instant.FromUnixTimeSeconds(0), lastActiveAt: Instant.FromUnixTimeSeconds(0),
         lastMessageAt: null, pokeyen: 0, tokens: 0,
-        selectedBadge: selectedBadge, roles: new HashSet<Role> { Role.Operator });
+        selectedBadge: selectedBadge, roles: [Role.Operator]);
 
     private static Message MockMessage(User user, string text = "") =>
         new(user, text, new MessageSource.PrimaryChat(), string.Empty);
@@ -153,7 +153,7 @@ public class OperatorCommandsTest
     public async Task TestTransferBadgeSuccessful()
     {
         PkmnSpecies species = PkmnSpecies.RegisterName("1", "species");
-        _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
+        _argsParser.AddArgumentParser(new PkmnSpeciesParser([species]));
         User userSelf = MockOperator("MockUserSelf");
         User gifter = MockUser("Gifter");
         User recipient = MockUser("Recipient");
@@ -192,7 +192,7 @@ public class OperatorCommandsTest
     public async Task TestTransferBadgeOmitReason()
     {
         PkmnSpecies species = PkmnSpecies.RegisterName("1", "species");
-        _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
+        _argsParser.AddArgumentParser(new PkmnSpeciesParser([species]));
         User userSelf = MockOperator("MockUserSelf");
         User gifter = MockUser("Gifter");
         User recipient = MockUser("Recipient");
@@ -219,7 +219,7 @@ public class OperatorCommandsTest
     public async Task TestGiftBadgeNotOwned()
     {
         PkmnSpecies species = PkmnSpecies.RegisterName("1", "species");
-        _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
+        _argsParser.AddArgumentParser(new PkmnSpeciesParser([species]));
         User userSelf = MockOperator("MockUserSelf");
         User gifter = MockUser("Gifter");
         User recipient = MockUser("Recipient");
@@ -249,7 +249,7 @@ public class OperatorCommandsTest
     public async Task TestCreateBadge()
     {
         PkmnSpecies species = PkmnSpecies.RegisterName("1", "Species");
-        _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
+        _argsParser.AddArgumentParser(new PkmnSpeciesParser([species]));
         User user = MockOperator("MockUser");
         User recipient = MockUser("Recipient");
         OperatorCommands operatorCommands = new(

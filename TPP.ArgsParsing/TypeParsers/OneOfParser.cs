@@ -26,7 +26,7 @@ public class OneOfParser(ArgsParser argsParser) : IArgumentParser<OneOf>
         for (int i = 0; i < genericTypes.Length; i++)
         {
             Type nestedType = genericTypes[i];
-            ArgsParseResult<List<object>> parseResult = await argsParser.ParseRaw(args, new[] { nestedType });
+            ArgsParseResult<List<object>> parseResult = await argsParser.ParseRaw(args, [nestedType]);
             if (parseResult.SuccessResult == null)
             {
                 Debug.Assert(parseResult.Failures.Any());
@@ -59,14 +59,14 @@ public class OneOfParser(ArgsParser argsParser) : IArgumentParser<OneOf>
                 Type genericType = genericTypes[j];
                 ConstructorInfo? optionalConstructor = typeof(Optional<>)
                     .MakeGenericType(genericType)
-                    .GetConstructor(new[] { typeof(bool), genericType });
+                    .GetConstructor([typeof(bool), genericType]);
                 if (optionalConstructor == null)
                 {
                     throw new InvalidOperationException($"{typeof(Optional<>)} needs a constructor (bool, object)");
                 }
                 invokeArgs[j] = i == j // for the successful one, fill the optional with the result
-                    ? optionalConstructor.Invoke(new[] { true, result })
-                    : optionalConstructor.Invoke(new object[] { false, null! });
+                    ? optionalConstructor.Invoke([true, result])
+                    : optionalConstructor.Invoke([false, null!]);
             }
             return ArgsParseResult<OneOf>.Success(
                 parseResult.Failures,

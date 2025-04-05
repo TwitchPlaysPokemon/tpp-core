@@ -20,7 +20,7 @@ public static class ArgsParserExtensions
     public static async Task<ArgsParseResult<T1>> TryParse<T1>(
         this ArgsParser argsParser, IImmutableList<string> args)
     {
-        IEnumerable<Type> types = new[] { typeof(T1) };
+        IEnumerable<Type> types = [typeof(T1)];
         ArgsParseResult<List<object>> parseResult =
             await argsParser.ParseRaw(args, types, errorOnRemainingArgs: true);
         if (parseResult.SuccessResult == null)
@@ -42,7 +42,7 @@ public static class ArgsParserExtensions
     public static async Task<ArgsParseResult<(T1, T2)>> TryParse<T1, T2>(
         this ArgsParser argsParser, IImmutableList<string> args)
     {
-        IEnumerable<Type> types = new[] { typeof(T1), typeof(T2) };
+        IEnumerable<Type> types = [typeof(T1), typeof(T2)];
         ArgsParseResult<List<object>> parseResult =
             await argsParser.ParseRaw(args, types, errorOnRemainingArgs: true);
         if (parseResult.SuccessResult == null)
@@ -64,7 +64,7 @@ public static class ArgsParserExtensions
     public static async Task<ArgsParseResult<(T1, T2, T3)>> TryParse<T1, T2, T3>(
         this ArgsParser argsParser, IImmutableList<string> args)
     {
-        IEnumerable<Type> types = new[] { typeof(T1), typeof(T2), typeof(T3) };
+        IEnumerable<Type> types = [typeof(T1), typeof(T2), typeof(T3)];
         ArgsParseResult<List<object>> parseResult =
             await argsParser.ParseRaw(args, types, errorOnRemainingArgs: true);
         if (parseResult.SuccessResult == null)
@@ -86,7 +86,7 @@ public static class ArgsParserExtensions
     public static async Task<ArgsParseResult<(T1, T2, T3, T4)>> TryParse<T1, T2, T3, T4>(
         this ArgsParser argsParser, IImmutableList<string> args)
     {
-        IEnumerable<Type> types = new[] { typeof(T1), typeof(T2), typeof(T3), typeof(T4) };
+        IEnumerable<Type> types = [typeof(T1), typeof(T2), typeof(T3), typeof(T4)];
         ArgsParseResult<List<object>> parseResult =
             await argsParser.ParseRaw(args, types, errorOnRemainingArgs: true);
         if (parseResult.SuccessResult == null)
@@ -108,7 +108,7 @@ public static class ArgsParserExtensions
     public static async Task<ArgsParseResult<(T1, T2, T3, T4, T5)>> TryParse<T1, T2, T3, T4, T5>(
         this ArgsParser argsParser, IImmutableList<string> args)
     {
-        IEnumerable<Type> types = new[] { typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5) };
+        IEnumerable<Type> types = [typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5)];
         ArgsParseResult<List<object>> parseResult =
             await argsParser.ParseRaw(args, types, errorOnRemainingArgs: true);
         if (parseResult.SuccessResult == null)

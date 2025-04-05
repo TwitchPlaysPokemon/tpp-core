@@ -45,7 +45,7 @@ public class MiscCommands : ICommandCollection
         if (uptimeData.LastUpdatedAt < now - MaxUptimeUpdateAge)
         {
             GetStreamsResponse apiResponse =
-                await twitchChat.TwitchApi.GetStreamsAsync(userIds: new List<string> { twitchChat.ChannelId });
+                await twitchChat.TwitchApi.GetStreamsAsync(userIds: [twitchChat.ChannelId]);
             Stream? stream = apiResponse.Streams.FirstOrDefault(); // may be null if offline (or wrong channel id)
             uptimeData.StartedAt = stream?.StartedAt.ToInstant();
             uptimeData.LastUpdatedAt = now;
@@ -69,14 +69,14 @@ public class MiscCommands : ICommandCollection
         return new CommandResult { Response = streamUptimeResponse + " " + coreUptimeResponse };
     }
 
-    public IEnumerable<Command> Commands => new[]
-    {
+    public IEnumerable<Command> Commands =>
+    [
         new Command("unsupported", _ => Task.FromResult(new CommandResult()))
         {
             Description = "Prevents stupid loops when a core messages another core",
-            Aliases = new[] { "unknown" }
+            Aliases = ["unknown"]
         },
 
         new Command("uptime", Uptime) { Description = "Shows how long the stream has been up." }
-    };
+    ];
 }

@@ -160,7 +160,7 @@ public class TransmuterTest
         Badge outputBadge = new("badgeOut", user.Id, speciesOut, Badge.BadgeSource.Transmutation, Instant.MinValue);
 
         bankMock.GetAvailableMoney(user).Returns(1);
-        List<Dictionary<string, object?>> transferData = new();
+        List<Dictionary<string, object?>> transferData = [];
         transmutationCalculatorMock.Transmute(inputSpeciesList).Returns(speciesOut);
         badgeRepoMock.FindByUserAndSpecies(user.Id, speciesIn, inputSpeciesList.Count)
             .Returns(inputBadges);
@@ -169,13 +169,13 @@ public class TransmuterTest
             .ReturnsForAnyArgs(inputBadges);
         badgeRepoMock.AddBadge(user.Id, speciesOut, Badge.BadgeSource.Transmutation, null)
             .Returns(outputBadge);
-        List<Transaction<User>> transactionData = new();
+        List<Transaction<User>> transactionData = [];
         bankMock.PerformTransaction(
                 Arg.Do<Transaction<User>>(u => transactionData.Add(u)), CancellationToken.None)
             .Returns(default(TransactionLog)!); // result is not used, no need to mock a response
         clockMock.GetCurrentInstant().Returns(instant);
 
-        List<TransmuteEventArgs> transmuteEventArgsList = new();
+        List<TransmuteEventArgs> transmuteEventArgsList = [];
 
         ITransmuter transmuter = new Transmuter(
             badgeRepoMock, transmutationCalculatorMock, bankMock,

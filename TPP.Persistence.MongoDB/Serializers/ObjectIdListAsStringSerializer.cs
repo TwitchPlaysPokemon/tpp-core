@@ -15,7 +15,7 @@ public class ObjectIdListAsStringSerializer : SerializerBase<IReadOnlyList<strin
     public override IReadOnlyList<string> Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
     {
         context.Reader.ReadStartArray();
-        List<string> list = new();
+        List<string> list = [];
         while (context.Reader.ReadBsonType() != BsonType.EndOfDocument)
             list.Add(context.Reader.ReadObjectId().ToString());
         context.Reader.ReadEndArray();

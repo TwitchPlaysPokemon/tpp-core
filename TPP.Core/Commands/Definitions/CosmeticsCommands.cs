@@ -13,37 +13,37 @@ public class CosmeticsCommands(IUserRepo userRepo, IBank<User> tokenBank) : ICom
 {
     private const string UnlockGlowCommandName = "unlockglow";
 
-    public IEnumerable<Command> Commands => new[]
-    {
+    public IEnumerable<Command> Commands =>
+    [
         new Command("setglow", SetGlow)
         {
-            Aliases = new[] { "setsecondarycolor", "setsecondarycolour" },
+            Aliases = ["setsecondarycolor", "setsecondarycolour"],
             Description = "Change the color of the glow around your name as it appears on stream. " +
                           "Argument: #<hexcolor>"
         },
         new Command("removeglow", RemoveGlow)
         {
-            Aliases = new[] { "removesecondarycolor", "removesecondarycolour" },
+            Aliases = ["removesecondarycolor", "removesecondarycolour"],
             Description = "Remove the glow around your name as it appears on stream."
         },
         new Command(UnlockGlowCommandName, UnlockGlow)
         {
-            Aliases = new[] { "unlocksecondarycolor", "unlocksecondarycolour" },
+            Aliases = ["unlocksecondarycolor", "unlocksecondarycolour"],
             Description = "Unlock the ability to change the color of your glow around your name " +
                           "as it appears on stream. Costs 1 token."
         },
         new Command("emblems", CheckEmblems)
         {
-            Aliases = new[] { "participation" },
+            Aliases = ["participation"],
             Description = "Show a user's run participation record. Argument: <username> (optional)"
         }.WithPerUserCooldown(Duration.FromSeconds(3)),
         new Command("selectemblem", SelectEmblem)
         {
-            Aliases = new[] { "chooseemblem", "selectparticipationbadge", "chooseparticipationbadge" },
+            Aliases = ["chooseemblem", "selectparticipationbadge", "chooseparticipationbadge"],
             Description = "Select which run's emblem color to show on stream next to your name. " +
                           "Argument: <run number>"
-        },
-    };
+        }
+    ];
 
     public async Task<CommandResult> SetGlow(CommandContext context)
     {

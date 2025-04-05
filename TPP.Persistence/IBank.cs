@@ -204,7 +204,7 @@ public abstract class ReserveCheckersBank<T> : IBank<T>
     public async Task<TransactionLog> PerformTransaction(
         Transaction<T> transaction,
         CancellationToken token = default) =>
-        (await PerformTransactions(new[] { transaction }, token)).First();
+        (await PerformTransactions([transaction], token)).First();
 
     public abstract Task<List<TransactionLog>> FindTransactions(User user, Instant at, int limit);
 }

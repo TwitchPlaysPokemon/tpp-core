@@ -10,7 +10,7 @@ internal record GivenPoints(int Points, string Reason, Instant GivenAt);
 
 public class PointStore(IClock clock, float decayPerSecond)
 {
-    private readonly List<GivenPoints> _points = new();
+    private readonly List<GivenPoints> _points = [];
 
     public void AddPoints(int points, string reason)
     {

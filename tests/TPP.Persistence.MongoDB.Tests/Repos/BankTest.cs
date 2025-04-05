@@ -106,11 +106,10 @@ public class BankTest : MongoTestBase
         await usersCollection.InsertOneAsync(knownUser);
 
         UserNotFoundException<TestUser> userNotFound = Assert.ThrowsAsync<UserNotFoundException<TestUser>>(() =>
-            bank.PerformTransactions(new[]
-            {
+            bank.PerformTransactions([
                 new Transaction<TestUser>(knownUser, 3, "test"),
                 new Transaction<TestUser>(unknownUser, -3, "test")
-            })
+            ])
         )!;
 
         Assert.That(userNotFound.User, Is.EqualTo(unknownUser));
@@ -127,7 +126,7 @@ public class BankTest : MongoTestBase
         (IBank<TestUser> bank, IMongoCollection<TestUser> usersCollection) = CreateDbObjects(new MockClock());
         TestUser user = new TestUser { Money = 10 };
         TestUser otherUser = new TestUser { Money = 20 };
-        await usersCollection.InsertManyAsync(new[] { user, otherUser });
+        await usersCollection.InsertManyAsync([user, otherUser]);
         Task<long> Checker(TestUser u) => Task.FromResult(u == user ? 1L : 0L);
 
         Assert.That(await bank.GetAvailableMoney(user), Is.EqualTo(10));
@@ -157,7 +156,7 @@ public class BankTest : MongoTestBase
         (IBank<TestUser> bank, IMongoCollection<TestUser> usersCollection) = CreateDbObjects(clockMock);
         TestUser user = new TestUser { Money = 10 };
         await usersCollection.InsertOneAsync(user);
-        List<int> list = new List<int> { 1, 2, 3 };
+        List<int> list = [1, 2, 3];
         Dictionary<string, bool> dictionary = new Dictionary<string, bool> { ["yes"] = true, ["no"] = false };
         await bank.PerformTransaction(new Transaction<TestUser>(user, 1, "test",
             new Dictionary<string, object?>

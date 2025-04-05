@@ -16,11 +16,11 @@ public class CommandAliasRepoTest : MongoTestBase
 
         CommandAlias alias1 = await repo.UpsertAlias("Alias1", "target1", []);
         CommandAlias alias2 = await repo.UpsertAlias("alias2", "target2", ["foo", "bar"]);
-        Assert.That(await repo.GetAliases(), Is.EquivalentTo(new[] { alias1, alias2 }));
+        Assert.That(await repo.GetAliases(), Is.EquivalentTo([alias1, alias2]));
 
         Assert.That(await repo.RemoveAlias("ALIAS1"), Is.True);
         Assert.That(await repo.RemoveAlias("alias1"), Is.False); // already deleted
-        Assert.That(await repo.GetAliases(), Is.EquivalentTo(new[] { alias2 }));
+        Assert.That(await repo.GetAliases(), Is.EquivalentTo([alias2]));
     }
 
     [Test]
@@ -30,9 +30,9 @@ public class CommandAliasRepoTest : MongoTestBase
         Assert.That(await repo.GetAliases(), Is.Empty);
 
         CommandAlias alias1 = await repo.UpsertAlias("alias", "target1", []);
-        Assert.That(await repo.GetAliases(), Is.EquivalentTo(new[] { alias1 }));
+        Assert.That(await repo.GetAliases(), Is.EquivalentTo([alias1]));
         CommandAlias alias2 = await repo.UpsertAlias("ALIAS", "target2", ["foo"]);
-        Assert.That(await repo.GetAliases(), Is.EquivalentTo(new[] { alias2 }));
+        Assert.That(await repo.GetAliases(), Is.EquivalentTo([alias2]));
     }
 
     [Test]

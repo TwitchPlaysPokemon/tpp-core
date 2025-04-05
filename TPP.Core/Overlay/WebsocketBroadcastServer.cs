@@ -41,7 +41,7 @@ internal readonly struct Connection : IAsyncDisposable
 /// It cannot receive messages.
 public class WebsocketBroadcastServer : IBroadcastServer, IWithLifecycle, IDisposable
 {
-    private readonly List<Connection> _connections = new List<Connection>();
+    private readonly List<Connection> _connections = [];
     private readonly string _host;
     private readonly int _port;
     private readonly ILogger<WebsocketBroadcastServer> _logger;
@@ -72,7 +72,7 @@ public class WebsocketBroadcastServer : IBroadcastServer, IWithLifecycle, IDispo
     public async Task Send(string message, CancellationToken cancellationToken)
     {
         byte[] bytes = Encoding.UTF8.GetBytes(message);
-        List<WebSocketException> errors = new();
+        List<WebSocketException> errors = [];
         await _connectionsSemaphore.WaitAsync(cancellationToken);
         try
         {

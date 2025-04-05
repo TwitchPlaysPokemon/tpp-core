@@ -44,7 +44,7 @@ public class TransmuteCommandsTest
     public async Task TestTransmute()
     {
         PkmnSpecies species = PkmnSpecies.RegisterName("1", "mon");
-        _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
+        _argsParser.AddArgumentParser(new PkmnSpeciesParser([species]));
         User user = MockUser("MockUser");
         _badgeRepoMock.FindByUserAndSpecies(user.Id, species, null)
             .Returns(ImmutableList<Badge>.Empty);

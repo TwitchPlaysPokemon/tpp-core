@@ -10,8 +10,8 @@ namespace TPP.Core.Commands.Definitions;
 
 public class UserCommands(IUserRepo userRepo) : ICommandCollection
 {
-    public IEnumerable<Command> Commands => new[]
-    {
+    public IEnumerable<Command> Commands =>
+    [
         new Command("displayname", SetDisplayName)
         {
             Description = "Set the capitalization of your display name as it appears on stream. " +
@@ -25,13 +25,13 @@ public class UserCommands(IUserRepo userRepo) : ICommandCollection
         },
         new Command("showroles", ShowRoles)
         {
-            Aliases = new[] { "roles" },
+            Aliases = ["roles"],
             Description = "Show which roles a user has. " +
                           "Arguments: <user>"
         },
-        new Command("operators", Ops) { Aliases = new[] { "ops" }, Description = "Alias for '!list operator'" }.WithGlobalCooldown(Duration.FromSeconds(30)),
-        new Command("moderators", Mods) { Aliases = new[] { "mods" }, Description = "Alias for '!list moderator'" }.WithGlobalCooldown(Duration.FromSeconds(30)),
-    };
+        new Command("operators", Ops) { Aliases = ["ops"], Description = "Alias for '!list operator'" }.WithGlobalCooldown(Duration.FromSeconds(30)),
+        new Command("moderators", Mods) { Aliases = ["mods"], Description = "Alias for '!list moderator'" }.WithGlobalCooldown(Duration.FromSeconds(30))
+    ];
 
     public async Task<CommandResult> SetDisplayName(CommandContext context)
     {

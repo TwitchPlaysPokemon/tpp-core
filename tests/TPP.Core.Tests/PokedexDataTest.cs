@@ -28,7 +28,7 @@ public class PokedexDataTest
         public void passes_through_exact_name()
         {
             string[] names =
-            {
+            [
                 "Nidoran♀", "Nidoran♂",
                 "Farfetch'd", "Sirfetch'd",
                 "Mr. Mime", "Mr. Rime", "Mime Jr.",
@@ -43,7 +43,7 @@ public class PokedexDataTest
                 "Flabébé",
                 "Type: Null",
                 "MissingNo."
-            };
+            ];
             foreach (string name in names)
             {
                 Assert.That(PokedexData.NormalizeName(name), Is.EqualTo(name));

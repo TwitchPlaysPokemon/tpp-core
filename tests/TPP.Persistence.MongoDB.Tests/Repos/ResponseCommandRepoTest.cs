@@ -15,11 +15,11 @@ public class ResponseCommandRepoTest : MongoTestBase
 
         ResponseCommand command1 = await repo.UpsertCommand("Command1", "response 1");
         ResponseCommand command2 = await repo.UpsertCommand("command2", "response 2");
-        Assert.That(await repo.GetCommands(), Is.EquivalentTo(new[] { command1, command2 }));
+        Assert.That(await repo.GetCommands(), Is.EquivalentTo([command1, command2]));
 
         Assert.That(await repo.RemoveCommand("COMMAND1"), Is.True);
         Assert.That(await repo.RemoveCommand("command1"), Is.False); // already deleted
-        Assert.That(await repo.GetCommands(), Is.EquivalentTo(new[] { command2 }));
+        Assert.That(await repo.GetCommands(), Is.EquivalentTo([command2]));
     }
 
     [Test]
@@ -29,8 +29,8 @@ public class ResponseCommandRepoTest : MongoTestBase
         Assert.That(await repo.GetCommands(), Is.Empty);
 
         ResponseCommand command1 = await repo.UpsertCommand("command", "response 1");
-        Assert.That(await repo.GetCommands(), Is.EquivalentTo(new[] { command1 }));
+        Assert.That(await repo.GetCommands(), Is.EquivalentTo([command1]));
         ResponseCommand command2 = await repo.UpsertCommand("COMMAND", "response 2");
-        Assert.That(await repo.GetCommands(), Is.EquivalentTo(new[] { command2 }));
+        Assert.That(await repo.GetCommands(), Is.EquivalentTo([command2]));
     }
 }

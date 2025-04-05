@@ -250,7 +250,7 @@ public class TypeParsersTest
         const string speciesName = "Uniquamon";
         var argsParser = new ArgsParser();
         PkmnSpecies species = PkmnSpecies.RegisterName(speciesId, speciesName);
-        argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
+        argsParser.AddArgumentParser(new PkmnSpeciesParser([species]));
 
         PkmnSpecies resultById = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create("#" + speciesId));
         PkmnSpecies resultByPaddedId =
@@ -280,7 +280,7 @@ public class TypeParsersTest
         PkmnSpecies species = PkmnSpecies.RegisterName("123", "'Mahina: -Pea.");
         Regex removeCharsRegex = new Regex("[ '-.:]");
         string NormalizeName(string name) => removeCharsRegex.Replace(name, "");
-        argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }, NormalizeName));
+        argsParser.AddArgumentParser(new PkmnSpeciesParser([species], NormalizeName));
 
         PkmnSpecies resultById = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create("#123"));
         PkmnSpecies result1 = await argsParser.Parse<PkmnSpecies>(args: ImmutableList.Create("mahina", "pea"));

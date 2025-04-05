@@ -27,9 +27,9 @@ public class BannedUrlsRule : IModerationRule
 {
     public string Id => "banned_url";
     private static readonly string[] BannedUrls =
-    {
+    [
         "strawpoii.me", "strawpoil.me", "findminecraft.com", "akk.li/pics/anne.jpg", "shafou.com", "herobrine.com"
-    };
+    ];
 
     public RuleResult Check(Message message) =>
         BannedUrls.Any(url => message.MessageText.Contains(url, StringComparison.InvariantCultureIgnoreCase))

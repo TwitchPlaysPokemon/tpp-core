@@ -21,13 +21,13 @@ public class BettingCommands : ICommandCollection
         _bettingPeriodProvider = bettingPeriodProvider;
     }
 
-    public IEnumerable<Command> Commands => new[]
-    {
+    public IEnumerable<Command> Commands =>
+    [
         new Command("bet", Bet)
         {
             Description = "Chat only: bet on PBR using Pokéyen. Arguments: <team> <amount or percent>"
         }
-    };
+    ];
 
     public async Task<CommandResult> Bet(CommandContext context)
     {

@@ -300,7 +300,7 @@ public static class Setups
     {
         IImmutableList<ResponseCommand> commands = responseCommandRepo.GetCommands().Result;
 
-        HashSet<string> dynamicallyInstalledCommands = new();
+        HashSet<string> dynamicallyInstalledCommands = [];
         void InstallCommand(ResponseCommand command)
         {
             Command? existing = commandProcessor.FindCommand(command.Command);
@@ -339,7 +339,7 @@ public static class Setups
     {
         IImmutableList<CommandAlias> aliases = commandAliasRepo.GetAliases().Result;
 
-        HashSet<string> dynamicallyInstalledAliases = new();
+        HashSet<string> dynamicallyInstalledAliases = [];
         void InstallAlias(CommandAlias alias)
         {
             Command? existing = commandProcessor.FindCommand(alias.Alias);

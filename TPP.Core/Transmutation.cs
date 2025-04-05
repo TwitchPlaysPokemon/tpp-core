@@ -213,7 +213,7 @@ public class Transmuter(
 
     private async Task OnTransmuted(User user, IImmutableList<PkmnSpecies> inputs, PkmnSpecies output)
     {
-        List<PkmnSpecies> candidates = new();
+        List<PkmnSpecies> candidates = [];
         for (int i = 0; i < 5; i++)
             candidates.Add(await transmutationCalculator.Transmute(inputs));
         candidates.Insert(Random.Next(0, candidates.Count), output);

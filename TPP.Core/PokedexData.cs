@@ -19,7 +19,7 @@ public class PokedexData
     public ImmutableSortedSet<PkmnSpecies> KnownSpecies { get; }
 
     private static readonly (string, string)[] NameNormalizations =
-    {
+    [
         (@"Nidoran-?[♀f]",   "Nidoran♀"),
         (@"Nidoran-?[♂m]",   "Nidoran♂"),
         (@"Farfetch'?d",     "Farfetch'd"),
@@ -62,8 +62,8 @@ public class PokedexData
         (@"Raging[ -]?Bolt",  "Raging Bolt"),
         (@"Iron[ -]?Boulder", "Iron Boulder"),
         (@"Iron[ -]?Crown",   "Iron Crown"),
-        (@"MissingNo\.?",    "MissingNo."),
-    };
+        (@"MissingNo\.?",    "MissingNo.")
+    ];
 
     private static readonly IImmutableDictionary<Regex, string> NameNormalizationRegexes = NameNormalizations
         .ToImmutableDictionary(

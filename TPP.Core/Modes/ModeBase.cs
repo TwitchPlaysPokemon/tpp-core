@@ -25,7 +25,7 @@ namespace TPP.Core.Modes;
 
 public sealed class ModeBase : IWithLifecycle, ICommandHandler
 {
-    private static readonly Role[] ExemptionRoles = { Role.Operator, Role.Moderator, Role.ModbotExempt };
+    private static readonly Role[] ExemptionRoles = [Role.Operator, Role.Moderator, Role.ModbotExempt];
 
     private readonly ILogger<ModeBase> _logger;
     private readonly IImmutableDictionary<string, IChat> _chats;

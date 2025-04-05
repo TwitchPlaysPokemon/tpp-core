@@ -13,8 +13,8 @@ public class PollCommands(IPollRepo pollRepo) : ICommandCollection
 {
     private const string PollCommandName = "poll";
 
-    public IEnumerable<Command> Commands => new[]
-    {
+    public IEnumerable<Command> Commands =>
+    [
         new Command("vote", Vote)
         {
             Description =
@@ -23,15 +23,15 @@ public class PollCommands(IPollRepo pollRepo) : ICommandCollection
         },
         new Command(PollCommandName, Poll)
         {
-            Aliases = new[] { "checkpoll" },
+            Aliases = ["checkpoll"],
             Description = "Check a poll's status and options. Argument: <PollCode>"
         },
         new Command("polls", Polls)
         {
-            Aliases = new[] { "listpolls", "allpolls", "activepolls" },
+            Aliases = ["listpolls", "allpolls", "activepolls"],
             Description = "List all currently active polls."
-        },
-    };
+        }
+    ];
 
     public async Task<CommandResult> Vote(CommandContext context)
     {
@@ -48,7 +48,7 @@ public class PollCommands(IPollRepo pollRepo) : ICommandCollection
         if (poll == null)
             return new CommandResult { Response = $"No poll with the code '{pollCode}' was found." };
 
-        List<int> selectedOptions = new();
+        List<int> selectedOptions = [];
         foreach (string voteStr in votes)
         {
             PollOption? option = null;

@@ -14,14 +14,14 @@ class ManagePollCommands(IPollRepo pollRepo) : ICommandCollection
     {
         new Command("createpoll", StartPoll)
         {
-            Aliases = new[] { "startpoll" },
+            Aliases = ["startpoll"],
             Description = "Starts a new poll. " +
                           "Arguments: <PollName> <PollCode> <MultipleChoice> <AllowChangeVote> <Option1> <Option2> <OptionX> (optional). " +
                           "Underscores in the poll name and options will be replaced with spaces."
         },
         new Command("closepoll", ClosePoll)
         {
-            Aliases = new[] { "endpoll" },
+            Aliases = ["endpoll"],
             Description = "End a poll. Arguments: <PollCode>"
         },
     }.Select(cmd => cmd.WithModeratorsOnly());

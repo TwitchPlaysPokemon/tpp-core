@@ -8,6 +8,7 @@ using TPP.Core;
 using TPP.Core.Overlay.Events;
 using TPP.Inputting.Inputs;
 using TPP.Inputting.Parsing;
+using TPP.Model;
 
 namespace TPP.Inputting.Tests.Parsing;
 public class ButtonMappingTest
@@ -230,7 +231,7 @@ public class ButtonMappingTest
         var originalMapper = _inputMapper;
         try
         {
-            _inputMapper = new DefaultTppInputMapper(controllerPrefixes: new string[] { "Left ", "Right " });
+            _inputMapper = new DefaultTppInputMapper(controllerPrefixes: ["Left ", "Right "]);
             _inputParser = ButtonProfile.GameBoy.ToInputParserBuilder().Build();
 
             // good cases
@@ -279,7 +280,7 @@ public class ButtonMappingTest
         });
     }
 
-    private static Model.User MockUser(
+    private static User MockUser(
     string name = "user",
     int pokeyen = 0,
     int tokens = 0,
@@ -287,7 +288,7 @@ public class ButtonMappingTest
     int? pokeyenBetRank = null,
     bool glowColorUnlocked = false,
     SortedSet<int>? emblems = null
-    ) => new Model.User(
+    ) => new User(
         id: Guid.NewGuid().ToString(),
         name: name, twitchDisplayName: twitchDisplayName ?? "☺" + name, simpleName: name.ToLower(), color: null,
         firstActiveAt: Instant.FromUnixTimeSeconds(0),

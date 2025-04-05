@@ -34,7 +34,7 @@ public class BettingPeriodTest
     public async Task proper_payouts_blue_wins()
     {
         var bankMock = Substitute.For<IBank<string>>();
-        List<Transaction<string>> transactions = new();
+        List<Transaction<string>> transactions = [];
         bankMock.PerformTransactions(
             Arg.Do<IEnumerable<Transaction<string>>>(txs => transactions.AddRange(txs)),
             Arg.Any<CancellationToken>()
@@ -54,18 +54,17 @@ public class BettingPeriodTest
             Assert.That(tx.Type, Is.EqualTo("match"));
             Assert.That(tx.AdditionalData, Is.EqualTo(new Dictionary<string, object?> { ["match"] = 1234 }));
         }
-        Assert.That(transactions.Select(tx => (tx.User, tx.Change)), Is.EquivalentTo(new[]
-        {
+        Assert.That(transactions.Select(tx => (tx.User, tx.Change)), Is.EquivalentTo([
             ("userBlue", 250),
             ("userRed", -250)
-        }));
+        ]));
     }
 
     [Test]
     public async Task proper_payouts_red_wins()
     {
         var bankMock = Substitute.For<IBank<string>>();
-        List<Transaction<string>> transactions = new();
+        List<Transaction<string>> transactions = [];
         bankMock.PerformTransactions(
             Arg.Do<IEnumerable<Transaction<string>>>(txs => transactions.AddRange(txs)),
             Arg.Any<CancellationToken>()
@@ -85,11 +84,10 @@ public class BettingPeriodTest
             Assert.That(tx.Type, Is.EqualTo("match"));
             Assert.That(tx.AdditionalData, Is.EqualTo(new Dictionary<string, object?> { ["match"] = 1234 }));
         }
-        Assert.That(transactions.Select(tx => (tx.User, tx.Change)), Is.EquivalentTo(new[]
-        {
+        Assert.That(transactions.Select(tx => (tx.User, tx.Change)), Is.EquivalentTo([
             ("userBlue", -200),
-            ("userRed", 200),
-        }));
+            ("userRed", 200)
+        ]));
     }
 
     [Test]

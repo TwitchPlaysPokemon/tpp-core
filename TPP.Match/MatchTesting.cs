@@ -35,7 +35,7 @@ public static class MatchTesting
         ),
         Nature = Nature.Jolly,
         Shiny = false,
-        Species = new Species { Id = 48, Name = "Venonat", Types = new[] { "Bug", "Poison" } },
+        Species = new Species { Id = 48, Name = "Venonat", Types = ["Bug", "Poison"] },
         Status = new Status
         {
             Nonvolatile = new NonvolatileStatus

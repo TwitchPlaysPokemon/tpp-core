@@ -15,18 +15,18 @@ public class EasterEggCommands : ICommandCollection
     {
         new Command("racc", RaccAttack)
         {
-            Aliases = new[] {"raccattack"},
+            Aliases = ["raccattack"],
             Description = "He protecc. He attacc. But most importantly he RaccAttack ."
         },
 
         new Command("thanks", StaticResponse("You're welcome!"))
-            {Aliases = new[] {"thank"}, Description = "Respond to a user's thanks."},
+            {Aliases = ["thank"], Description = "Respond to a user's thanks."},
 
         new Command("twitch", StaticResponse("Kappa"))
             {Description = "Respond with the twitch."},
 
         new Command("iloveyou", StaticResponse("I love you too! <3"))
-            {Aliases = new[] {"iloveyou<3"}, Description = "Respond to a user's love. <3"}
+            {Aliases = ["iloveyou<3"], Description = "Respond to a user's love. <3"}
     }.Select(cmd => cmd.WithGlobalCooldown(Duration.FromSeconds(10)));
 
     public Task<CommandResult> RaccAttack(CommandContext context)

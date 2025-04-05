@@ -238,7 +238,7 @@ public static class RulesTest
         [Test]
         public void detects_banned_word()
         {
-            BannedWordsRule rule = new(new[] { "penis" });
+            BannedWordsRule rule = new(["penis"]);
             Message message = TextMessage("𝓟énis haha");
 
             RuleResult result = rule.Check(message);
@@ -250,7 +250,7 @@ public static class RulesTest
         [Test]
         public void ignored_not_banned_word()
         {
-            BannedWordsRule rule = new(new[] { "penis" });
+            BannedWordsRule rule = new(["penis"]);
             Message message = TextMessage("boobs haha");
             Assert.That(rule.Check(message), Is.InstanceOf<RuleResult.Nothing>());
         }

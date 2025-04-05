@@ -19,7 +19,7 @@ public static class ConfigUtils
         foreach (string configKey in config.UnrecognizedConfigs.Keys)
         {
             if (config is IRootConfig && configKey == IRootConfig.SchemaFieldName) continue;
-            string fullyQualifiedConfigKey = string.Join(".", parentConfigKeys.Concat(new[] { configKey }));
+            string fullyQualifiedConfigKey = string.Join(".", parentConfigKeys.Concat([configKey]));
             Console.Error.WriteLine($"unrecognized config key '{fullyQualifiedConfigKey}'");
         }
         // recursively check all nested configs
@@ -31,7 +31,7 @@ public static class ConfigUtils
                 if (value != null)
                 {
                     WriteUnrecognizedConfigsToStderr(value,
-                        parentConfigKeys.Concat(new[] { property.Name }).ToList());
+                        parentConfigKeys.Concat([property.Name]).ToList());
                 }
             }
         }

@@ -69,7 +69,7 @@ public class User(
     public long Tokens { get; init; } = tokens;
     public long PokeyenHighScore { get; init; } = pokeyenHighScore;
 
-    public SortedSet<int> ParticipationEmblems { get; init; } = participationEmblems ?? new SortedSet<int>();
+    public SortedSet<int> ParticipationEmblems { get; init; } = participationEmblems ?? [];
     public int? SelectedParticipationEmblem { get; init; } = selectedParticipationEmblem;
 
     public PkmnSpecies? SelectedBadge { get; init; } = selectedBadge;
@@ -79,7 +79,7 @@ public class User(
 
     public int? PokeyenBetRank { get; init; } = pokeyenBetRank;
 
-    public HashSet<Role> Roles { get; init; } = roles ?? new HashSet<Role>();
+    public HashSet<Role> Roles { get; init; } = roles ?? [];
 
     // public bool Active { get; init; }
     // public bool Follower { get; init; }

@@ -182,7 +182,7 @@ public class BadgeRepo(
     {
         Instant now = clock.GetCurrentInstant();
 
-        List<Badge> updatedBadges = new();
+        List<Badge> updatedBadges = [];
         using (IClientSessionHandle sessionOuter = await Collection.Database.Client.StartSessionAsync())
         {
             await sessionOuter.WithTransactionAsync(async (txSession, txToken) =>

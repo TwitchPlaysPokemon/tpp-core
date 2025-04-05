@@ -90,7 +90,7 @@ public class BadgeCommandsTest
             var species1 = PkmnSpecies.RegisterName("1", "Einsmon");
             var species2 = PkmnSpecies.RegisterName("22", "Zwozwomon");
             var species3 = PkmnSpecies.RegisterName("13", "Drölfmon");
-            _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species1, species2, species3 }));
+            _argsParser.AddArgumentParser(new PkmnSpeciesParser([species1, species2, species3]));
             User otherUser = MockUser("Someone_Else");
             _userRepoMock
                 .FindBySimpleName(otherUser.SimpleName)
@@ -127,7 +127,7 @@ public class BadgeCommandsTest
         {
             User user = MockUser("MockUser");
             PkmnSpecies species = PkmnSpecies.RegisterName("1", "PersonMon");
-            _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
+            _argsParser.AddArgumentParser(new PkmnSpeciesParser([species]));
             User otherUser = MockUser("PersonMon");
             _userRepoMock
                 .FindBySimpleName(otherUser.SimpleName)
@@ -153,7 +153,7 @@ public class BadgeCommandsTest
         {
             User user = MockUser("User");
             PkmnSpecies species = PkmnSpecies.RegisterName("1", "Species");
-            _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
+            _argsParser.AddArgumentParser(new PkmnSpeciesParser([species]));
             _userRepoMock
                 .FindBySimpleName(user.SimpleName)
                 .Returns(user);
@@ -204,7 +204,7 @@ public class BadgeCommandsTest
     {
         User user = MockUser("MockUser");
         PkmnSpecies species = PkmnSpecies.RegisterName("1", "Mon");
-        _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
+        _argsParser.AddArgumentParser(new PkmnSpeciesParser([species]));
         _badgeRepoMock.HasUserBadge(user.Id, species).Returns(true);
 
         CommandResult result = await _badgeCommands.SelectBadge(new CommandContext(MockMessage(user),
@@ -219,7 +219,7 @@ public class BadgeCommandsTest
     {
         User user = MockUser("MockUser");
         PkmnSpecies species = PkmnSpecies.RegisterName("1", "Mon");
-        _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
+        _argsParser.AddArgumentParser(new PkmnSpeciesParser([species]));
         _badgeRepoMock.HasUserBadge(user.Id, species).Returns(false);
 
         CommandResult result = await _badgeCommands.SelectBadge(new CommandContext(MockMessage(user),
@@ -245,7 +245,7 @@ public class BadgeCommandsTest
     {
         User user = MockUser("MockUser");
         PkmnSpecies species = PkmnSpecies.RegisterName("1", "Mon");
-        _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
+        _argsParser.AddArgumentParser(new PkmnSpeciesParser([species]));
         _badgeStatsRepoMock.GetBadgeStatsForSpecies(species)
             .Returns(new BadgeStat(species, 5, 5, 5, 5, 0.00001d));
         _badgeRepoMock.FindOwnerIdsForSpecies(species)
@@ -285,7 +285,7 @@ public class BadgeCommandsTest
     public async Task TestGiftBadgeSuccessful()
     {
         PkmnSpecies species = PkmnSpecies.RegisterName("1", "species");
-        _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
+        _argsParser.AddArgumentParser(new PkmnSpeciesParser([species]));
         User user = MockUser("MockUser");
         User recipient = MockUser("Recipient");
         _userRepoMock.FindBySimpleName("recipient").Returns(Task.FromResult((User?)recipient));
@@ -312,7 +312,7 @@ public class BadgeCommandsTest
     public async Task TestGiftBadgeNotOwned()
     {
         PkmnSpecies species = PkmnSpecies.RegisterName("1", "species");
-        _argsParser.AddArgumentParser(new PkmnSpeciesParser(new[] { species }));
+        _argsParser.AddArgumentParser(new PkmnSpeciesParser([species]));
         User user = MockUser("MockUser");
         User recipient = MockUser("Recipient");
         _userRepoMock.FindBySimpleName("recipient").Returns(Task.FromResult((User?)recipient));

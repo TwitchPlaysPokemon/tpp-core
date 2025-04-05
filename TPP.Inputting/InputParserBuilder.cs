@@ -16,8 +16,8 @@ public class InputParserBuilder
     // so it doesn't make sense to give the touchscreen any custom name.
     private const string TouchscreenName = "touchscreen";
 
-    private readonly List<IInputDefinition> _inputDefinitions = new();
-    private readonly HashSet<(string, string)> _conflicts = new();
+    private readonly List<IInputDefinition> _inputDefinitions = [];
+    private readonly HashSet<(string, string)> _conflicts = [];
     private bool _multitouch = false;
     private int _maxSetLength = 2;
     private int _maxSequenceLength = 1;

@@ -186,7 +186,7 @@ public class UserRepoTest : MongoTestBase
         Assert.That(userNew.ParticipationEmblems, Is.EqualTo(new SortedSet<int>()));
 
         await userRepo.Collection.UpdateOneAsync(u => u.Id == userInfo.Id, Builders<User>.Update
-            .Set(u => u.ParticipationEmblems, new SortedSet<int> { 42 }));
+            .Set(u => u.ParticipationEmblems, [42]));
         // when, then
         User userExisting = await userRepo.RecordUser(userInfo);
         Assert.That(userExisting.ParticipationEmblems, Is.Not.Null);
@@ -233,15 +233,15 @@ public class UserRepoTest : MongoTestBase
 
         // when, then
         User user1Emblem = await userRepo.GiveEmblem(user0Emblems, 1);
-        Assert.That(user1Emblem.ParticipationEmblems, Is.EquivalentTo(new[] { 1 }));
+        Assert.That(user1Emblem.ParticipationEmblems, Is.EquivalentTo([1]));
         User? userFromDb1Emblem = await userRepo.FindBySimpleName(userInfo.SimpleName);
-        Assert.That(userFromDb1Emblem?.ParticipationEmblems, Is.EquivalentTo(new[] { 1 }));
+        Assert.That(userFromDb1Emblem?.ParticipationEmblems, Is.EquivalentTo([1]));
 
         // when, then
         User user2Emblems = await userRepo.GiveEmblem(user1Emblem, 2);
-        Assert.That(user2Emblems.ParticipationEmblems, Is.EquivalentTo(new[] { 1, 2 }));
+        Assert.That(user2Emblems.ParticipationEmblems, Is.EquivalentTo([1, 2]));
         User? userFromDb2Emblems = await userRepo.FindBySimpleName(userInfo.SimpleName);
-        Assert.That(userFromDb2Emblems?.ParticipationEmblems, Is.EquivalentTo(new[] { 1, 2 }));
+        Assert.That(userFromDb2Emblems?.ParticipationEmblems, Is.EquivalentTo([1, 2]));
     }
 
     /// <summary>

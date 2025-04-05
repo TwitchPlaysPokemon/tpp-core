@@ -23,14 +23,14 @@ public class TransmuteCommands(
         transmutationCooldown ?? Duration.FromSeconds(DefaultTransmutationCooldownSeconds));
     private readonly Duration _messageDelay = messageDelay ?? Duration.FromSeconds(DefaultMessageDelaySeconds);
 
-    public IEnumerable<Command> Commands => new[]
-    {
+    public IEnumerable<Command> Commands =>
+    [
         new Command("transmute", Transmute)
         {
             Description = "Transform 3 or more badges into a (usually) rarer badge. Costs one token. " +
                           "Arguments: <several Pokemon>(at least 3) t1"
-        },
-    };
+        }
+    ];
 
     public async Task<CommandResult> Transmute(CommandContext context)
     {

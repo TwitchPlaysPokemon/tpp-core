@@ -89,7 +89,7 @@ public class Moderator(
         bool deleteMessage = false;
         (RuleResult.Timeout, IModerationRule)? timeoutAndRule = null;
 
-        List<(RuleResult, IModerationRule)> pointResults = new();
+        List<(RuleResult, IModerationRule)> pointResults = [];
 
         void ProcessResult(RuleResult result, IModerationRule rule)
         {

@@ -28,23 +28,23 @@ public class BadgeCommands : ICommandCollection
     private const string PokedexModeModes = "modes";
     private const string PokedexModeNational = "national";
 
-    public IEnumerable<Command> Commands => new[]
-    {
+    public IEnumerable<Command> Commands =>
+    [
         new Command("badges", Badges)
         {
-            Aliases = new[] { "badge" },
+            Aliases = ["badge"],
             Description = "Show a user's badges. Argument: <Pokemon> (optional) <Username> (optional)"
         }.WithPerUserCooldown(Duration.FromSeconds(3)),
 
         new Command("unselectbadge", UnselectBadge)
         {
-            Aliases = new[] { "unchoosebadge", "unequipbadge" },
+            Aliases = ["unchoosebadge", "unequipbadge"],
             Description = "Unequip your displayed badge."
         },
 
         new Command("selectbadge", SelectBadge)
         {
-            Aliases = new[] { "choosebadge", "equipbadge" },
+            Aliases = ["choosebadge", "equipbadge"],
             Description = "Change your displayed badge. Argument: <Pokemon>"
         },
 
@@ -55,7 +55,7 @@ public class BadgeCommands : ICommandCollection
 
         new Command("pokedex", Pokedex)
         {
-            Aliases = new[] { "dex" },
+            Aliases = ["dex"],
             Description = "Show how many different species of badge a user owns. Argument: <username> (optional) <mode> (optional). For more info, type \"!dex modes\""
         }.WithPerUserCooldown(Duration.FromSeconds(3)),
 
@@ -63,8 +63,8 @@ public class BadgeCommands : ICommandCollection
         {
             Description =
                 "Gift a badge you own to another user with no price. Arguments: <pokemon> <number of badges>(Optional) <username>"
-        },
-    };
+        }
+    ];
 
     private readonly IBadgeRepo _badgeRepo;
     private readonly IBadgeStatsRepo _badgeStatsRepo;

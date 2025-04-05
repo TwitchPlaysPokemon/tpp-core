@@ -35,7 +35,7 @@ public class ModerationService(
         if (executor == null)
             return BanResult.NotSupportedInChannel;
 
-        if (targetUser.Roles.Overlaps(new[] { Role.Operator, Role.Moderator }))
+        if (targetUser.Roles.Overlaps([Role.Operator, Role.Moderator]))
             return BanResult.UserIsModOrOp;
 
         Instant now = clock.GetCurrentInstant();
@@ -70,7 +70,7 @@ public class ModerationService(
         if (executor == null)
             return TimeoutResult.NotSupportedInChannel;
 
-        if (targetUser.Roles.Overlaps(new[] { Role.Operator, Role.Moderator }))
+        if (targetUser.Roles.Overlaps([Role.Operator, Role.Moderator]))
             return TimeoutResult.UserIsModOrOp;
 
         bool isIssuing = duration != null;
