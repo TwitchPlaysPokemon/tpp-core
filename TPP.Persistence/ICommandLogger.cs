@@ -2,10 +2,9 @@ using System.Collections.Immutable;
 using System.Threading.Tasks;
 using TPP.Model;
 
-namespace TPP.Persistence
+namespace TPP.Persistence;
+
+public interface ICommandLogger
 {
-    public interface ICommandLogger
-    {
-        public Task<CommandLog> Log(string userId, string command, IImmutableList<string> args, string? response);
-    }
+    public Task<CommandLog> Log(string userId, string command, IImmutableList<string> args, string? response);
 }
