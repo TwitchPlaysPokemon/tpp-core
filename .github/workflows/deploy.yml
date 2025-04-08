@@ -12,7 +12,7 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Publish the core
         run: dotnet publish TPP.Core -c Release -r linux-x64 -p:PublishSingleFile=true --no-self-contained -p:IncludeNativeLibrariesForSelfExtract=true
       - name: Deploy the core to TPP
