@@ -40,15 +40,15 @@ namespace MusicCat.Musiclibrary.Count
         /// <param name="requestConfiguration">Configuration for the request such as headers, query parameters, and middleware options.</param>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public async Task<int> GetAsync(Action<RequestConfiguration<global::MusicCat.Musiclibrary.Count.CountRequestBuilder.CountRequestBuilderGetQueryParameters>>? requestConfiguration = default, CancellationToken cancellationToken = default)
+        public async Task<int?> GetAsync(Action<RequestConfiguration<global::MusicCat.Musiclibrary.Count.CountRequestBuilder.CountRequestBuilderGetQueryParameters>>? requestConfiguration = default, CancellationToken cancellationToken = default)
         {
 #nullable restore
 #else
-        public async Task<int> GetAsync(Action<RequestConfiguration<global::MusicCat.Musiclibrary.Count.CountRequestBuilder.CountRequestBuilderGetQueryParameters>> requestConfiguration = default, CancellationToken cancellationToken = default)
+        public async Task<int?> GetAsync(Action<RequestConfiguration<global::MusicCat.Musiclibrary.Count.CountRequestBuilder.CountRequestBuilderGetQueryParameters>> requestConfiguration = default, CancellationToken cancellationToken = default)
         {
 #endif
             var requestInfo = ToGetRequestInformation(requestConfiguration);
-            return await RequestAdapter.SendPrimitiveAsync<int>(requestInfo, default, cancellationToken).ConfigureAwait(false);
+            return await RequestAdapter.SendPrimitiveAsync<int?>(requestInfo, default, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
         /// Counts all currently enabled songs in the library, optionally filtered to one type
@@ -82,7 +82,7 @@ namespace MusicCat.Musiclibrary.Count
         /// Counts all currently enabled songs in the library, optionally filtered to one type
         /// </summary>
         [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
-        public partial class CountRequestBuilderGetQueryParameters
+        public partial class CountRequestBuilderGetQueryParameters 
         {
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable

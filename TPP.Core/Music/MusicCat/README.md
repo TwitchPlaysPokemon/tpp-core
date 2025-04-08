@@ -21,10 +21,5 @@ Re-generate it by following these steps:
   ```shell
   find Client/ -type f -exec dos2unix {} \;
   ```
-- Unfortunately, [Kiota erroneously makes results nullable](https://github.com/microsoft/kiota/issues/3911).
-  Let's fix some nullabilities manually:
-  ```shell
-  sed -i 's/<int?>/<int>/g' Client/MusicLibrary/Count/CountRequestBuilder.cs
-  sed -i 's/<float?>/<float>/g' Client/Player/Position/PositionRequestBuilder.cs
-  sed -i 's/<float?>/<float>/g' Client/Player/Volume/VolumeRequestBuilder.cs
-  ```
+- Unfortunately, [Kiota erroneously makes results nullable](https://github.com/microsoft/kiota/issues/3911),
+  so the generated code claims everything may be null, which is not true. That's a limitation for now.

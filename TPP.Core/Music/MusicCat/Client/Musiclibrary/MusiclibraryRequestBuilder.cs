@@ -4,6 +4,8 @@ using Microsoft.Kiota.Abstractions.Extensions;
 using Microsoft.Kiota.Abstractions;
 using MusicCat.Musiclibrary.Count;
 using MusicCat.Musiclibrary.Reload;
+using MusicCat.Musiclibrary.Search;
+using MusicCat.Musiclibrary.Songs;
 using MusicCat.Musiclibrary.Verify;
 using System.Collections.Generic;
 using System.IO;
@@ -26,6 +28,16 @@ namespace MusicCat.Musiclibrary
         public global::MusicCat.Musiclibrary.Reload.ReloadRequestBuilder Reload
         {
             get => new global::MusicCat.Musiclibrary.Reload.ReloadRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The search property</summary>
+        public global::MusicCat.Musiclibrary.Search.SearchRequestBuilder Search
+        {
+            get => new global::MusicCat.Musiclibrary.Search.SearchRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The songs property</summary>
+        public global::MusicCat.Musiclibrary.Songs.SongsRequestBuilder Songs
+        {
+            get => new global::MusicCat.Musiclibrary.Songs.SongsRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The verify property</summary>
         public global::MusicCat.Musiclibrary.Verify.VerifyRequestBuilder Verify
