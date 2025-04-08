@@ -12,7 +12,7 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Try publishing and running dummy mode
         run: |
           cd TPP.Core
