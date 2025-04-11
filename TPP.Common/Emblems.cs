@@ -101,7 +101,8 @@ public static class Emblems
         [92] = "Super Gauntlet Legends: Arceus",
         [93] = "Multiworld Emerald",
         [94] = "Rocket Edition",
-        [95] = "Anniversary KEP"
+        [95] = "Anniversary KEP",
+        [96] = "Photonic Sun"
     };
 
     public static string FormatEmblem(int emblemNum)
