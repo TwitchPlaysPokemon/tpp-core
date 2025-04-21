@@ -73,20 +73,21 @@ dotnet run -- start -m dualcore
 
 The following scopes are currently in use:
 
-| scope                          | used for                                                      |
-|--------------------------------|---------------------------------------------------------------|
-| chat:read                      | Read messages from chat (via IRC/TMI).                        |
-| chat:edit                      | Send messages to chat (via IRC/TMI).                          |
-| user:bot                       | Appear in chat as bot.                                        |
-| user:read:chat                 | Read messages from chat. (via EventSub)                       |
-| user:write:chat                | Send messages to chat. (via Twitch API)                       |
-| user:manage:whispers           | Sending and receiving whispers.                               |
-| moderator:read:chatters        | Read the chatters list in the channel (e.g. for badge drops). |
-| moderator:read:followers       | Read the followers list (currently old core).                 |
-| moderator:manage:banned_users  | Timeout, ban and unban users (tpp automod, mod commands).     |
-| moderator:manage:chat_messages | Delete chat messages (tpp automod, purge invalid bets).       |
-| moderator:manage:chat_settings | Change chat settings, e.g. emote-only mode (mod commands).    |
-| channel:read:subscriptions     | Reacting to incoming subscriptions                            |
+| scope                           | used for                                                      | account  |
+|---------------------------------|---------------------------------------------------------------|----------|
+| chat:read                       | Read messages from chat (via IRC/TMI).                        | chat bot |
+| chat:edit                       | Send messages to chat (via IRC/TMI).                          | chat bot |
+| user:bot                        | Appear in chat as bot.                                        | chat bot |
+| user:read:chat                  | Read messages from chat. (via EventSub)                       | chat bot |
+| user:write:chat                 | Send messages to chat. (via Twitch API)                       | chat bot |
+| user:manage:whispers            | Sending and receiving whispers.                               | chat bot |
+| moderator:read:chatters         | Read the chatters list in the channel (e.g. for badge drops). | chat bot |
+| moderator:read:followers        | Read the followers list (currently old core).                 | chat bot |
+| moderator:manage:banned_users   | Timeout, ban and unban users (tpp automod, mod commands).     | chat bot |
+| moderator:manage:chat_messages  | Delete chat messages (tpp automod, purge invalid bets).       | chat bot |
+| moderator:manage:chat_settings  | Change chat settings, e.g. emote-only mode (mod commands).    | chat bot |
+| channel:read:subscriptions      | Reacting to incoming subscriptions                            | channel  |
+| channel:read:redemptions        | Reacting to channel point redemptions (e.g. vidclips)         | channel  |
 
 ## modes
 
