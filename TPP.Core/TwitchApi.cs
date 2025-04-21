@@ -159,7 +159,8 @@ public class TwitchApi(
         ScopeInfo.Bot("moderator:manage:banned_users",  "Timeout, ban and unban users (tpp automod, mod commands)"),
         ScopeInfo.Bot("moderator:manage:chat_messages", "Delete chat messages (tpp automod, purge invalid bets)"),
         ScopeInfo.Bot("moderator:manage:chat_settings", "Change chat settings, e.g. emote-only mode (mod commands)"),
-        ScopeInfo.Channel("channel:read:subscriptions", "Reacting to incoming subscriptions")
+        ScopeInfo.Channel("channel:read:subscriptions", "Reacting to incoming subscriptions"),
+        ScopeInfo.Channel("channel:read:redemptions",   "Reacting to channel point redemptions (e.g. vidclips)"),
     ];
     private static readonly Dictionary<string, ScopeInfo> ScopeInfosPerScope = ScopeInfos
         .ToDictionary(scopeInfo => scopeInfo.Scope, scopeInfo => scopeInfo);
