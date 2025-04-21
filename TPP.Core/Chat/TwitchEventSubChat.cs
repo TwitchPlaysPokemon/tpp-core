@@ -24,7 +24,10 @@ using TwitchLib.Api.Core.Exceptions;
 using TwitchLib.Api.Helix.Models.Streams.GetStreams;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;
 using static TPP.Core.EventUtils;
+using RedemptionStatus = TPP.Core.Overlay.Events.RedemptionStatus;
 using User = TPP.Model.User;
+using EventSub = TPP.Twitch.EventSub;
+using RedemptionReward = TPP.Core.Overlay.Events.RedemptionReward;
 
 namespace TPP.Core.Chat;
 
@@ -123,6 +126,10 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
                     await ChannelSubscriptionMessageReceived(channelSubscriptionMessage); // resubscriptions only
                 else if (notification is ChannelSubscriptionGift channelSubscriptionGift)
                     await ChannelSubscriptionGiftReceived(channelSubscriptionGift);
+                else if (notification is ChannelChannelPointsCustomRewardRedemptionAdd rewardRedemptionAdd)
+                    await ChannelRewardRedemptionAddReceived(rewardRedemptionAdd);
+                else if (notification is ChannelChannelPointsCustomRewardRedemptionUpdate rewardRedemptionUpdate)
+                    await ChannelRewardRedemptionUpdateReceived(rewardRedemptionUpdate);
                 else
                     _logger.LogWarning("received unhandled channel EventSub notification of type {Type}, payload: {Payload}",
                         notification.Metadata.SubscriptionType, notification.Payload);
@@ -182,7 +189,11 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
             _twitchApi.SubscribeToEventSubChannel<ChannelSubscriptionMessage>(session.Id,
                 new ChannelSubscriptionMessage.Condition(BroadcasterUserId: _channelId).AsDict()),
             _twitchApi.SubscribeToEventSubChannel<ChannelSubscriptionGift>(session.Id,
-                new ChannelSubscriptionGift.Condition(BroadcasterUserId: _channelId).AsDict())
+                new ChannelSubscriptionGift.Condition(BroadcasterUserId: _channelId).AsDict()),
+            _twitchApi.SubscribeToEventSubChannel<ChannelChannelPointsCustomRewardRedemptionAdd>(session.Id,
+                new ChannelChannelPointsCustomRewardRedemptionAdd.Condition(BroadcasterUserId: _channelId).AsDict()),
+            _twitchApi.SubscribeToEventSubChannel<ChannelChannelPointsCustomRewardRedemptionUpdate>(session.Id,
+                new ChannelChannelPointsCustomRewardRedemptionUpdate.Condition(BroadcasterUserId: _channelId).AsDict())
         );
         _logger.LogDebug("Finished setting up channel EventSub subscriptions");
     }
@@ -607,15 +618,15 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
             subscriptionGiftInfo);
         string subGiftResponse = subGiftResult switch
         {
-            ISubscriptionProcessor.SubGiftResult.OkButLinked {GifterTokens: 0, LinkedUsers: [var linked]}  =>
+            ISubscriptionProcessor.SubGiftResult.OkButLinked { GifterTokens: 0, LinkedUsers: [var linked] }  =>
                 $"As you are linked to the account '{linked.Name}' you have gifted to, " +
                 $"you have not received a token bonus. " +
                 "The recipient account still gains the normal benefits however. Thanks for subscribing!",
-            ISubscriptionProcessor.SubGiftResult.OkButLinked {GifterTokens: 0, LinkedUsers: var linked}  =>
+            ISubscriptionProcessor.SubGiftResult.OkButLinked { GifterTokens: 0, LinkedUsers: var linked }  =>
                 $"As you are linked to the accounts you have gifted to " +
                 $"({string.Join(", ", linked.Select(u => u.Name))}), you have not received a token bonus. " +
                 "The recipient accounts still gain the normal benefits however. Thanks for subscribing!",
-            ISubscriptionProcessor.SubGiftResult.OkButLinked {GifterTokens: var tokens, LinkedUsers: var linked} =>
+            ISubscriptionProcessor.SubGiftResult.OkButLinked { GifterTokens: var tokens, LinkedUsers: var linked } =>
                 $"Thank you for your generosity! You received T{tokens} tokens for giving a gift subscription. " +
                 $"Note that as you are linked to some accounts you have gifted to " +
                 $"({string.Join(", ", linked.Select(u => u.Name))}), you have received a smaller token bonus. " +
@@ -629,6 +640,68 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
             _ => throw new ArgumentOutOfRangeException(nameof(subGiftResult))
         };
         await _responseSender.SendWhisper(subscriptionGiftInfo.Gifter, subGiftResponse);
+    }
+
+    private async Task ChannelRewardRedemptionAddReceived(
+        ChannelChannelPointsCustomRewardRedemptionAdd rewardRedemption)
+    {
+        ChannelChannelPointsCustomRewardRedemptionAdd.Event evt = rewardRedemption.Payload.Event;
+        Debug.Assert(evt.BroadcasterUserId == _channelId, "Must only process reward redemptions of own channel");
+
+        User user = await _userRepo.RecordUser(new UserInfo(evt.UserId, evt.UserName, evt.UserLogin));
+        // We're not doing anything with this, we're just forwarding it as an overlay event to be processed there
+        await _overlayConnection.Send(new ChannelPointRewardRedemptionAdd
+        {
+            Id = evt.Id,
+            User = user,
+            UserInput = evt.UserInput,
+            Status = evt.Status switch
+            {
+                EventSub.Notifications.RedemptionStatus.Unknown => RedemptionStatus.Unknown,
+                EventSub.Notifications.RedemptionStatus.Unfulfilled => RedemptionStatus.Unfulfilled,
+                EventSub.Notifications.RedemptionStatus.Fulfilled => RedemptionStatus.Fulfilled,
+                EventSub.Notifications.RedemptionStatus.Canceled => RedemptionStatus.Canceled,
+            },
+            Reward = new RedemptionReward
+            {
+                Id = evt.Reward.Id,
+                Title = evt.Reward.Title,
+                Cost = evt.Reward.Cost,
+                Prompt = evt.Reward.Prompt
+            },
+            RedeemedAt = evt.RedeemedAt,
+        }, CancellationToken.None);
+    }
+
+    private async Task ChannelRewardRedemptionUpdateReceived(
+        ChannelChannelPointsCustomRewardRedemptionUpdate rewardRedemption)
+    {
+        ChannelChannelPointsCustomRewardRedemptionUpdate.Event evt = rewardRedemption.Payload.Event;
+        Debug.Assert(evt.BroadcasterUserId == _channelId, "Must only process reward redemptions of own channel");
+
+        User user = await _userRepo.RecordUser(new UserInfo(evt.UserId, evt.UserName, evt.UserLogin));
+        // We're not doing anything with this, we're just forwarding it as an overlay event to be processed there
+        await _overlayConnection.Send(new ChannelPointRewardRedemptionUpdate
+        {
+            Id = evt.Id,
+            User = user,
+            UserInput = evt.UserInput,
+            Status = evt.Status switch
+            {
+                EventSub.Notifications.RedemptionStatus.Unknown => RedemptionStatus.Unknown,
+                EventSub.Notifications.RedemptionStatus.Unfulfilled => RedemptionStatus.Unfulfilled,
+                EventSub.Notifications.RedemptionStatus.Fulfilled => RedemptionStatus.Fulfilled,
+                EventSub.Notifications.RedemptionStatus.Canceled => RedemptionStatus.Canceled,
+            },
+            Reward = new RedemptionReward
+            {
+                Id = evt.Reward.Id,
+                Title = evt.Reward.Title,
+                Cost = evt.Reward.Cost,
+                Prompt = evt.Reward.Prompt
+            },
+            RedeemedAt = evt.RedeemedAt,
+        }, CancellationToken.None);
     }
 
     private static string BuildSubResponse(
