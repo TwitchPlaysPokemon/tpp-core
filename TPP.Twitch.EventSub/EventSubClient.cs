@@ -151,10 +151,8 @@ public class EventSubClient
         while (!cancellationToken.IsCancellationRequested)
         {
             // Don't pass the cancellation token here. Instead, once cancelled we perform a graceful websocket closure.
-            // Otherwise, the websocket would be immediately put in an aborted state, but we're not in that of a hurry.
-            // Also, run it on the thread pool as a desperate attempt to see if the frequent disconnects we encounter
-            // are due to e.g. the async event loop blocking for a bit and causing the ping/pong to be delayed.
-            Task<ReadMessageResponse> readTask = Task.Run(async () => await ReadMessage(webSocketBox.WebSocket, CancellationToken.None));
+            // Otherwise the websocket would be immediately put in an aborted state, but we're not in that of a hurry.
+            Task<ReadMessageResponse> readTask = ReadMessage(webSocketBox.WebSocket, CancellationToken.None);
             Instant assumeDeadAt = lastMessageTimestamp + Duration.FromSeconds(KeepaliveTimeSeconds) + KeepAliveGrace;
             Instant now = _clock.GetCurrentInstant();
             Task timeoutTask = assumeDeadAt < now
