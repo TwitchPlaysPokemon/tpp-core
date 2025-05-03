@@ -33,7 +33,7 @@ public class Moderator(
     : IModerator
 {
     /// CPU or IO-intensive mod rules are not worth it, so let's have a threshold after which we get a warning
-    private static readonly Duration RuleDurationWarnThreshold = Duration.FromMilliseconds(50);
+    private static readonly Duration RuleDurationWarnThreshold = Duration.FromMilliseconds(100);
 
     private static readonly Duration RecentTimeoutsLimit = Duration.FromDays(7);
     private static readonly Duration InitialTimeoutDuration = Duration.FromMinutes(2);
