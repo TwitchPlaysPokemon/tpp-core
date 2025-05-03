@@ -36,7 +36,7 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
     /// Ideally, each message should be completely processed in a short amount of time.
     /// If we take longer, something's broken performance-wise, or we're doing too much in response to a message.
     /// Experience showed that the most likely culprit is slow queries or the DB itself acting up.
-    private static readonly Duration MessageProcessDurationWarnThreshold = Duration.FromMilliseconds(300);
+    private static readonly Duration MessageProcessDurationWarnThreshold = Duration.FromMilliseconds(1000);
 
     public event EventHandler<MessageEventArgs>? IncomingMessage;
 
@@ -119,7 +119,7 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
                         notification.Metadata.SubscriptionType, notification.Payload);
                 Duration elapsed = stopwatch.ElapsedDuration();
                 if (elapsed > MessageProcessDurationWarnThreshold)
-                    _logger.LogWarning("WTF, that took {Duration}ms", elapsed.TotalMilliseconds);
+                    _logger.LogWarning("Message processing took {Duration}ms: {MessageJson}", elapsed.TotalMilliseconds,  originalJson);
             });
         _clientChannel.NotificationReceived += (_, notificationArgs) =>
             TaskToVoidSafely(_logger, async () =>
