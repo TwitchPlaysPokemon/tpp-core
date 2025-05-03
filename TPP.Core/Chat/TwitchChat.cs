@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
+using NodaTime.Extensions;
 using TPP.Core.Configuration;
 using TPP.Core.Moderation;
 using TPP.Core.Overlay;
@@ -15,6 +17,10 @@ namespace TPP.Core.Chat;
 
 public sealed class TwitchChat : IChat, IChatModeChanger, IExecutor
 {
+    /// Ideally, each message should be completely processed in a short amount of time.
+    /// If we take longer, something's broken performance-wise, or we're doing too much in response to a message.
+    private static readonly Duration MessageProcessDurationWarnThreshold = Duration.FromMilliseconds(200);
+
     public string Name { get; }
     public event EventHandler<MessageEventArgs>? IncomingMessage;
 
@@ -69,7 +75,12 @@ public sealed class TwitchChat : IChat, IChatModeChanger, IExecutor
 
     private void MessageReceived(object? sender, MessageEventArgs args)
     {
+        var stopwatch = Stopwatch.StartNew();
         IncomingMessage?.Invoke(this, args);
+        Duration elapsed = stopwatch.ElapsedDuration();
+        if (elapsed > MessageProcessDurationWarnThreshold)
+            _logger.LogWarning("Message took {Duration}ms to process: {Message}",
+                elapsed.TotalMilliseconds, args.Message);
     }
 
     public async Task Start(CancellationToken cancellationToken)

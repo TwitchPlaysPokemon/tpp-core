@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NodaTime;
+using NodaTime.Extensions;
 using TPP.Model;
 using TPP.Persistence;
 
@@ -30,6 +32,9 @@ public class Moderator(
     int pointsForDelete = 200)
     : IModerator
 {
+    /// CPU or IO-intensive mod rules are not worth it, so let's have a threshold after which we get a warning
+    private static readonly Duration RuleDurationWarnThreshold = Duration.FromMilliseconds(50);
+
     private static readonly Duration RecentTimeoutsLimit = Duration.FromDays(7);
     private static readonly Duration InitialTimeoutDuration = Duration.FromMinutes(2);
     // twitch does not allow timeouts beyond 2 weeks
@@ -104,9 +109,13 @@ public class Moderator(
                 logger.LogWarning($"unhandled moderator rule result type '{result.GetType()}'");
         }
 
-        foreach (IModerationRule? rule in rules)
+        foreach (IModerationRule rule in rules)
         {
+            var stopwatch = Stopwatch.StartNew();
             RuleResult result = rule.Check(message);
+            Duration elapsed = stopwatch.ElapsedDuration();
+            if (elapsed > RuleDurationWarnThreshold)
+                logger.LogWarning("Executing mod rule {Rule} took {Duration}ms", rule.Id, elapsed.TotalMilliseconds);
             ProcessResult(result, rule);
         }
         while (pointResults.Any())
