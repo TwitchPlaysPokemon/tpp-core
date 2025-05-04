@@ -107,19 +107,29 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
                 _logger.LogTrace("received chat EventSub notification of type {Type}, " +
                                  "payload: {Payload}, original json: {OriginalJson}",
                     notification.Metadata.SubscriptionType, notification.Payload, originalJson);
-
+                string message = "";
                 if (notification is ChannelChatMessage chatMessage)
+                {
                     await MessageReceived(chatMessage);
+                    message = $"{chatMessage.Payload.Event.ChatterUserName}: {chatMessage.Payload.Event.Message}";
+                }
                 else if (notification is UserWhisperMessage whisperMessage)
+                {
                     await WhisperReceived(whisperMessage);
+                    message = $"<Whisper> {whisperMessage.Payload.Event.FromUserName}: {whisperMessage.Payload.Event.Whisper}";
+                }
                 else if (notification is ChannelChatSettingsUpdate settingsUpdate)
+                {
                     _channelState = settingsUpdate.Payload.Event;
+                    message = $"<Channel Mode Change>";
+                }
                 else
                     _logger.LogWarning("received unhandled bot EventSub notification of type {Type}, payload: {Payload}",
                         notification.Metadata.SubscriptionType, notification.Payload);
                 Duration elapsed = stopwatch.ElapsedDuration();
                 if (elapsed > MessageProcessDurationWarnThreshold)
-                    _logger.LogWarning("Message processing took {Duration}ms: {MessageJson}", elapsed.TotalMilliseconds,  originalJson);
+                    _logger.LogWarning("Message processing took {Duration}ms: {Message} (Raw: {MessageJson})",
+                     elapsed.TotalMilliseconds, message, originalJson);
             });
         _clientChannel.NotificationReceived += (_, notificationArgs) =>
             TaskToVoidSafely(_logger, async () =>
@@ -274,7 +284,7 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
             foreach (string[] chunk in joinedChannelIds.Chunk(chunkSize))
             {
                 GetStreamsResponse getStreamsResponse =
-                    await _twitchApi.GetStreamsAsync(userIds: [..chunk], first: chunkSize);
+                    await _twitchApi.GetStreamsAsync(userIds: [.. chunk], first: chunkSize);
                 foreach (Stream s in getStreamsResponse.Streams)
                     liveChannelIds.Add(s.UserId);
             }
@@ -627,11 +637,11 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
             subscriptionGiftInfo);
         string subGiftResponse = subGiftResult switch
         {
-            ISubscriptionProcessor.SubGiftResult.OkButLinked { GifterTokens: 0, LinkedUsers: [var linked] }  =>
+            ISubscriptionProcessor.SubGiftResult.OkButLinked { GifterTokens: 0, LinkedUsers: [var linked] } =>
                 $"As you are linked to the account '{linked.Name}' you have gifted to, " +
                 $"you have not received a token bonus. " +
                 "The recipient account still gains the normal benefits however. Thanks for subscribing!",
-            ISubscriptionProcessor.SubGiftResult.OkButLinked { GifterTokens: 0, LinkedUsers: var linked }  =>
+            ISubscriptionProcessor.SubGiftResult.OkButLinked { GifterTokens: 0, LinkedUsers: var linked } =>
                 $"As you are linked to the accounts you have gifted to " +
                 $"({string.Join(", ", linked.Select(u => u.Name))}), you have not received a token bonus. " +
                 "The recipient accounts still gain the normal benefits however. Thanks for subscribing!",
