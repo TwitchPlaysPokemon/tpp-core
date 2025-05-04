@@ -111,12 +111,12 @@ public partial class TwitchEventSubChat : IWithLifecycle, IMessageSource
                 if (notification is ChannelChatMessage chatMessage)
                 {
                     await MessageReceived(chatMessage);
-                    message = $"{chatMessage.Payload.Event.ChatterUserName}: {chatMessage.Payload.Event.Message}";
+                    message = $"{chatMessage.Payload.Event.ChatterUserName}: {chatMessage.Payload.Event.Message.Text}";
                 }
                 else if (notification is UserWhisperMessage whisperMessage)
                 {
                     await WhisperReceived(whisperMessage);
-                    message = $"<Whisper> {whisperMessage.Payload.Event.FromUserName}: {whisperMessage.Payload.Event.Whisper}";
+                    message = $"<Whisper> {whisperMessage.Payload.Event.FromUserName}: {whisperMessage.Payload.Event.Whisper.Text}";
                 }
                 else if (notification is ChannelChatSettingsUpdate settingsUpdate)
                 {
