@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # This script automates the process of making a mongodump backup
 # on linux from one of three nodes in a 3-node replica set.
+# It assumes the cluster is set up with one PRIMARY, one SECONDARY and a third node either as SECONDARY or ARBITER.
 # You may copy it to e.g. /usr/local/bin/
 
 NC='\033[0m' # No Color
@@ -29,10 +30,11 @@ mypriority=$(mongosh --quiet --eval 'JSON.stringify(rs.conf().members)' | jq -r 
 allvotes=$(mongosh --quiet --eval 'JSON.stringify(rs.conf().members)' | jq -r -c "[.[] | .votes] | add")
 allprios=$(mongosh --quiet --eval 'JSON.stringify(rs.conf().members)' | jq -r -c "[.[] | .priority] | add")
 numsecondaries=$(mongosh --quiet --eval 'JSON.stringify(rs.status().members)' | jq -r -c "[.[] | select(.stateStr == \"SECONDARY\")] | length")
+numarbiters=$(mongosh --quiet --eval 'JSON.stringify(rs.status().members)' | jq -r -c "[.[] | select(.stateStr == \"ARBITER\")] | length")
 
 if [ "$mymemberstatus" != "SECONDARY" ]; then
   if [ "$mymemberstatus" = "PRIMARY" ]; then
-    if [[ $numsecondaries -ge 2 ]]; then
+    if [[ $numsecondaries -ge 1 && $((numsecondaries + numarbiters)) -ge 2 ]]; then
       echo "Detected current node as primary and that there are $numsecondaries secondaries that can take over."
       echo "Automatically stepping down current node..."
       mongosh --quiet --eval 'rs.stepDown()'
@@ -44,9 +46,9 @@ if [ "$mymemberstatus" != "SECONDARY" ]; then
         exit 1
       fi
     else
-      echo -e "${RED}Detected current node as primary and that there are only $numsecondaries secondaries online.${NC}"
+      echo -e "${RED}Detected current node as PRIMARY, $numsecondaries secondaries, $numarbiters arbiters.${NC}"
       echo -e "${RED}Cannot automatically step down current node.${NC}"
-      echo -e "${RED}Ensure at least 2 other nodes are healthy and could take over, and try again.${NC}"
+      echo -e "${RED}Ensure 2+ other nodes (1+ being SECONDARY) are healthy and could take over, then try again.${NC}"
       exit 1
     fi
   else
@@ -66,12 +68,12 @@ echo "Successfully verified that the replica set can have a majority of votes wi
 
 prioritywithoutme=$(echo "$allprios $mypriority" | awk '{print $1-$2}')
 # inverted because awk returns booleans (0=false) instead of exit codes
-if ! awk "BEGIN{exit ($mypriority >= $prioritywithoutme)}"; then
-  echo -e "${RED}Could not verify that the replica set would have a majority of priority without this node.${NC}"
+if ! awk "BEGIN{exit ($prioritywithoutme > 0)}"; then
+  echo -e "${RED}Could not verify that the replica set would have any priority left without this node.${NC}"
   echo -e "${RED}Detected this node having '$mypriority' priority, and '$allprios' priority total${NC}"
   exit 1
 fi
-echo "Successfully verified that the replica set can have a majority priority without $myhostaddr"
+echo "Successfully verified that the replica set has any priority left without $myhostaddr"
 
 echo "Shutting down mongod service..."
 sudo systemctl stop mongod
