@@ -68,7 +68,7 @@ echo "Successfully verified that the replica set can have a majority of votes wi
 
 prioritywithoutme=$(echo "$allprios $mypriority" | awk '{print $1-$2}')
 # inverted because awk returns booleans (0=false) instead of exit codes
-if ! awk "BEGIN{exit ($prioritywithoutme > 0)}"; then
+if ! awk "BEGIN{exit ($prioritywithoutme <= 0)}"; then
   echo -e "${RED}Could not verify that the replica set would have any priority left without this node.${NC}"
   echo -e "${RED}Detected this node having '$mypriority' priority, and '$allprios' priority total${NC}"
   exit 1
