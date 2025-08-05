@@ -102,7 +102,9 @@ public static class Emblems
         [93] = "Multiworld Emerald",
         [94] = "Rocket Edition",
         [95] = "Anniversary KEP",
-        [96] = "Photonic Sun"
+        [96] = "Photonic Sun",
+        [97] = "Unbound",
+        [98] = "Legends: Z-A"
     };
 
     public static string FormatEmblem(int emblemNum)
