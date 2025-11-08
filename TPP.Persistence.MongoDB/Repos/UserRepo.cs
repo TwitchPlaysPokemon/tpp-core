@@ -18,7 +18,7 @@ public class UserRepo(
     long startingTokens,
     IImmutableList<string> defaultOperators,
     IClock clock
-) : IUserRepo
+) : IUserRepo, IAsyncInitRepo
 {
     public const string CollectionName = "users";
 
@@ -73,7 +73,7 @@ public class UserRepo(
         });
     }
 
-    public async Task InitializeAsync(IMongoDatabase database)
+    public async Task InitializeAsync()
     {
         await Collection.Indexes.CreateManyAsync([
             new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(u => u.SimpleName)),
