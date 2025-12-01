@@ -18,7 +18,7 @@
 		<PackageReference Include="String.Similarity" Version="3.0.0" />
 		<PackageReference Include="TwitchLib.Api" Version="3.10.0-preview-796c294" />
 		<!-- No release since 2022-3-11, but we want new features and this fix: https://github.com/TwitchLib/TwitchLib.Client/pull/170 -->
-		<PackageReference Include="TwitchLib.Client" Version="4.0.0-preview-5ef35d539836f8bcd29bd836a23b9e853020acfa" />
+		<PackageReference Include="TwitchLib.Client" Version="4.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>
