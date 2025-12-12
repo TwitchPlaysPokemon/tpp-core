@@ -104,7 +104,8 @@ public static class Emblems
         [95] = "Anniversary KEP",
         [96] = "Photonic Sun",
         [97] = "Unbound",
-        [98] = "Legends: Z-A"
+        [98] = "Legends: Z-A",
+        [99] = "Randomized Shield"
     };
 
     public static string FormatEmblem(int emblemNum)
