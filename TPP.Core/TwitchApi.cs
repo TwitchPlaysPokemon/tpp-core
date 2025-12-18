@@ -10,6 +10,7 @@ using TwitchLib.Api;
 using TwitchLib.Api.Auth;
 using TwitchLib.Api.Core.Enums;
 using TwitchLib.Api.Core.Exceptions;
+using TwitchLib.Api.Helix.Models.Channels.SendChatMessage;
 using TwitchLib.Api.Helix.Models.Chat.ChatSettings;
 using TwitchLib.Api.Helix.Models.Chat.Emotes.GetChannelEmotes;
 using TwitchLib.Api.Helix.Models.Chat.Emotes.GetGlobalEmotes;
@@ -93,9 +94,13 @@ public class TwitchApi(
         RetryingBot(api => api.Helix.Chat.UpdateChatSettingsAsync(broadcasterId, moderatorId, settings));
     public Task SendChatMessage(string broadcasterId, string senderUserId, string message,
         string? replyParentMessageId = null) =>
-        RetryingBot(api =>
-            api.Helix.Chat.SendChatMessage(broadcasterId, senderUserId, message,
-                replyParentMessageId: replyParentMessageId));
+        RetryingBot(api => api.Helix.Chat.SendChatMessage(new SendChatMessageRequest
+        {
+            BroadcasterId = broadcasterId,
+            SenderId = senderUserId,
+            Message = message,
+            ReplyParentMessageId = replyParentMessageId
+        }));
     public Task SendWhisperAsync(string fromUserId, string toUserId, string message, bool newRecipient) =>
         RetryingBot(api => api.Helix.Whispers.SendWhisperAsync(fromUserId, toUserId, message, newRecipient));
     public Task<GetGlobalEmotesResponse> GetGlobalEmotes() =>
@@ -190,7 +195,7 @@ public class TwitchApi(
         // Validate correct Client-IDs
         if (!botTokenInfo.ClientId.Equals(appClientId, StringComparison.InvariantCultureIgnoreCase))
             oofs.Add($"Bot token Client-ID '{botTokenInfo.ClientId}' does not match configured " +
-                    $"App-Client-ID '{appClientId}'. Did you create the token using the wrong App-Client-ID?");
+                     $"App-Client-ID '{appClientId}'. Did you create the token using the wrong App-Client-ID?");
         if (!channelTokenInfo.ClientId.Equals(appClientId, StringComparison.InvariantCultureIgnoreCase))
             oofs.Add(
                 $"Channel token Client-ID '{channelTokenInfo.ClientId}' does not match configured " +

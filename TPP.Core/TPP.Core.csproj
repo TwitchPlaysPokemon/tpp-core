@@ -16,7 +16,7 @@
 		<PackageReference Include="Serilog.Extensions.Logging.File" Version="3.0.0" />
 		<PackageReference Include="Serilog.Sinks.Discord.Lite" Version="0.2.0" />
 		<PackageReference Include="String.Similarity" Version="3.0.0" />
-		<PackageReference Include="TwitchLib.Api" Version="3.10.0-preview-796c294" />
+		<PackageReference Include="TwitchLib.Api" Version="3.10.2" />
 		<PackageReference Include="TwitchLib.Client" Version="4.0.1" />
 	</ItemGroup>
 
