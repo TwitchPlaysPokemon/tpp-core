@@ -78,7 +78,7 @@ public static class Emblems
         [69] = "Inverse Platinum",
         [70] = "Wilting Y",
         [71] = "Victory Fire",
-        [72] = "Randomized Soul Silver",
+        [72] = "Randomized SoulSilver",
         [73] = "Resolute",
         [74] = "Black and White 3: Genesis",
         [75] = "Mega Power",
