@@ -109,7 +109,8 @@ public static class Emblems
         [100] = "Anniversary Emerald",
         [101] = "HeartGold",
         [102] = "Luminescent Platinum",
-        [103] = "Peridot"
+        [103] = "Peridot",
+        [104] = "Switch LeafGreen
     };
 
     public static string FormatEmblem(int emblemNum)
