@@ -98,7 +98,10 @@ public class EventParsingTests
             "cc106a89-1814-919d-454c-f4f2f970aae7",
             new ChannelChatMessage.Message(
                 "Hi chat",
-                [new ChannelChatMessage.Fragment(ChannelChatMessage.FragmentType.Text, "Hi chat", null, null, null)]
+                [
+                    new ChannelChatMessage.Fragment(ChannelChatMessage.FragmentType.Text, "Hi chat", null, null, null,
+                        null)
+                ]
             ),
             ChannelChatMessage.MessageType.Text,
             [
@@ -166,7 +169,10 @@ public class EventParsingTests
             "f4f3eedc-b5e5-42a5-b085-5cb6a5384e44",
             new ChannelChatMessage.Message(
                 "anyway TEH URN",
-                [new ChannelChatMessage.Fragment(ChannelChatMessage.FragmentType.Text, "anyway TEH URN", null, null, null)]
+                [
+                    new ChannelChatMessage.Fragment(ChannelChatMessage.FragmentType.Text, "anyway TEH URN", null, null,
+                        null, null)
+                ]
             ),
             ChannelChatMessage.MessageType.ChannelPointsHighlighted,
             [
@@ -354,6 +360,80 @@ public class EventParsingTests
             "quotrok",
             "some-whisper-id",
             new UserWhisperMessage.Whisper("a secret"))));
+    }
+
+    /// Actual message from 2026-09-19T15:20:48.7617200Z that used to fail to parse since we didn't know about GIFs yet.
+    [Test]
+    public void ParseChatFragmentGif()
+    {
+        const string json =
+            """
+            {
+              "broadcaster_user_id": "56648155",
+              "broadcaster_user_login": "twitchplayspokemon",
+              "broadcaster_user_name": "TwitchPlaysPokemon",
+              "source_broadcaster_user_id": null,
+              "source_broadcaster_user_login": null,
+              "source_broadcaster_user_name": null,
+              "chatter_user_id": "154530459",
+              "chatter_user_login": "realsnackman",
+              "chatter_user_name": "RealSnackMan",
+              "message_id": "798fd992-7e6e-4e2f-8394-89019f526c94",
+              "source_message_id": null,
+              "is_source_only": null,
+              "message": {
+                "text": "[Happy Dance GIF by Pokémon]",
+                "fragments": [
+                  {
+                    "type": "gif",
+                    "text": "[Happy Dance GIF by Pokémon]",
+                    "cheermote": null,
+                    "emote": null,
+                    "mention": null,
+                    "gif": {
+                      "id": "pUh8KWBxCjMeMI3S3y",
+                      "url": "https://media2.giphy.com/media/pUh8KWBxCjMeMI3S3y/giphy.gif?cid=095d7a5d93rxvli96wrrkxg1b2i6zefmpbxia0si5335x0yp&ep=v1_gifs_search&rid=giphy.gif&ct=g"
+                    }
+                  }
+                ]
+              },
+              "color": "#8A2BE2",
+              "badges": [
+                { "set_id": "moderator", "id": "1", "info": "" },
+                { "set_id": "subscriber", "id": "2096", "info": "97" },
+                { "set_id": "charmander", "id": "1", "info": "" }
+              ],
+              "source_badges": null,
+              "message_type": "text",
+              "cheer": null,
+              "reply": null,
+              "channel_points_custom_reward_id": null,
+              "channel_points_animation_id": null
+            }
+            """;
+
+        ChannelChatMessage.Event evt = ParseNotificationEvent<ChannelChatMessage>(json).Payload.Event;
+        Assert.That(evt, Is.EqualTo(new ChannelChatMessage.Event(
+            "56648155",
+            "TwitchPlaysPokemon",
+            "twitchplayspokemon",
+            "154530459",
+            "RealSnackMan",
+            "realsnackman",
+            "798fd992-7e6e-4e2f-8394-89019f526c94",
+            new ChannelChatMessage.Message("[Happy Dance GIF by Pokémon]", [
+                new ChannelChatMessage.Fragment(ChannelChatMessage.FragmentType.Gif, "[Happy Dance GIF by Pokémon]",
+                    null, null, null,
+                    new ChannelChatMessage.Gif("pUh8KWBxCjMeMI3S3y",
+                        "https://media2.giphy.com/media/pUh8KWBxCjMeMI3S3y/giphy.gif?cid=095d7a5d93rxvli96wrrkxg1b2i6zefmpbxia0si5335x0yp&ep=v1_gifs_search&rid=giphy.gif&ct=g"))
+            ]),
+            ChannelChatMessage.MessageType.Text,
+            [
+                new ChannelChatMessage.Badge("moderator", "1", ""),
+                new ChannelChatMessage.Badge("subscriber", "2096", "97"),
+                new ChannelChatMessage.Badge("charmander", "1", "")
+            ],
+            null, "#8A2BE2", null, null)));
     }
 
     /// Parses only the notification-part of a message, enhancing it with a dummy message-envelope.

@@ -73,12 +73,20 @@ public class ChannelChatMessage(NotificationMetadata metadata, NotificationPaylo
         string UserLogin
     );
 
+    /// <param name="Id">An ID that uniquely identifies this GIF.</param>
+    /// <param name="Url">The URL of the GIF asset. Applications rendering the GIF must use the full URL provided; it must not be modified.</param>
+    public record Gif(
+        string Id,
+        string Url
+    );
+
     public enum FragmentType
     {
         Text,
         Cheermote,
         Emote,
-        Mention
+        Mention,
+        Gif
     }
 
     /// <param name="Type">The type of message fragment. Possible values: text, cheermote, emote, mention</param>
@@ -86,12 +94,14 @@ public class ChannelChatMessage(NotificationMetadata metadata, NotificationPaylo
     /// <param name="Cheermote">Optional. Metadata pertaining to the cheermote.</param>
     /// <param name="Emote">Optional. Metadata pertaining to the emote.</param>
     /// <param name="Mention">Optional. Metadata pertaining to the mention.</param>
+    /// <param name="Gif">Optional. Metadata pertaining to the GIF.</param>
     public record Fragment(
         FragmentType Type,
         string Text,
         Cheermote? Cheermote,
         Emote? Emote,
-        Mention? Mention
+        Mention? Mention,
+        Gif? Gif
     );
 
     /// <summary>
