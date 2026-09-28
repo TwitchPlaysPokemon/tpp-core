@@ -1,5 +1,6 @@
 using System.Linq;
 using NUnit.Framework;
+using TPP.ArgsParsing.TypeParsers;
 using TPP.Common;
 
 namespace TPP.Core.Tests;
@@ -11,6 +12,17 @@ public class PokedexDataTest
     {
         PokedexData pokedexData = PokedexData.Load();
         Assert.That(pokedexData.KnownSpecies.Any(), Is.True, "pokemon name data missing or empty");
+    }
+
+    [Test]
+    public void species_names_build_lookup_without_duplicates()
+    {
+        // A duplicate species name in pokemon_names.csv used to pass all tests
+        // but crash the deployment at startup, when PkmnSpeciesParser builds
+        // its name lookup. Build that same lookup here so bad data fails the test.
+        PokedexData pokedexData = PokedexData.Load();
+        Assert.DoesNotThrow(() => new PkmnSpeciesParser(pokedexData.KnownSpecies, PokedexData.NormalizeName),
+            "duplicate species names in pokemon name data");
     }
 
     [Test]
