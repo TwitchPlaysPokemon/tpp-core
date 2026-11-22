@@ -18,9 +18,9 @@ jobs:
         uses: actions/setup-dotnet@v6.1.0
         with:
           dotnet-version: ${{ matrix.dotnet-sdk-version }}
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
       - name: MongoDB in GitHub Actions
-        uses: supercharge/mongodb-github-action@1.11.0
+        uses: supercharge/mongodb-github-action@1.12.1
         with:
           mongodb-version: 7.0
           mongodb-replica-set: rs0
