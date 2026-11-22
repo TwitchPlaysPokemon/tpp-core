@@ -15,7 +15,7 @@ jobs:
         uses: actions/setup-dotnet@v6.1.0
         with:
           dotnet-version: 10.0.x
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
       - name: Regenerate core config json schemas
         run: |
           cd TPP.Core
