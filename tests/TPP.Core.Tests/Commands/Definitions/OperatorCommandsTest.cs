@@ -181,8 +181,9 @@ public class OperatorCommandsTest
             ["responsible_user"] = userSelf.Id,
             ["reason"] = "because reason",
         };
+        ImmutableList<Badge> expected = ImmutableList.Create(badge1, badge2);
         await _badgeRepoMock.Received(1).TransferBadges(
-            Arg.Is<IImmutableList<Badge>>(list => list.SequenceEqual(ImmutableList.Create(badge1, badge2))),
+            Arg.Is<IImmutableList<Badge>>(list => list.SequenceEqual(expected)),
             recipient.Id,
             "gift_remote",
             Arg.Is<IDictionary<string, object?>>(dict => dict.DictionaryEqual(data)));

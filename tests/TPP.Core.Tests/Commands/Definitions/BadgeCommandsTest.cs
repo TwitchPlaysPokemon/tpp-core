@@ -301,8 +301,9 @@ public class BadgeCommandsTest
         Assert.That(result.Response, Is.EqualTo("You successfully gifted 2 #001 species badges to Recipient!"));
         Assert.That(result.ResponseTarget, Is.EqualTo(ResponseTarget.NoneIfChat));
         IDictionary<string, object?> data = new Dictionary<string, object?> { ["gifter"] = user.Id };
+        ImmutableList<Badge> expected = ImmutableList.Create(badge1, badge2);
         await _badgeRepoMock.Received(1).TransferBadges(
-            Arg.Is<IImmutableList<Badge>>(list => list.SequenceEqual(ImmutableList.Create(badge1, badge2))),
+            Arg.Is<IImmutableList<Badge>>(list => list.SequenceEqual(expected)),
             recipient.Id,
             "gift",
             Arg.Is<IDictionary<string, object?>>(dict => dict.DictionaryEqual(data)));

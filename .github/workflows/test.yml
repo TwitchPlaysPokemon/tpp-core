@@ -10,8 +10,8 @@ jobs:
     strategy:
       matrix:
         dotnet-sdk-version:
-          - 8.0.101 # currently running on stream
-          - 8.0.x
+          - 10.0.404 # currently running on stream
+          - 10.0.x
 
     steps:
       - name: Setup .NET
