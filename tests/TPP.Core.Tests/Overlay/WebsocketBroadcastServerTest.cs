@@ -122,8 +122,8 @@ public class WebsocketBroadcastServerTest
 
         await client.WriteAsync("Hi server!", CancellationToken.None);
         Assert.That(await client.ReadAsync(CancellationToken.None), Is.Null); // server is terminating the connection
-        WebSocketException ex = Assert.ThrowsAsync<WebSocketException>(()
-            => client.WriteAsync("Websocket is already dead", CancellationToken.None))!;
+        WebSocketException ex = await Assert.ThrowsAsync<WebSocketException>(()
+            => client.WriteAsync("Websocket is already dead", CancellationToken.None));
         Assert.That(ex.WebSocketErrorCode, Is.EqualTo(WebSocketError.InvalidState));
         cts.Cancel();
         await serverTask;

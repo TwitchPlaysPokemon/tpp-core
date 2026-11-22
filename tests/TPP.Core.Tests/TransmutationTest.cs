@@ -104,7 +104,7 @@ public class TransmutationCalculatorTest
     /// it should also be rejected as a transmutation input.
     /// </summary>
     [Test]
-    public void TestCannotTransmuteUntransmutableBadge()
+    public async Task TestCannotTransmuteUntransmutableBadge()
     {
         PkmnSpecies speciesTransmutable = PkmnSpecies.RegisterName("1", "yes");
         PkmnSpecies speciesUntransmutable = PkmnSpecies.RegisterName("2", "no");
@@ -122,8 +122,8 @@ public class TransmutationCalculatorTest
             random: () => 12345
         );
 
-        TransmuteException exception = Assert.ThrowsAsync<TransmuteException>(async () => await transmutationCalculator
-            .Transmute(ImmutableList.Create(speciesUntransmutable, speciesUntransmutable, speciesUntransmutable)))!;
+        TransmuteException exception = await Assert.ThrowsAsync<TransmuteException>(async () => await transmutationCalculator
+            .Transmute(ImmutableList.Create(speciesUntransmutable, speciesUntransmutable, speciesUntransmutable)));
         Assert.That(exception.Message, Is.EqualTo(speciesUntransmutable + " cannot be used for transmutation"));
     }
 }
@@ -217,8 +217,8 @@ public class TransmuterTest
         ITransmuter transmuter = new Transmuter(
             badgeRepoMock, Substitute.For<ITransmutationCalculator>(), bankMock,
             Substitute.For<ITransmutationLogRepo>(), Substitute.For<IClock>());
-        var exception = Assert.ThrowsAsync<TransmuteException>(async () =>
-            await transmuter.Transmute(user, 1, inputSpeciesList))!;
+        var exception = await Assert.ThrowsAsync<TransmuteException>(async () =>
+            await transmuter.Transmute(user, 1, inputSpeciesList));
         Assert.That(exception.Message, Is.EqualTo("You don't have enough #001 SpeciesInput badges."));
 
         await badgeRepoMock.Received(1).FindByUserAndSpecies(user.Id, speciesIn, inputSpeciesList.Count);
@@ -241,8 +241,8 @@ public class TransmuterTest
         ITransmuter transmuter = new Transmuter(
             badgeRepoMock, Substitute.For<ITransmutationCalculator>(), bankMock,
             Substitute.For<ITransmutationLogRepo>(), Substitute.For<IClock>());
-        var exception = Assert.ThrowsAsync<TransmuteException>(async () =>
-            await transmuter.Transmute(user, 1, inputSpeciesList))!;
+        var exception = await Assert.ThrowsAsync<TransmuteException>(async () =>
+            await transmuter.Transmute(user, 1, inputSpeciesList));
         Assert.That(exception.Message, Is.EqualTo("You don't have the T1 required to transmute."));
 
         Assert.That(badgeRepoMock.ReceivedCalls().Count(), Is.EqualTo(0));

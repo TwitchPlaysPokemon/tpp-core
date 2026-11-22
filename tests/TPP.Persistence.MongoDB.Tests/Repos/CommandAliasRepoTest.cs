@@ -41,6 +41,6 @@ public class CommandAliasRepoTest : MongoTestBase
         CommandAliasRepo repo = new(CreateTemporaryDatabase());
         Assert.That(await repo.GetAliases(), Is.Empty);
 
-        Assert.ThrowsAsync<ArgumentException>(() => repo.UpsertAlias("alias", "target with spaces", []));
+        await Assert.ThrowsAsync<ArgumentException>(() => repo.UpsertAlias("alias", "target with spaces", []));
     }
 }

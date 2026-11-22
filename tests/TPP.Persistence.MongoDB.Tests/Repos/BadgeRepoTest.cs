@@ -271,9 +271,9 @@ public class BadgeRepoTest : MongoTestBase
                 Builders<Badge>.Filter.Where(b => b.Id == badge2.Id),
                 Builders<Badge>.Update.Set(b => b.UserId, "someOtherUser"));
 
-            OwnedBadgeNotFoundException ex = Assert.ThrowsAsync<OwnedBadgeNotFoundException>(() =>
+            OwnedBadgeNotFoundException ex = await Assert.ThrowsAsync<OwnedBadgeNotFoundException>(() =>
                 badgeRepo.TransferBadges(ImmutableList.Create(badge1, badge2),
-                    "recipient", "reason", new Dictionary<string, object?>()))!;
+                    "recipient", "reason", new Dictionary<string, object?>()));
             Assert.That(ex.Badge, Is.EqualTo(badge2));
             // first badge must not have changed ownership
             Badge firstBadge = await badgeRepo.Collection.Find(b => b.Id == badge1.Id).FirstAsync();

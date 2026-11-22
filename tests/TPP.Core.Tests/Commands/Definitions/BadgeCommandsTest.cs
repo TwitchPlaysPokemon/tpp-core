@@ -113,12 +113,12 @@ public class BadgeCommandsTest
         }
 
         [Test]
-        public void TestBadgesUserNotFound()
+        public async Task TestBadgesUserNotFound()
         {
             _argsParser.AddArgumentParser(new PkmnSpeciesParser(Array.Empty<PkmnSpecies>()));
             User user = MockUser("MockUser");
-            ArgsParseFailure exception = Assert.ThrowsAsync<ArgsParseFailure>(() => _badgeCommands.Badges(
-                new CommandContext(MockMessage(user), ImmutableList.Create("@someone_unknown"), _argsParser)))!;
+            ArgsParseFailure exception = await Assert.ThrowsAsync<ArgsParseFailure>(() => _badgeCommands.Badges(
+                new CommandContext(MockMessage(user), ImmutableList.Create("@someone_unknown"), _argsParser)));
             Assert.That(exception.Message, Is.EqualTo("did not recognize a user with the name 'someone_unknown'"));
         }
 
@@ -230,13 +230,13 @@ public class BadgeCommandsTest
     }
 
     [Test]
-    public void TestSelectUnknownBadge()
+    public async Task TestSelectUnknownBadge()
     {
         _argsParser.AddArgumentParser(new PkmnSpeciesParser(Array.Empty<PkmnSpecies>()));
         User user = MockUser("MockUser");
-        ArgsParseFailure failure = Assert.ThrowsAsync<ArgsParseFailure>(() =>
+        ArgsParseFailure failure = await Assert.ThrowsAsync<ArgsParseFailure>(() =>
             _badgeCommands.SelectBadge(new CommandContext(MockMessage(user),
-                ImmutableList.Create("#123"), _argsParser)))!;
+                ImmutableList.Create("#123"), _argsParser)));
         Assert.That(failure.Message, Is.EqualTo("did not recognize species '#123'"));
     }
 

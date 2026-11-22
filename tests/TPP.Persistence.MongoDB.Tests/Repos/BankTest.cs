@@ -73,8 +73,8 @@ public class BankTest : MongoTestBase
         user.Money = 15; // amount in the database is unexpectedly lower than this
 
         var transaction = new Transaction<TestUser>(user, 1, "test");
-        InvalidOperationException failure = Assert.ThrowsAsync<InvalidOperationException>(
-            () => bank.PerformTransaction(transaction))!;
+        InvalidOperationException failure = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => bank.PerformTransaction(transaction));
 
         Assert.That(
             failure.Message, Is.EqualTo("Tried to perform transaction with stale user data: " +
@@ -86,14 +86,14 @@ public class BankTest : MongoTestBase
     }
 
     [Test]
-    public void fails_transaction_if_user_not_found()
+    public async Task fails_transaction_if_user_not_found()
     {
         (IBank<TestUser> bank, IMongoCollection<TestUser> _) = CreateDbObjects(new MockClock());
         var user = new TestUser { Money = 10 }; // user not persisted
 
         var transaction = new Transaction<TestUser>(user, 1, "test");
-        UserNotFoundException<TestUser> userNotFound = Assert.ThrowsAsync<UserNotFoundException<TestUser>>(
-            () => bank.PerformTransaction(transaction))!;
+        UserNotFoundException<TestUser> userNotFound = await Assert.ThrowsAsync<UserNotFoundException<TestUser>>(
+            () => bank.PerformTransaction(transaction));
         Assert.That(userNotFound.User, Is.EqualTo(user));
     }
 
@@ -105,12 +105,12 @@ public class BankTest : MongoTestBase
         TestUser unknownUser = new TestUser { Money = 20 };
         await usersCollection.InsertOneAsync(knownUser);
 
-        UserNotFoundException<TestUser> userNotFound = Assert.ThrowsAsync<UserNotFoundException<TestUser>>(() =>
+        UserNotFoundException<TestUser> userNotFound = await Assert.ThrowsAsync<UserNotFoundException<TestUser>>(() =>
             bank.PerformTransactions([
                 new Transaction<TestUser>(knownUser, 3, "test"),
                 new Transaction<TestUser>(unknownUser, -3, "test")
             ])
-        )!;
+        );
 
         Assert.That(userNotFound.User, Is.EqualTo(unknownUser));
         // ensure neither user's balance was modified
@@ -140,12 +140,12 @@ public class BankTest : MongoTestBase
     }
 
     [Test]
-    public void fails_check_money_for_unknown_user()
+    public async Task fails_check_money_for_unknown_user()
     {
         (IBank<TestUser> bank, IMongoCollection<TestUser> _) = CreateDbObjects(new MockClock());
         TestUser unknownUser = new TestUser { Money = 0 }; // not persisted
-        UserNotFoundException<TestUser> userNotFound = Assert.ThrowsAsync<UserNotFoundException<TestUser>>(
-            () => bank.GetAvailableMoney(unknownUser))!;
+        UserNotFoundException<TestUser> userNotFound = await Assert.ThrowsAsync<UserNotFoundException<TestUser>>(
+            () => bank.GetAvailableMoney(unknownUser));
         Assert.That(userNotFound.User, Is.EqualTo(unknownUser));
     }
 
