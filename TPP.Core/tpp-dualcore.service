@@ -19,8 +19,9 @@ After=network.target
 Wants=network-online.target
 
 [Service]
-# SIGTERM (normal shutdown) results in exit code 143 (128 + SIGTERM/15)
-SuccessExitStatus=143
+# SIGTERM (normal shutdown) results in exit code 143 (128 + SIGTERM/15) on dotnet 8, and maybe in other setups?
+# Let's be safe and treat both as successful shutdowns.
+SuccessExitStatus=143 SIGTERM
 Restart=on-failure
 Type=simple
 ExecStart=%h/core start --mode=dualcore
