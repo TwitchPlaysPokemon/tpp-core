@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -198,15 +199,15 @@ Options:
         try
         {
             Task modeTask = mode.Start(cts.Token);
-            void Abort(object? sender, EventArgs args)
+            void Abort()
             {
                 if (cts.IsCancellationRequested) return;
                 logger.LogInformation("Aborting mode...");
                 cts.Cancel();
                 cleanupDone.Task.Wait();
             }
-            AppDomain.CurrentDomain.ProcessExit += Abort; // SIGTERM
-            Console.CancelKeyPress += Abort; // CTRL-C / SIGINT
+            PosixSignalRegistration.Create(PosixSignal.SIGTERM, _ => Abort());
+            Console.CancelKeyPress += (_, _) => Abort(); // CTRL-C / SIGINT
             modeTask.Wait();
         }
         catch (AggregateException ex) when (ex.InnerException is OperationCanceledException)
